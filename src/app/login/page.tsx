@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AuthFrame } from "@/components/AuthFrame";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -36,76 +37,56 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
-        <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-8 shadow-2xl backdrop-blur">
-          <a href="/" className="text-sm font-semibold text-slate-300">
-            ← Back to home
+    <AuthFrame
+      title="Log in"
+      description="Access your FrontierOps workspace."
+      footer={
+        <p className="text-center text-sm text-slate-300">
+          Need an account?{" "}
+          <a href="/signup" className="font-bold text-white underline">
+            Sign up
           </a>
-
-          <div className="mt-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-              FrontierOps
-            </p>
-
-            <h1 className="mt-3 text-3xl font-bold tracking-tight">
-              Log in
-            </h1>
-
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Access your FrontierOps workspace.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="mt-8 space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-200">
-                Email
-              </label>
-              <input
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-200">
-                Password
-              </label>
-              <input
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-                type="password"
-                placeholder="Your password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </div>
-
-            <button
-              disabled={loading}
-              className="w-full rounded-xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Logging in..." : "Log in"}
-            </button>
-          </form>
-
-          {message && (
-            <div className="mt-4 rounded-xl border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
-              {message}
-            </div>
-          )}
-
-          <p className="mt-6 text-center text-sm text-slate-300">
-            Need an account?{" "}
-            <a href="/signup" className="font-semibold text-white underline">
-              Sign up
-            </a>
-          </p>
+        </p>
+      }
+    >
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-slate-200">Email</label>
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
         </div>
-      </div>
-    </main>
+
+        <div>
+          <label className="text-sm font-semibold text-slate-200">
+            Password
+          </label>
+          <input
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+            type="password"
+            placeholder="Your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+
+        <button
+          disabled={loading}
+          className="w-full rounded-2xl bg-white px-4 py-3 font-bold text-slate-950 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Logging in..." : "Log in"}
+        </button>
+      </form>
+
+      {message && (
+        <div className="mt-4 rounded-2xl border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
+          {message}
+        </div>
+      )}
+    </AuthFrame>
   );
 }

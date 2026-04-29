@@ -1,7 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 function getStartOfMonth() {
   const now = new Date();
@@ -76,6 +79,41 @@ function getServiceRevenue(
       revenue,
     }))
     .sort((a, b) => b.revenue - a.revenue);
+}
+
+function getHealthStatus({
+  followUpsDue,
+  unpaidRevenue,
+  openEstimateValue,
+}: {
+  followUpsDue: number;
+  unpaidRevenue: number;
+  openEstimateValue: number;
+}) {
+  if (followUpsDue >= 5 || unpaidRevenue >= 10000) {
+    return {
+      label: "Needs Attention",
+      tone: "warning" as const,
+      message:
+        "There are several items that need follow-up before they turn into lost revenue.",
+    };
+  }
+
+  if (openEstimateValue >= 5000) {
+    return {
+      label: "Strong Pipeline",
+      tone: "info" as const,
+      message:
+        "Your pipeline has meaningful open estimate value. Follow-ups should be prioritized.",
+    };
+  }
+
+  return {
+    label: "Stable",
+    tone: "success" as const,
+    message:
+      "Your workspace is organized and there are no major issues requiring immediate attention.",
+  };
 }
 
 export default async function WorkspacePage() {
@@ -206,13 +244,13 @@ export default async function WorkspacePage() {
 
   const totalCustomers = customers?.length || 0;
 
+  const totalRevenue =
+    sales?.reduce((sum, sale) => sum + Number(sale.amount || 0), 0) || 0;
+
   const monthlyRevenue =
     sales
       ?.filter((sale) => sale.sale_date >= startOfMonth)
       .reduce((sum, sale) => sum + Number(sale.amount || 0), 0) || 0;
-
-  const totalRevenue =
-    sales?.reduce((sum, sale) => sum + Number(sale.amount || 0), 0) || 0;
 
   const unpaidRevenue =
     sales
@@ -247,135 +285,241 @@ export default async function WorkspacePage() {
       ?.filter(
         (followUp) => followUp.status === "Open" && followUp.due_date <= today,
       )
-      .slice(0, 5) || [];
+      .slice(0, 4) || [];
 
-  const recentLeads = leads?.slice(0, 5) || [];
-
+  const recentLeads = leads?.slice(0, 4) || [];
+  const recentSales = sales?.slice(0, 4) || [];
   const serviceRevenue = getServiceRevenue(sales || []).slice(0, 5);
+
+  const highestServiceRevenue = Math.max(
+    ...serviceRevenue.map((item) => item.revenue),
+    1,
+  );
+
+  const health = getHealthStatus({
+    followUpsDue,
+    unpaidRevenue,
+    openEstimateValue,
+  });
 
   return (
     <AppShell companyName={company.name} userEmail={user.email || ""}>
-      <div className="space-y-6">
-        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Dashboard
-            </p>
+      <div className="space-y-8">
+        <section className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-950 p-6 text-white shadow-2xl md:p-8">
+          <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
 
-            <h1 className="mt-2 text-3xl font-bold">{company.name}</h1>
+          <div className="relative grid gap-8 xl:grid-cols-[1.3fr_0.7fr] xl:items-end">
+            <div>
+              <div className="inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-300">
+                Business Command Center
+              </div>
 
-            <p className="mt-2 text-slate-600">
-              Live overview of customers, leads, jobs, sales, and follow-ups.
-            </p>
+              <h1 className="mt-5 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">
+                {company.name}
+              </h1>
+
+              <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300 md:text-lg">
+                Live view of revenue, pipeline, jobs, customers, and follow-ups
+                across your operation.
+              </p>
+
+              <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    This Month
+                  </p>
+                  <p className="mt-2 text-3xl font-black">
+                    {formatCurrency(monthlyRevenue)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Pipeline
+                  </p>
+                  <p className="mt-2 text-3xl font-black">
+                    {formatCurrency(openEstimateValue)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Active Jobs
+                  </p>
+                  <p className="mt-2 text-3xl font-black">{activeJobs}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                    Due Now
+                  </p>
+                  <p className="mt-2 text-3xl font-black">{followUpsDue}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-slate-300">Business health</p>
+                  <p className="mt-1 text-2xl font-black">{health.label}</p>
+                </div>
+
+                <StatusBadge tone={health.tone}>{health.label}</StatusBadge>
+              </div>
+
+              <p className="mt-4 text-sm leading-7 text-slate-300">
+                {health.message}
+              </p>
+
+              <Link
+                href="/ai-assistant"
+                className="mt-5 inline-flex rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-950 hover:bg-slate-200"
+              >
+                Generate AI report →
+              </Link>
+            </div>
           </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-            Logged in as{" "}
-            <span className="font-semibold text-slate-950">{user.email}</span>
-          </div>
-        </header>
+        </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Monthly revenue</p>
-            <p className="mt-2 text-3xl font-bold">
-              {formatCurrency(monthlyRevenue)}
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Since {new Date(startOfMonth).toLocaleDateString()}
-            </p>
-          </div>
+          <StatCard
+            label="Total revenue"
+            value={formatCurrency(totalRevenue)}
+            helper="All recorded sales"
+            tone="green"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Open estimates</p>
-            <p className="mt-2 text-3xl font-bold">
-              {formatCurrency(openEstimateValue)}
-            </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Leads with Estimate Sent status
-            </p>
-          </div>
+          <StatCard
+            label="Unpaid / partial"
+            value={formatCurrency(unpaidRevenue)}
+            helper="Payment follow-up needed"
+            tone={unpaidRevenue > 0 ? "amber" : "default"}
+          />
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm text-amber-700">Follow-ups due</p>
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              {followUpsDue}
-            </p>
-            <p className="mt-2 text-xs text-amber-700">
-              Open reminders due today or earlier
-            </p>
-          </div>
+          <StatCard
+            label="New leads"
+            value={newLeadsThisMonth}
+            helper="Created this month"
+            tone="blue"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Customers</p>
-            <p className="mt-2 text-3xl font-bold">{totalCustomers}</p>
-            <p className="mt-2 text-xs text-slate-500">
-              Total customer records
-            </p>
-          </div>
+          <StatCard
+            label="Jobs"
+            value={`${activeJobs} / ${completedJobs}`}
+            helper="Active / completed"
+            tone="default"
+          />
+
+          <StatCard
+            label="Customers"
+            value={totalCustomers}
+            helper="Total customer records"
+          />
         </section>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Total revenue</p>
-            <p className="mt-2 text-2xl font-bold">
-              {formatCurrency(totalRevenue)}
-            </p>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Revenue Mix
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Revenue by service</h2>
+              </div>
+
+              <Link
+                href="/sales"
+                className="text-sm font-bold text-slate-600 hover:text-slate-950"
+              >
+                View sales →
+              </Link>
+            </div>
+
+            {serviceRevenue.length === 0 ? (
+              <div className="mt-8 rounded-3xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
+                No sales data yet. Add sales to see service performance.
+              </div>
+            ) : (
+              <div className="mt-6 space-y-5">
+                {serviceRevenue.map((item) => {
+                  const width = Math.max(
+                    8,
+                    Math.round((item.revenue / highestServiceRevenue) * 100),
+                  );
+
+                  return (
+                    <div key={item.service}>
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="font-bold text-slate-950">
+                          {item.service}
+                        </p>
+                        <p className="font-black">
+                          {formatCurrency(item.revenue)}
+                        </p>
+                      </div>
+
+                      <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-slate-950"
+                          style={{ width: `${width}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Unpaid / partial</p>
-            <p className="mt-2 text-2xl font-bold">
-              {formatCurrency(unpaidRevenue)}
-            </p>
-          </div>
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Attention Queue
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Due follow-ups</h2>
+              </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">New leads this month</p>
-            <p className="mt-2 text-2xl font-bold">{newLeadsThisMonth}</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Jobs</p>
-            <p className="mt-2 text-2xl font-bold">
-              {activeJobs} active / {completedJobs} done
-            </p>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 p-5">
-              <h2 className="text-xl font-bold">Due follow-ups</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                These need attention first.
-              </p>
+              <Link
+                href="/follow-ups"
+                className="text-sm font-bold text-slate-600 hover:text-slate-950"
+              >
+                View all →
+              </Link>
             </div>
 
             {dueFollowUps.length === 0 ? (
-              <div className="p-6 text-slate-500">
-                No due follow-ups right now.
+              <div className="mt-8 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-950">
+                <p className="font-bold">Nothing urgent right now.</p>
+                <p className="mt-2 text-sm leading-6">
+                  No open follow-ups are due today or overdue.
+                </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="mt-5 space-y-3">
                 {dueFollowUps.map((followUp) => (
-                  <div key={followUp.id} className="p-5">
-                    <div className="flex items-start justify-between gap-4">
+                  <div
+                    key={followUp.id}
+                    className="rounded-3xl border border-amber-200 bg-amber-50 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-slate-950">
+                        <p className="font-black text-amber-950">
                           {getCustomerName(followUp.customers)}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-amber-800">
                           {getLeadService(followUp.leads)}
                         </p>
                       </div>
 
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-amber-800">
                         Due {new Date(followUp.due_date).toLocaleDateString()}
                       </span>
                     </div>
 
-                    <p className="mt-3 text-sm text-slate-600">
+                    <p className="mt-3 text-sm leading-6 text-amber-900">
                       {followUp.message}
                     </p>
                   </div>
@@ -383,39 +527,50 @@ export default async function WorkspacePage() {
               </div>
             )}
           </div>
+        </section>
 
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 p-5">
-              <h2 className="text-xl font-bold">Recent leads</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Newest pipeline opportunities.
-              </p>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Pipeline
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Recent leads</h2>
+              </div>
+
+              <Link
+                href="/leads"
+                className="text-sm font-bold text-slate-600 hover:text-slate-950"
+              >
+                Manage →
+              </Link>
             </div>
 
             {recentLeads.length === 0 ? (
-              <div className="p-6 text-slate-500">No leads yet.</div>
+              <div className="p-8 text-slate-500">No leads yet.</div>
             ) : (
               <div className="divide-y divide-slate-100">
                 {recentLeads.map((lead) => (
                   <div key={lead.id} className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="font-semibold text-slate-950">
+                        <p className="font-black text-slate-950">
                           {getCustomerName(lead.customers)}
                         </p>
                         <p className="mt-1 text-sm text-slate-600">
                           {lead.service_requested}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Source: {lead.source || "—"}
+                          Source: {lead.source || "Unknown"}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <p className="font-bold">
+                        <p className="font-black">
                           {formatCurrency(lead.estimated_value)}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
                           {lead.status}
                         </p>
                       </div>
@@ -425,34 +580,57 @@ export default async function WorkspacePage() {
               </div>
             )}
           </div>
-        </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="text-xl font-bold">Revenue by service</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Top service categories from sales records.
-            </p>
-          </div>
+          <div className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Revenue
+                </p>
+                <h2 className="mt-2 text-2xl font-black">Recent sales</h2>
+              </div>
 
-          {serviceRevenue.length === 0 ? (
-            <div className="p-6 text-slate-500">No sales data yet.</div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {serviceRevenue.map((item) => (
-                <div
-                  key={item.service}
-                  className="flex items-center justify-between p-5"
-                >
-                  <p className="font-semibold text-slate-950">{item.service}</p>
-
-                  <p className="text-lg font-bold">
-                    {formatCurrency(item.revenue)}
-                  </p>
-                </div>
-              ))}
+              <Link
+                href="/sales"
+                className="text-sm font-bold text-slate-600 hover:text-slate-950"
+              >
+                Manage →
+              </Link>
             </div>
-          )}
+
+            {recentSales.length === 0 ? (
+              <div className="p-8 text-slate-500">No sales yet.</div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentSales.map((sale) => (
+                  <div key={sale.id} className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-black text-slate-950">
+                          {getCustomerName(sale.customers)}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {sale.service_type || "Other service"}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {sale.sale_date}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-black">
+                          {formatCurrency(sale.amount)}
+                        </p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                          {sale.payment_status}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </AppShell>
