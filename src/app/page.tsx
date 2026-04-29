@@ -32,26 +32,33 @@ export default function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-slate-950 text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6">
         <nav className="flex items-center justify-between">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            FrontierOps
-          </Link>
+  <a href="/" className="text-lg font-bold tracking-tight">
+    FrontierOps
+  </a>
 
-          <div className="flex items-center gap-3 text-sm">
-            <Link
-              href="/dashboard"
-              className="hidden rounded-full px-4 py-2 text-slate-300 hover:bg-white/10 hover:text-white sm:block"
-            >
-              Demo
-            </Link>
+  <div className="flex items-center gap-3 text-sm">
+    <a
+      href="/dashboard"
+      className="hidden rounded-full px-4 py-2 text-slate-300 hover:bg-white/10 hover:text-white sm:block"
+    >
+      Demo
+    </a>
 
-            <Link
-              href="/login"
-              className="rounded-full border border-white/15 px-4 py-2 text-slate-200 hover:bg-white/10"
-            >
-              Log in
-            </Link>
-          </div>
-        </nav>
+    <a
+      href="/login"
+      className="rounded-full px-4 py-2 text-slate-300 hover:bg-white/10 hover:text-white"
+    >
+      Log in
+    </a>
+
+    <a
+      href="/signup"
+      className="rounded-full border border-white/15 px-4 py-2 text-slate-200 hover:bg-white/10"
+    >
+      Sign up
+    </a>
+  </div>
+</nav>
 
         <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1fr_520px]">
           <div className="max-w-3xl">
