@@ -37,7 +37,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/auth-test");
+    router.push("/onboarding");
   }
 
   return (
