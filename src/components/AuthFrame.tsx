@@ -21,7 +21,7 @@ export function AuthFrame({
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.3),rgba(15,23,42,1))]" />
 
           <div className="relative flex h-full flex-col justify-between">
-            <ProductMark dark />
+            <ProductMark inverse />
 
             <div className="max-w-2xl">
               <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-200">
@@ -48,7 +48,7 @@ export function AuthFrame({
         <section className="flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-md">
             <div className="mb-8 lg:hidden">
-              <ProductMark dark />
+              <ProductMark inverse />
             </div>
 
             <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] p-8 shadow-2xl backdrop-blur">

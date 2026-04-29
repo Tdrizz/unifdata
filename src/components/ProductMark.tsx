@@ -1,5 +1,7 @@
 function getInitials(name?: string) {
-  if (!name) return "FO";
+  if (!name) {
+    return "FO";
+  }
 
   return (
     name
@@ -13,36 +15,52 @@ function getInitials(name?: string) {
 
 export function ProductMark({
   companyName,
-  dark = false,
+  compact = false,
+  inverse = false,
 }: {
   companyName?: string;
-  dark?: boolean;
+  compact?: boolean;
+  inverse?: boolean;
 }) {
   const initials = getInitials(companyName);
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-white shadow-sm">
+    <div className="flex min-w-0 items-center gap-3">
+      <div
+        className={
+          inverse
+            ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sm font-black text-slate-950 shadow-sm"
+            : "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-black text-white shadow-sm"
+        }
+      >
         {initials}
       </div>
 
-      <div>
-        <p
-          className={dark ? "font-bold text-white" : "font-bold text-slate-950"}
-        >
-          FrontierOps
-        </p>
-
-        {companyName && (
+      {!compact && (
+        <div className="min-w-0">
           <p
             className={
-              dark ? "text-xs text-slate-400" : "text-xs text-slate-500"
+              inverse
+                ? "truncate font-black tracking-tight text-white"
+                : "truncate font-black tracking-tight text-slate-950"
             }
           >
-            {companyName}
+            FrontierOps
           </p>
-        )}
-      </div>
+
+          {companyName && (
+            <p
+              className={
+                inverse
+                  ? "truncate text-xs font-medium text-slate-400"
+                  : "truncate text-xs font-medium text-slate-500"
+              }
+            >
+              {companyName}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
