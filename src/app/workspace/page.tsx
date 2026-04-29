@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { LogoutButton } from "@/components/LogoutButton";
+import { AppShell } from "@/components/AppShell";
 
 export default async function WorkspacePage() {
   const supabase = await createClient();
@@ -23,22 +23,18 @@ export default async function WorkspacePage() {
   const { company, role } = currentCompany;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-8 text-slate-950">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <header className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-              FrontierOps Workspace
-            </p>
+    <AppShell companyName={company.name} userEmail={user.email || ""}>
+      <div className="space-y-6">
+        <header>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Workspace
+          </p>
 
-            <h1 className="mt-2 text-3xl font-bold">{company.name}</h1>
+          <h1 className="mt-2 text-3xl font-bold">{company.name}</h1>
 
-            <p className="mt-2 text-slate-600">
-              Logged in as {user.email}
-            </p>
-          </div>
-
-          <LogoutButton />
+          <p className="mt-2 text-slate-600">
+            Your company workspace is connected and ready.
+          </p>
         </header>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -64,9 +60,8 @@ export default async function WorkspacePage() {
           <h2 className="text-xl font-bold">Company onboarding works.</h2>
 
           <p className="mt-3 leading-7">
-            Your user account is now connected to a company workspace. This is
-            the foundation for customers, leads, jobs, sales, follow-ups, CSV
-            imports, and AI reports.
+            Your user account is now connected to a company workspace. Next,
+            you can start adding real customer records.
           </p>
         </section>
 
@@ -74,13 +69,13 @@ export default async function WorkspacePage() {
           <h2 className="text-xl font-bold">Next build steps</h2>
 
           <ul className="mt-4 list-disc space-y-2 pl-5 text-slate-600">
-            <li>Build the shared app sidebar/layout.</li>
-            <li>Create the customers page.</li>
-            <li>Add the first real customer form.</li>
-            <li>Confirm RLS only allows access to this company’s records.</li>
+            <li>Open the Customers page.</li>
+            <li>Add your first customer.</li>
+            <li>Confirm it saves to Supabase.</li>
+            <li>Confirm the customer is attached to your company_id.</li>
           </ul>
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 }
