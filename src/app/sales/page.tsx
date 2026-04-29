@@ -359,8 +359,7 @@ export default async function SalesPage() {
                           {getCustomerName(sale.customers)}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Added{" "}
-                          {new Date(sale.created_at).toLocaleDateString()}
+                          Added {new Date(sale.created_at).toLocaleDateString()}
                         </p>
                       </td>
 
