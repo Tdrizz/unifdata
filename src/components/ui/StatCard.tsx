@@ -1,9 +1,42 @@
 const toneStyles = {
-  default: "border-slate-200 bg-white text-slate-950",
-  blue: "border-blue-100 bg-blue-50 text-blue-950",
-  green: "border-emerald-100 bg-emerald-50 text-emerald-950",
-  amber: "border-amber-100 bg-amber-50 text-amber-950",
-  red: "border-red-100 bg-red-50 text-red-950",
+  default: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-slate-300",
+  },
+  subtle: {
+    card: "border-slate-200 bg-slate-50 text-slate-950",
+    accent: "bg-slate-400",
+  },
+  positive: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-emerald-500",
+  },
+  warning: {
+    card: "border-amber-200 bg-amber-50 text-amber-950",
+    accent: "bg-amber-500",
+  },
+  danger: {
+    card: "border-red-200 bg-red-50 text-red-950",
+    accent: "bg-red-500",
+  },
+
+  // Backward-compatible aliases so older pages don't break
+  green: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-emerald-500",
+  },
+  blue: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-slate-400",
+  },
+  amber: {
+    card: "border-amber-200 bg-amber-50 text-amber-950",
+    accent: "bg-amber-500",
+  },
+  red: {
+    card: "border-red-200 bg-red-50 text-red-950",
+    accent: "bg-red-500",
+  },
 };
 
 export function StatCard({
@@ -17,13 +50,25 @@ export function StatCard({
   helper?: string;
   tone?: keyof typeof toneStyles;
 }) {
+  const styles = toneStyles[tone];
+
   return (
-    <div className={`rounded-3xl border p-5 shadow-sm ${toneStyles[tone]}`}>
-      <p className="text-sm font-bold opacity-65">{label}</p>
+    <div
+      className={`relative overflow-hidden rounded-3xl border p-5 shadow-sm ${styles.card}`}
+    >
+      <div className={`absolute left-0 top-0 h-full w-1 ${styles.accent}`} />
 
-      <p className="mt-2 text-3xl font-black tracking-tight">{value}</p>
+      <p className="text-sm font-medium text-slate-500">{label}</p>
 
-      {helper && <p className="mt-2 text-xs leading-5 opacity-65">{helper}</p>}
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+        {value}
+      </p>
+
+      {helper && (
+        <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
+          {helper}
+        </p>
+      )}
     </div>
   );
 }

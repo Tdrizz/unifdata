@@ -29,37 +29,43 @@ export function GenerateSummaryButton() {
     }
 
     setSummary(data.summary || "");
-    setMessage("AI summary generated and saved.");
+    setMessage("Summary generated and saved.");
     router.refresh();
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-xl font-bold">Generate business summary</h2>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+        Generate
+      </p>
 
-      <p className="mt-2 text-sm leading-6 text-slate-500">
-        FrontierOps will read your current customers, leads, jobs, sales, and
-        follow-ups, then generate a plain-English business summary.
+      <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">
+        Create a business report
+      </h2>
+
+      <p className="mt-3 text-sm leading-7 text-slate-600">
+        Pull current operating metrics and generate a short summary with
+        recommended next actions.
       </p>
 
       <button
         onClick={generateSummary}
         disabled={loading}
-        className="mt-5 rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Generating..." : "Generate AI summary"}
+        {loading ? "Generating summary..." : "Generate AI summary"}
       </button>
 
       {message && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-700">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-700">
           {message}
         </div>
       )}
 
       {summary && (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950">
-          <h3 className="font-bold">Latest generated summary</h3>
-          <div className="mt-3 whitespace-pre-wrap text-sm leading-7">
+        <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <p className="font-black text-slate-950">Latest summary</p>
+          <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-700">
             {summary}
           </div>
         </div>

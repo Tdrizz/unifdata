@@ -1,18 +1,8 @@
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { AppNav } from "@/components/AppNav";
 import { LogoutButton } from "@/components/LogoutButton";
 import { ProductMark } from "@/components/ProductMark";
-
-const navItems = [
-  { href: "/workspace", label: "Dashboard", helper: "Overview" },
-  { href: "/customers", label: "Customers", helper: "CRM" },
-  { href: "/leads", label: "Leads", helper: "Pipeline" },
-  { href: "/jobs", label: "Jobs", helper: "Operations" },
-  { href: "/sales", label: "Sales", helper: "Revenue" },
-  { href: "/follow-ups", label: "Follow-Ups", helper: "Reminders" },
-  { href: "/imports", label: "Imports", helper: "Migration" },
-  { href: "/ai-assistant", label: "AI Assistant", helper: "Insights" },
-];
 
 type ThemeStyle = CSSProperties & {
   "--fo-primary"?: string;
@@ -38,41 +28,25 @@ export function AppShell({
   };
 
   return (
-    <div style={themeStyle} className="min-h-screen text-slate-950">
+    <div
+      style={themeStyle}
+      className="min-h-screen bg-[#f5f7fb] text-slate-950"
+    >
       <div className="flex min-h-screen">
-        <aside className="hidden w-[290px] shrink-0 flex-col bg-slate-950 p-4 text-white md:flex">
+        <aside className="hidden w-[292px] shrink-0 flex-col bg-slate-950 p-4 text-white md:flex">
           <Link
             href="/workspace"
-            className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 shadow-sm hover:bg-white/10"
+            className="rounded-3xl border border-white/10 bg-white/6 p-4 shadow-sm hover:bg-white/10"
           >
             <ProductMark companyName={companyName} inverse />
           </Link>
 
-          <nav className="mt-5 space-y-1.5">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group flex items-center justify-between rounded-2xl px-4 py-3 text-sm hover:bg-white/10"
-              >
-                <div>
-                  <p className="font-bold text-slate-200 group-hover:text-white">
-                    {item.label}
-                  </p>
-                  <p className="mt-0.5 text-xs font-medium text-slate-500 group-hover:text-slate-400">
-                    {item.helper}
-                  </p>
-                </div>
+          <div className="mt-7 flex-1">
+            <AppNav />
+          </div>
 
-                <span className="text-slate-600 opacity-0 group-hover:opacity-100">
-                  →
-                </span>
-              </Link>
-            ))}
-          </nav>
-
-          <div className="mt-auto rounded-3xl border border-white/10 bg-white/[0.06] p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+          <div className="rounded-3xl border border-white/10 bg-white/6 p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
               Account
             </p>
 
@@ -96,16 +70,8 @@ export function AppShell({
               <LogoutButton />
             </div>
 
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="mt-3">
+              <AppNav mobile />
             </div>
           </header>
 

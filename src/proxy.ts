@@ -5,6 +5,8 @@ const protectedRoutes = [
   "/auth-test",
   "/onboarding",
   "/workspace",
+  "/crm",
+  "/data-hub",
   "/customers",
   "/leads",
   "/jobs",
