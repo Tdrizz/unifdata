@@ -165,7 +165,7 @@ export async function POST() {
   };
 
   const prompt = `
-You are an AI business analyst for a local service business using FrontierOps.
+You are an AI business analyst for a business using FrontierOps.
 
 Write a concise business summary using the metrics below.
 
