@@ -1,13 +1,112 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { ProductMark } from "@/components/ProductMark";
 
 const sectors = [
-  "Contractors",
-  "Landscaping",
-  "Dental offices",
-  "Insurance agencies",
-  "Auto dealerships",
-  "Professional services",
+  {
+    label: "Contractors",
+    title: "Contractor preview",
+    focus:
+      "3 estimates pending response, $18,200 in active jobs, and 2 customer records missing addresses.",
+    stats: [
+      ["Open estimate value", "$18.2k"],
+      ["Active jobs", "5"],
+      ["Unpaid work", "$6.1k"],
+      ["Data health", "79%"],
+    ],
+    insights: [
+      "Roofing estimates are converting fastest this month.",
+      "Two repeat customers haven't been followed up in 30 days.",
+      "Several job records are missing completed dates.",
+    ],
+  },
+  {
+    label: "Landscaping",
+    title: "Landscaping preview",
+    focus:
+      "4 follow-ups due, $12,400 in open quotes, and 3 customer records need cleanup.",
+    stats: [
+      ["Open quote value", "$12.4k"],
+      ["Active jobs", "7"],
+      ["Unpaid work", "$3.8k"],
+      ["Data health", "84%"],
+    ],
+    insights: [
+      "Yard cleanups are creating the most quote requests.",
+      "Mowing brings the most repeat revenue.",
+      "Three customers are missing phone or email.",
+    ],
+  },
+  {
+    label: "Dental offices",
+    title: "Dental office preview",
+    focus:
+      "6 recall follow-ups overdue, $8,200 in outstanding balances, and 4 patient records incomplete.",
+    stats: [
+      ["Open inquiry value", "$8.2k"],
+      ["Appointments", "18"],
+      ["Outstanding balances", "$4.1k"],
+      ["Data health", "91%"],
+    ],
+    insights: [
+      "Recall follow-ups are the highest priority today.",
+      "New patient inquiries are converting from Google.",
+      "Most patient records have usable contact details.",
+    ],
+  },
+  {
+    label: "Insurance agencies",
+    title: "Insurance agency preview",
+    focus:
+      "9 renewals due this week, $6,700 in open prospects, and several policies missing source tracking.",
+    stats: [
+      ["Open prospect value", "$6.7k"],
+      ["Renewals due", "9"],
+      ["Unpaid commissions", "$1.25k"],
+      ["Data health", "79%"],
+    ],
+    insights: [
+      "Renewal follow-ups should be handled before Friday.",
+      "Referral leads are converting better than paid ads.",
+      "Several policies are missing source tracking.",
+    ],
+  },
+  {
+    label: "Auto dealerships",
+    title: "Auto dealership preview",
+    focus:
+      "5 vehicle inquiries need follow-up, $42,000 in pending deals, and 2 customer files incomplete.",
+    stats: [
+      ["Open deal value", "$42k"],
+      ["Active inquiries", "5"],
+      ["Unpaid sales", "$11.5k"],
+      ["Data health", "88%"],
+    ],
+    insights: [
+      "Trade-in inquiries are converting to deals this week.",
+      "Two high-value prospects haven't been contacted in 5 days.",
+      "Finance records are missing for three recent sales.",
+    ],
+  },
+  {
+    label: "Professional services",
+    title: "Professional services preview",
+    focus:
+      "3 proposals awaiting approval, $15,800 in active projects, and 1 client record missing contact info.",
+    stats: [
+      ["Open proposal value", "$15.8k"],
+      ["Active projects", "3"],
+      ["Unpaid invoices", "$5.2k"],
+      ["Data health", "93%"],
+    ],
+    insights: [
+      "Two proposals have been open for more than two weeks.",
+      "Retainer clients are producing the most stable revenue.",
+      "One client file is missing a primary contact email.",
+    ],
+  },
 ];
 
 const platformPoints = [
@@ -50,6 +149,9 @@ const workflowCards = [
 ];
 
 export default function HomePage() {
+  const [activeSector, setActiveSector] = useState(1); // default: Landscaping
+  const sector = sectors[activeSector];
+
   return (
     <main className="min-h-screen bg-[#090e1a] text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6">
@@ -110,7 +212,7 @@ export default function HomePage() {
                 href="/preview"
                 className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
-                View demo
+                View Product Preview
               </Link>
 
               <Link
@@ -121,14 +223,22 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-10 flex flex-wrap gap-2">
-              {sectors.map((sector) => (
-                <span
-                  key={sector}
-                  className="rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm font-medium text-slate-300"
+            <p className="mt-10 text-xs font-medium uppercase tracking-widest text-slate-500">
+              Select an industry
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {sectors.map((s, i) => (
+                <button
+                  key={s.label}
+                  onClick={() => setActiveSector(i)}
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition-all duration-150 ${
+                    activeSector === i
+                      ? "border-white/40 bg-white text-slate-950"
+                      : "border-white/10 bg-white/6 text-slate-300 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  }`}
                 >
-                  {sector}
-                </span>
+                  {s.label}
+                </button>
               ))}
             </div>
           </div>
@@ -141,7 +251,7 @@ export default function HomePage() {
                     Today’s brief
                   </p>
                   <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-                    Landscaping demo
+                    {sector.title}
                   </h2>
                 </div>
 
@@ -155,18 +265,12 @@ export default function HomePage() {
                   Today’s focus
                 </p>
                 <p className="mt-2 text-lg font-semibold leading-7">
-                  4 follow-ups due, $12,400 in open quotes, and 3 customer
-                  records need cleanup.
+                  {sector.focus}
                 </p>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
-                {[
-                  ["Open quote value", "$12.4k"],
-                  ["Active jobs", "7"],
-                  ["Unpaid work", "$3.8k"],
-                  ["Data health", "84%"],
-                ].map(([label, value]) => (
+                {sector.stats.map(([label, value]) => (
                   <div
                     key={label}
                     className="rounded-2xl border border-slate-200 bg-white p-4"
@@ -182,11 +286,7 @@ export default function HomePage() {
               <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-5">
                 <p className="font-semibold">What FrontierOps sees</p>
                 <div className="mt-4 space-y-3">
-                  {[
-                    "Yard cleanups are creating the most quote requests.",
-                    "Mowing brings the most repeat revenue.",
-                    "Three customers are missing phone or email.",
-                  ].map((item) => (
+                  {sector.insights.map((item) => (
                     <div
                       key={item}
                       className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700"
@@ -247,6 +347,29 @@ export default function HomePage() {
                 </p>
               </div>
             ))}
+          </div>
+          <div className="mt-16 rounded-3xl border border-white/10 bg-white/6 p-10 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight">
+              Ready to turn your messy data into a clean workspace?
+            </h2>
+            <p className="mt-3 text-slate-300">
+              Create a company, choose the business sector, and start building
+              the operating system around what actually matters.
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link
+                href="/signup"
+                className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
+              >
+                Create workspace
+              </Link>
+              <Link
+                href="/preview"
+                className="rounded-2xl border border-white/15 px-6 py-3 font-semibold text-white hover:bg-white/10"
+              >
+                View Product Preview
+              </Link>
+            </div>
           </div>
         </div>
       </section>
