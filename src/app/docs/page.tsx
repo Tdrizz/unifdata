@@ -154,7 +154,7 @@ export default function DocsPage() {
           </div>
         </nav>
 
-        <header className="mt-12 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <header className="mt-12 rounded-4xl border border-slate-200 bg-white p-8 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             FrontierOps Docs
           </p>
@@ -171,7 +171,7 @@ export default function DocsPage() {
         </header>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
-          <aside className="h-fit rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
+          <aside className="h-fit rounded-4xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
             <p className="text-sm font-semibold text-slate-950">Contents</p>
 
             <div className="mt-4 grid gap-2 text-sm">
@@ -199,7 +199,7 @@ export default function DocsPage() {
           <div className="space-y-6">
             <section
               id="overview"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Overview
@@ -231,7 +231,7 @@ export default function DocsPage() {
 
             <section
               id="lifecycle"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Core lifecycle
@@ -267,7 +267,7 @@ export default function DocsPage() {
 
             <section
               id="pages"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Product pages
