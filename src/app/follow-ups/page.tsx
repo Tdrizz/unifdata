@@ -1,59 +1,160 @@
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany } from "@/lib/current-company";
-import {
-  completeFollowUpAction,
-  createFollowUpAction,
-  deleteFollowUpAction,
-  reopenFollowUpAction,
-} from "./actions";
+import { getCurrentCompany, getCurrentCompanyId } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const followUpStatuses = ["Open", "Completed"];
 
-function getCustomerName(customerRelation: unknown) {
-  if (Array.isArray(customerRelation)) {
-    return customerRelation[0]?.name || "No customer";
+async function createFollowUpAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
   }
 
-  if (
-    typeof customerRelation === "object" &&
-    customerRelation !== null &&
-    "name" in customerRelation
-  ) {
-    return String(
-      (customerRelation as { name?: string | null }).name || "No customer",
-    );
+  const customerId = String(formData.get("customerId") || "").trim();
+  const leadId = String(formData.get("leadId") || "").trim();
+  const dueDate = String(formData.get("dueDate") || "").trim();
+  const status = String(formData.get("status") || "Open").trim();
+  const message = String(formData.get("message") || "").trim();
+
+  if (!message) {
+    throw new Error("Follow-up message is required.");
   }
 
-  return "No customer";
+  if (!dueDate) {
+    throw new Error("Due date is required.");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("follow_ups").insert({
+    company_id: companyId,
+    customer_id: customerId || null,
+    lead_id: leadId || null,
+    due_date: dueDate,
+    status: status || "Open",
+    message,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/follow-ups");
+  revalidatePath("/workspace");
+  revalidatePath("/crm");
+  revalidatePath("/data-hub");
 }
 
-function getLeadService(leadRelation: unknown) {
-  if (Array.isArray(leadRelation)) {
-    return leadRelation[0]?.service_requested || "No lead";
+async function completeFollowUpAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
   }
 
-  if (
-    typeof leadRelation === "object" &&
-    leadRelation !== null &&
-    "service_requested" in leadRelation
-  ) {
-    return String(
-      (leadRelation as { service_requested?: string | null })
-        .service_requested || "No lead",
-    );
+  const followUpId = String(formData.get("followUpId") || "");
+
+  if (!followUpId) {
+    throw new Error("Follow-up ID is required.");
   }
 
-  return "No lead";
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("follow_ups")
+    .update({ status: "Completed" })
+    .eq("id", followUpId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/follow-ups");
+  revalidatePath("/workspace");
+  revalidatePath("/crm");
 }
 
-function getStatusBadgeClass(status: string) {
-  if (status === "Completed") {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+async function reopenFollowUpAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
   }
 
-  return "bg-amber-50 text-amber-700 border-amber-200";
+  const followUpId = String(formData.get("followUpId") || "");
+
+  if (!followUpId) {
+    throw new Error("Follow-up ID is required.");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("follow_ups")
+    .update({ status: "Open" })
+    .eq("id", followUpId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/follow-ups");
+  revalidatePath("/workspace");
+  revalidatePath("/crm");
+}
+
+async function deleteFollowUpAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
+  }
+
+  const followUpId = String(formData.get("followUpId") || "");
+
+  if (!followUpId) {
+    throw new Error("Follow-up ID is required.");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("follow_ups")
+    .delete()
+    .eq("id", followUpId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/follow-ups");
+  revalidatePath("/workspace");
+  revalidatePath("/crm");
+  revalidatePath("/data-hub");
+}
+
+function getTodayString() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function formatDate(date: string | null) {
@@ -64,8 +165,78 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleDateString();
 }
 
-function getTodayString() {
-  return new Date().toISOString().slice(0, 10);
+function getCustomerName(customerRelation: unknown) {
+  if (Array.isArray(customerRelation)) {
+    return customerRelation[0]?.name || "No customer linked";
+  }
+
+  if (
+    typeof customerRelation === "object" &&
+    customerRelation !== null &&
+    "name" in customerRelation
+  ) {
+    return String(
+      (customerRelation as { name?: string | null }).name ||
+        "No customer linked",
+    );
+  }
+
+  return "No customer linked";
+}
+
+function getLeadName(leadRelation: unknown) {
+  if (Array.isArray(leadRelation)) {
+    return leadRelation[0]?.service_requested || "No opportunity linked";
+  }
+
+  if (
+    typeof leadRelation === "object" &&
+    leadRelation !== null &&
+    "service_requested" in leadRelation
+  ) {
+    return String(
+      (leadRelation as { service_requested?: string | null })
+        .service_requested || "No opportunity linked",
+    );
+  }
+
+  return "No opportunity linked";
+}
+
+function getFollowUpTone(status: string | null, dueDate: string | null) {
+  const today = getTodayString();
+
+  if (status === "Completed") {
+    return "success" as const;
+  }
+
+  if (dueDate && dueDate < today) {
+    return "danger" as const;
+  }
+
+  if (dueDate && dueDate === today) {
+    return "warning" as const;
+  }
+
+  return "neutral" as const;
+}
+
+function getFollowUpLabel(status: string | null, dueDate: string | null) {
+  const today = getTodayString();
+
+  if (status === "Completed") {
+    return "Completed";
+  }
+
+  if (dueDate && dueDate < today) {
+    return "Overdue";
+  }
+
+  if (dueDate && dueDate === today) {
+    return "Due today";
+  }
+
+  return "Upcoming";
 }
 
 export default async function FollowUpsPage() {
@@ -86,6 +257,9 @@ export default async function FollowUpsPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
+
+  const today = getTodayString();
 
   const { data: customers, error: customersError } = await supabase
     .from("customers")
@@ -118,7 +292,6 @@ export default async function FollowUpsPage() {
       status,
       message,
       created_at,
-      completed_at,
       customers (
         name
       ),
@@ -134,298 +307,478 @@ export default async function FollowUpsPage() {
     throw new Error(followUpsError.message);
   }
 
-  const today = getTodayString();
+  const customerRecords = customers || [];
+  const leadRecords = leads || [];
+  const followUpRecords = followUps || [];
 
-  const totalFollowUps = followUps?.length || 0;
+  const totalFollowUps = followUpRecords.length;
 
-  const openFollowUps =
-    followUps?.filter((followUp) => followUp.status === "Open").length || 0;
+  const openFollowUps = followUpRecords.filter(
+    (followUp) => followUp.status === "Open",
+  );
 
-  const dueOrOverdue =
-    followUps?.filter(
-      (followUp) => followUp.status === "Open" && followUp.due_date <= today,
-    ).length || 0;
+  const completedFollowUps = followUpRecords.filter(
+    (followUp) => followUp.status === "Completed",
+  );
 
-  const completedFollowUps =
-    followUps?.filter((followUp) => followUp.status === "Completed").length ||
-    0;
+  const overdueFollowUps = followUpRecords.filter(
+    (followUp) =>
+      followUp.status === "Open" &&
+      Boolean(followUp.due_date) &&
+      followUp.due_date < today,
+  );
+
+  const dueTodayFollowUps = followUpRecords.filter(
+    (followUp) =>
+      followUp.status === "Open" &&
+      Boolean(followUp.due_date) &&
+      followUp.due_date === today,
+  );
+
+  const upcomingFollowUps = followUpRecords.filter(
+    (followUp) =>
+      followUp.status === "Open" &&
+      Boolean(followUp.due_date) &&
+      followUp.due_date > today,
+  );
+
+  const disconnectedFollowUps = followUpRecords.filter(
+    (followUp) => !followUp.customer_id && !followUp.lead_id,
+  );
+
+  const missingMessage = followUpRecords.filter(
+    (followUp) => !followUp.message,
+  );
+
+  const missingDueDate = followUpRecords.filter(
+    (followUp) => !followUp.due_date,
+  );
+
+  const actionQueue = [
+    ...overdueFollowUps,
+    ...dueTodayFollowUps,
+    ...upcomingFollowUps,
+  ].slice(0, 10);
+
+  const cleanupItems = [
+    {
+      label: "Follow-ups not connected to records",
+      value: disconnectedFollowUps.length,
+      description:
+        "Follow-ups are most useful when connected to a customer or opportunity.",
+    },
+    {
+      label: "Follow-ups missing message",
+      value: missingMessage.length,
+      description:
+        "A clear message makes it easier to know what action needs to happen.",
+    },
+    {
+      label: "Follow-ups missing due date",
+      value: missingDueDate.length,
+      description: "Due dates turn reminders into an actual action queue.",
+    },
+  ];
 
   return (
-    <AppShell companyName={company.name} userEmail={user.email || ""}>
+    <AppShell
+      companyName={company.name}
+      userEmail={user.email || ""}
+      brandColor={company.brand_color || "#0f172a"}
+      accentColor={company.accent_color || "#2563eb"}
+    >
       <div className="space-y-6">
-        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Follow-Up System
-            </p>
+        <PageHeader
+          eyebrow="Workflow"
+          title="Action Queue"
+          description={`Track ${profile.labels.followUpPlural.toLowerCase()}, overdue reminders, upcoming actions, and relationship tasks so important follow-up does not get lost.`}
+        />
 
-            <h1 className="mt-2 text-3xl font-bold">Follow-Ups</h1>
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Open actions"
+            value={openFollowUps.length}
+            helper={`${totalFollowUps} total reminders`}
+          />
 
-            <p className="mt-2 text-slate-600">
-              Track who needs to be contacted next so leads and estimates do not
-              go cold.
-            </p>
-          </div>
-        </header>
+          <StatCard
+            label="Overdue"
+            value={overdueFollowUps.length}
+            helper="Open reminders past due"
+            tone={overdueFollowUps.length > 0 ? "danger" : "default"}
+          />
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Total follow-ups</p>
-            <p className="mt-2 text-3xl font-bold">{totalFollowUps}</p>
-          </div>
+          <StatCard
+            label="Due today"
+            value={dueTodayFollowUps.length}
+            helper="Open reminders due today"
+            tone={dueTodayFollowUps.length > 0 ? "warning" : "default"}
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Open</p>
-            <p className="mt-2 text-3xl font-bold">{openFollowUps}</p>
-          </div>
-
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-            <p className="text-sm text-amber-700">Due / overdue</p>
-            <p className="mt-2 text-3xl font-bold text-amber-950">
-              {dueOrOverdue}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
-            <p className="text-sm text-emerald-700">Completed</p>
-            <p className="mt-2 text-3xl font-bold text-emerald-950">
-              {completedFollowUps}
-            </p>
-          </div>
+          <StatCard
+            label="Completed"
+            value={completedFollowUps.length}
+            helper="Closed reminders"
+            tone={completedFollowUps.length > 0 ? "positive" : "default"}
+          />
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-bold">Add follow-up</h2>
-
-          <form
-            action={createFollowUpAction}
-            className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2"
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.75fr_1.25fr]">
+          <SectionCard
+            title="Add follow-up"
+            description="Create a reminder tied to a customer, opportunity, or general action."
           >
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Customer
-              </label>
-              <select
-                name="customerId"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              >
-                <option value="">No customer selected</option>
-                {customers?.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <form action={createFollowUpAction} className="space-y-4 p-5">
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  {profile.labels.customerSingular}
+                </label>
+                <select
+                  name="customerId"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                >
+                  <option value="">No customer linked</option>
+                  {customerRecords.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Related lead
-              </label>
-              <select
-                name="leadId"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              >
-                <option value="">No lead selected</option>
-                {leads?.map((lead) => (
-                  <option key={lead.id} value={lead.id}>
-                    {lead.service_requested} — {lead.status}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Related {profile.labels.leadSingular.toLowerCase()}
+                </label>
+                <select
+                  name="leadId"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                >
+                  <option value="">No opportunity linked</option>
+                  {leadRecords.map((lead) => (
+                    <option key={lead.id} value={lead.id}>
+                      {lead.service_requested}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Due date
-              </label>
-              <input
-                name="dueDate"
-                type="date"
-                required
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Due date
+                  </label>
+                  <input
+                    name="dueDate"
+                    type="date"
+                    required
+                    defaultValue={today}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Status
-              </label>
-              <select
-                name="status"
-                defaultValue="Open"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              >
-                {followUpStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    defaultValue="Open"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    {followUpStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-slate-700">
-                Message / reminder
-              </label>
-              <textarea
-                name="message"
-                rows={3}
-                required
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="Call Mike about the estimate before Friday."
-              />
-            </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Action
+                </label>
+                <textarea
+                  name="message"
+                  required
+                  rows={4}
+                  placeholder="Call back about estimate, send invoice reminder, check appointment availability, follow up on quote..."
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                />
+              </div>
 
-            <div className="md:col-span-2">
-              <button className="rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white hover:bg-slate-800">
-                Add follow-up
+              <button className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                Save follow-up
               </button>
-            </div>
-          </form>
+            </form>
+          </SectionCard>
+
+          <SectionCard
+            title="Today’s action queue"
+            description="The most important reminders, ordered by urgency."
+          >
+            {actionQueue.length === 0 ? (
+              <EmptyState
+                title="No open actions"
+                description="Nothing is overdue, due today, or upcoming right now."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {actionQueue.map((followUp) => (
+                  <article
+                    key={followUp.id}
+                    className="grid gap-4 p-5 md:grid-cols-[1fr_160px_160px]"
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge
+                          tone={getFollowUpTone(
+                            followUp.status,
+                            followUp.due_date,
+                          )}
+                        >
+                          {getFollowUpLabel(followUp.status, followUp.due_date)}
+                        </StatusBadge>
+
+                        <p className="text-xs font-medium text-slate-500">
+                          Due {formatDate(followUp.due_date)}
+                        </p>
+                      </div>
+
+                      <p className="mt-3 font-semibold text-slate-950">
+                        {followUp.message}
+                      </p>
+
+                      <p className="mt-2 text-sm text-slate-600">
+                        {getCustomerName(followUp.customers)}
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-500">
+                        Related: {getLeadName(followUp.leads)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-slate-500">
+                        Created
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-slate-700">
+                        {formatDate(followUp.created_at)}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 md:justify-end">
+                      {followUp.status === "Completed" ? (
+                        <form action={reopenFollowUpAction}>
+                          <input
+                            type="hidden"
+                            name="followUpId"
+                            value={followUp.id}
+                          />
+                          <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                            Reopen
+                          </button>
+                        </form>
+                      ) : (
+                        <form action={completeFollowUpAction}>
+                          <input
+                            type="hidden"
+                            name="followUpId"
+                            value={followUp.id}
+                          />
+                          <button className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                            Complete
+                          </button>
+                        </form>
+                      )}
+
+                      <form action={deleteFollowUpAction}>
+                        <input
+                          type="hidden"
+                          name="followUpId"
+                          value={followUp.id}
+                        />
+                        <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </SectionCard>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="text-xl font-bold">Follow-up list</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              These follow-ups are coming from Supabase and filtered to your
-              company.
-            </p>
-          </div>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+          <SectionCard
+            title="Queue health"
+            description="A clean view of what is overdue, due today, upcoming, and completed."
+          >
+            <div className="grid grid-cols-2 divide-x divide-y divide-slate-100">
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">Overdue</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {overdueFollowUps.length}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Open reminders past due.
+                </p>
+              </div>
 
-          {!followUps || followUps.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-lg font-semibold">No follow-ups yet.</p>
-              <p className="mt-2 text-slate-500">
-                Add your first follow-up using the form above.
-              </p>
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">Due today</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {dueTodayFollowUps.length}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Needs attention today.
+                </p>
+              </div>
+
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">Upcoming</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {upcomingFollowUps.length}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Scheduled for later.
+                </p>
+              </div>
+
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">Completed</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {completedFollowUps.length}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Closed reminders.
+                </p>
+              </div>
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Cleanup queue"
+            description="Fix these items to keep the action queue useful and connected."
+          >
+            <div className="divide-y divide-slate-100">
+              {cleanupItems.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-start justify-between gap-4 p-5"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-950">{item.label}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
+                    {item.value}
+                  </StatusBadge>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </section>
+
+        <SectionCard
+          title="All follow-ups"
+          description="Every reminder, action item, callback, and relationship task stored in the workspace."
+        >
+          {followUpRecords.length === 0 ? (
+            <EmptyState
+              title="No follow-ups yet"
+              description="Add your first follow-up to create an action queue for the business."
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="p-4 font-medium">Customer</th>
-                    <th className="p-4 font-medium">Lead</th>
-                    <th className="p-4 font-medium">Message</th>
-                    <th className="p-4 font-medium">Due</th>
-                    <th className="p-4 font-medium">Status</th>
-                    <th className="p-4 font-medium">Actions</th>
-                  </tr>
-                </thead>
+            <div className="divide-y divide-slate-100">
+              {followUpRecords.map((followUp) => (
+                <article
+                  key={followUp.id}
+                  className="grid gap-4 p-5 md:grid-cols-[1.1fr_1fr_130px_150px]"
+                >
+                  <div>
+                    <StatusBadge
+                      tone={getFollowUpTone(followUp.status, followUp.due_date)}
+                    >
+                      {getFollowUpLabel(followUp.status, followUp.due_date)}
+                    </StatusBadge>
 
-                <tbody className="divide-y divide-slate-100">
-                  {followUps.map((followUp) => {
-                    const isDue =
-                      followUp.status === "Open" && followUp.due_date <= today;
+                    <p className="mt-3 font-semibold text-slate-950">
+                      {followUp.message}
+                    </p>
 
-                    return (
-                      <tr
-                        key={followUp.id}
-                        className={isDue ? "bg-amber-50/40" : ""}
-                      >
-                        <td className="p-4 align-top">
-                          <p className="font-semibold text-slate-950">
-                            {getCustomerName(followUp.customers)}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Created{" "}
-                            {new Date(followUp.created_at).toLocaleDateString()}
-                          </p>
-                        </td>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {getCustomerName(followUp.customers)}
+                    </p>
 
-                        <td className="max-w-xs p-4 align-top text-slate-600">
-                          {getLeadService(followUp.leads)}
-                        </td>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Related: {getLeadName(followUp.leads)}
+                    </p>
+                  </div>
 
-                        <td className="max-w-sm p-4 align-top text-slate-600">
-                          {followUp.message || "—"}
-                        </td>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">Dates</p>
+                    <p className="mt-1 text-sm text-slate-700">
+                      Due: {formatDate(followUp.due_date)}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Added: {formatDate(followUp.created_at)}
+                    </p>
+                  </div>
 
-                        <td className="p-4 align-top">
-                          <p
-                            className={
-                              isDue
-                                ? "font-bold text-amber-800"
-                                : "text-slate-600"
-                            }
-                          >
-                            {formatDate(followUp.due_date)}
-                          </p>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">Status</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-950">
+                      {followUp.status || "Unknown"}
+                    </p>
+                  </div>
 
-                          {isDue && (
-                            <p className="mt-1 text-xs font-semibold text-amber-700">
-                              Due now
-                            </p>
-                          )}
-                        </td>
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    {followUp.status === "Completed" ? (
+                      <form action={reopenFollowUpAction}>
+                        <input
+                          type="hidden"
+                          name="followUpId"
+                          value={followUp.id}
+                        />
+                        <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                          Reopen
+                        </button>
+                      </form>
+                    ) : (
+                      <form action={completeFollowUpAction}>
+                        <input
+                          type="hidden"
+                          name="followUpId"
+                          value={followUp.id}
+                        />
+                        <button className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                          Complete
+                        </button>
+                      </form>
+                    )}
 
-                        <td className="p-4 align-top">
-                          <span
-                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                              followUp.status,
-                            )}`}
-                          >
-                            {followUp.status}
-                          </span>
-
-                          {followUp.completed_at && (
-                            <p className="mt-1 text-xs text-slate-500">
-                              Completed {formatDate(followUp.completed_at)}
-                            </p>
-                          )}
-                        </td>
-
-                        <td className="p-4 align-top">
-                          <div className="flex flex-wrap gap-2">
-                            {followUp.status === "Open" ? (
-                              <form action={completeFollowUpAction}>
-                                <input
-                                  type="hidden"
-                                  name="followUpId"
-                                  value={followUp.id}
-                                />
-
-                                <button className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
-                                  Complete
-                                </button>
-                              </form>
-                            ) : (
-                              <form action={reopenFollowUpAction}>
-                                <input
-                                  type="hidden"
-                                  name="followUpId"
-                                  value={followUp.id}
-                                />
-
-                                <button className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                                  Reopen
-                                </button>
-                              </form>
-                            )}
-
-                            <form action={deleteFollowUpAction}>
-                              <input
-                                type="hidden"
-                                name="followUpId"
-                                value={followUp.id}
-                              />
-
-                              <button className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
-                                Delete
-                              </button>
-                            </form>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    <form action={deleteFollowUpAction}>
+                      <input
+                        type="hidden"
+                        name="followUpId"
+                        value={followUp.id}
+                      />
+                      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-        </section>
+        </SectionCard>
       </div>
     </AppShell>
   );
