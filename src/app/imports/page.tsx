@@ -21,6 +21,41 @@ const expectedCustomerColumns = [
   "notes",
 ];
 
+const providerCards = [
+  {
+    name: "CSV Upload",
+    status: "Available",
+    description:
+      "Import relationship data from spreadsheets, exports, and manual business lists.",
+    detail: "Best for first-time setup and quick data migration.",
+    tone: "success" as const,
+  },
+  {
+    name: "Google Sheets",
+    status: "Next",
+    description:
+      "Connect a spreadsheet, map columns once, and sync updated rows into FrontierOps.",
+    detail: "Planned as the first read-only automated sync.",
+    tone: "warning" as const,
+  },
+  {
+    name: "QuickBooks",
+    status: "Planned",
+    description:
+      "Pull customers, invoices, payments, and unpaid balances into the revenue layer.",
+    detail: "Read-only first. No accounting writes until much later.",
+    tone: "neutral" as const,
+  },
+  {
+    name: "Stripe / Square",
+    status: "Planned",
+    description:
+      "Bring payment activity into FrontierOps so revenue and collections stay visible.",
+    detail: "Useful for businesses already taking digital payments.",
+    tone: "neutral" as const,
+  },
+];
+
 function parseCsvLine(line: string) {
   const values: string[] = [];
   let current = "";
@@ -98,13 +133,17 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleString();
 }
 
-function getImportTone(status: string | null) {
-  if (status === "completed") {
+function getStatusTone(status: string | null) {
+  if (status === "completed" || status === "active") {
     return "success" as const;
   }
 
   if (status === "failed") {
     return "danger" as const;
+  }
+
+  if (status === "pending") {
+    return "warning" as const;
   }
 
   return "neutral" as const;
@@ -151,7 +190,7 @@ async function importCustomersAction(formData: FormData) {
     .filter((row) => Boolean(row.name));
 
   if (validRows.length === 0) {
-    throw new Error("No valid customer rows found. Each row needs a name.");
+    throw new Error("No valid relationship rows found. Each row needs a name.");
   }
 
   const supabase = await createClient();
@@ -166,8 +205,8 @@ async function importCustomersAction(formData: FormData) {
 
   const { error: importError } = await supabase.from("imports").insert({
     company_id: companyId,
-    file_name: file.name || "customer-import.csv",
-    import_type: "customers",
+    file_name: file.name || "relationship-import.csv",
+    import_type: "relationships",
     status: "completed",
     records_created: validRows.length,
   });
@@ -176,10 +215,32 @@ async function importCustomersAction(formData: FormData) {
     throw new Error(importError.message);
   }
 
+  const { error: syncRunError } = await supabase.from("sync_runs").insert({
+    company_id: companyId,
+    sync_connection_id: null,
+    status: "completed",
+    records_seen: rows.length,
+    records_created: validRows.length,
+    records_updated: 0,
+    records_failed: rows.length - validRows.length,
+    finished_at: new Date().toISOString(),
+    metadata: {
+      source_type: "csv",
+      file_name: file.name || "relationship-import.csv",
+      record_type: "relationships",
+      headers,
+    },
+  });
+
+  if (syncRunError) {
+    throw new Error(syncRunError.message);
+  }
+
   revalidatePath("/imports");
   revalidatePath("/customers");
   revalidatePath("/workspace");
   revalidatePath("/data-hub");
+  revalidatePath("/ai-assistant");
 }
 
 export default async function ImportsPage() {
@@ -222,8 +283,35 @@ export default async function ImportsPage() {
     throw new Error(customersError.message);
   }
 
+  const { data: syncConnections, error: syncConnectionsError } = await supabase
+    .from("sync_connections")
+    .select(
+      "id, name, source_type, source_name, record_type, sync_frequency, status, last_sync_at, created_at",
+    )
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false });
+
+  if (syncConnectionsError) {
+    throw new Error(syncConnectionsError.message);
+  }
+
+  const { data: syncRuns, error: syncRunsError } = await supabase
+    .from("sync_runs")
+    .select(
+      "id, status, records_seen, records_created, records_updated, records_failed, error_message, started_at, finished_at, metadata",
+    )
+    .eq("company_id", company.id)
+    .order("started_at", { ascending: false })
+    .limit(12);
+
+  if (syncRunsError) {
+    throw new Error(syncRunsError.message);
+  }
+
   const importRecords = imports || [];
   const customerRecords = customers || [];
+  const connectionRecords = syncConnections || [];
+  const syncRunRecords = syncRuns || [];
 
   const totalImports = importRecords.length;
 
@@ -236,9 +324,15 @@ export default async function ImportsPage() {
     (item) => item.status === "completed",
   ).length;
 
-  const failedImports = importRecords.filter(
+  const failedRuns = syncRunRecords.filter(
     (item) => item.status === "failed",
   ).length;
+
+  const totalSyncedRecords = syncRunRecords.reduce(
+    (sum, run) =>
+      sum + Number(run.records_created || 0) + Number(run.records_updated || 0),
+    0,
+  );
 
   const missingContact = customerRecords.filter(
     (customer) => !customer.phone && !customer.email,
@@ -259,9 +353,9 @@ export default async function ImportsPage() {
     >
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Data"
-          title="Data Migration"
-          description="Bring messy customer lists into FrontierOps, clean the records, and turn scattered spreadsheet data into a usable business system."
+          eyebrow="Import & Sync"
+          title="Data Sources"
+          description="Bring business data into FrontierOps from spreadsheets, exports, and eventually connected tools. The goal is to reduce manual entry and turn scattered data into a usable operating view."
         />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -273,30 +367,30 @@ export default async function ImportsPage() {
           />
 
           <StatCard
-            label="Records created"
+            label="Records imported"
             value={totalImportedRecords}
-            helper="Total records added through imports"
+            helper="Created through CSV imports"
           />
 
           <StatCard
-            label="Missing contact"
-            value={missingContact}
-            helper="Imported records with no phone or email"
-            tone={missingContact > 0 ? "warning" : "default"}
+            label="Synced records"
+            value={totalSyncedRecords}
+            helper="Created or updated through sync runs"
+            tone={totalSyncedRecords > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Failed imports"
-            value={failedImports}
-            helper="Imports that need review"
-            tone={failedImports > 0 ? "danger" : "default"}
+            label="Sync issues"
+            value={failedRuns}
+            helper="Failed sync attempts"
+            tone={failedRuns > 0 ? "danger" : "default"}
           />
         </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.75fr_1.25fr]">
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr]">
           <SectionCard
-            title={`Import ${profile.labels.customerPlural.toLowerCase()}`}
-            description="Upload a CSV customer list and FrontierOps will create clean customer records."
+            title="Import relationships from CSV"
+            description={`Upload a CSV to create ${profile.labels.customerPlural.toLowerCase()} from an existing spreadsheet or export.`}
           >
             <form action={importCustomersAction} className="space-y-5 p-5">
               <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6">
@@ -314,19 +408,54 @@ export default async function ImportsPage() {
 
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   Best for customer lists exported from spreadsheets, old CRMs,
-                  bookkeeping tools, or local business software.
+                  booking systems, or business management tools.
                 </p>
               </div>
 
               <button className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
-                Import customer records
+                Import relationship records
               </button>
             </form>
           </SectionCard>
 
           <SectionCard
+            title="Sync roadmap"
+            description="FrontierOps will start with safe read-only syncs before any two-way updates."
+          >
+            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+              {providerCards.map((provider) => (
+                <div
+                  key={provider.name}
+                  className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        {provider.name}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {provider.description}
+                      </p>
+                    </div>
+
+                    <StatusBadge tone={provider.tone}>
+                      {provider.status}
+                    </StatusBadge>
+                  </div>
+
+                  <p className="mt-4 rounded-2xl bg-white px-4 py-3 text-xs font-medium leading-5 text-slate-500">
+                    {provider.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </section>
+
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <SectionCard
             title="CSV template"
-            description="Use this format for the cleanest import."
+            description="Current CSV imports support relationship data. Mapping for other record types comes next."
           >
             <div className="p-5">
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
@@ -348,19 +477,19 @@ export default async function ImportsPage() {
                           Mike Johnson
                         </td>
                         <td className="px-4 py-3 text-slate-600">
-                          907-555-1234
+                          808-555-0110
                         </td>
                         <td className="px-4 py-3 text-slate-600">
                           mike@example.com
                         </td>
                         <td className="px-4 py-3 text-slate-600">
-                          123 Main St
+                          Kailua-Kona, HI
                         </td>
                         <td className="px-4 py-3 text-slate-600">
                           Residential
                         </td>
                         <td className="px-4 py-3 text-slate-600">
-                          Asked about spring service
+                          Interested in monthly service
                         </td>
                       </tr>
                     </tbody>
@@ -368,29 +497,15 @@ export default async function ImportsPage() {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5">
-                <p className="text-sm font-semibold text-slate-950">
-                  Required column
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Only{" "}
-                  <span className="font-semibold text-slate-950">name</span> is
-                  required. The other columns are optional but improve data
-                  quality and reporting.
-                </p>
-
-                <pre className="mt-4 overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
-                  name,phone,email,address,customer_type,notes
-                  {"\n"}
-                  Mike Johnson,907-555-1234,mike@example.com,123 Main
-                  St,Residential,Asked about spring service
-                </pre>
-              </div>
+              <pre className="mt-5 overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100">
+                name,phone,email,address,customer_type,notes
+                {"\n"}
+                Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona
+                HI,Residential,Interested in monthly service
+              </pre>
             </div>
           </SectionCard>
-        </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           <SectionCard
             title="Import quality"
             description="After data comes in, FrontierOps shows what still needs cleanup."
@@ -398,13 +513,13 @@ export default async function ImportsPage() {
             <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-3 md:divide-x md:divide-y-0">
               <div className="p-5">
                 <p className="text-sm font-medium text-slate-500">
-                  Customer records
+                  Relationship records
                 </p>
                 <p className="mt-2 text-3xl font-semibold text-slate-950">
                   {customerRecords.length}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Total stored customer records.
+                  Total stored people or company records.
                 </p>
               </div>
 
@@ -428,56 +543,140 @@ export default async function ImportsPage() {
                   {missingAddress}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  No service or mailing address.
+                  No service, mailing, or business address.
                 </p>
               </div>
             </div>
           </SectionCard>
+        </section>
 
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
           <SectionCard
-            title="Recently added records"
-            description="Newest customer records currently stored in the workspace."
+            title="Saved sync connections"
+            description="Future automated syncs will appear here after a source is connected and mapped."
           >
-            {recentCustomers.length === 0 ? (
+            {connectionRecords.length === 0 ? (
               <EmptyState
-                title="No customer records yet"
-                description="Import a CSV or add customers manually to start building the data layer."
+                title="No sync connections yet"
+                description="CSV import is available now. Google Sheets and connected source syncs will use this area next."
               />
             ) : (
               <div className="divide-y divide-slate-100">
-                {recentCustomers.map((customer) => (
-                  <div
-                    key={customer.id}
-                    className="grid gap-3 p-5 md:grid-cols-[1fr_1fr_140px]"
+                {connectionRecords.map((connection) => (
+                  <article
+                    key={connection.id}
+                    className="grid gap-4 p-5 md:grid-cols-[1fr_140px_130px_150px]"
                   >
                     <div>
                       <p className="font-semibold text-slate-950">
-                        {customer.name}
+                        {connection.name}
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        {customer.customer_type || "No type set"}
+                        {connection.source_name || connection.source_type}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-xs font-medium text-slate-500">
-                        Contact
+                        Record type
                       </p>
-                      <p className="mt-1 text-sm text-slate-700">
-                        {customer.email || customer.phone || "No contact info"}
+                      <p className="mt-1 text-sm font-semibold text-slate-700">
+                        {connection.record_type}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-slate-500">
+                        Frequency
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-slate-700">
+                        {connection.sync_frequency}
                       </p>
                     </div>
 
                     <div className="md:text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Added
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-slate-700">
-                        {formatDate(customer.created_at)}
+                      <StatusBadge tone={getStatusTone(connection.status)}>
+                        {connection.status}
+                      </StatusBadge>
+                      <p className="mt-2 text-xs text-slate-500">
+                        Last sync: {formatDate(connection.last_sync_at)}
                       </p>
                     </div>
-                  </div>
+                  </article>
                 ))}
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            title="Recent sync activity"
+            description="Every import and future sync should create a traceable run history."
+          >
+            {syncRunRecords.length === 0 ? (
+              <EmptyState
+                title="No sync activity yet"
+                description="Upload a CSV to create the first sync run history record."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {syncRunRecords.map((run) => {
+                  const metadata = run.metadata as {
+                    source_type?: string;
+                    file_name?: string;
+                    record_type?: string;
+                  };
+
+                  return (
+                    <article
+                      key={run.id}
+                      className="grid gap-4 p-5 md:grid-cols-[1fr_130px_130px_160px]"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {metadata?.file_name ||
+                            metadata?.source_type ||
+                            "Sync run"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {metadata?.record_type || "records"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Created
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {run.records_created}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">
+                          Updated
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {run.records_updated}
+                        </p>
+                      </div>
+
+                      <div className="md:text-right">
+                        <StatusBadge tone={getStatusTone(run.status)}>
+                          {run.status}
+                        </StatusBadge>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {formatDate(run.finished_at || run.started_at)}
+                        </p>
+                      </div>
+
+                      {run.error_message && (
+                        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 md:col-span-4">
+                          {run.error_message}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </SectionCard>
@@ -485,12 +684,12 @@ export default async function ImportsPage() {
 
         <SectionCard
           title="Import history"
-          description="A record of data migrations performed for this workspace."
+          description="A record of CSV migrations performed for this workspace."
         >
           {importRecords.length === 0 ? (
             <EmptyState
               title="No imports yet"
-              description="Upload your first CSV to start migrating business data into FrontierOps."
+              description="Upload your first CSV to start moving business data into FrontierOps."
             />
           ) : (
             <div className="divide-y divide-slate-100">
@@ -520,7 +719,7 @@ export default async function ImportsPage() {
                   <div>
                     <p className="text-xs font-medium text-slate-500">Status</p>
                     <div className="mt-1">
-                      <StatusBadge tone={getImportTone(item.status)}>
+                      <StatusBadge tone={getStatusTone(item.status)}>
                         {item.status}
                       </StatusBadge>
                     </div>
