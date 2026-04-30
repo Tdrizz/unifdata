@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductMark } from "@/components/ProductMark";
 
 const sectors = [
   "Contractors",
@@ -53,16 +54,8 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#090e1a] text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6">
         <nav className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950">
-              FO
-            </div>
-            <div>
-              <p className="font-semibold">FrontierOps</p>
-              <p className="hidden text-xs text-slate-400 sm:block">
-                Business data command center
-              </p>
-            </div>
+          <Link href="/">
+            <ProductMark inverse />
           </Link>
 
           <div className="flex items-center gap-2 text-sm">

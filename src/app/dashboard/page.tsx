@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductMark } from "@/components/ProductMark";
 
 const demoSectors = [
   {
@@ -55,16 +56,8 @@ export default function DemoDashboardPage() {
     <main className="min-h-screen bg-[#eef2f7] text-slate-950">
       <section className="mx-auto max-w-7xl px-6 py-6">
         <nav className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
-              FO
-            </div>
-            <div>
-              <p className="font-semibold">FrontierOps</p>
-              <p className="hidden text-xs text-slate-500 sm:block">
-                Public demo
-              </p>
-            </div>
+          <Link href="/">
+            <ProductMark companyName="Public demo" />
           </Link>
 
           <div className="flex items-center gap-2">
