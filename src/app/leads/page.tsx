@@ -1,21 +1,131 @@
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany } from "@/lib/current-company";
-import { createLeadAction, deleteLeadAction } from "./actions";
+import { getCurrentCompany, getCurrentCompanyId } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { StatCard } from "@/components/ui/StatCard";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 const leadStatuses = [
   "New",
   "Contacted",
   "Estimate Sent",
+  "Needs Follow-Up",
   "Won",
   "Lost",
-  "Needs Follow-Up",
 ];
+
+async function createLeadAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
+  }
+
+  const customerId = String(formData.get("customerId") || "").trim();
+  const serviceRequested = String(
+    formData.get("serviceRequested") || "",
+  ).trim();
+  const status = String(formData.get("status") || "New").trim();
+  const estimatedValue = String(formData.get("estimatedValue") || "").trim();
+  const source = String(formData.get("source") || "").trim();
+  const nextFollowUpDate = String(
+    formData.get("nextFollowUpDate") || "",
+  ).trim();
+  const notes = String(formData.get("notes") || "").trim();
+
+  if (!serviceRequested) {
+    throw new Error("Service requested is required.");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("leads").insert({
+    company_id: companyId,
+    customer_id: customerId || null,
+    service_requested: serviceRequested,
+    status: status || "New",
+    estimated_value: estimatedValue ? Number(estimatedValue) : null,
+    source: source || null,
+    next_follow_up_date: nextFollowUpDate || null,
+    notes: notes || null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/crm");
+  revalidatePath("/workspace");
+  revalidatePath("/data-hub");
+}
+
+async function deleteLeadAction(formData: FormData) {
+  "use server";
+
+  const companyId = await getCurrentCompanyId();
+
+  if (!companyId) {
+    throw new Error("No company found.");
+  }
+
+  const leadId = String(formData.get("leadId") || "");
+
+  if (!leadId) {
+    throw new Error("Lead ID is required.");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("leads")
+    .delete()
+    .eq("id", leadId)
+    .eq("company_id", companyId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/leads");
+  revalidatePath("/crm");
+  revalidatePath("/workspace");
+  revalidatePath("/data-hub");
+}
+
+function getTodayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getStaleDateString(daysAgo: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+
+  return date.toISOString();
+}
+
+function formatCurrency(value: number | string | null) {
+  return `$${Number(value || 0).toLocaleString()}`;
+}
+
+function formatDate(date: string | null) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Date(date).toLocaleDateString();
+}
 
 function getCustomerName(customerRelation: unknown) {
   if (Array.isArray(customerRelation)) {
-    return customerRelation[0]?.name || "No customer";
+    return customerRelation[0]?.name || "No customer linked";
   }
 
   if (
@@ -24,37 +134,32 @@ function getCustomerName(customerRelation: unknown) {
     "name" in customerRelation
   ) {
     return String(
-      (customerRelation as { name?: string | null }).name || "No customer",
+      (customerRelation as { name?: string | null }).name ||
+        "No customer linked",
     );
   }
 
-  return "No customer";
+  return "No customer linked";
 }
 
-function formatCurrency(value: number | string | null) {
-  const numberValue = Number(value || 0);
-
-  return `$${numberValue.toLocaleString()}`;
-}
-
-function getStatusBadgeClass(status: string) {
+function getStatusTone(status: string | null) {
   if (status === "Won") {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    return "success" as const;
   }
 
   if (status === "Lost") {
-    return "bg-red-50 text-red-700 border-red-200";
+    return "danger" as const;
   }
 
-  if (status === "Estimate Sent") {
-    return "bg-blue-50 text-blue-700 border-blue-200";
+  if (status === "Estimate Sent" || status === "Needs Follow-Up") {
+    return "warning" as const;
   }
 
-  if (status === "Needs Follow-Up") {
-    return "bg-amber-50 text-amber-700 border-amber-200";
-  }
+  return "neutral" as const;
+}
 
-  return "bg-slate-50 text-slate-700 border-slate-200";
+function isOpenStatus(status: string | null) {
+  return status !== "Won" && status !== "Lost";
 }
 
 export default async function LeadsPage() {
@@ -75,6 +180,10 @@ export default async function LeadsPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
+
+  const today = getTodayString();
+  const staleCutoff = getStaleDateString(14);
 
   const { data: customers, error: customersError } = await supabase
     .from("customers")
@@ -92,10 +201,10 @@ export default async function LeadsPage() {
       `
       id,
       customer_id,
-      source,
-      service_requested,
       status,
       estimated_value,
+      source,
+      service_requested,
       next_follow_up_date,
       notes,
       created_at,
@@ -111,272 +220,479 @@ export default async function LeadsPage() {
     throw new Error(leadsError.message);
   }
 
-  const totalLeads = leads?.length || 0;
+  const leadRecords = leads || [];
+  const customerRecords = customers || [];
 
-  const openEstimateValue =
-    leads
-      ?.filter((lead) => lead.status === "Estimate Sent")
-      .reduce(
-        (sum, lead) => sum + Number(lead.estimated_value || 0),
-        0,
-      ) || 0;
+  const totalLeads = leadRecords.length;
 
-  const followUpsDue =
-    leads?.filter((lead) => {
-      if (!lead.next_follow_up_date) {
-        return false;
-      }
+  const openLeads = leadRecords.filter((lead) =>
+    isOpenStatus(lead.status),
+  ).length;
 
-      const today = new Date().toISOString().slice(0, 10);
+  const wonLeads = leadRecords.filter((lead) => lead.status === "Won").length;
 
-      return (
-        lead.status !== "Won" &&
-        lead.status !== "Lost" &&
-        lead.next_follow_up_date <= today
-      );
-    }).length || 0;
+  const lostLeads = leadRecords.filter((lead) => lead.status === "Lost").length;
+
+  const openPipelineValue = leadRecords
+    .filter((lead) => isOpenStatus(lead.status))
+    .reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0);
+
+  const estimateSentValue = leadRecords
+    .filter((lead) => lead.status === "Estimate Sent")
+    .reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0);
+
+  const dueFollowUps = leadRecords.filter(
+    (lead) =>
+      isOpenStatus(lead.status) &&
+      Boolean(lead.next_follow_up_date) &&
+      lead.next_follow_up_date <= today,
+  ).length;
+
+  const staleOpenLeads = leadRecords.filter(
+    (lead) => isOpenStatus(lead.status) && lead.created_at < staleCutoff,
+  ).length;
+
+  const missingCustomer = leadRecords.filter(
+    (lead) => !lead.customer_id,
+  ).length;
+
+  const missingSource = leadRecords.filter((lead) => !lead.source).length;
+
+  const missingValue = leadRecords.filter(
+    (lead) => !lead.estimated_value || Number(lead.estimated_value) === 0,
+  ).length;
+
+  const conversionRate =
+    totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
+
+  const statusColumns = leadStatuses.map((status) => ({
+    status,
+    count: leadRecords.filter((lead) => lead.status === status).length,
+    value: leadRecords
+      .filter((lead) => lead.status === status)
+      .reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0),
+  }));
+
+  const highestValueLeads = leadRecords
+    .filter((lead) => isOpenStatus(lead.status))
+    .sort(
+      (a, b) => Number(b.estimated_value || 0) - Number(a.estimated_value || 0),
+    )
+    .slice(0, 5);
+
+  const cleanupItems = [
+    {
+      label: `${profile.labels.leadPlural} without a linked ${profile.labels.customerSingular.toLowerCase()}`,
+      value: missingCustomer,
+      description:
+        "Connecting records to customers keeps the relationship history clean.",
+    },
+    {
+      label: `${profile.labels.leadPlural} missing source`,
+      value: missingSource,
+      description:
+        "Source tracking helps show which marketing or referral channels work.",
+    },
+    {
+      label: `${profile.labels.leadPlural} missing estimated value`,
+      value: missingValue,
+      description:
+        "Estimated value helps prioritize follow-up and pipeline quality.",
+    },
+    {
+      label: "Follow-up dates due",
+      value: dueFollowUps,
+      description:
+        "These open records have a follow-up date due today or earlier.",
+    },
+    {
+      label: "Stale open records",
+      value: staleOpenLeads,
+      description:
+        "These open records are older than 14 days and may need attention.",
+    },
+  ];
 
   return (
-    <AppShell companyName={company.name} userEmail={user.email || ""}>
+    <AppShell
+      companyName={company.name}
+      userEmail={user.email || ""}
+      brandColor={company.brand_color || "#0f172a"}
+      accentColor={company.accent_color || "#2563eb"}
+    >
       <div className="space-y-6">
-        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Pipeline
-            </p>
+        <PageHeader
+          eyebrow="Records"
+          title={profile.labels.leadPlural}
+          description={`Track ${profile.labels.leadPlural.toLowerCase()}, estimated value, source, status, notes, and follow-up dates so relationship activity does not fall through the cracks.`}
+        />
 
-            <h1 className="mt-2 text-3xl font-bold">Leads</h1>
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label={`Open ${profile.labels.leadPlural.toLowerCase()}`}
+            value={openLeads}
+            helper={`${totalLeads} total records`}
+          />
 
-            <p className="mt-2 text-slate-600">
-              Track potential jobs, estimates, sources, and follow-ups for{" "}
-              {company.name}.
-            </p>
-          </div>
-        </header>
+          <StatCard
+            label="Open pipeline value"
+            value={formatCurrency(openPipelineValue)}
+            helper="Estimated value on open records"
+          />
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Total leads</p>
-            <p className="mt-2 text-3xl font-bold">{totalLeads}</p>
-          </div>
+          <StatCard
+            label="Follow-ups due"
+            value={dueFollowUps}
+            helper="Open records with due follow-up dates"
+            tone={dueFollowUps > 0 ? "warning" : "default"}
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Open estimate value</p>
-            <p className="mt-2 text-3xl font-bold">
-              {formatCurrency(openEstimateValue)}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Follow-ups due</p>
-            <p className="mt-2 text-3xl font-bold">{followUpsDue}</p>
-          </div>
+          <StatCard
+            label="Conversion"
+            value={`${conversionRate}%`}
+            helper={`${wonLeads} won / ${lostLeads} lost`}
+            tone={conversionRate > 0 ? "positive" : "default"}
+          />
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-xl font-bold">Add lead</h2>
-
-          <form
-            action={createLeadAction}
-            className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2"
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.75fr_1.25fr]">
+          <SectionCard
+            title={`Add ${profile.labels.leadSingular.toLowerCase()}`}
+            description="Create a pipeline record that can connect to a customer, job, revenue, and follow-up history."
           >
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Customer
-              </label>
-              <select
-                name="customerId"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              >
-                <option value="">No customer selected</option>
-                {customers?.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <form action={createLeadAction} className="space-y-4 p-5">
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  {profile.labels.customerSingular}
+                </label>
+                <select
+                  name="customerId"
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                >
+                  <option value="">No customer linked</option>
+                  {customerRecords.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Lead source
-              </label>
-              <input
-                name="source"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="Referral, Google, Facebook, website..."
-              />
-            </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Request / service
+                </label>
+                <input
+                  name="serviceRequested"
+                  required
+                  placeholder="Driveway repair, new patient consult, policy renewal..."
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                />
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Service requested
-              </label>
-              <input
-                name="serviceRequested"
-                required
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="Driveway gravel repair"
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    defaultValue="New"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    {leadStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Status
-              </label>
-              <select
-                name="status"
-                defaultValue="New"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              >
-                {leadStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Estimated value
+                  </label>
+                  <input
+                    name="estimatedValue"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="3500"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Estimated value
-              </label>
-              <input
-                name="estimatedValue"
-                type="number"
-                min="0"
-                step="0.01"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="3500"
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Source
+                  </label>
+                  <input
+                    name="source"
+                    placeholder="Google, referral, Facebook, walk-in..."
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </div>
 
-            <div>
-              <label className="text-sm font-medium text-slate-700">
-                Next follow-up date
-              </label>
-              <input
-                name="nextFollowUpDate"
-                type="date"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">
+                    Next follow-up
+                  </label>
+                  <input
+                    name="nextFollowUpDate"
+                    type="date"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </div>
+              </div>
 
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-slate-700">
-                Notes
-              </label>
-              <textarea
-                name="notes"
-                rows={3}
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                placeholder="What did they ask for? What needs to happen next?"
-              />
-            </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Notes
+                </label>
+                <textarea
+                  name="notes"
+                  rows={4}
+                  placeholder="Context, estimate details, customer request, objections, urgency, or next step..."
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                />
+              </div>
 
-            <div className="md:col-span-2">
-              <button className="rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white hover:bg-slate-800">
-                Add lead
+              <button className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                Save {profile.labels.leadSingular.toLowerCase()}
               </button>
+            </form>
+          </SectionCard>
+
+          <SectionCard
+            title="Pipeline health"
+            description="A quick look at where records are sitting and what needs attention."
+          >
+            <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-3 md:divide-x md:divide-y-0">
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">
+                  Estimate sent value
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {formatCurrency(estimateSentValue)}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Value sitting in records marked Estimate Sent.
+                </p>
+              </div>
+
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">
+                  Stale open records
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {staleOpenLeads}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Open records older than 14 days.
+                </p>
+              </div>
+
+              <div className="p-5">
+                <p className="text-sm font-medium text-slate-500">
+                  Data cleanup
+                </p>
+                <p className="mt-2 text-3xl font-semibold text-slate-950">
+                  {missingCustomer + missingSource + missingValue}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Missing customer, source, or estimated value.
+                </p>
+              </div>
             </div>
-          </form>
+
+            <div className="border-t border-slate-100 p-5">
+              <p className="text-sm font-semibold text-slate-950">
+                Status breakdown
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                {statusColumns.map((column) => (
+                  <div
+                    key={column.status}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-950">
+                        {column.status}
+                      </p>
+                      <StatusBadge tone={getStatusTone(column.status)}>
+                        {column.count}
+                      </StatusBadge>
+                    </div>
+                    <p className="mt-2 text-xs font-medium text-slate-500">
+                      {formatCurrency(column.value)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SectionCard>
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="text-xl font-bold">Lead list</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              These leads are coming from Supabase and filtered to your
-              company.
-            </p>
-          </div>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+          <SectionCard
+            title="Cleanup queue"
+            description="Fix these items to make reports, AI summaries, and pipeline prioritization more useful."
+          >
+            <div className="divide-y divide-slate-100">
+              {cleanupItems.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-start justify-between gap-4 p-5"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-950">{item.label}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
 
-          {!leads || leads.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-lg font-semibold">No leads yet.</p>
-              <p className="mt-2 text-slate-500">
-                Add your first lead using the form above.
-              </p>
+                  <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
+                    {item.value}
+                  </StatusBadge>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-500">
-                  <tr>
-                    <th className="p-4 font-medium">Customer</th>
-                    <th className="p-4 font-medium">Service</th>
-                    <th className="p-4 font-medium">Source</th>
-                    <th className="p-4 font-medium">Status</th>
-                    <th className="p-4 font-medium">Value</th>
-                    <th className="p-4 font-medium">Follow-up</th>
-                    <th className="p-4 font-medium">Action</th>
-                  </tr>
-                </thead>
+          </SectionCard>
 
-                <tbody className="divide-y divide-slate-100">
-                  {leads.map((lead) => (
-                    <tr key={lead.id}>
-                      <td className="p-4 align-top">
-                        <p className="font-semibold text-slate-950">
-                          {getCustomerName(lead.customers)}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          Added{" "}
-                          {new Date(lead.created_at).toLocaleDateString()}
-                        </p>
-                      </td>
+          <SectionCard
+            title="Highest value open records"
+            description={`Open ${profile.labels.leadPlural.toLowerCase()} sorted by estimated value.`}
+          >
+            {highestValueLeads.length === 0 ? (
+              <EmptyState
+                title="No open value yet"
+                description={`Add estimated values to open ${profile.labels.leadPlural.toLowerCase()} to prioritize follow-up.`}
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {highestValueLeads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className="grid gap-4 p-5 md:grid-cols-[1fr_140px_140px]"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        {lead.service_requested || "Untitled record"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {getCustomerName(lead.customers)}
+                      </p>
+                    </div>
 
-                      <td className="max-w-xs p-4 align-top text-slate-600">
-                        <p>{lead.service_requested || "—"}</p>
-                        {lead.notes && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {lead.notes}
-                          </p>
-                        )}
-                      </td>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500">
+                        Status
+                      </p>
+                      <div className="mt-1">
+                        <StatusBadge tone={getStatusTone(lead.status)}>
+                          {lead.status || "Unknown"}
+                        </StatusBadge>
+                      </div>
+                    </div>
 
-                      <td className="p-4 align-top text-slate-600">
-                        {lead.source || "—"}
-                      </td>
-
-                      <td className="p-4 align-top">
-                        <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                            lead.status,
-                          )}`}
-                        >
-                          {lead.status}
-                        </span>
-                      </td>
-
-                      <td className="p-4 align-top font-semibold text-slate-950">
+                    <div className="md:text-right">
+                      <p className="text-xs font-medium text-slate-500">
+                        Value
+                      </p>
+                      <p className="mt-1 font-semibold text-slate-950">
                         {formatCurrency(lead.estimated_value)}
-                      </td>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </section>
 
-                      <td className="p-4 align-top text-slate-600">
-                        {lead.next_follow_up_date || "—"}
-                      </td>
+        <SectionCard
+          title={`${profile.labels.leadPlural} records`}
+          description="Clean pipeline records with status, source, value, follow-up dates, and relationship context."
+        >
+          {leadRecords.length === 0 ? (
+            <EmptyState
+              title={`No ${profile.labels.leadPlural.toLowerCase()} yet`}
+              description={`Add your first ${profile.labels.leadSingular.toLowerCase()} to begin tracking pipeline movement and follow-up.`}
+            />
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {leadRecords.map((lead) => (
+                <article
+                  key={lead.id}
+                  className="grid gap-4 p-5 md:grid-cols-[1.2fr_1fr_1fr_130px_90px]"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-950">
+                      {lead.service_requested || "Untitled record"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {getCustomerName(lead.customers)}
+                    </p>
+                  </div>
 
-                      <td className="p-4 align-top">
-                        <form action={deleteLeadAction}>
-                          <input
-                            type="hidden"
-                            name="leadId"
-                            value={lead.id}
-                          />
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">
+                      Source / value
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-slate-700">
+                      {lead.source || "No source"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {formatCurrency(lead.estimated_value)}
+                    </p>
+                  </div>
 
-                          <button className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50">
-                            Delete
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">
+                      Follow-up
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-slate-700">
+                      {formatDate(lead.next_follow_up_date)}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Added {formatDate(lead.created_at)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">Status</p>
+                    <div className="mt-2">
+                      <StatusBadge tone={getStatusTone(lead.status)}>
+                        {lead.status || "Unknown"}
+                      </StatusBadge>
+                    </div>
+                  </div>
+
+                  <form action={deleteLeadAction} className="md:text-right">
+                    <input type="hidden" name="leadId" value={lead.id} />
+                    <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                      Delete
+                    </button>
+                  </form>
+
+                  {lead.notes && (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-5">
+                      <p className="text-xs font-medium text-slate-500">
+                        Notes
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-slate-700">
+                        {lead.notes}
+                      </p>
+                    </div>
+                  )}
+                </article>
+              ))}
             </div>
           )}
-        </section>
+        </SectionCard>
       </div>
     </AppShell>
   );
