@@ -9,6 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Link from "next/link";
 
 const paymentStatuses = ["Paid", "Partial", "Unpaid"];
 
@@ -888,12 +889,21 @@ export default async function SalesPage() {
                     </div>
                   </div>
 
-                  <form action={deleteSaleAction} className="md:text-right">
-                    <input type="hidden" name="saleId" value={sale.id} />
-                    <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
-                      Delete
-                    </button>
-                  </form>
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <Link
+                      href={`/sales/${sale.id}/edit`}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit
+                    </Link>
+
+                    <form action={deleteSaleAction}>
+                      <input type="hidden" name="saleId" value={sale.id} />
+                      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </article>
               ))}
             </div>
