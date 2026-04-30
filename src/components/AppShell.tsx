@@ -30,10 +30,10 @@ export function AppShell({
   return (
     <div
       style={themeStyle}
-      className="min-h-screen bg-[#f5f7fb] text-slate-950"
+      className="min-h-screen bg-[#eef2f7] text-slate-950"
     >
       <div className="flex min-h-screen">
-        <aside className="hidden w-[292px] shrink-0 flex-col bg-slate-950 p-4 text-white md:flex">
+        <aside className="hidden w-[304px] shrink-0 flex-col border-r border-slate-900 bg-[#090e1a] p-4 text-white md:flex">
           <Link
             href="/workspace"
             className="rounded-3xl border border-white/10 bg-white/6 p-4 shadow-sm hover:bg-white/10"
@@ -41,16 +41,16 @@ export function AppShell({
             <ProductMark companyName={companyName} inverse />
           </Link>
 
-          <div className="mt-7 flex-1">
+          <div className="mt-6 flex-1 overflow-y-auto pr-1">
             <AppNav />
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/6 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
-              Account
+          <div className="mt-6 rounded-3xl border border-white/10 bg-white/6 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Signed in
             </p>
 
-            <p className="mt-2 truncate text-sm font-semibold text-slate-300">
+            <p className="mt-2 truncate text-sm font-medium text-slate-300">
               {userEmail}
             </p>
 
@@ -75,8 +75,10 @@ export function AppShell({
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-            <div className="mx-auto w-full max-w-7xl">{children}</div>
+          <main className="flex-1">
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-6 md:px-8 md:py-8">
+              {children}
+            </div>
           </main>
         </div>
       </div>

@@ -20,6 +20,9 @@ export async function getCurrentCompany() {
         id,
         name,
         industry,
+        business_sector,
+        brand_color,
+        accent_color,
         plan,
         status,
         created_at
