@@ -57,34 +57,34 @@ export default function DemoDashboardPage() {
       <section className="mx-auto max-w-7xl px-6 py-6">
         <nav className="flex items-center justify-between">
           <Link href="/">
-            <ProductMark companyName="Public demo" />
+            <ProductMark companyName="Public Preview" />
           </Link>
 
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2">
             <Link
               href="/"
-              className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Home
             </Link>
 
             <Link
               href="/docs"
-              className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Docs
             </Link>
 
             <Link
               href="/login"
-              className="rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Log in
             </Link>
 
             <Link
               href="/signup"
-              className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
+              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
             >
               Start
             </Link>

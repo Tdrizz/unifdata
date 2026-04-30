@@ -57,7 +57,7 @@ http://localhost:3000
 
 ```text
 /              Public landing page
-/dashboard     Public demo dashboard
+/preview       Public Product preview
 /signup        Signup page
 /login         Login page
 /onboarding    Company setup

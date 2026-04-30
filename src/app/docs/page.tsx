@@ -140,16 +140,31 @@ export default function DocsPage() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/dashboard"
+              href="/"
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Demo
+              Home
             </Link>
+
+            <Link
+              href="/preview"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Preview
+            </Link>
+
             <Link
               href="/login"
-              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Log in
+            </Link>
+
+            <Link
+              href="/signup"
+              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Start
             </Link>
           </div>
         </nav>
@@ -297,7 +312,7 @@ export default function DocsPage() {
 
             <section
               id="industries"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Industry-aware language
@@ -327,7 +342,7 @@ export default function DocsPage() {
 
             <section
               id="sync"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Connected workflow
@@ -355,7 +370,7 @@ export default function DocsPage() {
 
             <section
               id="imports"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">Imports</h2>
 
@@ -374,7 +389,7 @@ export default function DocsPage() {
 
             <section
               id="ai"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 AI Advisor
@@ -390,7 +405,7 @@ export default function DocsPage() {
 
             <section
               id="demo"
-              className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
             >
               <h2 className="text-2xl font-semibold tracking-tight">
                 Demo checklist

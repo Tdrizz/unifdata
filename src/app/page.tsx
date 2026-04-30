@@ -60,10 +60,10 @@ export default function HomePage() {
 
           <div className="flex items-center gap-2 text-sm">
             <Link
-              href="/dashboard"
+              href="/preview"
               className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
             >
-              Demo
+              Preview
             </Link>
 
             <Link
@@ -107,7 +107,7 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/dashboard"
+                href="/preview"
                 className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
                 View demo
