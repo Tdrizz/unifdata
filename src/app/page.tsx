@@ -201,8 +201,7 @@ export default function HomePage() {
               Why it matters
             </p>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">
-              Most local businesses do not have bad businesses. They have messy
-              data.
+              Most businesses do not have bad businesses. They have messy data.
             </h2>
             <p className="mt-4 text-base leading-8 text-slate-300">
               Customer info sits in spreadsheets. Follow-ups sit in memory.
