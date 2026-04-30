@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
@@ -569,6 +570,13 @@ export default async function FollowUpsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 md:justify-end">
+                      <Link
+                        href={`/follow-ups/${followUp.id}/edit`}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </Link>
+
                       {followUp.status === "Completed" ? (
                         <form action={reopenFollowUpAction}>
                           <input
@@ -739,6 +747,13 @@ export default async function FollowUpsPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 md:justify-end">
+                    <Link
+                      href={`/follow-ups/${followUp.id}/edit`}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit
+                    </Link>
+
                     {followUp.status === "Completed" ? (
                       <form action={reopenFollowUpAction}>
                         <input

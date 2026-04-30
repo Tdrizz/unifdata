@@ -1,8 +1,3 @@
-import {
-  isAcceptedOpportunityStatus,
-  opportunityStatusOptions,
-  syncAcceptedOpportunity,
-} from "@/lib/lifecycle";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -13,7 +8,9 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 
-async function updateLeadAction(formData: FormData) {
+const followUpStatuses = ["Open", "Completed"];
+
+async function updateFollowUpAction(formData: FormData) {
   "use server";
 
   const companyId = await getCurrentCompanyId();
@@ -22,73 +19,53 @@ async function updateLeadAction(formData: FormData) {
     throw new Error("No company found.");
   }
 
-  const leadId = String(formData.get("leadId") || "").trim();
+  const followUpId = String(formData.get("followUpId") || "").trim();
   const customerId = String(formData.get("customerId") || "").trim();
-  const serviceRequested = String(
-    formData.get("serviceRequested") || "",
-  ).trim();
-  const status = String(formData.get("status") || "New").trim();
-  const estimatedValue = String(formData.get("estimatedValue") || "").trim();
-  const source = String(formData.get("source") || "").trim();
-  const nextFollowUpDate = String(
-    formData.get("nextFollowUpDate") || "",
-  ).trim();
-  const notes = String(formData.get("notes") || "").trim();
+  const leadId = String(formData.get("leadId") || "").trim();
+  const dueDate = String(formData.get("dueDate") || "").trim();
+  const status = String(formData.get("status") || "Open").trim();
+  const message = String(formData.get("message") || "").trim();
 
-  if (!leadId) {
-    throw new Error("Lead ID is required.");
+  if (!followUpId) {
+    throw new Error("Follow-up ID is required.");
   }
 
-  if (!serviceRequested) {
-    throw new Error("Request / service is required.");
+  if (!message) {
+    throw new Error("Follow-up message is required.");
   }
 
-  const estimatedAmount = estimatedValue ? Number(estimatedValue) : null;
+  if (!dueDate) {
+    throw new Error("Due date is required.");
+  }
 
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("leads")
+    .from("follow_ups")
     .update({
       customer_id: customerId || null,
-      service_requested: serviceRequested,
-      status: status || "New",
-      estimated_value: estimatedAmount,
-      source: source || null,
-      next_follow_up_date: nextFollowUpDate || null,
-      notes: notes || null,
+      lead_id: leadId || null,
+      due_date: dueDate,
+      status: status || "Open",
+      message,
     })
-    .eq("id", leadId)
+    .eq("id", followUpId)
     .eq("company_id", companyId);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  if (isAcceptedOpportunityStatus(status)) {
-    await syncAcceptedOpportunity({
-      supabase,
-      companyId,
-      opportunityId: leadId,
-      relationshipId: customerId || null,
-      opportunityName: serviceRequested,
-      amount: estimatedAmount,
-      source: source || null,
-    });
-  }
-
-  revalidatePath("/leads");
-  revalidatePath("/crm");
+  revalidatePath("/follow-ups");
   revalidatePath("/workspace");
-  revalidatePath("/jobs");
-  revalidatePath("/sales");
+  revalidatePath("/crm");
   revalidatePath("/data-hub");
   revalidatePath("/ai-assistant");
 
-  redirect("/leads");
+  redirect("/follow-ups");
 }
 
-export default async function EditLeadPage({
+export default async function EditFollowUpPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -114,17 +91,15 @@ export default async function EditLeadPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const { data: lead, error: leadError } = await supabase
-    .from("leads")
-    .select(
-      "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes",
-    )
+  const { data: followUp, error: followUpError } = await supabase
+    .from("follow_ups")
+    .select("id, customer_id, lead_id, due_date, status, message")
     .eq("id", id)
     .eq("company_id", company.id)
     .single();
 
-  if (leadError || !lead) {
-    redirect("/leads");
+  if (followUpError || !followUp) {
+    redirect("/follow-ups");
   }
 
   const { data: customers, error: customersError } = await supabase
@@ -137,6 +112,16 @@ export default async function EditLeadPage({
     throw new Error(customersError.message);
   }
 
+  const { data: leads, error: leadsError } = await supabase
+    .from("leads")
+    .select("id, service_requested, estimated_value, status")
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false });
+
+  if (leadsError) {
+    throw new Error(leadsError.message);
+  }
+
   return (
     <AppShell
       companyName={company.name}
@@ -146,25 +131,25 @@ export default async function EditLeadPage({
     >
       <div className="space-y-6">
         <PageHeader
-          eyebrow="Edit record"
-          title={`Edit ${profile.labels.leadSingular.toLowerCase()}`}
-          description="Update status, source, estimated value, follow-up date, and notes so the pipeline stays accurate."
+          eyebrow="Edit action"
+          title="Edit follow-up"
+          description="Update the action, due date, status, and linked records so the action queue stays accurate."
           actions={
             <Link
-              href="/leads"
+              href="/follow-ups"
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Back to {profile.labels.leadPlural.toLowerCase()}
+              Back to action queue
             </Link>
           }
         />
 
         <SectionCard
-          title="Pipeline details"
-          description="Changes saved here update CRM, Today, Data Hub, and AI summaries."
+          title="Follow-up details"
+          description="Changes saved here update Today, Relationships, Data Hub, and AI summaries."
         >
-          <form action={updateLeadAction} className="space-y-4 p-5">
-            <input type="hidden" name="leadId" value={lead.id} />
+          <form action={updateFollowUpAction} className="space-y-4 p-5">
+            <input type="hidden" name="followUpId" value={followUp.id} />
 
             <div>
               <label className="text-sm font-medium text-slate-700">
@@ -172,7 +157,7 @@ export default async function EditLeadPage({
               </label>
               <select
                 name="customerId"
-                defaultValue={lead.customer_id || ""}
+                defaultValue={followUp.customer_id || ""}
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
               >
                 <option value="">No customer linked</option>
@@ -186,83 +171,64 @@ export default async function EditLeadPage({
 
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Request / service
+                Related {profile.labels.leadSingular.toLowerCase()}
               </label>
-              <input
-                name="serviceRequested"
-                required
-                defaultValue={lead.service_requested || ""}
+              <select
+                name="leadId"
+                defaultValue={followUp.lead_id || ""}
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
+              >
+                <option value="">No opportunity linked</option>
+                {(leads || []).map((lead) => (
+                  <option key={lead.id} value={lead.id}>
+                    {lead.service_requested} — $
+                    {Number(lead.estimated_value || 0).toLocaleString()}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium text-slate-700">
+                  Due date
+                </label>
+                <input
+                  name="dueDate"
+                  type="date"
+                  required
+                  defaultValue={followUp.due_date || ""}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                />
+              </div>
+
               <div>
                 <label className="text-sm font-medium text-slate-700">
                   Status
                 </label>
                 <select
                   name="status"
-                  defaultValue={lead.status || "New"}
+                  defaultValue={followUp.status || "Open"}
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                 >
-                  {opportunityStatusOptions.map((status) => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
+                  {followUpStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Estimated value
-                </label>
-                <input
-                  name="estimatedValue"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue={lead.estimated_value || ""}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Source
-                </label>
-                <input
-                  name="source"
-                  defaultValue={lead.source || ""}
-                  placeholder="Google, referral, Facebook, walk-in..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Next follow-up
-                </label>
-                <input
-                  name="nextFollowUpDate"
-                  type="date"
-                  defaultValue={lead.next_follow_up_date || ""}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
               </div>
             </div>
 
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Notes
+                Action
               </label>
               <textarea
-                name="notes"
+                name="message"
                 rows={5}
-                defaultValue={lead.notes || ""}
+                required
+                defaultValue={followUp.message || ""}
                 className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
               />
             </div>
@@ -273,7 +239,7 @@ export default async function EditLeadPage({
               </button>
 
               <Link
-                href="/leads"
+                href="/follow-ups"
                 className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel

@@ -1,8 +1,10 @@
 export type BusinessSector =
   | "general"
-  | "construction"
   | "field_service"
+  | "construction"
   | "dental_medical"
+  | "insurance"
+  | "automotive"
   | "professional_services"
   | "retail";
 
@@ -35,41 +37,72 @@ export type IndustryProfile = {
 export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
   general: {
     id: "general",
-    label: "General Local Business",
-    headline: "Daily operating brief",
+    label: "General Business",
+    headline: "Business operating view",
     dailyFocus:
-      "Track customers, opportunities, active work, revenue, and follow-ups from one place.",
+      "Track relationships, opportunities, work, revenue, actions, and data quality from one workspace.",
     labels: {
-      customerSingular: "Customer",
-      customerPlural: "Customers",
-      leadSingular: "Lead",
-      leadPlural: "Leads",
-      jobSingular: "Job",
-      jobPlural: "Jobs",
-      saleSingular: "Sale",
-      salePlural: "Sales",
-      followUpPlural: "Follow-ups",
+      customerSingular: "Relationship",
+      customerPlural: "Relationships",
+      leadSingular: "Opportunity",
+      leadPlural: "Opportunities",
+      jobSingular: "Work item",
+      jobPlural: "Work items",
+      saleSingular: "Revenue record",
+      salePlural: "Revenue records",
+      followUpPlural: "Actions",
     },
     priorityNames: {
-      pipeline: "Open pipeline",
+      pipeline: "Open opportunity value",
       activeWork: "Active work",
       revenue: "Revenue",
-      followUps: "Follow-ups due",
-      dataHealth: "Data health",
+      followUps: "Actions due",
+      dataHealth: "Data quality",
     },
     insightPrompts: [
-      "Which customers or leads need attention today?",
-      "What revenue is unpaid or at risk?",
-      "Which records are missing useful business data?",
+      "Which relationships or opportunities need attention today?",
+      "What revenue is open, unpaid, or at risk?",
+      "Which records need cleanup before reporting can be trusted?",
+    ],
+  },
+
+  field_service: {
+    id: "field_service",
+    label: "Field Service / Local Services",
+    headline: "Service operations view",
+    dailyFocus:
+      "Track clients, quotes, service work, payments, follow-ups, and service data quality.",
+    labels: {
+      customerSingular: "Client",
+      customerPlural: "Clients",
+      leadSingular: "Quote",
+      leadPlural: "Quotes",
+      jobSingular: "Service visit",
+      jobPlural: "Service visits",
+      saleSingular: "Payment",
+      salePlural: "Payments",
+      followUpPlural: "Client actions",
+    },
+    priorityNames: {
+      pipeline: "Open quote value",
+      activeWork: "Scheduled service",
+      revenue: "Service revenue",
+      followUps: "Client actions due",
+      dataHealth: "Service data quality",
+    },
+    insightPrompts: [
+      "Which clients need follow-up today?",
+      "Which open quotes should be handled first?",
+      "Which service visits or payments need attention?",
     ],
   },
 
   construction: {
     id: "construction",
     label: "Construction / Contractor",
-    headline: "Project and estimate control center",
+    headline: "Project and estimate view",
     dailyFocus:
-      "Monitor open estimates, active jobs, unpaid work, follow-ups, and project records before revenue slips.",
+      "Track customers, estimates, projects, payments, follow-ups, and project data quality.",
     labels: {
       customerSingular: "Customer",
       customerPlural: "Customers",
@@ -79,90 +112,121 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Projects",
       saleSingular: "Payment",
       salePlural: "Payments",
-      followUpPlural: "Estimate follow-ups",
+      followUpPlural: "Project actions",
     },
     priorityNames: {
       pipeline: "Open estimate value",
       activeWork: "Active projects",
-      revenue: "Collected revenue",
-      followUps: "Estimate follow-ups due",
-      dataHealth: "Project data health",
+      revenue: "Project revenue",
+      followUps: "Project actions due",
+      dataHealth: "Project data quality",
     },
     insightPrompts: [
       "Which estimates need follow-up before they go cold?",
       "Which active projects are tied to unpaid or partial payments?",
-      "Which customer/project records are missing contact or value data?",
-    ],
-  },
-
-  field_service: {
-    id: "field_service",
-    label: "Field Service / Trades",
-    headline: "Schedule, quotes, and service revenue",
-    dailyFocus:
-      "Stay on top of service calls, quotes, repeat customers, unpaid jobs, and follow-ups.",
-    labels: {
-      customerSingular: "Client",
-      customerPlural: "Clients",
-      leadSingular: "Quote",
-      leadPlural: "Quotes",
-      jobSingular: "Service job",
-      jobPlural: "Service jobs",
-      saleSingular: "Payment",
-      salePlural: "Payments",
-      followUpPlural: "Client follow-ups",
-    },
-    priorityNames: {
-      pipeline: "Open quote value",
-      activeWork: "Scheduled service jobs",
-      revenue: "Service revenue",
-      followUps: "Client follow-ups due",
-      dataHealth: "Service data health",
-    },
-    insightPrompts: [
-      "Which clients need follow-up today?",
-      "Which open quotes should be chased first?",
-      "Which service jobs are unpaid or missing value?",
+      "Which project records are missing customer, value, or schedule details?",
     ],
   },
 
   dental_medical: {
     id: "dental_medical",
     label: "Dental / Medical Office",
-    headline: "Patient flow and collections brief",
+    headline: "Patient flow and collections view",
     dailyFocus:
-      "Track patient inquiries, appointments, treatment opportunities, collections, and recall follow-ups.",
+      "Track patients, inquiries, treatment opportunities, appointments, collections, and patient follow-ups.",
     labels: {
       customerSingular: "Patient",
       customerPlural: "Patients",
-      leadSingular: "Inquiry",
-      leadPlural: "Inquiries",
+      leadSingular: "Treatment opportunity",
+      leadPlural: "Treatment opportunities",
       jobSingular: "Appointment",
       jobPlural: "Appointments",
       saleSingular: "Collection",
       salePlural: "Collections",
-      followUpPlural: "Patient follow-ups",
+      followUpPlural: "Patient actions",
     },
     priorityNames: {
-      pipeline: "Open treatment / inquiry value",
+      pipeline: "Open treatment value",
       activeWork: "Scheduled appointments",
       revenue: "Collections",
-      followUps: "Patient follow-ups due",
-      dataHealth: "Patient data health",
+      followUps: "Patient actions due",
+      dataHealth: "Patient data quality",
     },
     insightPrompts: [
       "Which patients need recall or treatment follow-up?",
-      "Which inquiries have not converted into appointments?",
-      "Which patient records are missing contact details?",
+      "Which treatment opportunities have not turned into appointments?",
+      "Which patient records are missing usable contact details?",
+    ],
+  },
+
+  insurance: {
+    id: "insurance",
+    label: "Insurance Agency",
+    headline: "Client, policy, and renewal view",
+    dailyFocus:
+      "Track clients, policy opportunities, renewals, commissions, service actions, and client data quality.",
+    labels: {
+      customerSingular: "Client",
+      customerPlural: "Clients",
+      leadSingular: "Policy opportunity",
+      leadPlural: "Policy opportunities",
+      jobSingular: "Policy task",
+      jobPlural: "Policy tasks",
+      saleSingular: "Commission record",
+      salePlural: "Commission records",
+      followUpPlural: "Client actions",
+    },
+    priorityNames: {
+      pipeline: "Open policy value",
+      activeWork: "Active policy work",
+      revenue: "Commission revenue",
+      followUps: "Renewal actions due",
+      dataHealth: "Client data quality",
+    },
+    insightPrompts: [
+      "Which renewals or policy opportunities need follow-up?",
+      "Which clients are missing policy or contact details?",
+      "Which sources are producing the strongest client opportunities?",
+    ],
+  },
+
+  automotive: {
+    id: "automotive",
+    label: "Auto Dealer / Vehicle Sales",
+    headline: "Customer, deal, and sales view",
+    dailyFocus:
+      "Track customers, vehicle opportunities, appointments, deal progress, sales, and follow-ups.",
+    labels: {
+      customerSingular: "Customer",
+      customerPlural: "Customers",
+      leadSingular: "Vehicle opportunity",
+      leadPlural: "Vehicle opportunities",
+      jobSingular: "Deal task",
+      jobPlural: "Deal tasks",
+      saleSingular: "Vehicle sale",
+      salePlural: "Vehicle sales",
+      followUpPlural: "Customer actions",
+    },
+    priorityNames: {
+      pipeline: "Open deal value",
+      activeWork: "Active deal work",
+      revenue: "Sales revenue",
+      followUps: "Customer actions due",
+      dataHealth: "Customer data quality",
+    },
+    insightPrompts: [
+      "Which vehicle opportunities need follow-up?",
+      "Which customers need appointment or financing follow-up?",
+      "Which lead sources are producing the most deal value?",
     ],
   },
 
   professional_services: {
     id: "professional_services",
     label: "Professional Services",
-    headline: "Client work and proposal brief",
+    headline: "Client work and proposal view",
     dailyFocus:
-      "Track clients, open proposals, active work, revenue, unpaid invoices, and relationship follow-ups.",
+      "Track clients, proposals, active work, invoices, revenue, and client follow-ups.",
     labels: {
       customerSingular: "Client",
       customerPlural: "Clients",
@@ -172,14 +236,14 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Projects",
       saleSingular: "Invoice",
       salePlural: "Invoices",
-      followUpPlural: "Client follow-ups",
+      followUpPlural: "Client actions",
     },
     priorityNames: {
       pipeline: "Open proposal value",
       activeWork: "Active projects",
       revenue: "Revenue",
-      followUps: "Client follow-ups due",
-      dataHealth: "Client data health",
+      followUps: "Client actions due",
+      dataHealth: "Client data quality",
     },
     insightPrompts: [
       "Which proposals need follow-up?",
@@ -191,9 +255,9 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
   retail: {
     id: "retail",
     label: "Retail / Local Store",
-    headline: "Customer and sales activity brief",
+    headline: "Customer and sales activity view",
     dailyFocus:
-      "Track customer records, inquiries, sales, follow-ups, and revenue patterns for local retail operations.",
+      "Track customers, inquiries, orders, sales, follow-ups, and revenue patterns for local retail operations.",
     labels: {
       customerSingular: "Customer",
       customerPlural: "Customers",
@@ -203,14 +267,14 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Orders",
       saleSingular: "Sale",
       salePlural: "Sales",
-      followUpPlural: "Customer follow-ups",
+      followUpPlural: "Customer actions",
     },
     priorityNames: {
       pipeline: "Open inquiry value",
       activeWork: "Open orders",
       revenue: "Sales revenue",
-      followUps: "Customer follow-ups due",
-      dataHealth: "Customer data health",
+      followUps: "Customer actions due",
+      dataHealth: "Customer data quality",
     },
     insightPrompts: [
       "Which customers should be followed up with?",
