@@ -9,7 +9,6 @@ import { StatCard } from "@/components/ui/StatCard";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { DashboardInsightCharts } from "@/components/ui/DashboardInsightCharts";
 
 function getStartOfMonth() {
   const now = new Date();
@@ -60,118 +59,7 @@ function getCustomerName(customerRelation: unknown) {
   return "No customer";
 }
 
-function getServiceRevenue(
-  sales: { service_type: string | null; amount: number | string | null }[],
-) {
-  const serviceMap = new Map<string, number>();
-
-  sales.forEach((sale) => {
-    const service = sale.service_type || "Uncategorized";
-    const current = serviceMap.get(service) || 0;
-
-    serviceMap.set(service, current + Number(sale.amount || 0));
-  });
-
-  return Array.from(serviceMap.entries())
-    .map(([service, revenue]) => ({
-      service,
-      revenue,
-    }))
-    .sort((a, b) => b.revenue - a.revenue);
-}
-
-function getLeadInterest(
-  leads: {
-    service_requested: string | null;
-    estimated_value: number | string | null;
-  }[],
-) {
-  const serviceMap = new Map<
-    string,
-    {
-      count: number;
-      estimatedValue: number;
-    }
-  >();
-
-  leads.forEach((lead) => {
-    const service = lead.service_requested || "Uncategorized";
-    const current = serviceMap.get(service) || {
-      count: 0,
-      estimatedValue: 0,
-    };
-
-    serviceMap.set(service, {
-      count: current.count + 1,
-      estimatedValue:
-        current.estimatedValue + Number(lead.estimated_value || 0),
-    });
-  });
-
-  return Array.from(serviceMap.entries())
-    .map(([service, data]) => ({
-      label: service,
-      value: data.count,
-      helper: `${formatCurrency(data.estimatedValue)} estimated value`,
-    }))
-    .sort((a, b) => b.value - a.value);
-}
-
-function getPipelineBreakdown(leads: { status: string | null }[]) {
-  const statusMap = new Map<string, number>();
-
-  leads.forEach((lead) => {
-    const status = lead.status || "Unknown";
-    statusMap.set(status, (statusMap.get(status) || 0) + 1);
-  });
-
-  return Array.from(statusMap.entries())
-    .map(([status, count]) => ({
-      label: status,
-      value: count,
-    }))
-    .sort((a, b) => b.value - a.value);
-}
-
-function getRevenueTrend(
-  sales: { sale_date: string | null; amount: number | string | null }[],
-) {
-  const now = new Date();
-
-  const months = Array.from({ length: 6 }).map((_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}`;
-
-    return {
-      key,
-      label: date.toLocaleString("default", { month: "short" }),
-      revenue: 0,
-    };
-  });
-
-  sales.forEach((sale) => {
-    if (!sale.sale_date) {
-      return;
-    }
-
-    const saleMonth = sale.sale_date.slice(0, 7);
-    const month = months.find((item) => item.key === saleMonth);
-
-    if (month) {
-      month.revenue += Number(sale.amount || 0);
-    }
-  });
-
-  return months.map(({ label, revenue }) => ({
-    label,
-    revenue,
-  }));
-}
-
-function getDailySummary({
+function getBriefSentence({
   followUpsDue,
   unpaidRevenue,
   openEstimateValue,
@@ -182,36 +70,37 @@ function getDailySummary({
   openEstimateValue: number;
   dataIssueCount: number;
 }) {
-  if (
-    followUpsDue === 0 &&
-    unpaidRevenue === 0 &&
-    openEstimateValue === 0 &&
-    dataIssueCount === 0
-  ) {
-    return "Everything is clear right now. No urgent follow-ups, unpaid revenue, open estimate value, or record cleanup issues are showing.";
-  }
-
-  const parts = [];
+  const items = [];
 
   if (followUpsDue > 0) {
-    parts.push(`${followUpsDue} follow-up${followUpsDue === 1 ? "" : "s"} due`);
+    items.push(`${followUpsDue} follow-up${followUpsDue === 1 ? "" : "s"} due`);
   }
 
   if (openEstimateValue > 0) {
-    parts.push(`${formatCurrency(openEstimateValue)} in open estimate value`);
+    items.push(
+      `${formatCurrency(openEstimateValue)} in open opportunity value`,
+    );
   }
 
   if (unpaidRevenue > 0) {
-    parts.push(`${formatCurrency(unpaidRevenue)} unpaid or partially paid`);
+    items.push(`${formatCurrency(unpaidRevenue)} unpaid or partially paid`);
   }
 
   if (dataIssueCount > 0) {
-    parts.push(
+    items.push(
       `${dataIssueCount} record cleanup item${dataIssueCount === 1 ? "" : "s"}`,
     );
   }
 
-  return `Today’s focus: ${parts.join(", ")}.`;
+  if (items.length === 0) {
+    return "Your workspace is clear right now. No urgent follow-ups, unpaid revenue, open opportunity value, or data cleanup issues are showing.";
+  }
+
+  return `Today’s focus: ${items.join(", ")}.`;
+}
+
+function getPriorityTone(value: number) {
+  return value > 0 ? ("warning" as const) : ("success" as const);
 }
 
 export default async function WorkspacePage() {
@@ -418,7 +307,7 @@ export default async function WorkspacePage() {
       ?.filter(
         (followUp) => followUp.status === "Open" && followUp.due_date <= today,
       )
-      .slice(0, 4) || [];
+      .slice(0, 5) || [];
 
   const staleLeadList =
     leads
@@ -427,13 +316,13 @@ export default async function WorkspacePage() {
           !["Won", "Lost"].includes(lead.status) &&
           lead.created_at < staleCutoff,
       )
-      .slice(0, 4) || [];
+      .slice(0, 5) || [];
 
   const unpaidSales =
-    sales?.filter((sale) => sale.payment_status !== "Paid").slice(0, 4) || [];
+    sales?.filter((sale) => sale.payment_status !== "Paid").slice(0, 5) || [];
 
   const recentActivity = [
-    ...(leads || []).slice(0, 4).map((lead) => ({
+    ...(leads || []).slice(0, 5).map((lead) => ({
       id: `lead-${lead.id}`,
       type: profile.labels.leadSingular,
       title: lead.service_requested || "Untitled opportunity",
@@ -441,7 +330,7 @@ export default async function WorkspacePage() {
       date: lead.created_at,
       href: "/leads",
     })),
-    ...(jobs || []).slice(0, 4).map((job) => ({
+    ...(jobs || []).slice(0, 5).map((job) => ({
       id: `job-${job.id}`,
       type: profile.labels.jobSingular,
       title: job.service_type || "Untitled work record",
@@ -449,7 +338,7 @@ export default async function WorkspacePage() {
       date: job.created_at,
       href: "/jobs",
     })),
-    ...(sales || []).slice(0, 4).map((sale) => ({
+    ...(sales || []).slice(0, 5).map((sale) => ({
       id: `sale-${sale.id}`,
       type: profile.labels.saleSingular,
       title: formatCurrency(sale.amount),
@@ -459,27 +348,9 @@ export default async function WorkspacePage() {
     })),
   ]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6);
+    .slice(0, 8);
 
-  const revenueTrend = getRevenueTrend(sales || []);
-
-  const serviceRevenue = getServiceRevenue(sales || []).slice(0, 6);
-
-  const revenueByService = serviceRevenue.map((item) => ({
-    label: item.service,
-    value: item.revenue,
-  }));
-
-  const interestByService = getLeadInterest(leads || [])
-    .slice(0, 6)
-    .map((item) => ({
-      label: item.label,
-      value: item.value,
-    }));
-
-  const pipelineBreakdown = getPipelineBreakdown(leads || []).slice(0, 6);
-
-  const dailySummary = getDailySummary({
+  const briefSentence = getBriefSentence({
     followUpsDue,
     unpaidRevenue,
     openEstimateValue,
@@ -495,33 +366,33 @@ export default async function WorkspacePage() {
           ? "Open reminders are due today or overdue."
           : "No follow-ups are due right now.",
       href: "/follow-ups",
-      tone: followUpsDue > 0 ? ("warning" as const) : ("neutral" as const),
+      tone: getPriorityTone(followUpsDue),
       cta: followUpsDue > 0 ? "Review queue" : "View reminders",
     },
     {
-      title: "Protect pipeline",
+      title: "Pipeline",
       value: formatCurrency(openEstimateValue),
       description:
         openEstimateValue > 0
           ? `${profile.labels.leadPlural} marked Estimate Sent may need follow-up.`
           : "No estimate value is currently waiting.",
       href: "/crm",
-      tone: openEstimateValue > 0 ? ("warning" as const) : ("neutral" as const),
-      cta: "Open CRM",
+      tone: getPriorityTone(openEstimateValue),
+      cta: "Open relationships",
     },
     {
-      title: "Collect revenue",
+      title: "Revenue",
       value: formatCurrency(unpaidRevenue),
       description:
         unpaidRevenue > 0
           ? "Payments marked unpaid or partial need attention."
           : "No unpaid revenue is showing right now.",
       href: "/sales",
-      tone: unpaidRevenue > 0 ? ("warning" as const) : ("neutral" as const),
-      cta: "View sales",
+      tone: getPriorityTone(unpaidRevenue),
+      cta: "View revenue",
     },
     {
-      title: "Clean records",
+      title: "Data quality",
       value: `${dataHealthScore}%`,
       description:
         dataIssueCount > 0
@@ -530,6 +401,34 @@ export default async function WorkspacePage() {
       href: "/data-hub",
       tone: dataIssueCount > 0 ? ("warning" as const) : ("success" as const),
       cta: "Open Data Hub",
+    },
+  ];
+
+  const dataQualityItems = [
+    {
+      label: "Customers missing phone and email",
+      value: missingCustomerContact,
+      href: "/customers",
+    },
+    {
+      label: `${profile.labels.leadPlural} without a customer`,
+      value: leadsWithoutCustomer,
+      href: "/leads",
+    },
+    {
+      label: `${profile.labels.jobPlural} missing value`,
+      value: jobsMissingValue,
+      href: "/jobs",
+    },
+    {
+      label: `${profile.labels.salePlural} missing source`,
+      value: salesMissingSource,
+      href: "/sales",
+    },
+    {
+      label: "Follow-ups not connected to a record",
+      value: followUpsWithoutRelationship,
+      href: "/follow-ups",
     },
   ];
 
@@ -543,8 +442,8 @@ export default async function WorkspacePage() {
       <div className="space-y-6">
         <PageHeader
           eyebrow={profile.label}
-          title="Daily brief"
-          description={profile.dailyFocus}
+          title="Today"
+          description="A focused daily view of what needs attention, what is moving, and where business data needs cleanup."
           actions={
             <Link
               href="/ai-assistant"
@@ -556,7 +455,7 @@ export default async function WorkspacePage() {
         />
 
         <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="grid gap-0 xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid gap-0 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="border-b border-slate-100 p-6 xl:border-b-0 xl:border-r">
               <div className="flex flex-wrap items-center gap-3">
                 <StatusBadge
@@ -576,20 +475,20 @@ export default async function WorkspacePage() {
                 </p>
               </div>
 
-              <h2 className="mt-5 max-w-3xl text-2xl font-semibold tracking-tight text-slate-950 md:text-3xl">
-                {dailySummary}
+              <h2 className="mt-5 max-w-4xl text-2xl font-semibold tracking-tight text-slate-950 md:text-3xl">
+                {briefSentence}
               </h2>
 
               <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
                 FrontierOps is organizing your{" "}
                 {profile.labels.customerPlural.toLowerCase()},{" "}
                 {profile.labels.leadPlural.toLowerCase()},{" "}
-                {profile.labels.jobPlural.toLowerCase()}, revenue, and
-                follow-ups into one operating view.
+                {profile.labels.jobPlural.toLowerCase()}, revenue, follow-ups,
+                and business records into one operating system.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-0 divide-x divide-y divide-slate-100 xl:divide-y-0">
+            <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 xl:divide-y-0">
               <div className="p-5">
                 <p className="text-xs font-medium text-slate-500">
                   {profile.priorityNames.revenue}
@@ -664,7 +563,7 @@ export default async function WorkspacePage() {
           ))}
         </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_0.9fr]">
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr]">
           <SectionCard
             title="Action queue"
             description="The records most likely to affect follow-up, cash flow, or data quality today."
@@ -819,49 +718,74 @@ export default async function WorkspacePage() {
           />
         </section>
 
-        <DashboardInsightCharts
-          revenueTrend={revenueTrend}
-          revenueByService={revenueByService}
-          interestByService={interestByService}
-          pipelineBreakdown={pipelineBreakdown}
-        />
-
-        <SectionCard
-          title="Recent movement"
-          description="Newest activity across leads, jobs, and revenue."
-        >
-          {recentActivity.length === 0 ? (
-            <EmptyState
-              title="No activity yet"
-              description="Add records to begin building business history."
-            />
-          ) : (
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+          <SectionCard
+            title="Data quality"
+            description="Records that need cleanup before reports are fully reliable."
+          >
             <div className="divide-y divide-slate-100">
-              {recentActivity.map((item) => (
+              {dataQualityItems.map((item) => (
                 <Link
+                  key={item.label}
                   href={item.href}
-                  key={item.id}
-                  className="grid gap-3 p-5 hover:bg-slate-50 md:grid-cols-[130px_1fr_110px]"
+                  className="flex items-center justify-between gap-4 p-5 hover:bg-slate-50"
                 >
-                  <p className="text-sm font-semibold text-slate-500">
-                    {item.type}
-                  </p>
-
                   <div>
-                    <p className="font-semibold text-slate-950">{item.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      {item.subtitle}
+                    <p className="font-semibold text-slate-950">{item.label}</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {item.value > 0
+                        ? "Review and clean these records."
+                        : "No issues found."}
                     </p>
                   </div>
 
-                  <p className="text-sm font-medium text-slate-500 md:text-right">
-                    {formatDate(item.date)}
-                  </p>
+                  <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
+                    {item.value}
+                  </StatusBadge>
                 </Link>
               ))}
             </div>
-          )}
-        </SectionCard>
+          </SectionCard>
+
+          <SectionCard
+            title="Recent movement"
+            description="Newest activity across relationships, work, and revenue."
+          >
+            {recentActivity.length === 0 ? (
+              <EmptyState
+                title="No activity yet"
+                description="Add records to begin building business history."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentActivity.map((item) => (
+                  <Link
+                    href={item.href}
+                    key={item.id}
+                    className="grid gap-3 p-5 hover:bg-slate-50 md:grid-cols-[130px_1fr_110px]"
+                  >
+                    <p className="text-sm font-semibold text-slate-500">
+                      {item.type}
+                    </p>
+
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {item.subtitle}
+                      </p>
+                    </div>
+
+                    <p className="text-sm font-medium text-slate-500 md:text-right">
+                      {formatDate(item.date)}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </section>
       </div>
     </AppShell>
   );
