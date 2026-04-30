@@ -1,52 +1,81 @@
 import Link from "next/link";
 
-const features = [
+const sectors = [
+  "Contractors",
+  "Landscaping",
+  "Dental offices",
+  "Insurance agencies",
+  "Auto dealerships",
+  "Professional services",
+];
+
+const platformPoints = [
   {
-    title: "Customers",
+    title: "Today’s priorities",
     description:
-      "Keep customer records, notes, addresses, and contact info organized.",
+      "See follow-ups, unpaid work, stale opportunities, and data issues before they turn into lost revenue.",
   },
   {
-    title: "Pipeline",
+    title: "Industry-aware CRM",
     description:
-      "Track leads, estimates, sources, value, and next follow-up dates.",
+      "The workspace changes language and priorities based on the business type.",
   },
   {
-    title: "Operations",
+    title: "Data management",
     description:
-      "Manage jobs, status, dates, payments, and revenue in one place.",
+      "Clean up messy customer lists, missing fields, unlinked records, and scattered business data.",
   },
 ];
 
-const previewRows = [
-  ["Monthly revenue", "$64.8k"],
-  ["Open estimates", "$31.5k"],
-  ["Follow-ups due", "6"],
+const workflowCards = [
+  {
+    label: "1",
+    title: "Import or add records",
+    description:
+      "Bring in customers, leads, jobs, sales, and follow-ups from spreadsheets or manual entry.",
+  },
+  {
+    label: "2",
+    title: "Organize the business",
+    description:
+      "FrontierOps connects records into a cleaner operating system for the company.",
+  },
+  {
+    label: "3",
+    title: "Act on what matters",
+    description:
+      "Owners see the next actions, money at risk, and records that need cleanup.",
+  },
 ];
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#090e1a] text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6">
         <nav className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-black text-slate-950">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950">
               FO
             </div>
-            <span className="font-bold">FrontierOps</span>
+            <div>
+              <p className="font-semibold">FrontierOps</p>
+              <p className="hidden text-xs text-slate-400 sm:block">
+                Business data command center
+              </p>
+            </div>
           </Link>
 
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 text-sm">
             <Link
               href="/dashboard"
-              className="hidden rounded-full px-4 py-2 text-slate-300 hover:bg-white/10 hover:text-white sm:block"
+              className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
             >
               Demo
             </Link>
 
             <Link
               href="/login"
-              className="rounded-full px-4 py-2 text-slate-300 hover:bg-white/10 hover:text-white"
+              className="rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white"
             >
               Log in
             </Link>
@@ -55,95 +84,170 @@ export default function HomePage() {
               href="/signup"
               className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
             >
-              Sign up
+              Start
             </Link>
           </div>
         </nav>
 
         <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-              CRM + operations dashboard for local service businesses
+            <div className="inline-flex rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-slate-300">
+              CRM + data management for messy local businesses
             </div>
 
-            <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-              Run the business from one clean dashboard.
+            <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Turn scattered business data into a daily operating system.
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
               FrontierOps helps local businesses organize customers, leads,
-              jobs, sales, and follow-ups without juggling spreadsheets and
-              notes.
+              jobs, sales, follow-ups, imports, and AI summaries into one clean,
+              industry-aware dashboard.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/dashboard"
-                className="rounded-2xl bg-white px-5 py-3 text-center font-bold text-slate-950 hover:bg-slate-200"
+                className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
                 View demo
               </Link>
 
               <Link
                 href="/signup"
-                className="rounded-2xl border border-white/15 px-5 py-3 text-center font-bold text-white hover:bg-white/10"
+                className="rounded-2xl border border-white/15 px-5 py-3 text-center font-semibold text-white hover:bg-white/10"
               >
-                Create account
+                Create workspace
               </Link>
             </div>
 
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="rounded-3xl border border-white/10 bg-white/6 p-5"
+            <div className="mt-10 flex flex-wrap gap-2">
+              {sectors.map((sector) => (
+                <span
+                  key={sector}
+                  className="rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm font-medium text-slate-300"
                 >
-                  <p className="font-bold">{feature.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
-                    {feature.description}
-                  </p>
-                </div>
+                  {sector}
+                </span>
               ))}
             </div>
           </div>
 
-          <div className="rounded-4xl border border-white/10 bg-white/7 p-3 shadow-2xl backdrop-blur">
-            <div className="rounded-3xl bg-slate-50 p-5 text-slate-950">
-              <div className="flex items-center justify-between">
+          <div className="rounded-[2rem] border border-white/10 bg-white/6 p-3 shadow-2xl">
+            <div className="rounded-[1.5rem] bg-slate-50 p-5 text-slate-950">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-500">
-                    Demo workspace
+                  <p className="text-sm font-medium text-slate-500">
+                    Today’s brief
                   </p>
-                  <h2 className="mt-1 text-2xl font-black">
-                    Arctic Ridge Services
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+                    Landscaping demo
                   </h2>
                 </div>
 
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                  Live
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                  Needs attention
                 </span>
               </div>
 
-              <div className="mt-6 grid gap-3">
-                {previewRows.map(([label, value]) => (
+              <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5">
+                <p className="text-sm font-medium text-slate-500">
+                  Today’s focus
+                </p>
+                <p className="mt-2 text-lg font-semibold leading-7">
+                  4 follow-ups due, $12,400 in open quotes, and 3 customer
+                  records need cleanup.
+                </p>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {[
+                  ["Open quote value", "$12.4k"],
+                  ["Active jobs", "7"],
+                  ["Unpaid work", "$3.8k"],
+                  ["Data health", "84%"],
+                ].map(([label, value]) => (
                   <div
                     key={label}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                    className="rounded-2xl border border-slate-200 bg-white p-4"
                   >
-                    <p className="text-sm text-slate-500">{label}</p>
-                    <p className="text-xl font-black">{value}</p>
+                    <p className="text-xs font-medium text-slate-500">
+                      {label}
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold">{value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="font-black">AI Business Summary</p>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Revenue is trending up, but open estimates and overdue
-                  follow-ups need attention this week.
-                </p>
+              <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-5">
+                <p className="font-semibold">What FrontierOps sees</p>
+                <div className="mt-4 space-y-3">
+                  {[
+                    "Yard cleanups are creating the most quote requests.",
+                    "Mowing brings the most repeat revenue.",
+                    "Three customers are missing phone or email.",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10 bg-white/[0.03] px-6 py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Why it matters
+            </p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+              Most local businesses do not have bad businesses. They have messy
+              data.
+            </h2>
+            <p className="mt-4 text-base leading-8 text-slate-300">
+              Customer info sits in spreadsheets. Follow-ups sit in memory.
+              Revenue sits in QuickBooks. Jobs sit in texts. FrontierOps gives
+              owners one clean place to organize the operating side of the
+              business.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {platformPoints.map((point) => (
+              <div
+                key={point.title}
+                className="rounded-3xl border border-white/10 bg-white/6 p-6"
+              >
+                <p className="text-lg font-semibold">{point.title}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {point.description}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-16 grid gap-4 md:grid-cols-3">
+            {workflowCards.map((card) => (
+              <div
+                key={card.title}
+                className="rounded-3xl border border-white/10 bg-[#090e1a] p-6"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950">
+                  {card.label}
+                </div>
+                <p className="mt-5 text-lg font-semibold">{card.title}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {card.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -14,33 +14,33 @@ export function AuthFrame({
   footer?: ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
+    <main className="min-h-screen bg-[#090e1a] text-white">
       <div className="grid min-h-screen lg:grid-cols-[1fr_520px]">
         <section className="relative hidden overflow-hidden p-10 lg:block">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.28),transparent_28rem)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.3),rgba(15,23,42,1))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(148,163,184,0.2),transparent_28rem)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.15),rgba(9,14,26,1))]" />
 
           <div className="relative flex h-full flex-col justify-between">
             <ProductMark inverse />
 
             <div className="max-w-2xl">
-              <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-200">
-                Business command center
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+                Business data command center
               </p>
 
-              <h1 className="mt-5 text-5xl font-black leading-tight tracking-tight">
-                One clean system for customers, jobs, sales, and follow-ups.
+              <h1 className="mt-5 text-5xl font-semibold leading-tight tracking-tight">
+                A cleaner operating system for messy local business data.
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
-                FrontierOps helps local service businesses turn scattered data
-                into a simple operating dashboard.
+                Organize customers, opportunities, work, revenue, follow-ups,
+                imports, and AI summaries around the business sector.
               </p>
             </div>
 
             <p className="text-sm text-slate-500">
-              Built for local businesses that need clarity, not more software
-              clutter.
+              Built for businesses outgrowing spreadsheets, memory, and outdated
+              tools.
             </p>
           </div>
         </section>
@@ -51,20 +51,20 @@ export function AuthFrame({
               <ProductMark inverse />
             </div>
 
-            <div className="rounded-[2rem] border border-white/10 bg-white/[0.07] p-8 shadow-2xl backdrop-blur">
+            <div className="rounded-[2rem] border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
               <Link
                 href="/"
-                className="text-sm font-semibold text-slate-300 hover:text-white"
+                className="text-sm font-medium text-slate-300 hover:text-white"
               >
                 ← Back to home
               </Link>
 
               <div className="mt-8">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
                   FrontierOps
                 </p>
 
-                <h1 className="mt-3 text-3xl font-black tracking-tight">
+                <h1 className="mt-3 text-3xl font-semibold tracking-tight">
                   {title}
                 </h1>
 

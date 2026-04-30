@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { businessSectorOptions } from "@/lib/industry-profiles";
@@ -23,25 +23,53 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-2xl items-center">
-        <div className="w-full rounded-3xl border border-white/10 bg-white/10 p-8 shadow-2xl backdrop-blur">
-          <Link href="/" className="text-sm font-semibold text-slate-300">
+    <main className="min-h-screen bg-[#090e1a] px-6 py-10 text-white">
+      <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <section>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950">
+              FO
+            </div>
+            <div>
+              <p className="font-semibold">FrontierOps</p>
+              <p className="text-xs text-slate-400">Workspace setup</p>
+            </div>
+          </Link>
+
+          <div className="mt-12">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Build around the business
+            </p>
+
+            <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight">
+              Choose the sector so the dashboard knows what matters.
+            </h1>
+
+            <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
+              A contractor, dental office, insurance agency, dealership, and
+              landscaper do not need the same generic CRM view. FrontierOps uses
+              the sector to adjust wording, priorities, and reports.
+            </p>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
+          <Link href="/" className="text-sm font-medium text-slate-300">
             ← Back to home
           </Link>
 
           <div className="mt-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-              FrontierOps
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Company setup
             </p>
 
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-              Set up your company
-            </h1>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+              Create your workspace
+            </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Create your business workspace and choose the sector that best
-              matches how your company operates.
+              This creates the company workspace and sets the dashboard language
+              for the business.
             </p>
           </div>
 
@@ -52,7 +80,7 @@ export default async function OnboardingPage() {
               </label>
               <input
                 name="companyName"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
                 placeholder="Arctic Ridge Services"
                 required
               />
@@ -65,7 +93,7 @@ export default async function OnboardingPage() {
               <select
                 name="businessSector"
                 defaultValue="general"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
               >
                 {businessSectorOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -74,8 +102,7 @@ export default async function OnboardingPage() {
                 ))}
               </select>
               <p className="mt-2 text-xs leading-5 text-slate-400">
-                This controls the language and priorities shown in your
-                dashboards.
+                This controls the language and priorities shown in dashboards.
               </p>
             </div>
 
@@ -85,25 +112,25 @@ export default async function OnboardingPage() {
               </label>
               <input
                 name="industry"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
                 placeholder="Excavation, dental office, landscaping, IT services..."
               />
             </div>
 
-            <button className="w-full rounded-xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200">
+            <button className="w-full rounded-2xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200">
               Create company workspace
             </button>
           </form>
 
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-300">
-            <p className="font-semibold text-white">Why this matters</p>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
+            <p className="font-semibold text-white">What changes by sector?</p>
             <p className="mt-1">
-              A contractor, dental office, and professional service firm all
-              care about different numbers. FrontierOps will use this sector to
-              make the dashboard more relevant.
+              Customers can become patients or clients. Leads can become
+              estimates, inquiries, policies, proposals, or deals. The dashboard
+              focuses on the numbers that matter for that business.
             </p>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );

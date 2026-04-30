@@ -39,44 +39,44 @@ export default function LoginPage() {
   return (
     <AuthFrame
       title="Log in"
-      description="Access your FrontierOps workspace."
+      description="Access your company workspace and continue organizing the business."
       footer={
         <p className="text-center text-sm text-slate-300">
           Need an account?{" "}
-          <a href="/signup" className="font-bold text-white underline">
-            Sign up
+          <a href="/signup" className="font-semibold text-white underline">
+            Create one
           </a>
         </p>
       }
     >
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="text-sm font-semibold text-slate-200">Email</label>
+          <label className="text-sm font-medium text-slate-200">Email</label>
           <input
             className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
             type="email"
             placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            required
           />
         </div>
 
         <div>
-          <label className="text-sm font-semibold text-slate-200">
-            Password
-          </label>
+          <label className="text-sm font-medium text-slate-200">Password</label>
           <input
             className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
             type="password"
             placeholder="Your password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            required
           />
         </div>
 
         <button
           disabled={loading}
-          className="w-full rounded-2xl bg-white px-4 py-3 font-bold text-slate-950 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Log in"}
         </button>

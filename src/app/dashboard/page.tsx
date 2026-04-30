@@ -1,268 +1,182 @@
-const metrics = [
+import Link from "next/link";
+
+const demoSectors = [
   {
-    label: "Monthly Revenue",
-    value: "$64,800",
-    description: "Revenue tracked this month",
+    sector: "Landscaping",
+    focus: "Open quotes, recurring services, unpaid jobs, customer follow-ups",
+    metrics: [
+      ["Open quote value", "$12,400"],
+      ["Active service jobs", "7"],
+      ["Unpaid work", "$3,850"],
+      ["Data health", "84%"],
+    ],
+    insights: [
+      "Yard cleanups are creating the most customer interest.",
+      "Mowing is producing the most repeat revenue.",
+      "Three customer records are missing contact details.",
+    ],
   },
   {
-    label: "New Leads",
-    value: "28",
-    description: "New business opportunities",
+    sector: "Dental Office",
+    focus:
+      "New patient inquiries, appointments, treatment follow-ups, collections",
+    metrics: [
+      ["Open inquiry value", "$8,200"],
+      ["Appointments", "18"],
+      ["Outstanding balances", "$4,100"],
+      ["Data health", "91%"],
+    ],
+    insights: [
+      "Recall follow-ups are the highest priority today.",
+      "New patient inquiries are converting from Google.",
+      "Most patient records have usable contact details.",
+    ],
   },
   {
-    label: "Open Estimates",
-    value: "$31,500",
-    description: "Potential revenue waiting on approval",
-  },
-  {
-    label: "Jobs Completed",
-    value: "17",
-    description: "Completed jobs this month",
-  },
-  {
-    label: "Follow-Ups Due",
-    value: "6",
-    description: "Customers needing contact",
+    sector: "Insurance Agency",
+    focus:
+      "Prospects, renewals, policy follow-ups, commissions, client records",
+    metrics: [
+      ["Open prospect value", "$6,700"],
+      ["Renewals due", "9"],
+      ["Unpaid commissions", "$1,250"],
+      ["Data health", "79%"],
+    ],
+    insights: [
+      "Renewal follow-ups should be handled before Friday.",
+      "Referral leads are converting better than paid ads.",
+      "Several policies are missing source tracking.",
+    ],
   },
 ];
 
-const topServices = [
-  {
-    name: "Excavation",
-    revenue: "$28,400",
-  },
-  {
-    name: "Snow Removal",
-    revenue: "$18,900",
-  },
-  {
-    name: "Hauling",
-    revenue: "$9,700",
-  },
-];
-
-const followUps = [
-  {
-    customer: "Mike Johnson",
-    service: "Driveway gravel repair",
-    due: "Today",
-    value: "$3,500",
-  },
-  {
-    customer: "Sarah Miller",
-    service: "Snow removal contract",
-    due: "Tomorrow",
-    value: "$1,200",
-  },
-  {
-    customer: "Arctic Rentals LLC",
-    service: "Lot clearing estimate",
-    due: "2 days",
-    value: "$7,800",
-  },
-];
-
-const recentLeads = [
-  {
-    customer: "Ryan Thompson",
-    source: "Referral",
-    service: "Excavation",
-    status: "New",
-    value: "$4,200",
-  },
-  {
-    customer: "Northline Storage",
-    source: "Google Business",
-    service: "Snow Removal",
-    status: "Estimate Sent",
-    value: "$2,800",
-  },
-  {
-    customer: "Kona Freight Yard",
-    source: "Facebook",
-    service: "Hauling",
-    status: "Contacted",
-    value: "$1,600",
-  },
-];
-
-function MetricCard({
-  label,
-  value,
-  description,
-}: {
-  label: string;
-  value: string;
-  description: string;
-}) {
+export default function DemoDashboardPage() {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
-      <p className="mt-2 text-sm text-slate-500">{description}</p>
-    </div>
-  );
-}
+    <main className="min-h-screen bg-[#eef2f7] text-slate-950">
+      <section className="mx-auto max-w-7xl px-6 py-6">
+        <nav className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
+              FO
+            </div>
+            <div>
+              <p className="font-semibold">FrontierOps</p>
+              <p className="hidden text-xs text-slate-500 sm:block">
+                Public demo
+              </p>
+            </div>
+          </Link>
 
-function SectionCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-slate-950">{title}</h2>
-      <div className="mt-4">{children}</div>
-    </div>
-  );
-}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Home
+            </Link>
+            <Link
+              href="/signup"
+              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Start
+            </Link>
+          </div>
+        </nav>
 
-export default function DashboardPage() {
-  return (
-    <main className="min-h-screen bg-slate-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              FrontierOps Demo
+        <div className="mt-12 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Demo
             </p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-              Business Dashboard
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+              One platform. Different business priorities.
             </h1>
-            <p className="mt-2 text-slate-600">
-              A simple overview of customers, sales, jobs, and follow-ups.
+            <p className="mt-4 text-base leading-8 text-slate-600">
+              FrontierOps adapts the dashboard language and metrics to the type
+              of company using it. Contractors, dental offices, insurance
+              agencies, dealerships, and service businesses should not all see
+              the same generic CRM.
             </p>
           </div>
+        </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-            Demo Company:{" "}
-            <span className="font-semibold text-slate-950">
-              Arctic Ridge Services
-            </span>
-          </div>
-        </header>
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {metrics.map((metric) => (
-            <MetricCard
-              key={metric.label}
-              label={metric.label}
-              value={metric.value}
-              description={metric.description}
-            />
-          ))}
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <SectionCard title="AI Summary">
-            <p className="leading-7 text-slate-600">
-              Revenue is up this month, but there are 6 follow-ups due and
-              $31,500 in open estimates. The biggest opportunity is following up
-              with older estimates before they go cold.
-            </p>
-
-            <div className="mt-4 rounded-xl bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-700">
-                Recommended next action
-              </p>
-              <p className="mt-1 text-sm text-slate-600">
-                Contact the 3 highest-value open estimates before Friday.
-              </p>
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Top Services">
-            <div className="space-y-3">
-              {topServices.map((service) => (
-                <div
-                  key={service.name}
-                  className="flex justify-between border-b border-slate-100 pb-2"
-                >
-                  <span className="text-slate-600">{service.name}</span>
-                  <span className="font-semibold text-slate-950">
-                    {service.revenue}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <SectionCard title="Follow-Ups Due">
-            <div className="space-y-3">
-              {followUps.map((followUp) => (
-                <div
-                  key={followUp.customer}
-                  className="rounded-xl border border-slate-100 p-4"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {followUp.customer}
-                      </p>
-                      <p className="text-sm text-slate-500">
-                        {followUp.service}
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                      {followUp.due}
-                    </span>
+        <div className="mt-6 grid gap-6">
+          {demoSectors.map((demo) => (
+            <section
+              key={demo.sector}
+              className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="border-b border-slate-100 p-6">
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Industry workspace
+                    </p>
+                    <h2 className="mt-2 text-3xl font-semibold tracking-tight">
+                      {demo.sector}
+                    </h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
+                      {demo.focus}
+                    </p>
                   </div>
 
-                  <p className="mt-3 text-sm text-slate-600">
-                    Estimate value:{" "}
-                    <span className="font-semibold">{followUp.value}</span>
-                  </p>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                    Tailored
+                  </span>
                 </div>
-              ))}
-            </div>
-          </SectionCard>
+              </div>
 
-          <SectionCard title="Recent Leads">
-            <div className="overflow-hidden rounded-xl border border-slate-100">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-slate-500">
-                  <tr>
-                    <th className="p-3 font-medium">Customer</th>
-                    <th className="p-3 font-medium">Source</th>
-                    <th className="p-3 font-medium">Status</th>
-                    <th className="p-3 font-medium">Value</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {recentLeads.map((lead) => (
-                    <tr
-                      key={lead.customer}
-                      className="border-t border-slate-100"
-                    >
-                      <td className="p-3">
-                        <p className="font-medium text-slate-950">
-                          {lead.customer}
-                        </p>
-                        <p className="text-xs text-slate-500">{lead.service}</p>
-                      </td>
-                      <td className="p-3 text-slate-600">{lead.source}</td>
-                      <td className="p-3">
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-                          {lead.status}
-                        </span>
-                      </td>
-                      <td className="p-3 font-semibold text-slate-950">
-                        {lead.value}
-                      </td>
-                    </tr>
+              <div className="grid gap-0 xl:grid-cols-[0.85fr_1.15fr]">
+                <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 xl:border-r xl:divide-y">
+                  {demo.metrics.map(([label, value]) => (
+                    <div key={label} className="p-5">
+                      <p className="text-xs font-medium text-slate-500">
+                        {label}
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold">{value}</p>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+
+                <div className="p-6">
+                  <p className="font-semibold">What the owner sees today</p>
+                  <div className="mt-4 grid gap-3">
+                    {demo.insights.map((insight) => (
+                      <div
+                        key={insight}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700"
+                      >
+                        {insight}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <section className="my-10 rounded-[2rem] bg-slate-950 p-8 text-white">
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+            <div>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                Ready to turn a messy business into a clean workspace?
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+                Create a company, choose the business sector, and start building
+                the CRM and data layer around what actually matters.
+              </p>
             </div>
-          </SectionCard>
+
+            <Link
+              href="/signup"
+              className="rounded-2xl bg-white px-5 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-200"
+            >
+              Create workspace
+            </Link>
+          </div>
         </section>
-      </div>
+      </section>
     </main>
   );
 }
