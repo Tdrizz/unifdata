@@ -83,7 +83,7 @@ export default function DemoDashboardPage() {
           </div>
         </nav>
 
-        <div className="mt-12 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mt-12 rounded-4xl border border-slate-200 bg-white p-8 shadow-sm">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
               Demo
@@ -104,7 +104,7 @@ export default function DemoDashboardPage() {
           {demoSectors.map((demo) => (
             <section
               key={demo.sector}
-              className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm"
+              className="overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-sm"
             >
               <div className="border-b border-slate-100 p-6">
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
@@ -156,7 +156,7 @@ export default function DemoDashboardPage() {
           ))}
         </div>
 
-        <section className="my-10 rounded-[2rem] bg-slate-950 p-8 text-white">
+        <section className="my-10 rounded-4xl bg-slate-950 p-8 text-white">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">

@@ -33,7 +33,7 @@ export function AppShell({
       className="min-h-screen bg-[#eef2f7] text-slate-950"
     >
       <div className="flex min-h-screen">
-        <aside className="hidden w-[304px] shrink-0 flex-col border-r border-slate-900 bg-[#090e1a] p-4 text-white md:flex">
+        <aside className="hidden w-76 shrink-0 flex-col border-r border-slate-900 bg-[#090e1a] p-4 text-white md:flex">
           <Link
             href="/workspace"
             className="rounded-3xl border border-white/10 bg-white/6 p-4 shadow-sm hover:bg-white/10"
@@ -76,7 +76,7 @@ export function AppShell({
           </header>
 
           <main className="flex-1">
-            <div className="mx-auto w-full max-w-[1440px] px-4 py-6 md:px-8 md:py-8">
+            <div className="mx-auto w-full max-w-360 px-4 py-6 md:px-8 md:py-8">
               {children}
             </div>
           </main>

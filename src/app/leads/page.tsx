@@ -9,6 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import Link from "next/link";
 
 const leadStatuses = [
   "New",
@@ -671,12 +672,21 @@ export default async function LeadsPage() {
                     </div>
                   </div>
 
-                  <form action={deleteLeadAction} className="md:text-right">
-                    <input type="hidden" name="leadId" value={lead.id} />
-                    <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
-                      Delete
-                    </button>
-                  </form>
+                  <div className="flex flex-wrap gap-2 md:justify-end">
+                    <Link
+                      href={`/leads/${lead.id}/edit`}
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Edit
+                    </Link>
+
+                    <form action={deleteLeadAction}>
+                      <input type="hidden" name="leadId" value={lead.id} />
+                      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
 
                   {lead.notes && (
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-5">

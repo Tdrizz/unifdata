@@ -133,8 +133,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/6 p-3 shadow-2xl">
-            <div className="rounded-[1.5rem] bg-slate-50 p-5 text-slate-950">
+          <div className="rounded-4xl border border-white/10 bg-white/6 p-3 shadow-2xl">
+            <div className="rounded-3xl bg-slate-50 p-5 text-slate-950">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-500">
@@ -201,7 +201,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-white/10 bg-white/[0.03] px-6 py-20">
+      <section className="border-t border-white/10 bg-white/3 px-6 py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">

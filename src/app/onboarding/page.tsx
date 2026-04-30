@@ -53,7 +53,7 @@ export default async function OnboardingPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
+        <section className="rounded-4xl border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
           <Link href="/" className="text-sm font-medium text-slate-300">
             ← Back to home
           </Link>
