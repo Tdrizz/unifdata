@@ -67,6 +67,14 @@ export default function DemoDashboardPage() {
             >
               Home
             </Link>
+
+            <Link
+              href="/docs"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Docs
+            </Link>
+
             <Link
               href="/signup"
               className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
