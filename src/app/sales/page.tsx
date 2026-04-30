@@ -899,7 +899,7 @@ export default async function SalesPage() {
 
                     <form action={deleteSaleAction}>
                       <input type="hidden" name="saleId" value={sale.id} />
-                      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                      <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-700">
                         Delete
                       </button>
                     </form>

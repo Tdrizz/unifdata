@@ -1,3 +1,4 @@
+import { formatOpportunityStatus } from "@/lib/lifecycle";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -221,8 +222,53 @@ export default async function LeadsPage() {
     throw new Error(leadsError.message);
   }
 
+  const { data: workRecords, error: workRecordsError } = await supabase
+    .from("jobs")
+    .select("id, lead_id, status, paid_status")
+    .eq("company_id", company.id);
+
+  if (workRecordsError) {
+    throw new Error(workRecordsError.message);
+  }
+
+  const { data: revenueRecords, error: revenueRecordsError } = await supabase
+    .from("sales")
+    .select("id, job_id, payment_status")
+    .eq("company_id", company.id);
+
+  if (revenueRecordsError) {
+    throw new Error(revenueRecordsError.message);
+  }
+
   const leadRecords = leads || [];
   const customerRecords = customers || [];
+
+  const workByOpportunityId = new Map(
+    (workRecords || [])
+      .filter((work) => work.lead_id)
+      .map((work) => [work.lead_id, work]),
+  );
+
+  const revenueByWorkId = new Map(
+    (revenueRecords || [])
+      .filter((revenue) => revenue.job_id)
+      .map((revenue) => [revenue.job_id, revenue]),
+  );
+
+  function getLifecycleState(opportunityId: string) {
+    const work = workByOpportunityId.get(opportunityId);
+    const revenue = work ? revenueByWorkId.get(work.id) : null;
+
+    return {
+      workLabel: work
+        ? `Work: ${work.status || "Linked"}`
+        : "Work: not created",
+      revenueLabel: revenue
+        ? `Revenue: ${revenue.payment_status || "Tracked"}`
+        : "Revenue: not created",
+      isConnected: Boolean(work && revenue),
+    };
+  }
 
   const totalLeads = leadRecords.length;
 
@@ -628,7 +674,7 @@ export default async function LeadsPage() {
               {leadRecords.map((lead) => (
                 <article
                   key={lead.id}
-                  className="grid gap-4 p-5 md:grid-cols-[1.2fr_1fr_1fr_130px_90px]"
+                  className="grid gap-5 p-5 md:grid-cols-[1.15fr_0.85fr_0.85fr_110px_140px_90px]"
                 >
                   <div>
                     <p className="font-semibold text-slate-950">
@@ -667,8 +713,28 @@ export default async function LeadsPage() {
                     <p className="text-xs font-medium text-slate-500">Status</p>
                     <div className="mt-2">
                       <StatusBadge tone={getStatusTone(lead.status)}>
-                        {lead.status || "Unknown"}
+                        {formatOpportunityStatus(lead.status)}
                       </StatusBadge>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-slate-500">Flow</p>
+
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                        {getLifecycleState(lead.id).workLabel.replace(
+                          "Work: ",
+                          "",
+                        )}
+                      </span>
+
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                        {getLifecycleState(lead.id).revenueLabel.replace(
+                          "Revenue: ",
+                          "",
+                        )}
+                      </span>
                     </div>
                   </div>
 
@@ -682,7 +748,7 @@ export default async function LeadsPage() {
 
                     <form action={deleteLeadAction}>
                       <input type="hidden" name="leadId" value={lead.id} />
-                      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                      <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-700">
                         Delete
                       </button>
                     </form>

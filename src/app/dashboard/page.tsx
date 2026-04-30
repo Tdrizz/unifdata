@@ -89,13 +89,13 @@ export default function DemoDashboardPage() {
               Demo
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-              One platform. Different business priorities.
+              One operating system. Different business models.
             </h1>
             <p className="mt-4 text-base leading-8 text-slate-600">
               FrontierOps adapts the dashboard language and metrics to the type
-              of company using it. Contractors, dental offices, insurance
-              agencies, dealerships, and service businesses should not all see
-              the same generic CRM.
+              of company using it. A dental office, insurance agency,
+              dealership, contractor, and service business should not all
+              operate from the same generic dashboard.
             </p>
           </div>
         </div>

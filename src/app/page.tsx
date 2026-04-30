@@ -100,9 +100,9 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              FrontierOps helps businesses organize customers, leads, jobs,
-              sales, follow-ups, imports, and AI summaries into one clean,
-              industry-aware dashboard.
+              FrontierOps helps businesses organize their relationships,
+              opportunities, work, and revenue into one clean, industry-aware
+              workspace.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">

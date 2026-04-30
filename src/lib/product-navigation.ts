@@ -15,23 +15,23 @@ export const productNavigation: ProductNavGroup[] = [
     items: [
       {
         href: "/workspace",
-        label: "Overview",
-        description: "Daily operating brief",
+        label: "Brief",
+        description: "What needs attention",
       },
     ],
   },
   {
-    label: "Workflows",
+    label: "Business Flow",
     items: [
       {
         href: "/crm",
-        label: "Relationships",
-        description: "Pipeline and follow-up",
+        label: "Pipeline",
+        description: "Relationships and opportunities",
       },
       {
         href: "/follow-ups",
-        label: "Action Queue",
-        description: "Tasks and reminders",
+        label: "Actions",
+        description: "Tasks and next steps",
       },
     ],
   },
@@ -40,23 +40,23 @@ export const productNavigation: ProductNavGroup[] = [
     items: [
       {
         href: "/customers",
-        label: "Customers",
-        description: "Contacts and notes",
+        label: "People",
+        description: "Customers, clients, or patients",
       },
       {
         href: "/leads",
         label: "Opportunities",
-        description: "Leads, quotes, estimates",
+        description: "Potential business",
       },
       {
         href: "/jobs",
         label: "Work",
-        description: "Jobs and projects",
+        description: "Delivery and fulfillment",
       },
       {
         href: "/sales",
         label: "Revenue",
-        description: "Sales and payments",
+        description: "Payments and collections",
       },
     ],
   },
@@ -66,12 +66,12 @@ export const productNavigation: ProductNavGroup[] = [
       {
         href: "/data-hub",
         label: "Data Hub",
-        description: "Record quality and access",
+        description: "Quality and completeness",
       },
       {
         href: "/imports",
         label: "Imports",
-        description: "Data migration",
+        description: "Bring in outside data",
       },
     ],
   },
@@ -81,7 +81,7 @@ export const productNavigation: ProductNavGroup[] = [
       {
         href: "/ai-assistant",
         label: "AI Advisor",
-        description: "Summaries and next steps",
+        description: "Business summary",
       },
     ],
   },

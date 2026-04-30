@@ -237,7 +237,7 @@ export default async function AiAssistantPage() {
         <PageHeader
           eyebrow="Intelligence"
           title="AI Advisor"
-          description="Generate a plain-English business brief from live CRM, work, revenue, follow-up, and data quality records."
+          description="Generate a plain-English business brief from live relationships, opportunities, work, revenue, actions, and data quality."
           actions={
             <Link
               href="/workspace"

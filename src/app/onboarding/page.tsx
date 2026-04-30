@@ -42,13 +42,13 @@ export default async function OnboardingPage() {
             </p>
 
             <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight">
-              Choose the sector so the dashboard knows what matters.
+              Choose the sector so the workspace knows what matters.
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              A contractor, dental office, insurance agency, dealership, and
-              landscaper do not need the same generic CRM view. FrontierOps uses
-              the sector to adjust wording, priorities, and reports.
+              A dental office, insurance agency, dealership, contractor, and
+              service business should not operate from the same generic
+              workspace.
             </p>
           </div>
         </section>
@@ -125,9 +125,9 @@ export default async function OnboardingPage() {
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
             <p className="font-semibold text-white">What changes by sector?</p>
             <p className="mt-1">
-              Customers can become patients or clients. Leads can become
-              estimates, inquiries, policies, proposals, or deals. The dashboard
-              focuses on the numbers that matter for that business.
+              Relationships can become patients, clients, or customers.
+              Opportunities can become treatment plans, quotes, policies,
+              proposals, deals, or inquiries.
             </p>
           </div>
         </section>

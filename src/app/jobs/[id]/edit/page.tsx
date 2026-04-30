@@ -68,6 +68,18 @@ async function updateJobAction(formData: FormData) {
     throw new Error(error.message);
   }
 
+  const { error: revenuePaymentError } = await supabase
+    .from("sales")
+    .update({
+      payment_status: paidStatus || "Unpaid",
+    })
+    .eq("job_id", jobId)
+    .eq("company_id", companyId);
+
+  if (revenuePaymentError) {
+    throw new Error(revenuePaymentError.message);
+  }
+
   revalidatePath("/jobs");
   revalidatePath("/workspace");
   revalidatePath("/crm");

@@ -51,8 +51,8 @@ export function GenerateSummaryButton() {
           </h2>
 
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            FrontierOps reviews current records and creates a short operating
-            summary with risks, opportunities, and next steps.
+            FrontierOps reviews current business activity and creates a short
+            operating summary with risks, priorities, and next steps.
           </p>
         </div>
 
