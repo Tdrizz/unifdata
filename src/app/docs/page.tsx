@@ -198,7 +198,6 @@ export default function DocsPage() {
                 ["Opportunity sync", "#sync"],
                 ["Imports", "#imports"],
                 ["AI Advisor", "#ai"],
-                ["Demo checklist", "#demo"],
               ].map(([label, href]) => (
                 <a
                   key={href}
@@ -401,34 +400,6 @@ export default function DocsPage() {
                 relationships, opportunities, work, revenue, and actions to make
                 the summary meaningful.
               </p>
-            </section>
-
-            <section
-              id="demo"
-              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
-            >
-              <h2 className="text-2xl font-semibold tracking-tight">
-                Demo checklist
-              </h2>
-
-              <div className="mt-6 grid gap-3">
-                {[
-                  "Open the Today page and explain what needs attention.",
-                  "Show the Pipeline page and explain opportunities.",
-                  "Edit an opportunity and mark it Accepted / won.",
-                  "Show that Work and Revenue records were created.",
-                  "Show that revenue stays unpaid until payment is updated.",
-                  "Open Data Hub and explain data quality.",
-                  "Generate an AI business brief.",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
             </section>
           </div>
         </div>
