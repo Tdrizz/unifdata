@@ -92,7 +92,7 @@ export default function HomePage() {
         <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <div className="inline-flex rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-slate-300">
-              CRM + data management for messy local businesses
+              CRM + Data Management for messy local businesses
             </div>
 
             <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
@@ -100,8 +100,8 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              FrontierOps helps local businesses organize customers, leads,
-              jobs, sales, follow-ups, imports, and AI summaries into one clean,
+              FrontierOps helps businesses organize customers, leads, jobs,
+              sales, follow-ups, imports, and AI summaries into one clean,
               industry-aware dashboard.
             </p>
 
@@ -213,8 +213,8 @@ export default function HomePage() {
             </h2>
             <p className="mt-4 text-base leading-8 text-slate-300">
               Customer info sits in spreadsheets. Follow-ups sit in memory.
-              Revenue sits in QuickBooks. Jobs sit in texts. FrontierOps gives
-              owners one clean place to organize the operating side of the
+              Revenue sits in an old notebook. Jobs sit in texts. FrontierOps
+              gives owners one clean place to organize the operating side of the
               business.
             </p>
           </div>

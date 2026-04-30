@@ -2,7 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const protectedRoutes = [
-  "/auth-test",
   "/onboarding",
   "/workspace",
   "/crm",

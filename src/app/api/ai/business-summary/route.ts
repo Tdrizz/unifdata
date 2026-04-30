@@ -20,11 +20,15 @@ function formatCurrency(value: number) {
 }
 
 export async function POST() {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Missing GEMINI_API_KEY in .env.local." },
+      {
+        error:
+          "Missing Gemini API key. Add GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY.",
+      },
       { status: 500 },
     );
   }
