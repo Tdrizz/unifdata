@@ -168,6 +168,51 @@ export function CsvImportSessionFlow() {
     }
   }
 
+  async function updateRowAction(
+    rowId: string,
+    action: "skip" | "import_as_new" | "update_existing",
+  ) {
+    if (!preview?.session.id) {
+      return;
+    }
+
+    setMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/import-sessions/${preview.session.id}/rows/${rowId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || "Failed to update row action.");
+        return;
+      }
+
+      const previewResponse = await fetch(
+        `/api/import-sessions/${preview.session.id}`,
+      );
+      const previewData = await previewResponse.json();
+
+      if (previewResponse.ok) {
+        setPreview({
+          session: previewData.session,
+          rows: previewData.rows || [],
+        });
+      }
+    } catch {
+      setMessage("Something went wrong while updating the row action.");
+    }
+  }
+
   async function commitImport() {
     if (!preview?.session.id) {
       return;
@@ -220,6 +265,12 @@ export function CsvImportSessionFlow() {
     Boolean(preview) &&
     preview?.session.status !== "committed" &&
     Number(preview?.session.valid_rows || 0) > 0;
+  const hasRowsButNothingReady =
+    Boolean(preview) &&
+    preview?.session.status !== "committed" &&
+    Number(preview?.session.valid_rows || 0) === 0 &&
+    (Number(preview?.session.duplicate_rows || 0) > 0 ||
+      Number(preview?.session.error_rows || 0) > 0);
 
   return (
     <div className="space-y-5">
@@ -346,7 +397,7 @@ export function CsvImportSessionFlow() {
               </p>
             </div>
 
-            <div className="max-h-[420px] divide-y divide-slate-100 overflow-y-auto">
+            <div className="max-h-105 divide-y divide-slate-100 overflow-y-auto">
               {preview.rows.map((row) => {
                 const normalizedEntries = Object.entries(row.normalized_data);
 
@@ -378,9 +429,46 @@ export function CsvImportSessionFlow() {
                     </div>
 
                     {row.duplicate_reason && (
-                      <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-800">
-                        {row.duplicate_reason}
-                      </p>
+                      <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <p className="text-xs font-semibold text-amber-800">
+                          {row.duplicate_reason}
+                        </p>
+
+                        {preview.session.status !== "committed" &&
+                          row.status === "duplicate" && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => updateRowAction(row.id, "skip")}
+                                className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                              >
+                                Skip
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateRowAction(row.id, "import_as_new")
+                                }
+                                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                              >
+                                Import as new
+                              </button>
+
+                              {row.target_id && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateRowAction(row.id, "update_existing")
+                                  }
+                                  className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                                >
+                                  Update existing
+                                </button>
+                              )}
+                            </div>
+                          )}
+                      </div>
                     )}
 
                     {row.validation_errors?.length > 0 && (
@@ -393,6 +481,14 @@ export function CsvImportSessionFlow() {
               })}
             </div>
           </div>
+
+          {hasRowsButNothingReady && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+              No new rows are ready to import. Resolve duplicate rows by
+              skipping, importing as new, or updating the existing record. Error
+              rows need to be fixed in the source file and uploaded again.
+            </div>
+          )}
 
           <button
             type="button"

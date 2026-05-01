@@ -28,6 +28,8 @@ type StagedImportSessionRow = {
   normalized_data: Record<string, unknown>;
   action: string;
   status: string;
+  target_table: string | null;
+  target_id: string | null;
 };
 
 export type ImportFieldDefinition = {
@@ -771,7 +773,7 @@ export async function commitImportSession({
   const { data: rows, error: rowsError } = await supabase
     .from("import_session_rows")
     .select(
-      "id, row_number, external_id, external_hash, normalized_data, action, status",
+      "id, row_number, external_id, external_hash, normalized_data, action, status, target_table, target_id",
     )
     .eq("company_id", companyId)
     .eq("import_session_id", importSessionId)
@@ -782,6 +784,7 @@ export async function commitImportSession({
   }
 
   let createdRows = 0;
+  let updatedRows = 0;
   let skippedRows = 0;
   let failedRows = 0;
 
@@ -810,7 +813,10 @@ export async function commitImportSession({
   const stagedSessionRows = (rows || []) as StagedImportSessionRow[];
 
   for (const row of stagedSessionRows) {
-    if (row.status !== "valid" || row.action !== "create") {
+    if (
+      row.status !== "valid" ||
+      (row.action !== "create" && row.action !== "update")
+    ) {
       skippedRows += 1;
 
       const { error: skipError } = await supabase
@@ -833,24 +839,49 @@ export async function commitImportSession({
         normalizedData: row.normalized_data,
       });
 
-      const { data: createdRecord, error: createError } = await supabase
-        .from(targetTable)
-        .insert(payload)
-        .select("id")
-        .single();
+      let internalId: string;
 
-      if (createError) {
-        throw new Error(createError.message);
+      if (row.action === "update") {
+        if (!row.target_id) {
+          throw new Error("Cannot update row without a target record.");
+        }
+
+        const { company_id: _removedCompanyId, ...updatePayload } = payload;
+        void _removedCompanyId;
+
+        const { error: updateError } = await supabase
+          .from(targetTable)
+          .update(updatePayload)
+          .eq("id", row.target_id)
+          .eq("company_id", companyId);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+
+        internalId = row.target_id;
+        updatedRows += 1;
+      } else {
+        const { data: createdRecord, error: createError } = await supabase
+          .from(targetTable)
+          .insert(payload)
+          .select("id")
+          .single();
+
+        if (createError) {
+          throw new Error(createError.message);
+        }
+
+        internalId = createdRecord.id;
+        createdRows += 1;
       }
-
-      createdRows += 1;
 
       const { error: rowUpdateError } = await supabase
         .from("import_session_rows")
         .update({
           status: "committed",
           target_table: targetTable,
-          target_id: createdRecord.id,
+          target_id: internalId,
         })
         .eq("id", row.id)
         .eq("company_id", companyId);
@@ -870,7 +901,7 @@ export async function commitImportSession({
               external_id: row.external_id,
               external_hash: row.external_hash,
               internal_table: targetTable,
-              internal_id: createdRecord.id,
+              internal_id: internalId,
               last_seen_at: new Date().toISOString(),
             },
             {
@@ -920,7 +951,7 @@ export async function commitImportSession({
     .update({
       status: failedRows > 0 ? "completed_with_errors" : "completed",
       records_created: createdRows,
-      records_updated: 0,
+      records_updated: updatedRows,
       records_failed: failedRows,
       finished_at: new Date().toISOString(),
     })
@@ -936,7 +967,7 @@ export async function commitImportSession({
     .update({
       status: failedRows > 0 ? "failed" : "committed",
       created_rows: createdRows,
-      updated_rows: 0,
+      updated_rows: updatedRows,
       skipped_rows: skippedRows,
       error_rows: failedRows,
       committed_at: new Date().toISOString(),
@@ -950,6 +981,7 @@ export async function commitImportSession({
 
   return {
     createdRows,
+    updatedRows,
     skippedRows,
     failedRows,
   };
