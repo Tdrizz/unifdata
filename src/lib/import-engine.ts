@@ -862,16 +862,21 @@ export async function commitImportSession({
       if (row.external_id) {
         const { error: externalLinkError } = await supabase
           .from("external_record_links")
-          .upsert({
-            company_id: companyId,
-            sync_connection_id: null,
-            provider: session.source_type,
-            external_id: row.external_id,
-            external_hash: row.external_hash,
-            internal_table: targetTable,
-            internal_id: createdRecord.id,
-            last_seen_at: new Date().toISOString(),
-          });
+          .upsert(
+            {
+              company_id: companyId,
+              sync_connection_id: null,
+              provider: session.source_type,
+              external_id: row.external_id,
+              external_hash: row.external_hash,
+              internal_table: targetTable,
+              internal_id: createdRecord.id,
+              last_seen_at: new Date().toISOString(),
+            },
+            {
+              onConflict: "company_id,provider,external_id,internal_table",
+            },
+          );
 
         if (externalLinkError) {
           throw new Error(externalLinkError.message);
