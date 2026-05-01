@@ -302,6 +302,7 @@ async function findRelationshipDuplicate({
       .select("id")
       .eq("company_id", companyId)
       .eq("email", email)
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -324,6 +325,7 @@ async function findRelationshipDuplicate({
       .select("id")
       .eq("company_id", companyId)
       .eq("phone", phone)
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -347,6 +349,7 @@ async function findRelationshipDuplicate({
       .eq("company_id", companyId)
       .eq("name", name)
       .eq("address", address)
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -508,6 +511,7 @@ async function findSimpleDuplicate({
       .eq("company_id", companyId)
       .eq("message", message)
       .eq("due_date", dueDate)
+      .limit(1)
       .maybeSingle();
 
     if (error) {
@@ -568,109 +572,127 @@ export async function createImportSessionFromRows({
     throw new Error(sessionError.message);
   }
 
-  const stagedRows = [];
+  try {
+    const stagedRows = [];
 
-  for (let index = 0; index < rows.length; index += 1) {
-    const rowNumber = index + 1;
-    const rawData = rows[index];
+    for (let index = 0; index < rows.length; index += 1) {
+      const rowNumber = index + 1;
+      const rawData = rows[index];
 
-    const { normalizedData, validationErrors } = normalizeImportRow({
-      recordType,
-      row: rawData,
-      mapping,
-    });
+      const { normalizedData, validationErrors } = normalizeImportRow({
+        recordType,
+        row: rawData,
+        mapping,
+      });
 
-    const externalHash = hashImportData(normalizedData);
+      const externalHash = hashImportData(normalizedData);
 
-    const duplicate = validationErrors.length
-      ? null
-      : await findSimpleDuplicate({
-          supabase,
-          companyId,
-          recordType,
-          normalizedData,
-        });
+      const duplicate = validationErrors.length
+        ? null
+        : await findSimpleDuplicate({
+            supabase,
+            companyId,
+            recordType,
+            normalizedData,
+          });
 
-    let action = "create";
-    let status = "valid";
+      let action = "create";
+      let status = "valid";
 
-    if (validationErrors.length) {
-      action = "error";
-      status = "error";
-    } else if (duplicate) {
-      action = "review";
-      status = "duplicate";
+      if (validationErrors.length) {
+        action = "error";
+        status = "error";
+      } else if (duplicate) {
+        action = "review";
+        status = "duplicate";
+      }
+
+      stagedRows.push({
+        company_id: companyId,
+        import_session_id: session.id,
+        row_number: rowNumber,
+        external_id: buildExternalId({
+          sourceType,
+          sourceName: sourceName || fileName || null,
+          rowNumber,
+        }),
+        external_hash: externalHash,
+        raw_data: rawData,
+        normalized_data: normalizedData,
+        target_table: duplicate?.targetTable || getTargetTable(recordType),
+        target_id: duplicate?.targetId || null,
+        action,
+        status,
+        match_confidence: duplicate?.matchConfidence || null,
+        duplicate_reason: duplicate?.duplicateReason || null,
+        validation_errors: validationErrors,
+      });
     }
 
-    stagedRows.push({
-      company_id: companyId,
-      import_session_id: session.id,
-      row_number: rowNumber,
-      external_id: buildExternalId({
-        sourceType,
-        sourceName: sourceName || fileName || null,
-        rowNumber,
-      }),
-      external_hash: externalHash,
-      raw_data: rawData,
-      normalized_data: normalizedData,
-      target_table: duplicate?.targetTable || getTargetTable(recordType),
-      target_id: duplicate?.targetId || null,
-      action,
-      status,
-      match_confidence: duplicate?.matchConfidence || null,
-      duplicate_reason: duplicate?.duplicateReason || null,
-      validation_errors: validationErrors,
-    });
-  }
+    if (stagedRows.length) {
+      const { error: rowsError } = await supabase
+        .from("import_session_rows")
+        .insert(stagedRows);
 
-  if (stagedRows.length) {
-    const { error: rowsError } = await supabase
-      .from("import_session_rows")
-      .insert(stagedRows);
-
-    if (rowsError) {
-      throw new Error(rowsError.message);
+      if (rowsError) {
+        throw new Error(rowsError.message);
+      }
     }
-  }
 
-  const validRows = stagedRows.filter((row) => row.status === "valid").length;
-  const duplicateRows = stagedRows.filter(
-    (row) => row.status === "duplicate",
-  ).length;
-  const errorRows = stagedRows.filter((row) => row.status === "error").length;
+    const validRows = stagedRows.filter((row) => row.status === "valid").length;
+    const duplicateRows = stagedRows.filter(
+      (row) => row.status === "duplicate",
+    ).length;
+    const errorRows = stagedRows.filter((row) => row.status === "error").length;
 
-  const summary = {
-    source_type: sourceType,
-    source_name: sourceName || null,
-    file_name: fileName || null,
-    record_type: recordType,
-    total_rows: rows.length,
-    valid_rows: validRows,
-    duplicate_rows: duplicateRows,
-    error_rows: errorRows,
-  };
-
-  const { error: updateSessionError } = await supabase
-    .from("import_sessions")
-    .update({
-      status: "ready",
+    const summary = {
+      source_type: sourceType,
+      source_name: sourceName || null,
+      file_name: fileName || null,
+      record_type: recordType,
+      total_rows: rows.length,
       valid_rows: validRows,
       duplicate_rows: duplicateRows,
       error_rows: errorRows,
+    };
+
+    const { error: updateSessionError } = await supabase
+      .from("import_sessions")
+      .update({
+        status: "ready",
+        valid_rows: validRows,
+        duplicate_rows: duplicateRows,
+        error_rows: errorRows,
+        summary,
+      })
+      .eq("id", session.id)
+      .eq("company_id", companyId);
+
+    if (updateSessionError) {
+      throw new Error(updateSessionError.message);
+    }
+
+    return {
+      sessionId: session.id as string,
       summary,
-    })
-    .eq("id", session.id)
-    .eq("company_id", companyId);
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to analyze import session.";
 
-  if (updateSessionError) {
-    throw new Error(updateSessionError.message);
+    await supabase
+      .from("import_sessions")
+      .update({
+        status: "failed",
+        error_message: errorMessage,
+      })
+      .eq("id", session.id)
+      .eq("company_id", companyId);
+
+    throw error;
   }
-
-  return {
-    sessionId: session.id as string,
-    summary,
-  };
 }
 
 function buildInsertPayload({
