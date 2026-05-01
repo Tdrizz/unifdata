@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ImportRecordType =
   | "relationships"
@@ -18,8 +19,15 @@ export type ImportSourceType =
 export type RawImportRow = Record<string, unknown>;
 export type ImportMapping = Record<string, string>;
 
-type SupabaseWriteClient = {
-  from: (table: string) => any;
+type SupabaseWriteClient = SupabaseClient;
+type StagedImportSessionRow = {
+  id: string;
+  row_number: number;
+  external_id: string | null;
+  external_hash: string | null;
+  normalized_data: Record<string, unknown>;
+  action: string;
+  status: string;
 };
 
 export type ImportFieldDefinition = {
@@ -177,10 +185,6 @@ function getMappedValue(
   }
 
   return cleanImportValue(row[sourceColumn]);
-}
-
-function normalizeStatus(value: unknown, fallback: string) {
-  return cleanImportValue(value) || fallback;
 }
 
 export function hashImportData(data: unknown) {
@@ -777,10 +781,6 @@ export async function commitImportSession({
     throw new Error(rowsError.message);
   }
 
-  const rowsToCreate = (rows || []).filter(
-    (row: any) => row.status === "valid" && row.action === "create",
-  );
-
   let createdRows = 0;
   let skippedRows = 0;
   let failedRows = 0;
@@ -807,7 +807,9 @@ export async function commitImportSession({
     throw new Error(syncRunError.message);
   }
 
-  for (const row of rows || []) {
+  const stagedSessionRows = (rows || []) as StagedImportSessionRow[];
+
+  for (const row of stagedSessionRows) {
     if (row.status !== "valid" || row.action !== "create") {
       skippedRows += 1;
 
