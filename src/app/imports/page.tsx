@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
@@ -95,6 +96,7 @@ export default async function ImportsPage() {
     syncConnectionsResult,
     syncRunsResult,
     importSessionsResult,
+    integrationsResult,
   ] = await Promise.all([
     supabase
       .from("imports")
@@ -133,6 +135,12 @@ export default async function ImportsPage() {
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
       .limit(10),
+
+    supabase
+      .from("integrations")
+      .select("id, provider, provider_account_name, status, created_at")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (importsResult.error) {
@@ -155,11 +163,21 @@ export default async function ImportsPage() {
     throw new Error(importSessionsResult.error.message);
   }
 
+  if (integrationsResult.error) {
+    throw new Error(integrationsResult.error.message);
+  }
+
   const importRecords = importsResult.data || [];
   const customerRecords = customersResult.data || [];
   const connectionRecords = syncConnectionsResult.data || [];
   const syncRunRecords = syncRunsResult.data || [];
   const importSessionRecords = importSessionsResult.data || [];
+  const integrationRecords = integrationsResult.data || [];
+  const googleSheetsIntegration = integrationRecords.find(
+    (integration) =>
+      integration.provider === "google_sheets" &&
+      integration.status === "active",
+  );
 
   const completedImports = importRecords.filter(
     (item) => item.status === "completed",
@@ -243,6 +261,47 @@ export default async function ImportsPage() {
             title="Sync roadmap"
             description="CSV is available now. Connected sources will use the same import session pipeline."
           >
+            <div className="p-5 pb-0">
+              {googleSheetsIntegration ? (
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="font-semibold text-emerald-950">
+                        Google Sheets connected
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-700">
+                        {googleSheetsIntegration.provider_account_name ||
+                          "Google account"}
+                      </p>
+                    </div>
+
+                    <StatusBadge tone="success">Connected</StatusBadge>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        Connect Google Sheets
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">
+                        Authorize read-only spreadsheet access so FrontierOps
+                        can import sheet data through the staged import engine.
+                      </p>
+                    </div>
+
+                    <a
+                      href="/api/integrations/google/start"
+                      className="w-fit rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
+                      Connect Google
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
               {providerCards.map((provider) => (
                 <div
