@@ -11,32 +11,27 @@ export type ProductNavGroup = {
 
 export const productNavigation: ProductNavGroup[] = [
   {
-    label: "Today",
+    label: "Main",
     items: [
       {
         href: "/workspace",
-        label: "Brief",
+        label: "Home",
         description: "What needs attention",
       },
-    ],
-  },
-  {
-    label: "Business Flow",
-    items: [
       {
         href: "/crm",
         label: "Pipeline",
-        description: "Relationships and opportunities",
+        description: "Open opportunities",
       },
       {
-        href: "/follow-ups",
-        label: "Actions",
-        description: "Tasks and next steps",
+        href: "/data-hub",
+        label: "Insights",
+        description: "Trends and data quality",
       },
     ],
   },
   {
-    label: "Records",
+    label: "Workspace",
     items: [
       {
         href: "/customers",
@@ -51,33 +46,28 @@ export const productNavigation: ProductNavGroup[] = [
       {
         href: "/jobs",
         label: "Work",
-        description: "Delivery and fulfillment",
+        description: "Jobs, projects, or appointments",
       },
       {
         href: "/sales",
         label: "Revenue",
         description: "Payments and collections",
       },
+      {
+        href: "/follow-ups",
+        label: "Follow-Ups",
+        description: "Next steps and reminders",
+      },
     ],
   },
   {
-    label: "Data",
+    label: "Tools",
     items: [
-      {
-        href: "/data-hub",
-        label: "Data Hub",
-        description: "Quality and completeness",
-      },
       {
         href: "/imports",
-        label: "Imports",
-        description: "Bring in outside data",
+        label: "Import Data",
+        description: "CSV and Google Sheets",
       },
-    ],
-  },
-  {
-    label: "Intelligence",
-    items: [
       {
         href: "/ai-assistant",
         label: "AI Advisor",
