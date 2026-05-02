@@ -138,14 +138,6 @@ export function CsvImportSessionFlow() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-semibold text-slate-950">Safe import flow</p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          FrontierOps will analyze the file first, detect duplicates and errors,
-          then send you to a review page before anything is committed.
-        </p>
-      </div>
-
       <button
         type="button"
         onClick={analyzeCsv}
