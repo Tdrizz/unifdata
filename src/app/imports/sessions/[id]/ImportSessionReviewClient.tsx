@@ -261,11 +261,11 @@ export function ImportSessionReviewClient({
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-sm font-semibold text-slate-950">
-          Review before committing
+          Fix issues before import
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Ready rows will be created or updated in FrontierOps. Duplicate and
-          error rows are skipped unless you choose an action for them.
+          Edit bad rows directly, resolve duplicates, then commit only the rows
+          you want written into FrontierOps.
         </p>
       </div>
 
@@ -285,7 +285,7 @@ export function ImportSessionReviewClient({
           </p>
         </div>
 
-        <div className="max-h-[560px] divide-y divide-slate-100 overflow-y-auto">
+        <div className="max-h-140 divide-y divide-slate-100 overflow-y-auto">
           {rows.map((row) => {
             const normalizedEntries = Object.entries(row.normalized_data);
             const isWorking = workingRowId === row.id;
@@ -377,8 +377,13 @@ export function ImportSessionReviewClient({
                 )}
 
                 {row.validation_errors?.length > 0 && (
-                  <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
-                    {row.validation_errors.join(" ")}
+                  <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
+                      Needs fix
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-red-800">
+                      {row.validation_errors.join(" ")}
+                    </p>
                   </div>
                 )}
               </article>
