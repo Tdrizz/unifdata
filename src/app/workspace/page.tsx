@@ -147,11 +147,6 @@ function isClosedOpportunity(status: string | null) {
   );
 }
 
-function isWonOpportunity(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return normalized.includes("won") || normalized.includes("accepted");
-}
-
 function isCompleteWork(status: string | null) {
   const normalized = String(status || "").toLowerCase();
 
@@ -358,8 +353,6 @@ export default async function WorkspacePage() {
   );
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const wonLeads = leads.filter((lead) => isWonOpportunity(lead.status));
-
   const activeWork = workRecords.filter(
     (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
   );
@@ -372,13 +365,7 @@ export default async function WorkspacePage() {
     (sum, lead) => sum + Number(lead.estimated_value || 0),
     0,
   );
-
-  const wonValue = wonLeads.reduce(
-    (sum, lead) => sum + Number(lead.estimated_value || 0),
-    0,
-  );
-
-  const activeWorkValue = activeWork.reduce(
+const activeWorkValue = activeWork.reduce(
     (sum, work) => sum + Number(work.job_value || 0),
     0,
   );
@@ -953,3 +940,6 @@ export default async function WorkspacePage() {
     </AppShell>
   );
 }
+
+
+
