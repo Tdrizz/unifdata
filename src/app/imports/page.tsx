@@ -10,6 +10,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CsvImportSessionFlow } from "./CsvImportSessionFlow";
+import { GoogleSheetsImportFlow } from "./GoogleSheetsImportFlow";
 
 const providerCards = [
   {
@@ -263,19 +264,35 @@ export default async function ImportsPage() {
           >
             <div className="p-5 pb-0">
               {googleSheetsIntegration ? (
-                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="font-semibold text-emerald-950">
-                        Google Sheets connected
-                      </p>
-                      <p className="mt-1 text-sm text-emerald-700">
-                        {googleSheetsIntegration.provider_account_name ||
-                          "Google account"}
-                      </p>
-                    </div>
+                <div className="space-y-4">
+                  <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="font-semibold text-emerald-950">
+                          Google Sheets connected
+                        </p>
+                        <p className="mt-1 text-sm text-emerald-700">
+                          {googleSheetsIntegration.provider_account_name ||
+                            "Google account"}
+                        </p>
+                      </div>
 
-                    <StatusBadge tone="success">Connected</StatusBadge>
+                      <StatusBadge tone="success">Connected</StatusBadge>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                    <p className="font-semibold text-slate-950">
+                      Import from Google Sheets
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Paste a Google Sheet URL, choose a tab, and send the rows
+                      through the same staged import engine as CSV.
+                    </p>
+
+                    <div className="mt-4">
+                      <GoogleSheetsImportFlow />
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -377,11 +394,19 @@ export default async function ImportsPage() {
                       </p>
                     </div>
 
-                    <div className="md:text-right">
+                    <div className="flex flex-col gap-2 md:items-end">
                       <StatusBadge tone={getStatusTone(session.status)}>
                         {session.status}
                       </StatusBadge>
-                      <p className="mt-2 text-xs text-slate-500">
+
+                      <Link
+                        href={`/imports/sessions/${session.id}`}
+                        className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Review
+                      </Link>
+
+                      <p className="text-xs text-slate-500">
                         {formatDate(session.committed_at || session.created_at)}
                       </p>
                     </div>

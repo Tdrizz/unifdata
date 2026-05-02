@@ -123,6 +123,116 @@ export const importFieldDefinitions: Record<
   ],
 };
 
+const importFieldSynonyms: Record<string, string[]> = {
+  name: ["name", "customer", "client", "patient", "company", "account"],
+  phone: ["phone", "phone number", "mobile", "cell", "contact phone"],
+  email: ["email", "email address", "contact email"],
+  address: ["address", "service address", "mailing address", "location"],
+  customer_type: ["type", "customer type", "client type", "category"],
+  notes: ["notes", "note", "comments", "description"],
+
+  service_requested: [
+    "opportunity",
+    "lead",
+    "quote",
+    "estimate",
+    "proposal",
+    "deal",
+    "inquiry",
+    "service",
+    "service requested",
+    "treatment plan",
+  ],
+  status: ["status", "stage", "pipeline stage"],
+  estimated_value: [
+    "estimated value",
+    "value",
+    "amount",
+    "estimate amount",
+    "quote amount",
+    "deal value",
+  ],
+  source: ["source", "lead source", "channel", "referral source"],
+  next_follow_up_date: [
+    "next follow up",
+    "next follow-up",
+    "follow up date",
+    "follow-up date",
+    "next action date",
+  ],
+
+  service_type: [
+    "work",
+    "job",
+    "project",
+    "appointment",
+    "order",
+    "service type",
+    "category",
+  ],
+  job_value: ["job value", "work value", "project value", "amount", "value"],
+  start_date: ["start date", "scheduled date", "appointment date"],
+  completed_date: ["completed date", "completion date", "finished date"],
+  paid_status: ["paid status", "payment status", "paid"],
+
+  amount: ["amount", "payment", "revenue", "invoice amount", "sale amount"],
+  payment_status: ["payment status", "paid status", "status"],
+  sale_date: ["date", "sale date", "payment date", "invoice date"],
+  due_date: ["due date", "follow up date", "follow-up date"],
+  message: ["message", "action", "task", "follow up", "follow-up", "reminder"],
+};
+
+function normalizeImportHeader(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+export function guessImportMapping(
+  headers: string[],
+  recordType: ImportRecordType,
+) {
+  const mapping: ImportMapping = {};
+
+  const normalizedHeaders = headers.map((header) => ({
+    original: header,
+    normalized: normalizeImportHeader(header),
+  }));
+
+  importFieldDefinitions[recordType].forEach((field) => {
+    const possibleNames = [
+      field.key,
+      field.label,
+      ...(importFieldSynonyms[field.key] || []),
+    ];
+
+    const normalizedPossibleNames = possibleNames.map((name) =>
+      normalizeImportHeader(name),
+    );
+
+    const exactMatch = normalizedHeaders.find((header) =>
+      normalizedPossibleNames.includes(header.normalized),
+    );
+
+    if (exactMatch) {
+      mapping[field.key] = exactMatch.original;
+      return;
+    }
+
+    const partialMatch = normalizedHeaders.find((header) =>
+      normalizedPossibleNames.some(
+        (possibleName) =>
+          header.normalized.includes(possibleName) ||
+          possibleName.includes(header.normalized),
+      ),
+    );
+
+    if (partialMatch) {
+      mapping[field.key] = partialMatch.original;
+    }
+  });
+
+  return mapping;
+}
+
 export function getTargetTable(recordType: ImportRecordType) {
   if (recordType === "relationships") {
     return "customers";

@@ -145,22 +145,7 @@ export function CsvImportSessionFlow() {
         return;
       }
 
-      const previewResponse = await fetch(
-        `/api/import-sessions/${data.session_id}`,
-      );
-      const previewData = await previewResponse.json();
-
-      if (!previewResponse.ok) {
-        setMessage(previewData.error || "Failed to load import preview.");
-        return;
-      }
-
-      setPreview({
-        session: previewData.session,
-        rows: previewData.rows || [],
-      });
-
-      setMessage("CSV analyzed. Review the preview before committing.");
+      router.push(`/imports/sessions/${data.session_id}`);
     } catch {
       setMessage("Something went wrong while analyzing the CSV.");
     } finally {
