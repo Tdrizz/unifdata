@@ -5,6 +5,7 @@ const googleScopes = [
   "openid",
   "email",
   "https://www.googleapis.com/auth/spreadsheets.readonly",
+  "https://www.googleapis.com/auth/drive.file",
 ];
 
 export async function GET(request: Request) {
