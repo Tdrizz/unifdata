@@ -1,103 +1,52 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany, getCurrentCompanyId } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompany } from "@/lib/current-company";
 
-const paymentStatuses = ["Paid", "Partial", "Unpaid"];
+type RevenueRecord = {
+  id: string;
+  amount: number | null;
+  payment_status: string | null;
+  sale_date: string | null;
+  service_type: string | null;
+  source: string | null;
+  created_at: string;
+};
 
-async function createSaleAction(formData: FormData) {
-  "use server";
+function getFormString(formData: FormData, key: string) {
+  const value = formData.get(key);
 
-  const companyId = await getCurrentCompanyId();
-
-  if (!companyId) {
-    throw new Error("No company found.");
+  if (typeof value !== "string") {
+    return "";
   }
 
-  const customerId = String(formData.get("customerId") || "").trim();
-  const jobId = String(formData.get("jobId") || "").trim();
-  const amount = String(formData.get("amount") || "").trim();
-  const paymentStatus = String(formData.get("paymentStatus") || "Paid").trim();
-  const saleDate = String(formData.get("saleDate") || "").trim();
-  const serviceType = String(formData.get("serviceType") || "").trim();
-  const source = String(formData.get("source") || "").trim();
-
-  if (!amount) {
-    throw new Error("Amount is required.");
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase.from("sales").insert({
-    company_id: companyId,
-    customer_id: customerId || null,
-    job_id: jobId || null,
-    amount: Number(amount),
-    payment_status: paymentStatus || "Paid",
-    sale_date: saleDate || new Date().toISOString().slice(0, 10),
-    service_type: serviceType || null,
-    source: source || null,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/sales");
-  revalidatePath("/workspace");
-  revalidatePath("/data-hub");
+  return value.trim();
 }
 
-async function deleteSaleAction(formData: FormData) {
-  "use server";
+function getOptionalNumber(formData: FormData, key: string) {
+  const value = getFormString(formData, key);
 
-  const companyId = await getCurrentCompanyId();
-
-  if (!companyId) {
-    throw new Error("No company found.");
+  if (!value) {
+    return null;
   }
 
-  const saleId = String(formData.get("saleId") || "");
+  const number = Number(value);
 
-  if (!saleId) {
-    throw new Error("Sale ID is required.");
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from("sales")
-    .delete()
-    .eq("id", saleId)
-    .eq("company_id", companyId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/sales");
-  revalidatePath("/workspace");
-  revalidatePath("/data-hub");
+  return Number.isFinite(number) ? number : null;
 }
 
-function getStartOfMonth() {
-  const now = new Date();
-
-  return new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
-}
-
-function formatCurrency(value: number | string | null) {
-  return `$${Number(value || 0).toLocaleString()}`;
+function formatCurrency(value: number | null | undefined) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
 }
 
 function formatDate(date: string | null) {
@@ -108,147 +57,132 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleDateString();
 }
 
-function getCustomerName(customerRelation: unknown) {
-  if (Array.isArray(customerRelation)) {
-    return customerRelation[0]?.name || "No customer linked";
-  }
-
-  if (
-    typeof customerRelation === "object" &&
-    customerRelation !== null &&
-    "name" in customerRelation
-  ) {
-    return String(
-      (customerRelation as { name?: string | null }).name ||
-        "No customer linked",
-    );
-  }
-
-  return "No customer linked";
+function getTodayDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function getJobName(jobRelation: unknown) {
-  if (Array.isArray(jobRelation)) {
-    return jobRelation[0]?.service_type || "No work record linked";
-  }
+function getStatusTone(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
 
-  if (
-    typeof jobRelation === "object" &&
-    jobRelation !== null &&
-    "service_type" in jobRelation
-  ) {
-    return String(
-      (jobRelation as { service_type?: string | null }).service_type ||
-        "No work record linked",
-    );
-  }
-
-  return "No work record linked";
-}
-
-function getPaymentTone(status: string | null) {
-  if (status === "Paid") {
+  if (normalized.includes("paid")) {
     return "success" as const;
   }
 
-  if (status === "Partial") {
-    return "warning" as const;
+  if (
+    normalized.includes("unpaid") ||
+    normalized.includes("partial") ||
+    normalized.includes("due") ||
+    normalized.includes("overdue")
+  ) {
+    return "danger" as const;
   }
 
-  if (status === "Unpaid") {
-    return "danger" as const;
+  if (normalized.includes("pending")) {
+    return "warning" as const;
   }
 
   return "neutral" as const;
 }
 
-function getServiceSummary(
-  sales: {
-    service_type: string | null;
-    amount: number | string | null;
-    payment_status: string | null;
-  }[],
-) {
-  const serviceMap = new Map<
-    string,
-    {
-      count: number;
-      value: number;
-      unpaidValue: number;
-    }
-  >();
+function isPaid(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
 
-  sales.forEach((sale) => {
-    const service = sale.service_type || "Uncategorized";
-    const current = serviceMap.get(service) || {
-      count: 0,
-      value: 0,
-      unpaidValue: 0,
-    };
-
-    const amount = Number(sale.amount || 0);
-
-    serviceMap.set(service, {
-      count: current.count + 1,
-      value: current.value + amount,
-      unpaidValue:
-        current.unpaidValue + (sale.payment_status !== "Paid" ? amount : 0),
-    });
-  });
-
-  return Array.from(serviceMap.entries())
-    .map(([service, data]) => ({
-      service,
-      ...data,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 8);
+  return normalized === "paid" || normalized.includes("paid");
 }
 
-function getSourceSummary(
-  sales: {
-    source: string | null;
-    amount: number | string | null;
-    payment_status: string | null;
-  }[],
-) {
-  const sourceMap = new Map<
-    string,
-    {
-      count: number;
-      value: number;
-      unpaidValue: number;
-    }
-  >();
+function isUnpaid(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
 
-  sales.forEach((sale) => {
-    const source = sale.source || "Unknown";
-    const current = sourceMap.get(source) || {
-      count: 0,
-      value: 0,
-      unpaidValue: 0,
-    };
-
-    const amount = Number(sale.amount || 0);
-
-    sourceMap.set(source, {
-      count: current.count + 1,
-      value: current.value + amount,
-      unpaidValue:
-        current.unpaidValue + (sale.payment_status !== "Paid" ? amount : 0),
-    });
-  });
-
-  return Array.from(sourceMap.entries())
-    .map(([source, data]) => ({
-      source,
-      ...data,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 8);
+  return (
+    normalized.includes("unpaid") ||
+    normalized.includes("partial") ||
+    normalized.includes("due") ||
+    normalized.includes("overdue")
+  );
 }
 
-export default async function SalesPage() {
+function getRevenueNextStep(record: RevenueRecord) {
+  if (record.amount === null || record.amount === undefined) {
+    return "Add the amount so this revenue is included in reporting.";
+  }
+
+  if (!record.payment_status) {
+    return "Set the payment status so collected and uncollected revenue are clear.";
+  }
+
+  if (isUnpaid(record.payment_status)) {
+    return "This revenue still needs collection or payment follow-up.";
+  }
+
+  if (!record.source) {
+    return "Add a source so revenue can be tied back to what generated it.";
+  }
+
+  if (!record.sale_date) {
+    return "Add a revenue date so this appears in the right reporting period.";
+  }
+
+  return "Revenue looks good. Keep the source and payment status current.";
+}
+
+function getRevenueIssues(record: RevenueRecord) {
+  const issues: {
+    label: string;
+    tone: "success" | "warning" | "danger" | "neutral";
+  }[] = [];
+
+  if (record.amount === null || record.amount === undefined) {
+    issues.push({
+      label: "Add amount",
+      tone: "warning",
+    });
+  }
+
+  if (!record.payment_status) {
+    issues.push({
+      label: "Add status",
+      tone: "neutral",
+    });
+  } else if (isUnpaid(record.payment_status)) {
+    issues.push({
+      label: "Payment needed",
+      tone: "danger",
+    });
+  }
+
+  if (!record.source) {
+    issues.push({
+      label: "Add source",
+      tone: "neutral",
+    });
+  }
+
+  if (!record.sale_date) {
+    issues.push({
+      label: "Add date",
+      tone: "neutral",
+    });
+  }
+
+  if (issues.length === 0) {
+    issues.push({
+      label: "Looks clean",
+      tone: "success",
+    });
+  }
+
+  return issues;
+}
+
+export default async function RevenuePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; source?: string }>;
+}) {
+  const params = await searchParams;
+  const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
+  const selectedSource = params.source ? decodeURIComponent(params.source) : "";
+
   const supabase = await createClient();
 
   const {
@@ -266,159 +200,192 @@ export default async function SalesPage() {
   }
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
+  const today = getTodayDate();
 
-  const startOfMonth = getStartOfMonth();
+  async function createRevenue(formData: FormData) {
+    "use server";
 
-  const { data: customers, error: customersError } = await supabase
-    .from("customers")
-    .select("id, name")
-    .eq("company_id", company.id)
-    .order("name", { ascending: true });
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
 
-  if (customersError) {
-    throw new Error(customersError.message);
+    if (!currentCompany) {
+      redirect("/onboarding");
+    }
+
+    const { company } = currentCompany;
+
+    const amount = getOptionalNumber(formData, "amount");
+    const paymentStatus = getFormString(formData, "payment_status") || "Paid";
+    const saleDate = getFormString(formData, "sale_date") || getTodayDate();
+    const serviceType = getFormString(formData, "service_type");
+    const source = getFormString(formData, "source");
+
+    if (amount === null) {
+      throw new Error("Revenue amount is required.");
+    }
+
+    const { error } = await supabase.from("sales").insert({
+      company_id: company.id,
+      amount,
+      payment_status: paymentStatus,
+      sale_date: saleDate || null,
+      service_type: serviceType || null,
+      source: source || null,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    redirect("/sales");
   }
 
-  const { data: jobs, error: jobsError } = await supabase
-    .from("jobs")
-    .select("id, service_type, status, job_value")
-    .eq("company_id", company.id)
-    .order("created_at", { ascending: false });
-
-  if (jobsError) {
-    throw new Error(jobsError.message);
-  }
-
-  const { data: sales, error: salesError } = await supabase
+  const { data, error } = await supabase
     .from("sales")
     .select(
-      `
-      id,
-      customer_id,
-      job_id,
-      amount,
-      payment_status,
-      sale_date,
-      service_type,
-      source,
-      created_at,
-      customers (
-        name
-      ),
-      jobs (
-        service_type
-      )
-    `,
+      "id, amount, payment_status, sale_date, service_type, source, created_at",
     )
     .eq("company_id", company.id)
-    .order("sale_date", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(250);
 
-  if (salesError) {
-    throw new Error(salesError.message);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  const customerRecords = customers || [];
-  const jobRecords = jobs || [];
-  const saleRecords = sales || [];
+  const revenueRecords = (data || []) as RevenueRecord[];
 
-  const totalSales = saleRecords.length;
+  const paidRevenue = revenueRecords.filter((record) =>
+    isPaid(record.payment_status),
+  );
 
-  const totalRevenue = saleRecords.reduce(
-    (sum, sale) => sum + Number(sale.amount || 0),
+  const unpaidRevenue = revenueRecords.filter((record) =>
+    isUnpaid(record.payment_status),
+  );
+
+  const missingSource = revenueRecords.filter((record) => !record.source);
+
+  const missingAmount = revenueRecords.filter(
+    (record) => record.amount === null || record.amount === undefined,
+  );
+
+  const missingDate = revenueRecords.filter((record) => !record.sale_date);
+
+  const totalRevenue = revenueRecords.reduce(
+    (sum, record) => sum + Number(record.amount || 0),
     0,
   );
 
-  const monthlyRevenue = saleRecords
-    .filter((sale) => sale.sale_date >= startOfMonth)
-    .reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
+  const paidTotal = paidRevenue.reduce(
+    (sum, record) => sum + Number(record.amount || 0),
+    0,
+  );
 
-  const paidRevenue = saleRecords
-    .filter((sale) => sale.payment_status === "Paid")
-    .reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
+  const unpaidTotal = unpaidRevenue.reduce(
+    (sum, record) => sum + Number(record.amount || 0),
+    0,
+  );
 
-  const unpaidRevenue = saleRecords
-    .filter((sale) => sale.payment_status !== "Paid")
-    .reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
+  const cleanupGroups = [
+    {
+      id: "missing-source",
+      label: "Add source",
+      title: "Revenue needs sources",
+      detail: "Source tracking helps show what generated paid work.",
+      count: missingSource.length,
+      href: "/sales",
+    },
+    {
+      id: "missing-amount",
+      label: "Add amount",
+      title: "Revenue needs amounts",
+      detail: "Amounts are required for accurate revenue reporting.",
+      count: missingAmount.length,
+      href: "/sales",
+    },
+    {
+      id: "missing-date",
+      label: "Add date",
+      title: "Revenue needs dates",
+      detail: "Revenue dates keep records in the right reporting period.",
+      count: missingDate.length,
+      href: "/sales",
+    },
+  ].filter((item) => item.count > 0);
 
-  const paidCount = saleRecords.filter(
-    (sale) => sale.payment_status === "Paid",
-  ).length;
+  const prioritizedRevenue = [...revenueRecords]
+    .sort((a, b) => {
+      const aUnpaid = isUnpaid(a.payment_status);
+      const bUnpaid = isUnpaid(b.payment_status);
 
-  const partialCount = saleRecords.filter(
-    (sale) => sale.payment_status === "Partial",
-  ).length;
+      if (aUnpaid !== bUnpaid) {
+        return aUnpaid ? -1 : 1;
+      }
 
-  const unpaidCount = saleRecords.filter(
-    (sale) => sale.payment_status === "Unpaid",
-  ).length;
+      const aMissingSource = !a.source;
+      const bMissingSource = !b.source;
 
-  const missingCustomer = saleRecords.filter(
-    (sale) => !sale.customer_id,
-  ).length;
+      if (aMissingSource !== bMissingSource) {
+        return aMissingSource ? -1 : 1;
+      }
 
-  const missingJob = saleRecords.filter((sale) => !sale.job_id).length;
+      return Number(b.amount || 0) - Number(a.amount || 0);
+    })
+    .slice(0, 25);
 
-  const missingSource = saleRecords.filter((sale) => !sale.source).length;
+  const visibleRevenue = prioritizedRevenue.filter((record) => {
+    if (
+      selectedStatus &&
+      (record.payment_status || "Not set") !== selectedStatus
+    ) {
+      return false;
+    }
 
-  const missingServiceType = saleRecords.filter(
-    (sale) => !sale.service_type,
-  ).length;
+    if (selectedSource && (record.source || "No source") !== selectedSource) {
+      return false;
+    }
 
-  const missingDate = saleRecords.filter((sale) => !sale.sale_date).length;
+    return true;
+  });
 
-  const collectionRate =
-    totalRevenue > 0 ? Math.round((paidRevenue / totalRevenue) * 100) : 0;
+  const paymentGroups = Array.from(
+    revenueRecords.reduce((map, record) => {
+      const status = record.payment_status || "Not set";
+      const current = map.get(status) || {
+        status,
+        count: 0,
+        amount: 0,
+      };
 
-  const serviceSummary = getServiceSummary(saleRecords);
+      current.count += 1;
+      current.amount += Number(record.amount || 0);
+      map.set(status, current);
 
-  const sourceSummary = getSourceSummary(saleRecords);
+      return map;
+    }, new Map<string, { status: string; count: number; amount: number }>()),
+  )
+    .map(([, group]) => group)
+    .sort((a, b) => b.amount - a.amount);
 
-  const paymentSummary = paymentStatuses.map((status) => ({
-    status,
-    count: saleRecords.filter((sale) => sale.payment_status === status).length,
-    value: saleRecords
-      .filter((sale) => sale.payment_status === status)
-      .reduce((sum, sale) => sum + Number(sale.amount || 0), 0),
-  }));
+  const sourceGroups = Array.from(
+    revenueRecords.reduce((map, record) => {
+      const source = record.source || "No source";
+      const current = map.get(source) || {
+        source,
+        count: 0,
+        amount: 0,
+      };
 
-  const unpaidSales = saleRecords
-    .filter((sale) => sale.payment_status !== "Paid")
+      current.count += 1;
+      current.amount += Number(record.amount || 0);
+      map.set(source, current);
+
+      return map;
+    }, new Map<string, { source: string; count: number; amount: number }>()),
+  )
+    .map(([, group]) => group)
+    .sort((a, b) => b.amount - a.amount)
     .slice(0, 8);
-
-  const recentSales = saleRecords.slice(0, 8);
-
-  const cleanupItems = [
-    {
-      label: `${profile.labels.salePlural} without linked ${profile.labels.customerSingular.toLowerCase()}`,
-      value: missingCustomer,
-      description:
-        "Revenue is more useful when it connects back to the customer or client.",
-    },
-    {
-      label: `${profile.labels.salePlural} not linked to work`,
-      value: missingJob,
-      description:
-        "Connecting revenue to work records helps show which jobs or projects turn into payment.",
-    },
-    {
-      label: `${profile.labels.salePlural} missing source`,
-      value: missingSource,
-      description:
-        "Source tracking helps show which channels create paid work.",
-    },
-    {
-      label: `${profile.labels.salePlural} missing service type`,
-      value: missingServiceType,
-      description:
-        "Service type helps show what the business actually makes money from.",
-    },
-    {
-      label: `${profile.labels.salePlural} missing date`,
-      value: missingDate,
-      description: "Dates are needed for monthly reporting and trend analysis.",
-    },
-  ];
 
   return (
     <AppShell
@@ -427,484 +394,419 @@ export default async function SalesPage() {
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
-          eyebrow="Records"
-          title={profile.labels.salePlural}
-          description={`Track ${profile.labels.salePlural.toLowerCase()}, payment status, service type, source, dates, and related customers so revenue is easy to understand and follow up on.`}
+          eyebrow="Revenue"
+          title="Track payments and collected work"
+          description="Use this page to see paid revenue, unpaid revenue, payment status, and what sources are generating money."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/jobs"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Work
+              </Link>
+
+              <Link
+                href="/imports"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Import data
+              </Link>
+            </div>
+          }
         />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Revenue this month"
-            value={formatCurrency(monthlyRevenue)}
-            helper="Recorded since the start of the month"
-            tone="positive"
-          />
-
-          <StatCard
-            label="Total revenue stored"
+            label="Total revenue"
             value={formatCurrency(totalRevenue)}
-            helper={`${totalSales} total records`}
+            helper={`${revenueRecords.length} revenue records`}
+            tone={totalRevenue > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Unpaid / partial"
-            value={formatCurrency(unpaidRevenue)}
-            helper={`${partialCount} partial / ${unpaidCount} unpaid`}
-            tone={unpaidRevenue > 0 ? "warning" : "default"}
+            label="Collected"
+            value={formatCurrency(paidTotal)}
+            helper={`${paidRevenue.length} paid records`}
+            tone={paidTotal > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Collection rate"
-            value={`${collectionRate}%`}
-            helper={`${paidCount} records marked paid`}
-            tone={collectionRate >= 80 ? "positive" : "default"}
+            label="Payment needed"
+            value={formatCurrency(unpaidTotal)}
+            helper={`${unpaidRevenue.length} unpaid or partial records`}
+            tone={unpaidTotal > 0 ? "danger" : "positive"}
           />
-        </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.75fr_1.25fr]">
-          <SectionCard
-            title={`Add ${profile.labels.saleSingular.toLowerCase()}`}
-            description="Create a revenue record that can connect to a customer, work record, source, and service category."
-          >
-            <form action={createSaleAction} className="space-y-4 p-5">
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  {profile.labels.customerSingular}
-                </label>
-                <select
-                  name="customerId"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No customer linked</option>
-                  {customerRecords.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Related {profile.labels.jobSingular.toLowerCase()}
-                </label>
-                <select
-                  name="jobId"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No work record linked</option>
-                  {jobRecords.map((job) => (
-                    <option key={job.id} value={job.id}>
-                      {job.service_type} — {formatCurrency(job.job_value)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Amount
-                  </label>
-                  <input
-                    name="amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    required
-                    placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Payment status
-                  </label>
-                  <select
-                    name="paymentStatus"
-                    defaultValue="Paid"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
-                    {paymentStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Sale date
-                </label>
-                <input
-                  name="saleDate"
-                  type="date"
-                  defaultValue={new Date().toISOString().slice(0, 10)}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Service type
-                </label>
-                <input
-                  name="serviceType"
-                  placeholder="Mowing, excavation, appointment, policy, repair..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Source
-                </label>
-                <input
-                  name="source"
-                  placeholder="Google, referral, Facebook, repeat customer..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </div>
-
-              <button className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
-                Save {profile.labels.saleSingular.toLowerCase()}
-              </button>
-            </form>
-          </SectionCard>
-
-          <SectionCard
-            title="Revenue control"
-            description="Understand what has been collected, what is still outstanding, and what needs cleanup."
-          >
-            <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-3 md:divide-x md:divide-y-0">
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Paid revenue
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {formatCurrency(paidRevenue)}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Revenue marked fully paid.
-                </p>
-              </div>
-
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Outstanding
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {formatCurrency(unpaidRevenue)}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Revenue marked unpaid or partial.
-                </p>
-              </div>
-
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Data cleanup
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {missingCustomer + missingSource + missingServiceType}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Missing customer, source, or service type.
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 p-5">
-              <p className="text-sm font-semibold text-slate-950">
-                Payment status
-              </p>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                {paymentSummary.map((item) => (
-                  <div
-                    key={item.status}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-slate-950">
-                        {item.status}
-                      </p>
-                      <StatusBadge tone={getPaymentTone(item.status)}>
-                        {item.count}
-                      </StatusBadge>
-                    </div>
-
-                    <p className="mt-2 text-xs font-medium text-slate-500">
-                      {formatCurrency(item.value)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </SectionCard>
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-          <SectionCard
-            title="Revenue by service"
-            description="Which services, products, or categories are producing revenue."
-          >
-            {serviceSummary.length === 0 ? (
-              <EmptyState
-                title="No service revenue yet"
-                description="Add service types to revenue records to understand what makes the business money."
-              />
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {serviceSummary.map((item) => (
-                  <div
-                    key={item.service}
-                    className="grid gap-3 p-5 md:grid-cols-[1fr_120px_150px]"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {item.service}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.count}{" "}
-                        {item.count === 1
-                          ? profile.labels.saleSingular.toLowerCase()
-                          : profile.labels.salePlural.toLowerCase()}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-medium text-slate-500">
-                        Outstanding
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatCurrency(item.unpaidValue)}
-                      </p>
-                    </div>
-
-                    <div className="md:text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Total
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatCurrency(item.value)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Revenue by source"
-            description="Which channels are connected to recorded revenue."
-          >
-            {sourceSummary.length === 0 ? (
-              <EmptyState
-                title="No source data yet"
-                description="Add sources to revenue records to understand what channels create paid work."
-              />
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {sourceSummary.map((item) => (
-                  <div
-                    key={item.source}
-                    className="grid gap-3 p-5 md:grid-cols-[1fr_120px_150px]"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {item.source}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.count}{" "}
-                        {item.count === 1
-                          ? profile.labels.saleSingular.toLowerCase()
-                          : profile.labels.salePlural.toLowerCase()}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-medium text-slate-500">
-                        Outstanding
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatCurrency(item.unpaidValue)}
-                      </p>
-                    </div>
-
-                    <div className="md:text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Total
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatCurrency(item.value)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-          <SectionCard
-            title="Cleanup queue"
-            description="Fix these items to make revenue reporting more accurate."
-          >
-            <div className="divide-y divide-slate-100">
-              {cleanupItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-start justify-between gap-4 p-5"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-950">{item.label}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
-                    {item.value}
-                  </StatusBadge>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Outstanding revenue"
-            description="Revenue records that are not marked fully paid."
-          >
-            {unpaidSales.length === 0 ? (
-              <EmptyState
-                title="No outstanding revenue"
-                description="All stored revenue records are currently marked paid."
-              />
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {unpaidSales.map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="grid gap-4 p-5 md:grid-cols-[1fr_140px_140px]"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {formatCurrency(sale.amount)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {getCustomerName(sale.customers)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-medium text-slate-500">
-                        Status
-                      </p>
-                      <div className="mt-1">
-                        <StatusBadge tone={getPaymentTone(sale.payment_status)}>
-                          {sale.payment_status || "Unknown"}
-                        </StatusBadge>
-                      </div>
-                    </div>
-
-                    <div className="md:text-right">
-                      <p className="text-xs font-medium text-slate-500">Date</p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatDate(sale.sale_date)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCard>
+          <StatCard
+            label="Cleanup issues"
+            value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)}
+            helper="Missing source, amount, or date"
+            tone={cleanupGroups.length > 0 ? "warning" : "positive"}
+          />
         </section>
 
         <SectionCard
-          title={`${profile.labels.salePlural} records`}
-          description="Revenue records with customer context, source, service type, payment status, and date."
+          title="Add revenue"
+          description="Create a payment or revenue record manually."
         >
-          {saleRecords.length === 0 ? (
-            <EmptyState
-              title={`No ${profile.labels.salePlural.toLowerCase()} yet`}
-              description={`Add your first ${profile.labels.saleSingular.toLowerCase()} to begin tracking revenue and payment status.`}
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {saleRecords.map((sale) => (
-                <article
-                  key={sale.id}
-                  className="grid gap-4 p-5 md:grid-cols-[1fr_1fr_1fr_130px_90px]"
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
+              <div>
+                <p className="font-semibold text-slate-950">Quick add</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Add collected revenue, unpaid invoices, deposits, or partial
+                  payments.
+                </p>
+              </div>
+
+              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+                Add revenue
+              </span>
+
+              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+                Close
+              </span>
+            </summary>
+
+            <form
+              action={createRevenue}
+              className="border-t border-slate-100 p-5"
+            >
+              <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1fr]">
+                <label className="text-sm font-medium text-slate-700">
+                  Amount
+                  <input
+                    name="amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    placeholder="2500"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
+
+                <label className="text-sm font-medium text-slate-700">
+                  Payment status
+                  <select
+                    name="payment_status"
+                    defaultValue="Paid"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </label>
+
+                <label className="text-sm font-medium text-slate-700">
+                  Revenue date
+                  <input
+                    name="sale_date"
+                    type="date"
+                    defaultValue={today}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Service or category
+                  <input
+                    name="service_type"
+                    placeholder="Flooring install, website build, monthly service..."
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
+
+                <label className="text-sm font-medium text-slate-700">
+                  Source
+                  <input
+                    name="source"
+                    placeholder="Referral, Google, Website, Facebook..."
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="submit"
+                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {formatCurrency(sale.amount)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {getCustomerName(sale.customers)}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Related: {getJobName(sale.jobs)}
-                    </p>
-                  </div>
+                  Create revenue
+                </button>
+              </div>
+            </form>
+          </details>
+        </SectionCard>
 
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">
-                      Service / source
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
+          <SectionCard
+            title={
+              selectedStatus
+                ? `${selectedStatus} revenue`
+                : selectedSource
+                  ? `${selectedSource} revenue`
+                  : "Revenue queue"
+            }
+            description={
+              selectedStatus
+                ? `Showing revenue records marked ${selectedStatus}.`
+                : selectedSource
+                  ? `Showing revenue records from ${selectedSource}.`
+                  : "Revenue records prioritized by payment needs, missing source, and amount."
+            }
+          >
+            {visibleRevenue.length === 0 ? (
+              <EmptyState
+                title="No revenue records found"
+                description="Add revenue manually or import revenue from CSV or Google Sheets."
+              />
+            ) : (
+              <>
+                {(selectedStatus || selectedSource) && (
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                    <p className="text-sm font-semibold text-slate-700">
+                      Filtered by: {selectedStatus || selectedSource}
                     </p>
-                    <p className="mt-1 text-sm font-medium text-slate-700">
-                      {sale.service_type || "No service type"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {sale.source || "No source"}
-                    </p>
-                  </div>
 
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">Date</p>
-                    <p className="mt-1 text-sm font-medium text-slate-700">
-                      {formatDate(sale.sale_date)}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Added {formatDate(sale.created_at)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">
-                      Payment
-                    </p>
-                    <div className="mt-2">
-                      <StatusBadge tone={getPaymentTone(sale.payment_status)}>
-                        {sale.payment_status || "Unknown"}
-                      </StatusBadge>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 md:justify-end">
                     <Link
-                      href={`/sales/${sale.id}/edit`}
+                      href="/sales"
                       className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                     >
-                      Edit
+                      Clear filter
                     </Link>
-
-                    <form action={deleteSaleAction}>
-                      <input type="hidden" name="saleId" value={sale.id} />
-                      <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-700">
-                        Delete
-                      </button>
-                    </form>
                   </div>
-                </article>
+                )}
+
+                <div className="divide-y divide-slate-100">
+                  {visibleRevenue.map((record) => {
+                    const issues = getRevenueIssues(record);
+
+                    return (
+                      <article key={record.id} className="p-4">
+                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px_90px] md:items-start">
+                          <div>
+                            <p className="font-semibold text-slate-950">
+                              {record.service_type || "Revenue record"}
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-500">
+                              {record.source || "No source saved"}
+                            </p>
+
+                            <p className="mt-3 text-sm leading-6 text-slate-600">
+                              {getRevenueNextStep(record)}
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {issues.slice(0, 3).map((issue) => (
+                                <StatusBadge
+                                  key={issue.label}
+                                  tone={issue.tone}
+                                >
+                                  {issue.label}
+                                </StatusBadge>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Amount
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                              {formatCurrency(record.amount)}
+                            </p>
+
+                            <p className="mt-3 text-xs font-medium text-slate-500">
+                              Source
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                              {record.source || "Not set"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Date
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                              {formatDate(record.sale_date)}
+                            </p>
+
+                            <p className="mt-3 text-xs font-medium text-slate-500">
+                              Payment
+                            </p>
+                            <div className="mt-1">
+                              <StatusBadge
+                                tone={getStatusTone(record.payment_status)}
+                              >
+                                {record.payment_status || "Not set"}
+                              </StatusBadge>
+                            </div>
+                          </div>
+
+                          <div className="md:text-right">
+                            <Link
+                              href={`/sales/${record.id}/edit`}
+                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              Open
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </SectionCard>
+
+          <div className="space-y-5">
+            <SectionCard
+              title="Payment status"
+              description="Use this to filter revenue by collection state."
+            >
+              {paymentGroups.length === 0 ? (
+                <EmptyState
+                  title="No payment statuses yet"
+                  description="Payment statuses will appear here after revenue records are added."
+                />
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {paymentGroups.map((group) => (
+                    <article
+                      key={group.status}
+                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                    >
+                      <div>
+                        <StatusBadge tone={getStatusTone(group.status)}>
+                          {group.status}
+                        </StatusBadge>
+
+                        <p className="mt-2 font-semibold text-slate-950">
+                          {group.count} Found
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                          {isUnpaid(group.status)
+                            ? "Revenue that still needs collection or review."
+                            : isPaid(group.status)
+                              ? "Revenue marked as collected."
+                              : "Revenue using this payment status."}
+                        </p>
+                      </div>
+
+                      <div className="md:text-right">
+                        <p className="mb-2 text-xs font-medium text-slate-500">
+                          {formatCurrency(group.amount)}
+                        </p>
+
+                        <Link
+                          href={
+                            selectedStatus === group.status
+                              ? "/sales"
+                              : `/sales?status=${encodeURIComponent(
+                                  group.status,
+                                )}`
+                          }
+                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          {selectedStatus === group.status ? "Clear" : "Review"}
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+
+            <SectionCard
+              title="Sources"
+              description="Where revenue is coming from."
+            >
+              {sourceGroups.length === 0 ? (
+                <EmptyState
+                  title="No source data yet"
+                  description="Add sources to see which channels generate revenue."
+                />
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {sourceGroups.map((group) => (
+                    <article
+                      key={group.source}
+                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {group.source}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {group.count} records · {formatCurrency(group.amount)}
+                        </p>
+                      </div>
+
+                      <div className="md:text-right">
+                        <Link
+                          href={
+                            selectedSource === group.source
+                              ? "/sales"
+                              : `/sales?source=${encodeURIComponent(
+                                  group.source,
+                                )}`
+                          }
+                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          {selectedSource === group.source ? "Clear" : "Review"}
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </SectionCard>
+          </div>
+        </section>
+
+        <SectionCard
+          title="Revenue health"
+          description="Cleanup issues that make revenue reporting less reliable."
+        >
+          {cleanupGroups.length === 0 ? (
+            <EmptyState
+              title="Revenue records look clean"
+              description="No missing source, amount, or date issues were found."
+            />
+          ) : (
+            <div className="grid gap-4 p-4 md:grid-cols-3">
+              {cleanupGroups.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <StatusBadge tone="neutral">{item.label}</StatusBadge>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {item.count}
+                    </span>
+                  </div>
+
+                  <p className="mt-3 font-semibold text-slate-950">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {item.detail}
+                  </p>
+                </Link>
               ))}
             </div>
           )}

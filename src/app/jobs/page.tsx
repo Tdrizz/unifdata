@@ -837,7 +837,7 @@ export default async function WorkPage({
                         </StatusBadge>
 
                         <p className="mt-2 font-semibold text-slate-950">
-                          {group.count} work records
+                          {group.count} Found
                         </p>
 
                         <p className="mt-1 text-sm leading-6 text-slate-500">
