@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { formatDateOnly } from "@/lib/date-format";
 
 type OpportunityRecord = {
   id: string;
@@ -56,14 +57,6 @@ function formatCurrency(value: number | null | undefined) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
-}
-
-function formatDate(date: string | null) {
-  if (!date) {
-    return "—";
-  }
-
-  return new Date(date).toLocaleDateString();
 }
 
 function isTodayOrPast(date: string | null) {
@@ -129,10 +122,10 @@ function getFollowUpText(date: string | null) {
   }
 
   if (isTodayOrPast(date)) {
-    return `Due ${formatDate(date)}`;
+    return `Due ${formatDateOnly(date)}`;
   }
 
-  return `Follow up ${formatDate(date)}`;
+  return `Follow up ${formatDateOnly(date)}`;
 }
 
 function getFollowUpTone(date: string | null) {
@@ -817,3 +810,8 @@ export default async function OpportunitiesPage() {
     </AppShell>
   );
 }
+
+
+
+
+

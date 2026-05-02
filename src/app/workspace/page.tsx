@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { formatDateOnly } from "@/lib/date-format";
 
 function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("en-US", {
@@ -20,7 +21,7 @@ function formatCurrency(value: number | null | undefined) {
 
 function formatDate(date: string | null) {
   if (!date) {
-    return "—";
+    return "â€”";
   }
 
   return new Date(date).toLocaleDateString();
@@ -646,7 +647,7 @@ export default async function WorkspacePage() {
                           {action.message || "Follow up"}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
-                          Due {formatDate(action.due_date)}
+                          Due {formatDateOnly(action.due_date)}
                         </p>
                       </div>
 
@@ -822,3 +823,5 @@ export default async function WorkspacePage() {
     </AppShell>
   );
 }
+
+

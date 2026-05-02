@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { formatDateOnly } from "@/lib/date-format";
 
 type RevenueRecord = {
   id: string;
@@ -47,14 +48,6 @@ function formatCurrency(value: number | null | undefined) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
-}
-
-function formatDate(date: string | null) {
-  if (!date) {
-    return "—";
-  }
-
-  return new Date(date).toLocaleDateString();
 }
 
 function getTodayDate() {
@@ -638,7 +631,7 @@ export default async function RevenuePage({
                               Date
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatDate(record.sale_date)}
+                              {formatDateOnly(record.sale_date)}
                             </p>
 
                             <p className="mt-3 text-xs font-medium text-slate-500">
@@ -750,7 +743,7 @@ export default async function RevenuePage({
                           {group.source}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
-                          {group.count} records · {formatCurrency(group.amount)}
+                          {group.count} records Â· {formatCurrency(group.amount)}
                         </p>
                       </div>
 
@@ -815,3 +808,7 @@ export default async function RevenuePage({
     </AppShell>
   );
 }
+
+
+
+
