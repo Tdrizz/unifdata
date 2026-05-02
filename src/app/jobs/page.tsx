@@ -1,107 +1,69 @@
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany, getCurrentCompanyId } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompany } from "@/lib/current-company";
 
-const jobStatuses = [
-  "Scheduled",
-  "In Progress",
-  "Completed",
-  "Paid",
-  "Cancelled",
-];
+type WorkRecord = {
+  id: string;
+  customer_id: string | null;
+  lead_id: string | null;
+  service_type: string | null;
+  status: string | null;
+  job_value: number | null;
+  start_date: string | null;
+  completed_date: string | null;
+  paid_status: string | null;
+  created_at: string;
+};
 
-const paidStatuses = ["Unpaid", "Partial", "Paid"];
+type PersonRecord = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+};
 
-async function createJobAction(formData: FormData) {
-  "use server";
+type OpportunityRecord = {
+  id: string;
+  service_requested: string | null;
+  status: string | null;
+  estimated_value: number | null;
+};
 
-  const companyId = await getCurrentCompanyId();
+function getFormString(formData: FormData, key: string) {
+  const value = formData.get(key);
 
-  if (!companyId) {
-    throw new Error("No company found.");
+  if (typeof value !== "string") {
+    return "";
   }
 
-  const customerId = String(formData.get("customerId") || "").trim();
-  const leadId = String(formData.get("leadId") || "").trim();
-  const serviceType = String(formData.get("serviceType") || "").trim();
-  const status = String(formData.get("status") || "Scheduled").trim();
-  const jobValue = String(formData.get("jobValue") || "").trim();
-  const startDate = String(formData.get("startDate") || "").trim();
-  const completedDate = String(formData.get("completedDate") || "").trim();
-  const paidStatus = String(formData.get("paidStatus") || "Unpaid").trim();
-  const notes = String(formData.get("notes") || "").trim();
-
-  if (!serviceType) {
-    throw new Error("Service type is required.");
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase.from("jobs").insert({
-    company_id: companyId,
-    customer_id: customerId || null,
-    lead_id: leadId || null,
-    service_type: serviceType,
-    status: status || "Scheduled",
-    job_value: jobValue ? Number(jobValue) : null,
-    start_date: startDate || null,
-    completed_date: completedDate || null,
-    paid_status: paidStatus || "Unpaid",
-    notes: notes || null,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/jobs");
-  revalidatePath("/workspace");
-  revalidatePath("/data-hub");
+  return value.trim();
 }
 
-async function deleteJobAction(formData: FormData) {
-  "use server";
+function getOptionalNumber(formData: FormData, key: string) {
+  const value = getFormString(formData, key);
 
-  const companyId = await getCurrentCompanyId();
-
-  if (!companyId) {
-    throw new Error("No company found.");
+  if (!value) {
+    return null;
   }
 
-  const jobId = String(formData.get("jobId") || "");
+  const number = Number(value);
 
-  if (!jobId) {
-    throw new Error("Job ID is required.");
-  }
-
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from("jobs")
-    .delete()
-    .eq("id", jobId)
-    .eq("company_id", companyId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/jobs");
-  revalidatePath("/workspace");
-  revalidatePath("/data-hub");
+  return Number.isFinite(number) ? number : null;
 }
 
-function formatCurrency(value: number | string | null) {
-  return `$${Number(value || 0).toLocaleString()}`;
+function formatCurrency(value: number | null | undefined) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
 }
 
 function formatDate(date: string | null) {
@@ -112,77 +74,191 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleDateString();
 }
 
-function getCustomerName(customerRelation: unknown) {
-  if (Array.isArray(customerRelation)) {
-    return customerRelation[0]?.name || "No customer linked";
-  }
-
-  if (
-    typeof customerRelation === "object" &&
-    customerRelation !== null &&
-    "name" in customerRelation
-  ) {
-    return String(
-      (customerRelation as { name?: string | null }).name ||
-        "No customer linked",
-    );
-  }
-
-  return "No customer linked";
-}
-
-function getLeadName(leadRelation: unknown) {
-  if (Array.isArray(leadRelation)) {
-    return leadRelation[0]?.service_requested || "No opportunity linked";
-  }
-
-  if (
-    typeof leadRelation === "object" &&
-    leadRelation !== null &&
-    "service_requested" in leadRelation
-  ) {
-    return String(
-      (leadRelation as { service_requested?: string | null })
-        .service_requested || "No opportunity linked",
-    );
-  }
-
-  return "No opportunity linked";
-}
-
 function getStatusTone(status: string | null) {
-  if (status === "Completed" || status === "Paid") {
+  const normalized = String(status || "").toLowerCase();
+
+  if (
+    normalized.includes("complete") ||
+    normalized.includes("done") ||
+    normalized.includes("paid")
+  ) {
     return "success" as const;
   }
 
-  if (status === "In Progress" || status === "Scheduled") {
-    return "neutral" as const;
-  }
-
-  if (status === "Cancelled") {
+  if (
+    normalized.includes("cancel") ||
+    normalized.includes("failed") ||
+    normalized.includes("overdue")
+  ) {
     return "danger" as const;
   }
 
-  return "neutral" as const;
-}
-
-function getPaidTone(status: string | null) {
-  if (status === "Paid") {
-    return "success" as const;
-  }
-
-  if (status === "Partial") {
+  if (
+    normalized.includes("scheduled") ||
+    normalized.includes("active") ||
+    normalized.includes("progress") ||
+    normalized.includes("unpaid") ||
+    normalized.includes("partial")
+  ) {
     return "warning" as const;
   }
 
-  if (status === "Unpaid") {
-    return "danger" as const;
-  }
-
   return "neutral" as const;
 }
 
-export default async function JobsPage() {
+function isComplete(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  return (
+    normalized.includes("complete") ||
+    normalized.includes("done") ||
+    normalized.includes("finished")
+  );
+}
+
+function isCancelled(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  return normalized.includes("cancel");
+}
+
+function isUnpaid(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  return (
+    normalized.includes("unpaid") ||
+    normalized.includes("partial") ||
+    normalized.includes("due")
+  );
+}
+
+function getStageExplanation(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (normalized.includes("scheduled")) {
+    return {
+      meaning: "Planned work that has not started yet.",
+    };
+  }
+
+  if (normalized.includes("active") || normalized.includes("progress")) {
+    return {
+      meaning: "Work currently being delivered.",
+    };
+  }
+
+  if (
+    normalized.includes("complete") ||
+    normalized.includes("done") ||
+    normalized.includes("finished")
+  ) {
+    return {
+      meaning: "Finished work that should be checked against payment.",
+    };
+  }
+
+  if (normalized.includes("cancel")) {
+    return {
+      meaning: "Work that is no longer moving forward.",
+    };
+  }
+
+  return {
+    meaning: "Work using a custom or imported stage.",
+  };
+}
+
+function getWorkNextStep(work: WorkRecord) {
+  if (!work.customer_id) {
+    return "Link this work to the person or business it belongs to.";
+  }
+
+  if (work.job_value === null || work.job_value === undefined) {
+    return "Add a work value so this shows correctly in reporting.";
+  }
+
+  if (!work.start_date && !isComplete(work.status)) {
+    return "Add a start date so the team knows when this work begins.";
+  }
+
+  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+    return "Work is complete, but payment still needs attention.";
+  }
+
+  if (!work.lead_id) {
+    return "Link this work to the opportunity it came from if one exists.";
+  }
+
+  if (isCancelled(work.status)) {
+    return "This work is cancelled. Keep it out of active planning.";
+  }
+
+  if (isComplete(work.status)) {
+    return "This work is complete. Confirm payment and reporting are correct.";
+  }
+
+  return "Keep this work updated as it moves toward completion.";
+}
+
+function getWorkIssues(work: WorkRecord) {
+  const issues: {
+    label: string;
+    tone: "success" | "warning" | "danger" | "neutral";
+  }[] = [];
+
+  if (!work.customer_id) {
+    issues.push({
+      label: "Link person",
+      tone: "warning",
+    });
+  }
+
+  if (!work.lead_id) {
+    issues.push({
+      label: "No opportunity",
+      tone: "neutral",
+    });
+  }
+
+  if (work.job_value === null || work.job_value === undefined) {
+    issues.push({
+      label: "Add value",
+      tone: "neutral",
+    });
+  }
+
+  if (!work.start_date && !isComplete(work.status)) {
+    issues.push({
+      label: "Add start date",
+      tone: "neutral",
+    });
+  }
+
+  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+    issues.push({
+      label: "Payment needed",
+      tone: "danger",
+    });
+  }
+
+  if (issues.length === 0) {
+    issues.push({
+      label: "Looks clean",
+      tone: "success",
+    });
+  }
+
+  return issues;
+}
+
+export default async function WorkPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ stage?: string }>;
+}) {
+  const params = await searchParams;
+  const selectedStage = params.stage ? decodeURIComponent(params.stage) : "";
+
   const supabase = await createClient();
 
   const {
@@ -200,165 +276,203 @@ export default async function JobsPage() {
   }
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
 
-  const { data: customers, error: customersError } = await supabase
-    .from("customers")
-    .select("id, name")
-    .eq("company_id", company.id)
-    .order("name", { ascending: true });
+  async function createWork(formData: FormData) {
+    "use server";
 
-  if (customersError) {
-    throw new Error(customersError.message);
-  }
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
 
-  const { data: leads, error: leadsError } = await supabase
-    .from("leads")
-    .select("id, service_requested, status, estimated_value")
-    .eq("company_id", company.id)
-    .order("created_at", { ascending: false });
+    if (!currentCompany) {
+      redirect("/onboarding");
+    }
 
-  if (leadsError) {
-    throw new Error(leadsError.message);
-  }
+    const { company } = currentCompany;
 
-  const { data: jobs, error: jobsError } = await supabase
-    .from("jobs")
-    .select(
-      `
-      id,
-      customer_id,
-      lead_id,
+    const customerId = getFormString(formData, "customer_id");
+    const leadId = getFormString(formData, "lead_id");
+    const serviceType = getFormString(formData, "service_type");
+    const status = getFormString(formData, "status") || "Scheduled";
+    const jobValue = getOptionalNumber(formData, "job_value");
+    const startDate = getFormString(formData, "start_date");
+    const completedDate = getFormString(formData, "completed_date");
+    const paidStatus = getFormString(formData, "paid_status") || "Unpaid";
+
+    if (!serviceType) {
+      throw new Error("Work name is required.");
+    }
+
+    const { error } = await supabase.from("jobs").insert({
+      company_id: company.id,
+      customer_id: customerId || null,
+      lead_id: leadId || null,
+      service_type: serviceType,
       status,
-      job_value,
-      service_type,
-      start_date,
-      completed_date,
-      paid_status,
-      notes,
-      created_at,
-      customers (
-        name
-      ),
-      leads (
-        service_requested
-      )
-    `,
-    )
-    .eq("company_id", company.id)
-    .order("created_at", { ascending: false });
+      job_value: jobValue,
+      start_date: startDate || null,
+      completed_date: completedDate || null,
+      paid_status: paidStatus,
+    });
 
-  if (jobsError) {
-    throw new Error(jobsError.message);
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    redirect("/jobs");
   }
 
-  const customerRecords = customers || [];
-  const leadRecords = leads || [];
-  const jobRecords = jobs || [];
+  const [workResult, peopleResult, opportunitiesResult] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select(
+        "id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
+      )
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(250),
 
-  const totalJobs = jobRecords.length;
+    supabase
+      .from("customers")
+      .select("id, name, email, phone")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(250),
 
-  const scheduledJobs = jobRecords.filter(
-    (job) => job.status === "Scheduled",
-  ).length;
+    supabase
+      .from("leads")
+      .select("id, service_requested, status, estimated_value")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(250),
+  ]);
 
-  const activeJobs = jobRecords.filter(
-    (job) => job.status === "Scheduled" || job.status === "In Progress",
-  ).length;
+  if (workResult.error) {
+    throw new Error(workResult.error.message);
+  }
 
-  const inProgressJobs = jobRecords.filter(
-    (job) => job.status === "In Progress",
-  ).length;
+  if (peopleResult.error) {
+    throw new Error(peopleResult.error.message);
+  }
 
-  const completedJobs = jobRecords.filter(
-    (job) => job.status === "Completed" || job.status === "Paid",
-  ).length;
+  if (opportunitiesResult.error) {
+    throw new Error(opportunitiesResult.error.message);
+  }
 
-  const cancelledJobs = jobRecords.filter(
-    (job) => job.status === "Cancelled",
-  ).length;
+  const workRecords = (workResult.data || []) as WorkRecord[];
+  const people = (peopleResult.data || []) as PersonRecord[];
+  const opportunities = (opportunitiesResult.data || []) as OpportunityRecord[];
 
-  const totalJobValue = jobRecords.reduce(
-    (sum, job) => sum + Number(job.job_value || 0),
+  const personById = new Map(people.map((person) => [person.id, person]));
+  const opportunityById = new Map(
+    opportunities.map((opportunity) => [opportunity.id, opportunity]),
+  );
+
+  const activeWork = workRecords.filter(
+    (work) => !isComplete(work.status) && !isCancelled(work.status),
+  );
+
+  const completedWork = workRecords.filter((work) => isComplete(work.status));
+
+  const unpaidWork = workRecords.filter((work) => isUnpaid(work.paid_status));
+
+  const missingValue = workRecords.filter(
+    (work) => work.job_value === null || work.job_value === undefined,
+  );
+
+  const missingPerson = workRecords.filter((work) => !work.customer_id);
+
+  const missingOpportunity = workRecords.filter((work) => !work.lead_id);
+
+  const activeValue = activeWork.reduce(
+    (sum, work) => sum + Number(work.job_value || 0),
     0,
   );
 
-  const activeJobValue = jobRecords
-    .filter((job) => job.status === "Scheduled" || job.status === "In Progress")
-    .reduce((sum, job) => sum + Number(job.job_value || 0), 0);
+  const completedValue = completedWork.reduce(
+    (sum, work) => sum + Number(work.job_value || 0),
+    0,
+  );
 
-  const unpaidJobValue = jobRecords
-    .filter((job) => job.paid_status !== "Paid")
-    .reduce((sum, job) => sum + Number(job.job_value || 0), 0);
+  const unpaidValue = unpaidWork.reduce(
+    (sum, work) => sum + Number(work.job_value || 0),
+    0,
+  );
 
-  const jobsMissingCustomer = jobRecords.filter(
-    (job) => !job.customer_id,
-  ).length;
-
-  const jobsMissingLead = jobRecords.filter((job) => !job.lead_id).length;
-
-  const jobsMissingValue = jobRecords.filter(
-    (job) => !job.job_value || Number(job.job_value) === 0,
-  ).length;
-
-  const jobsMissingStartDate = jobRecords.filter(
-    (job) => !job.start_date,
-  ).length;
-
-  const jobsWithoutNotes = jobRecords.filter((job) => !job.notes).length;
-
-  const upcomingJobs = jobRecords
-    .filter((job) => job.status === "Scheduled")
-    .slice(0, 5);
-
-  const activeWork = jobRecords
-    .filter((job) => job.status === "Scheduled" || job.status === "In Progress")
-    .slice(0, 6);
-
-  const unpaidJobs = jobRecords
-    .filter((job) => job.paid_status !== "Paid")
-    .slice(0, 6);
-
-  const statusSummary = jobStatuses.map((status) => ({
-    status,
-    count: jobRecords.filter((job) => job.status === status).length,
-    value: jobRecords
-      .filter((job) => job.status === status)
-      .reduce((sum, job) => sum + Number(job.job_value || 0), 0),
-  }));
-
-  const cleanupItems = [
+  const cleanupGroups = [
     {
-      label: `${profile.labels.jobPlural} without a linked ${profile.labels.customerSingular.toLowerCase()}`,
-      value: jobsMissingCustomer,
-      description:
-        "Work records should usually connect to the customer or client receiving the work.",
+      id: "missing-person",
+      label: "Link person",
+      title: "Work needs people or businesses",
+      detail: "Work records should usually connect to whoever the work is for.",
+      count: missingPerson.length,
+      href: "/jobs",
     },
     {
-      label: `${profile.labels.jobPlural} not linked to an opportunity`,
-      value: jobsMissingLead,
-      description:
-        "Linking work to pipeline records helps show how opportunities turn into revenue.",
+      id: "missing-opportunity",
+      label: "Link opportunity",
+      title: "Work needs opportunity links",
+      detail: "Linking work to opportunities helps track the full lifecycle.",
+      count: missingOpportunity.length,
+      href: "/jobs",
     },
     {
-      label: `${profile.labels.jobPlural} missing value`,
-      value: jobsMissingValue,
-      description:
-        "Work value helps track projected revenue, unpaid work, and business performance.",
+      id: "missing-value",
+      label: "Add value",
+      title: "Work records need values",
+      detail: "Work value helps reporting reflect active and completed work.",
+      count: missingValue.length,
+      href: "/jobs",
     },
-    {
-      label: `${profile.labels.jobPlural} missing start date`,
-      value: jobsMissingStartDate,
-      description:
-        "Dates help show what is scheduled, active, completed, or falling behind.",
-    },
-    {
-      label: `${profile.labels.jobPlural} without notes`,
-      value: jobsWithoutNotes,
-      description:
-        "Notes preserve job details, scope, customer context, and handoff information.",
-    },
-  ];
+  ].filter((item) => item.count > 0);
+
+  const prioritizedWork = [...workRecords]
+    .sort((a, b) => {
+      const aActive = !isComplete(a.status) && !isCancelled(a.status);
+      const bActive = !isComplete(b.status) && !isCancelled(b.status);
+
+      if (aActive !== bActive) {
+        return aActive ? -1 : 1;
+      }
+
+      const aUnpaid = isUnpaid(a.paid_status);
+      const bUnpaid = isUnpaid(b.paid_status);
+
+      if (aUnpaid !== bUnpaid) {
+        return aUnpaid ? -1 : 1;
+      }
+
+      return Number(b.job_value || 0) - Number(a.job_value || 0);
+    })
+    .slice(0, 25);
+
+  const visibleWork = selectedStage
+    ? prioritizedWork.filter(
+        (work) => (work.status || "Scheduled") === selectedStage,
+      )
+    : prioritizedWork;
+
+  const stageGroups = Array.from(
+    workRecords.reduce((map, work) => {
+      const status = work.status || "Scheduled";
+      const current = map.get(status) || {
+        status,
+        count: 0,
+        unpaidCount: 0,
+      };
+
+      current.count += 1;
+
+      if (isUnpaid(work.paid_status)) {
+        current.unpaidCount += 1;
+      }
+
+      map.set(status, current);
+
+      return map;
+    }, new Map<string, { status: string; count: number; unpaidCount: number }>()),
+  )
+    .map(([, group]) => group)
+    .sort((a, b) => b.count - a.count);
 
   return (
     <AppShell
@@ -367,428 +481,429 @@ export default async function JobsPage() {
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
-          eyebrow="Records"
-          title={profile.labels.jobPlural}
-          description={`Track ${profile.labels.jobPlural.toLowerCase()}, status, value, dates, payment state, notes, and related customer history so work does not get scattered across memory, texts, and spreadsheets.`}
+          eyebrow="Work"
+          title="Track jobs, projects, and active delivery"
+          description="Use this page to see what work is planned, active, complete, cancelled, or still needs payment."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/leads"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Opportunities
+              </Link>
+
+              <Link
+                href="/imports"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Import data
+              </Link>
+            </div>
+          }
         />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label={`Active ${profile.labels.jobPlural.toLowerCase()}`}
-            value={activeJobs}
-            helper={`${scheduledJobs} scheduled / ${inProgressJobs} in progress`}
+            label="Active work"
+            value={activeWork.length}
+            helper={`${formatCurrency(activeValue)} still in progress or scheduled`}
+            tone={activeWork.length > 0 ? "warning" : "default"}
           />
 
           <StatCard
-            label="Active work value"
-            value={formatCurrency(activeJobValue)}
-            helper="Scheduled and in-progress value"
+            label="Completed work"
+            value={formatCurrency(completedValue)}
+            helper={`${completedWork.length} finished records`}
+            tone={completedValue > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Unpaid work value"
-            value={formatCurrency(unpaidJobValue)}
-            helper="Jobs not marked fully paid"
-            tone={unpaidJobValue > 0 ? "warning" : "default"}
+            label="Payment needed"
+            value={formatCurrency(unpaidValue)}
+            helper={`${unpaidWork.length} unpaid or partially paid records`}
+            tone={unpaidValue > 0 ? "danger" : "positive"}
           />
 
           <StatCard
-            label="Completed"
-            value={completedJobs}
-            helper={`${cancelledJobs} cancelled`}
-            tone={completedJobs > 0 ? "positive" : "default"}
+            label="Cleanup issues"
+            value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)}
+            helper="Missing person, opportunity, or work value"
+            tone={cleanupGroups.length > 0 ? "warning" : "positive"}
           />
         </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.75fr_1.25fr]">
-          <SectionCard
-            title={`Add ${profile.labels.jobSingular.toLowerCase()}`}
-            description="Create a work record that can connect back to customers, opportunities, revenue, and notes."
-          >
-            <form action={createJobAction} className="space-y-4 p-5">
+        <SectionCard
+          title="Add work"
+          description="Create work manually and optionally link it to a person or opportunity."
+        >
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
               <div>
-                <label className="text-sm font-medium text-slate-700">
-                  {profile.labels.customerSingular}
-                </label>
-                <select
-                  name="customerId"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No customer linked</option>
-                  {customerRecords.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
-                </select>
+                <p className="font-semibold text-slate-950">Quick add</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Add a job, project, appointment, service visit, or order.
+                </p>
               </div>
 
-              <div>
+              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+                Add work
+              </span>
+
+              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+                Close
+              </span>
+            </summary>
+
+            <form action={createWork} className="border-t border-slate-100 p-5">
+              <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Related {profile.labels.leadSingular.toLowerCase()}
+                  Link to person or business
+                  <select
+                    name="customer_id"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    <option value="">No linked person yet</option>
+                    {people.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.name ||
+                          person.email ||
+                          person.phone ||
+                          "Unnamed person"}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-                <select
-                  name="leadId"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No opportunity linked</option>
-                  {leadRecords.map((lead) => (
-                    <option key={lead.id} value={lead.id}>
-                      {lead.service_requested} —{" "}
-                      {formatCurrency(lead.estimated_value)}
-                    </option>
-                  ))}
-                </select>
+
+                <label className="text-sm font-medium text-slate-700">
+                  Link to opportunity
+                  <select
+                    name="lead_id"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    <option value="">No linked opportunity yet</option>
+                    {opportunities.map((opportunity) => (
+                      <option key={opportunity.id} value={opportunity.id}>
+                        {opportunity.service_requested ||
+                          formatCurrency(opportunity.estimated_value)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
-              <div>
+              <div className="mt-4 grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
                 <label className="text-sm font-medium text-slate-700">
-                  Work / service type
+                  Work name
+                  <input
+                    name="service_type"
+                    required
+                    placeholder="Flooring install, website build, service visit..."
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
                 </label>
-                <input
-                  name="serviceType"
-                  required
-                  placeholder="Driveway repair, cleaning visit, appointment, project..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
+
+                <label className="text-sm font-medium text-slate-700">
+                  Work value
+                  <input
+                    name="job_value"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="2500"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Status
-                  </label>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Work stage
                   <select
                     name="status"
                     defaultValue="Scheduled"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   >
-                    {jobStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Active">Active</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
                   </select>
-                </div>
+                </label>
 
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Payment status
-                  </label>
+                <label className="text-sm font-medium text-slate-700">
+                  Payment status
                   <select
-                    name="paidStatus"
+                    name="paid_status"
                     defaultValue="Unpaid"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   >
-                    {paidStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Paid">Paid</option>
                   </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700">
-                  Work value
                 </label>
-                <input
-                  name="jobValue"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="3500"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Start date
-                  </label>
-                  <input
-                    name="startDate"
-                    type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Completed date
-                  </label>
-                  <input
-                    name="completedDate"
-                    type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  />
-                </div>
-              </div>
-
-              <div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
-                  Notes
+                  Start date
+                  <input
+                    name="start_date"
+                    type="date"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
                 </label>
-                <textarea
-                  name="notes"
-                  rows={4}
-                  placeholder="Scope, job notes, access instructions, materials, appointment context, or handoff details..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
+
+                <label className="text-sm font-medium text-slate-700">
+                  Completed date
+                  <input
+                    name="completed_date"
+                    type="date"
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </label>
               </div>
 
-              <button className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
-                Save {profile.labels.jobSingular.toLowerCase()}
-              </button>
-            </form>
-          </SectionCard>
-
-          <SectionCard
-            title="Work control"
-            description="A clean view of active work, unpaid work, and operational data quality."
-          >
-            <div className="grid grid-cols-1 divide-y divide-slate-100 md:grid-cols-3 md:divide-x md:divide-y-0">
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Total value
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {formatCurrency(totalJobValue)}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Value across all stored work records.
-                </p>
-              </div>
-
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Active work
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {activeJobs}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Scheduled or currently in progress.
-                </p>
-              </div>
-
-              <div className="p-5">
-                <p className="text-sm font-medium text-slate-500">
-                  Data cleanup
-                </p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">
-                  {jobsMissingCustomer +
-                    jobsMissingValue +
-                    jobsMissingStartDate}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Missing customer, value, or start date.
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-100 p-5">
-              <p className="text-sm font-semibold text-slate-950">
-                Status breakdown
-              </p>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
-                {statusSummary.map((item) => (
-                  <div
-                    key={item.status}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-slate-950">
-                        {item.status}
-                      </p>
-                      <StatusBadge tone={getStatusTone(item.status)}>
-                        {item.count}
-                      </StatusBadge>
-                    </div>
-
-                    <p className="mt-2 text-xs font-medium text-slate-500">
-                      {formatCurrency(item.value)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </SectionCard>
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-          <SectionCard
-            title="Cleanup queue"
-            description="Fix these items to make operational reporting more accurate."
-          >
-            <div className="divide-y divide-slate-100">
-              {cleanupItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-start justify-between gap-4 p-5"
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="submit"
+                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-950">{item.label}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
+                  Create work
+                </button>
+              </div>
+            </form>
+          </details>
+        </SectionCard>
 
-                  <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
-                    {item.value}
-                  </StatusBadge>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
+          <SectionCard
+            title={selectedStage ? `${selectedStage} work` : "Work queue"}
+            description={
+              selectedStage
+                ? `Showing work records currently marked ${selectedStage}.`
+                : "The work that needs operational attention first."
+            }
+          >
+            {visibleWork.length === 0 ? (
+              <EmptyState
+                title={selectedStage ? "No work in this stage" : "No work yet"}
+                description={
+                  selectedStage
+                    ? "No records match this selected work stage."
+                    : "Add work manually or import work records from CSV or Google Sheets."
+                }
+              />
+            ) : (
+              <>
+                {selectedStage && (
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                    <p className="text-sm font-semibold text-slate-700">
+                      Filtered by stage: {selectedStage}
+                    </p>
+
+                    <Link
+                      href="/jobs"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Clear filter
+                    </Link>
+                  </div>
+                )}
+
+                <div className="divide-y divide-slate-100">
+                  {visibleWork.map((work) => {
+                    const person = work.customer_id
+                      ? personById.get(work.customer_id)
+                      : null;
+
+                    const opportunity = work.lead_id
+                      ? opportunityById.get(work.lead_id)
+                      : null;
+
+                    const issues = getWorkIssues(work);
+
+                    return (
+                      <article key={work.id} className="p-4">
+                        <div className="grid gap-4 md:grid-cols-[1fr_130px_160px_90px] md:items-start">
+                          <div>
+                            <p className="font-semibold text-slate-950">
+                              {work.service_type || "Untitled work"}
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-500">
+                              {person?.name ||
+                                opportunity?.service_requested ||
+                                "No person or opportunity linked"}
+                            </p>
+
+                            <p className="mt-3 text-sm leading-6 text-slate-600">
+                              {getWorkNextStep(work)}
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {issues.slice(0, 3).map((issue) => (
+                                <StatusBadge
+                                  key={issue.label}
+                                  tone={issue.tone}
+                                >
+                                  {issue.label}
+                                </StatusBadge>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Value
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                              {formatCurrency(work.job_value)}
+                            </p>
+
+                            <p className="mt-3 text-xs font-medium text-slate-500">
+                              Payment
+                            </p>
+                            <div className="mt-1">
+                              <StatusBadge
+                                tone={getStatusTone(work.paid_status)}
+                              >
+                                {work.paid_status || "Not set"}
+                              </StatusBadge>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">
+                              Start
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-700">
+                              {formatDate(work.start_date)}
+                            </p>
+
+                            <p className="mt-3 text-xs font-medium text-slate-500">
+                              Stage
+                            </p>
+                            <div className="mt-1">
+                              <StatusBadge tone={getStatusTone(work.status)}>
+                                {work.status || "Scheduled"}
+                              </StatusBadge>
+                            </div>
+                          </div>
+
+                          <div className="md:text-right">
+                            <Link
+                              href={`/jobs/${work.id}/edit`}
+                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              Open
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </SectionCard>
 
           <SectionCard
-            title="Active work"
-            description={`${profile.labels.jobPlural} currently scheduled or in progress.`}
+            title="Work stages"
+            description="Use this to filter the work queue by stage."
           >
-            {activeWork.length === 0 ? (
+            {stageGroups.length === 0 ? (
               <EmptyState
-                title="No active work"
-                description={`Add scheduled or in-progress ${profile.labels.jobPlural.toLowerCase()} to track work happening now.`}
+                title="No work stages yet"
+                description="Work stages will appear here after records are added."
               />
             ) : (
               <div className="divide-y divide-slate-100">
-                {activeWork.map((job) => (
-                  <div
-                    key={job.id}
-                    className="grid gap-4 p-5 md:grid-cols-[1fr_140px_140px]"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-950">
-                        {job.service_type || "Untitled work record"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {getCustomerName(job.customers)}
-                      </p>
-                    </div>
+                {stageGroups.map((group) => {
+                  const explanation = getStageExplanation(group.status);
 
-                    <div>
-                      <p className="text-xs font-medium text-slate-500">
-                        Status
-                      </p>
-                      <div className="mt-1">
-                        <StatusBadge tone={getStatusTone(job.status)}>
-                          {job.status || "Unknown"}
+                  return (
+                    <article
+                      key={group.status}
+                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                    >
+                      <div>
+                        <StatusBadge tone={getStatusTone(group.status)}>
+                          {group.status}
                         </StatusBadge>
-                      </div>
-                    </div>
 
-                    <div className="md:text-right">
-                      <p className="text-xs font-medium text-slate-500">
-                        Value
-                      </p>
-                      <p className="mt-1 font-semibold text-slate-950">
-                        {formatCurrency(job.job_value)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                        <p className="mt-2 font-semibold text-slate-950">
+                          {group.count} work records
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                          {explanation.meaning}
+                        </p>
+
+                        {group.unpaidCount > 0 && (
+                          <span className="mt-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                            {group.unpaidCount} need payment review
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="md:text-right">
+                        <Link
+                          href={
+                            selectedStage === group.status
+                              ? "/jobs"
+                              : `/jobs?stage=${encodeURIComponent(
+                                  group.status,
+                                )}`
+                          }
+                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          {selectedStage === group.status ? "Clear" : "Review"}
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </SectionCard>
         </section>
 
         <SectionCard
-          title={`${profile.labels.jobPlural} records`}
-          description="Operational records with customer context, related opportunities, value, dates, payment status, and notes."
+          title="Work health"
+          description="Cleanup issues that make work reporting less reliable."
         >
-          {jobRecords.length === 0 ? (
+          {cleanupGroups.length === 0 ? (
             <EmptyState
-              title={`No ${profile.labels.jobPlural.toLowerCase()} yet`}
-              description={`Add your first ${profile.labels.jobSingular.toLowerCase()} to begin tracking scheduled work, active work, completed work, and unpaid work.`}
+              title="Work records look clean"
+              description="No missing people, opportunities, or values were found."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
-              {jobRecords.map((job) => (
-                <article
-                  key={job.id}
-                  className="grid gap-4 p-5 md:grid-cols-[1.1fr_1fr_1fr_130px_90px]"
+            <div className="grid gap-4 p-4 md:grid-cols-3">
+              {cleanupGroups.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {job.service_type || "Untitled work record"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {getCustomerName(job.customers)}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Related: {getLeadName(job.leads)}
-                    </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <StatusBadge tone="neutral">{item.label}</StatusBadge>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                      {item.count}
+                    </span>
                   </div>
 
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">
-                      Value / payment
-                    </p>
-                    <p className="mt-1 text-sm font-medium text-slate-700">
-                      {formatCurrency(job.job_value)}
-                    </p>
-                    <div className="mt-2">
-                      <StatusBadge tone={getPaidTone(job.paid_status)}>
-                        {job.paid_status || "Unknown"}
-                      </StatusBadge>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">Dates</p>
-                    <p className="mt-1 text-sm text-slate-700">
-                      Start: {formatDate(job.start_date)}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Done: {formatDate(job.completed_date)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">Status</p>
-                    <div className="mt-2">
-                      <StatusBadge tone={getStatusTone(job.status)}>
-                        {job.status || "Unknown"}
-                      </StatusBadge>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Added {formatDate(job.created_at)}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 md:justify-end">
-                    <Link
-                      href={`/jobs/${job.id}/edit`}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Edit
-                    </Link>
-
-                    <form action={deleteJobAction}>
-                      <input type="hidden" name="jobId" value={job.id} />
-                      <button className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-700">
-                        Delete
-                      </button>
-                    </form>
-                  </div>
-
-                  {job.notes && (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-5">
-                      <p className="text-xs font-medium text-slate-500">
-                        Notes
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-slate-700">
-                        {job.notes}
-                      </p>
-                    </div>
-                  )}
-                </article>
+                  <p className="mt-3 font-semibold text-slate-950">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {item.detail}
+                  </p>
+                </Link>
               ))}
             </div>
           )}
