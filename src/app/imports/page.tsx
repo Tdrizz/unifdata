@@ -125,6 +125,7 @@ export default async function ImportsPage() {
         "id, source_type, source_name, file_name, record_type, status, total_rows, valid_rows, duplicate_rows, error_rows, created_rows, updated_rows, skipped_rows, created_at, committed_at",
       )
       .eq("company_id", company.id)
+      .in("status", ["draft", "analyzing", "ready", "failed"])
       .order("created_at", { ascending: false })
       .limit(6),
 
@@ -206,9 +207,9 @@ export default async function ImportsPage() {
           />
 
           <StatCard
-            label="Open reviews"
+            label="Needs review"
             value={openReviewSessions}
-            helper="Waiting for review"
+            helper="Imports not yet committed"
             tone={openReviewSessions > 0 ? "warning" : "default"}
           />
 
@@ -300,13 +301,13 @@ export default async function ImportsPage() {
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
           {" "}
           <SectionCard
-            title="Import reviews"
-            description="Review staged imports before they change your workspace."
+            title="Needs review"
+            description="Imports waiting for edits, duplicate decisions, or final commit."
           >
             {importSessionRecords.length === 0 ? (
               <EmptyState
-                title="No import reviews yet"
-                description="Upload a CSV or analyze a Google Sheet to create your first review."
+                title="Nothing waiting for review"
+                description="Upload a CSV or choose a Google Sheet to start a new import."
               />
             ) : (
               <div className="divide-y divide-slate-100">
@@ -353,7 +354,7 @@ export default async function ImportsPage() {
                         href={`/imports/sessions/${session.id}`}
                         className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                       >
-                        Review
+                        Open review
                       </Link>
                     </div>
                   </article>
@@ -363,7 +364,7 @@ export default async function ImportsPage() {
           </SectionCard>
           <SectionCard
             title="Data quality"
-            description={`Quick checks across ${profile.labels.customerPlural.toLowerCase()}.`}
+            description={`Missing details across ${profile.labels.customerPlural.toLowerCase()}.`}
           >
             <div className="grid gap-3 p-4 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -441,13 +442,13 @@ export default async function ImportsPage() {
             </SectionCard>
 
             <SectionCard
-              title="Recent activity"
-              description="Latest import and sync runs."
+              title="Import history"
+              description="Committed imports and sync runs for this workspace."
             >
               {syncRunRecords.length === 0 ? (
                 <EmptyState
-                  title="No import activity yet"
-                  description="Analyze and commit data to create activity history."
+                  title="No committed imports yet"
+                  description="Import and commit data to create history here."
                 />
               ) : (
                 <div className="divide-y divide-slate-100">

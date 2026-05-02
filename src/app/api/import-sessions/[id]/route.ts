@@ -97,3 +97,74 @@ export async function GET(_request: Request, context: RouteContext) {
     );
   }
 }
+
+export async function PATCH(request: Request, context: RouteContext) {
+  try {
+    const companyId = await getCurrentCompanyId();
+
+    if (!companyId) {
+      return NextResponse.json(
+        { error: "No company found for the current user." },
+        { status: 401 },
+      );
+    }
+
+    const { id } = await context.params;
+    const body = (await request.json()) as { action?: string };
+
+    if (body.action !== "cancel") {
+      return NextResponse.json(
+        { error: "Choose a valid import session action." },
+        { status: 400 },
+      );
+    }
+
+    const supabase = await createClient();
+
+    const { data: session, error: sessionError } = await supabase
+      .from("import_sessions")
+      .select("id, status")
+      .eq("id", id)
+      .eq("company_id", companyId)
+      .single();
+
+    if (sessionError || !session) {
+      throw new Error(sessionError?.message || "Import session not found.");
+    }
+
+    if (session.status === "committed") {
+      return NextResponse.json(
+        { error: "Committed import sessions cannot be cancelled." },
+        { status: 400 },
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from("import_sessions")
+      .update({
+        status: "cancelled",
+        error_message: null,
+      })
+      .eq("id", id)
+      .eq("company_id", companyId);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      status: "cancelled",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to cancel import session.",
+      },
+      { status: 500 },
+    );
+  }
+}

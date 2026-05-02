@@ -899,6 +899,10 @@ export async function commitImportSession({
     throw new Error("This import session has already been committed.");
   }
 
+  if (session.status === "cancelled") {
+    throw new Error("This import session has been cancelled.");
+  }
+
   const recordType = session.record_type as ImportRecordType;
   const targetTable = getTargetTable(recordType);
 

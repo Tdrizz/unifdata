@@ -36,6 +36,52 @@ type ImportSession = {
   committed_at: string | null;
 };
 
+type ReviewFieldDefinition = {
+  key: string;
+  label: string;
+  type?: "text" | "number" | "date";
+};
+
+const reviewFieldDefinitions: Record<string, ReviewFieldDefinition[]> = {
+  relationships: [
+    { key: "name", label: "Name" },
+    { key: "phone", label: "Phone" },
+    { key: "email", label: "Email" },
+    { key: "address", label: "Address" },
+    { key: "customer_type", label: "Type" },
+    { key: "notes", label: "Notes" },
+  ],
+  opportunities: [
+    { key: "service_requested", label: "Opportunity name" },
+    { key: "status", label: "Status" },
+    { key: "estimated_value", label: "Estimated value", type: "number" },
+    { key: "source", label: "Source" },
+    { key: "next_follow_up_date", label: "Next follow-up date", type: "date" },
+    { key: "notes", label: "Notes" },
+  ],
+  work: [
+    { key: "service_type", label: "Work name" },
+    { key: "status", label: "Status" },
+    { key: "job_value", label: "Work value", type: "number" },
+    { key: "start_date", label: "Start date", type: "date" },
+    { key: "completed_date", label: "Completed date", type: "date" },
+    { key: "paid_status", label: "Payment status" },
+    { key: "notes", label: "Notes" },
+  ],
+  revenue: [
+    { key: "amount", label: "Amount", type: "number" },
+    { key: "payment_status", label: "Payment status" },
+    { key: "sale_date", label: "Revenue date", type: "date" },
+    { key: "service_type", label: "Service / category" },
+    { key: "source", label: "Source" },
+  ],
+  actions: [
+    { key: "message", label: "Action" },
+    { key: "due_date", label: "Due date", type: "date" },
+    { key: "status", label: "Status" },
+  ],
+};
+
 export function displayValue(value: unknown) {
   if (value === null || value === undefined || value === "") {
     return "—";
@@ -144,12 +190,17 @@ export function ImportSessionReviewClient({
   const [message, setMessage] = useState("");
   const [workingRowId, setWorkingRowId] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [rowDraft, setRowDraft] = useState<Record<string, string>>({});
 
   const canCommit =
-    session.status !== "committed" && Number(session.valid_rows || 0) > 0;
-
+    session.status !== "committed" &&
+    session.status !== "cancelled" &&
+    Number(session.valid_rows || 0) > 0;
   const hasRowsButNothingReady =
     session.status !== "committed" &&
+    session.status !== "cancelled" &&
     Number(session.valid_rows || 0) === 0 &&
     (Number(session.duplicate_rows || 0) > 0 ||
       Number(session.error_rows || 0) > 0);
@@ -188,6 +239,59 @@ export function ImportSessionReviewClient({
     }
   }
 
+  function startEditingRow(row: ImportRow) {
+    const fields = reviewFieldDefinitions[session.record_type] || [];
+    const draft: Record<string, string> = {};
+
+    fields.forEach((field) => {
+      const value = row.normalized_data[field.key];
+
+      draft[field.key] =
+        value === null || value === undefined || value === ""
+          ? ""
+          : String(value);
+    });
+
+    setEditingRowId(row.id);
+    setRowDraft(draft);
+    setMessage("");
+  }
+
+  async function saveRowEdit(rowId: string) {
+    setMessage("");
+    setWorkingRowId(rowId);
+
+    try {
+      const response = await fetch(
+        `/api/import-sessions/${session.id}/rows/${rowId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            normalizedData: rowDraft,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || "Failed to save row changes.");
+        return;
+      }
+
+      setEditingRowId(null);
+      setRowDraft({});
+      router.refresh();
+    } catch {
+      setMessage("Something went wrong while saving row changes.");
+    } finally {
+      setWorkingRowId(null);
+    }
+  }
+
   async function commitImport() {
     setMessage("");
     setCommitting(true);
@@ -218,6 +322,42 @@ export function ImportSessionReviewClient({
       setMessage("Something went wrong while committing the import.");
     } finally {
       setCommitting(false);
+    }
+  }
+
+  async function cancelImport() {
+    const confirmed = window.confirm(
+      "Cancel this import review? No records will be committed.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage("");
+    setCancelling(true);
+
+    try {
+      const response = await fetch(`/api/import-sessions/${session.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "cancel" }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || "Failed to cancel import.");
+        return;
+      }
+
+      router.push("/imports");
+    } catch {
+      setMessage("Something went wrong while cancelling the import.");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -289,6 +429,9 @@ export function ImportSessionReviewClient({
           {rows.map((row) => {
             const normalizedEntries = Object.entries(row.normalized_data);
             const isWorking = workingRowId === row.id;
+            const isEditing = editingRowId === row.id;
+            const editableFields =
+              reviewFieldDefinitions[session.record_type] || [];
 
             return (
               <article key={row.id} className="p-4">
@@ -321,13 +464,94 @@ export function ImportSessionReviewClient({
                     </div>
                   </div>
 
-                  <span
-                    className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${getRowTone(
-                      row.status,
-                    )}`}
-                  >
-                    {row.status}
-                  </span>
+                  {isEditing && (
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-sm font-semibold text-slate-950">
+                        Edit staged row
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        These changes only affect this import review until you
+                        commit.
+                      </p>
+
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {editableFields.map((field) => (
+                          <label
+                            key={field.key}
+                            className="text-sm font-medium text-slate-700"
+                          >
+                            {field.label}
+                            <input
+                              type={
+                                field.type === "number"
+                                  ? "number"
+                                  : field.type === "date"
+                                    ? "date"
+                                    : "text"
+                              }
+                              value={rowDraft[field.key] || ""}
+                              onChange={(event) =>
+                                setRowDraft((current) => ({
+                                  ...current,
+                                  [field.key]: event.target.value,
+                                }))
+                              }
+                              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                            />
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={isWorking}
+                          onClick={() => saveRowEdit(row.id)}
+                          className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                        >
+                          Save row changes
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={isWorking}
+                          onClick={() => {
+                            setEditingRowId(null);
+                            setRowDraft({});
+                          }}
+                          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                    <span
+                      className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${getRowTone(
+                        row.status,
+                      )}`}
+                    >
+                      {row.status}
+                    </span>
+
+                    {session.status !== "committed" &&
+                      session.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          disabled={isWorking}
+                          onClick={() =>
+                            isEditing
+                              ? setEditingRowId(null)
+                              : startEditingRow(row)
+                          }
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          {isEditing ? "Cancel edit" : "Edit row"}
+                        </button>
+                      )}
+                  </div>
                 </div>
 
                 {row.duplicate_reason && (
@@ -337,6 +561,7 @@ export function ImportSessionReviewClient({
                     </p>
 
                     {session.status !== "committed" &&
+                      session.status !== "cancelled" &&
                       row.status === "duplicate" && (
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
@@ -345,7 +570,7 @@ export function ImportSessionReviewClient({
                             onClick={() => updateRowAction(row.id, "skip")}
                             className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
                           >
-                            Skip
+                            Skip this row
                           </button>
 
                           <button
@@ -356,7 +581,7 @@ export function ImportSessionReviewClient({
                             }
                             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                           >
-                            Import as new
+                            Import as separate record
                           </button>
 
                           {row.target_id && (
@@ -368,7 +593,7 @@ export function ImportSessionReviewClient({
                               }
                               className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                             >
-                              Update existing
+                              Update matched record
                             </button>
                           )}
                         </div>
@@ -392,18 +617,33 @@ export function ImportSessionReviewClient({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={commitImport}
-        disabled={!canCommit || committing}
-        className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {session.status === "committed"
-          ? "Import already committed"
-          : committing
-            ? "Committing import..."
-            : "Commit ready rows"}
-      </button>
+      <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
+        {session.status !== "committed" && session.status !== "cancelled" && (
+          <button
+            type="button"
+            onClick={cancelImport}
+            disabled={cancelling || committing}
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {cancelling ? "Cancelling..." : "Cancel import"}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={commitImport}
+          disabled={!canCommit || committing || cancelling}
+          className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 md:min-w-55"
+        >
+          {session.status === "committed"
+            ? "Import already committed"
+            : session.status === "cancelled"
+              ? "Import cancelled"
+              : committing
+                ? "Committing import..."
+                : "Commit ready rows"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -223,13 +223,12 @@ export async function PATCH(request: Request, context: RouteContext) {
       throw new Error(sessionError?.message || "Import session not found.");
     }
 
-    if (session.status === "committed") {
+    if (session.status === "committed" || session.status === "cancelled") {
       return NextResponse.json(
-        { error: "Committed import sessions cannot be edited." },
+        { error: "Committed or cancelled import sessions cannot be edited." },
         { status: 400 },
       );
     }
-
     if (!isValidRecordType(session.record_type)) {
       return NextResponse.json(
         { error: "Invalid import session record type." },
