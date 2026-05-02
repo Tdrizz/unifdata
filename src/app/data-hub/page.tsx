@@ -1,18 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
-
-function formatCurrency(value: number | string | null) {
-  return `$${Number(value || 0).toLocaleString()}`;
-}
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 function formatDate(date: string | null) {
   if (!date) {
@@ -22,16 +18,89 @@ function formatDate(date: string | null) {
   return new Date(date).toLocaleDateString();
 }
 
-function getScoreTone(score: number) {
-  if (score >= 90) {
+function formatDateTime(date: string | null) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Date(date).toLocaleString();
+}
+
+function formatCurrency(value: number | null | undefined) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function getStatusTone(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (
+    normalized.includes("complete") ||
+    normalized.includes("committed") ||
+    normalized.includes("active") ||
+    normalized.includes("paid") ||
+    normalized.includes("won")
+  ) {
     return "success" as const;
   }
 
-  if (score >= 75) {
-    return "neutral" as const;
+  if (
+    normalized.includes("failed") ||
+    normalized.includes("error") ||
+    normalized.includes("lost") ||
+    normalized.includes("cancel")
+  ) {
+    return "danger" as const;
   }
 
-  return "warning" as const;
+  if (
+    normalized.includes("ready") ||
+    normalized.includes("pending") ||
+    normalized.includes("analyzing") ||
+    normalized.includes("unpaid") ||
+    normalized.includes("partial") ||
+    normalized.includes("open")
+  ) {
+    return "warning" as const;
+  }
+
+  return "neutral" as const;
+}
+
+function getHealthTone(score: number) {
+  if (score >= 90) {
+    return "positive" as const;
+  }
+
+  if (score >= 70) {
+    return "warning" as const;
+  }
+
+  return "danger" as const;
+}
+
+function getRecordTypeLabel(recordType: string | null) {
+  const labels: Record<string, string> = {
+    relationships: "People",
+    opportunities: "Opportunities",
+    work: "Work",
+    revenue: "Revenue",
+    actions: "Follow-ups",
+  };
+
+  return labels[String(recordType || "")] || String(recordType || "Records");
+}
+
+function getSourceLabel(sourceType: string | null) {
+  const labels: Record<string, string> = {
+    csv: "CSV",
+    google_sheets: "Google Sheets",
+  };
+
+  return labels[String(sourceType || "")] || String(sourceType || "Source");
 }
 
 export default async function DataHubPage() {
@@ -60,59 +129,66 @@ export default async function DataHubPage() {
     jobsResult,
     salesResult,
     followUpsResult,
-    importsResult,
-    aiReportsResult,
+    importSessionsResult,
+    syncRunsResult,
   ] = await Promise.all([
     supabase
       .from("customers")
-      .select(
-        "id, name, phone, email, address, customer_type, notes, created_at",
-      )
+      .select("id, name, phone, email, address, customer_type, created_at")
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(200),
 
     supabase
       .from("leads")
       .select(
-        "id, customer_id, service_requested, status, source, estimated_value, next_follow_up_date, created_at",
+        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, created_at",
       )
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(200),
 
     supabase
       .from("jobs")
       .select(
-        "id, customer_id, lead_id, service_type, status, job_value, paid_status, start_date, completed_date, created_at",
+        "id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
       )
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(200),
 
     supabase
       .from("sales")
       .select(
-        "id, customer_id, job_id, amount, payment_status, service_type, source, sale_date, created_at",
+        "id, amount, payment_status, sale_date, service_type, source, created_at",
       )
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(200),
 
     supabase
       .from("follow_ups")
-      .select("id, customer_id, lead_id, status, due_date, message, created_at")
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
-
-    supabase
-      .from("imports")
-      .select("id, file_name, import_type, status, records_created, created_at")
+      .select("id, message, due_date, status, created_at")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
-      .limit(8),
+      .limit(200),
 
     supabase
-      .from("ai_reports")
-      .select("id, report_type, created_at")
+      .from("import_sessions")
+      .select(
+        "id, source_type, source_name, file_name, record_type, status, total_rows, valid_rows, duplicate_rows, error_rows, created_rows, updated_rows, skipped_rows, created_at, committed_at",
+      )
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
+      .limit(10),
+
+    supabase
+      .from("sync_runs")
+      .select(
+        "id, status, records_seen, records_created, records_updated, records_failed, error_message, started_at, finished_at, metadata",
+      )
+      .eq("company_id", company.id)
+      .order("started_at", { ascending: false })
       .limit(8),
   ]);
 
@@ -136,12 +212,12 @@ export default async function DataHubPage() {
     throw new Error(followUpsResult.error.message);
   }
 
-  if (importsResult.error) {
-    throw new Error(importsResult.error.message);
+  if (importSessionsResult.error) {
+    throw new Error(importSessionsResult.error.message);
   }
 
-  if (aiReportsResult.error) {
-    throw new Error(aiReportsResult.error.message);
+  if (syncRunsResult.error) {
+    throw new Error(syncRunsResult.error.message);
   }
 
   const customers = customersResult.data || [];
@@ -149,215 +225,221 @@ export default async function DataHubPage() {
   const jobs = jobsResult.data || [];
   const sales = salesResult.data || [];
   const followUps = followUpsResult.data || [];
-  const imports = importsResult.data || [];
-  const aiReports = aiReportsResult.data || [];
+  const importSessions = importSessionsResult.data || [];
+  const syncRuns = syncRunsResult.data || [];
+
+  const missingContact = customers.filter(
+    (customer) => !customer.phone && !customer.email,
+  );
+
+  const missingAddress = customers.filter((customer) => !customer.address);
+
+  const opportunitiesWithoutCustomer = leads.filter(
+    (lead) => !lead.customer_id,
+  );
+
+  const opportunitiesMissingSource = leads.filter((lead) => !lead.source);
+
+  const opportunitiesMissingValue = leads.filter(
+    (lead) =>
+      lead.estimated_value === null || lead.estimated_value === undefined,
+  );
+
+  const workMissingValue = jobs.filter(
+    (job) => job.job_value === null || job.job_value === undefined,
+  );
+
+  const revenueMissingSource = sales.filter((sale) => !sale.source);
+
+  const failedImports = importSessions.filter(
+    (session) => session.status === "failed",
+  );
+
+  const openImportReviews = importSessions.filter(
+    (session) =>
+      session.status === "ready" ||
+      session.status === "analyzing" ||
+      session.status === "draft",
+  );
+
+  const failedSyncRuns = syncRuns.filter((run) => run.status === "failed");
+
+  const cleanupGroups = [
+    {
+      id: "missing-contact",
+      label: "Add contact",
+      title: `${profile.labels.customerPlural} need contact details`,
+      detail: "Records without phone or email are harder to follow up with.",
+      count: missingContact.length,
+      href: "/customers",
+      tone: "neutral" as const,
+    },
+    {
+      id: "missing-address",
+      label: "Add address",
+      title: `${profile.labels.customerPlural} need addresses`,
+      detail:
+        "Addresses help with service area, job planning, and local context.",
+      count: missingAddress.length,
+      href: "/customers",
+      tone: "neutral" as const,
+    },
+    {
+      id: "opportunity-customer",
+      label: "Link opportunity",
+      title: "Opportunities need people or businesses",
+      detail: "Pipeline records should usually be connected to someone.",
+      count: opportunitiesWithoutCustomer.length,
+      href: "/leads",
+      tone: "neutral" as const,
+    },
+    {
+      id: "opportunity-source",
+      label: "Add source",
+      title: "Opportunities need sources",
+      detail:
+        "Source tracking helps show which marketing channels are working.",
+      count: opportunitiesMissingSource.length,
+      href: "/leads",
+      tone: "neutral" as const,
+    },
+    {
+      id: "opportunity-value",
+      label: "Add estimate",
+      title: "Opportunities need estimated values",
+      detail:
+        "Estimated value helps prioritize the most important opportunities.",
+      count: opportunitiesMissingValue.length,
+      href: "/leads",
+      tone: "neutral" as const,
+    },
+    {
+      id: "work-value",
+      label: "Add work value",
+      title: "Work records need values",
+      detail: "Work value helps reporting reflect active and completed work.",
+      count: workMissingValue.length,
+      href: "/jobs",
+      tone: "neutral" as const,
+    },
+    {
+      id: "revenue-source",
+      label: "Add revenue source",
+      title: "Revenue needs sources",
+      detail: "Revenue source helps show what generated paid work.",
+      count: revenueMissingSource.length,
+      href: "/sales",
+      tone: "neutral" as const,
+    },
+    {
+      id: "import-reviews",
+      label: "Review import",
+      title: "Imports are waiting for review",
+      detail:
+        "Uncommitted imports should be reviewed, committed, or cancelled.",
+      count: openImportReviews.length,
+      href: "/imports",
+      tone: "warning" as const,
+    },
+    {
+      id: "failed-imports",
+      label: "Fix import",
+      title: "Imports failed",
+      detail: "Failed import sessions may need cleanup or a new upload.",
+      count: failedImports.length,
+      href: "/imports",
+      tone: "danger" as const,
+    },
+    {
+      id: "failed-syncs",
+      label: "Fix sync",
+      title: "Sync runs failed",
+      detail:
+        "Failed sync activity should be reviewed before relying on imported data.",
+      count: failedSyncRuns.length,
+      href: "/imports",
+      tone: "danger" as const,
+    },
+  ].filter((item) => item.count > 0);
 
   const totalRecords =
     customers.length +
     leads.length +
     jobs.length +
     sales.length +
-    followUps.length +
-    imports.length +
-    aiReports.length;
+    followUps.length;
 
-  const missingCustomerContact = customers.filter(
-    (customer) => !customer.phone && !customer.email,
-  ).length;
-
-  const missingCustomerAddress = customers.filter(
-    (customer) => !customer.address,
-  ).length;
-
-  const leadsWithoutCustomer = leads.filter((lead) => !lead.customer_id).length;
-
-  const leadsMissingSource = leads.filter((lead) => !lead.source).length;
-
-  const leadsMissingValue = leads.filter(
-    (lead) => !lead.estimated_value || Number(lead.estimated_value) === 0,
-  ).length;
-
-  const jobsWithoutCustomer = jobs.filter((job) => !job.customer_id).length;
-
-  const jobsMissingValue = jobs.filter(
-    (job) => !job.job_value || Number(job.job_value) === 0,
-  ).length;
-
-  const salesWithoutCustomer = sales.filter((sale) => !sale.customer_id).length;
-
-  const salesMissingSource = sales.filter((sale) => !sale.source).length;
-
-  const followUpsWithoutRelationship = followUps.filter(
-    (followUp) => !followUp.customer_id && !followUp.lead_id,
-  ).length;
-
-  const dataIssueCount =
-    missingCustomerContact +
-    missingCustomerAddress +
-    leadsWithoutCustomer +
-    leadsMissingSource +
-    leadsMissingValue +
-    jobsWithoutCustomer +
-    jobsMissingValue +
-    salesWithoutCustomer +
-    salesMissingSource +
-    followUpsWithoutRelationship;
-
-  const dataHealthScore = Math.max(0, Math.min(100, 100 - dataIssueCount * 4));
-
-  const totalRevenue = sales.reduce(
-    (sum, sale) => sum + Number(sale.amount || 0),
+  const totalCleanupIssues = cleanupGroups.reduce(
+    (sum, item) => sum + item.count,
     0,
   );
 
-  const totalPipelineValue = leads.reduce(
-    (sum, lead) => sum + Number(lead.estimated_value || 0),
-    0,
+  const healthScore =
+    totalRecords === 0
+      ? 100
+      : Math.max(
+          0,
+          Math.round(
+            100 - (totalCleanupIssues / Math.max(totalRecords, 1)) * 100,
+          ),
+        );
+
+  const committedSessions = importSessions.filter(
+    (session) => session.status === "committed",
   );
 
-  const recordCollections = [
-    {
-      title: profile.labels.customerPlural,
-      description: "People and companies stored in the workspace.",
-      count: customers.length,
-      href: "/customers",
-    },
-    {
-      title: profile.labels.leadPlural,
-      description: "Pipeline, quotes, estimates, inquiries, and opportunities.",
-      count: leads.length,
-      href: "/leads",
-    },
-    {
-      title: profile.labels.jobPlural,
-      description: "Work records, projects, appointments, jobs, and status.",
-      count: jobs.length,
-      href: "/jobs",
-    },
-    {
-      title: profile.labels.salePlural,
-      description: "Revenue, payments, invoices, collections, and sources.",
-      count: sales.length,
-      href: "/sales",
-    },
-    {
-      title: profile.labels.followUpPlural,
-      description: "Reminders and action items tied to relationships or work.",
-      count: followUps.length,
-      href: "/follow-ups",
-    },
-    {
-      title: "Imports",
-      description:
-        "Data migration history from CSV and future external systems.",
-      count: imports.length,
-      href: "/imports",
-    },
-    {
-      title: "AI reports",
-      description: "Generated summaries and operating recommendations.",
-      count: aiReports.length,
-      href: "/ai-assistant",
-    },
-  ];
-
-  const cleanupItems = [
-    {
-      label: `${profile.labels.customerPlural} missing phone and email`,
-      description: "These records are harder to contact or follow up with.",
-      value: missingCustomerContact,
-      href: "/customers",
-    },
-    {
-      label: `${profile.labels.customerPlural} missing address`,
-      description: "Useful for service areas, job planning, and local context.",
-      value: missingCustomerAddress,
-      href: "/customers",
-    },
-    {
-      label: `${profile.labels.leadPlural} without a customer`,
-      description:
-        "Pipeline records should be connected to a person or business.",
-      value: leadsWithoutCustomer,
-      href: "/leads",
-    },
-    {
-      label: `${profile.labels.leadPlural} missing source`,
-      description:
-        "Source tracking helps show what marketing is actually working.",
-      value: leadsMissingSource,
-      href: "/leads",
-    },
-    {
-      label: `${profile.labels.leadPlural} missing estimated value`,
-      description: "Value helps prioritize the most important opportunities.",
-      value: leadsMissingValue,
-      href: "/leads",
-    },
-    {
-      label: `${profile.labels.jobPlural} missing value`,
-      description: "Work records need value to support operational reporting.",
-      value: jobsMissingValue,
-      href: "/jobs",
-    },
-    {
-      label: `${profile.labels.salePlural} missing source`,
-      description: "Revenue source helps identify what brings in paid work.",
-      value: salesMissingSource,
-      href: "/sales",
-    },
-    {
-      label: `${profile.labels.followUpPlural} not connected to records`,
-      description:
-        "Follow-ups should usually connect to a customer or opportunity.",
-      value: followUpsWithoutRelationship,
-      href: "/follow-ups",
-    },
-  ];
+  const importedRows = committedSessions.reduce(
+    (sum, session) =>
+      sum +
+      Number(session.created_rows || 0) +
+      Number(session.updated_rows || 0),
+    0,
+  );
 
   const recentRecords = [
-    ...customers.slice(0, 5).map((item) => ({
-      id: `customer-${item.id}`,
-      type: profile.labels.customerSingular,
-      label: item.name,
-      detail: item.email || item.phone || "No contact info",
-      createdAt: item.created_at,
+    ...customers.map((customer) => ({
+      id: `customer-${customer.id}`,
+      type: "Person",
+      title: customer.name || "Unnamed record",
+      detail: customer.email || customer.phone || "No contact saved",
+      date: customer.created_at,
       href: "/customers",
     })),
-    ...leads.slice(0, 5).map((item) => ({
-      id: `lead-${item.id}`,
-      type: profile.labels.leadSingular,
-      label: item.service_requested || "Untitled opportunity",
-      detail: `${item.status || "Unknown"} • ${formatCurrency(
-        item.estimated_value,
-      )}`,
-      createdAt: item.created_at,
+    ...leads.map((lead) => ({
+      id: `lead-${lead.id}`,
+      type: "Opportunity",
+      title: lead.service_requested || "Untitled opportunity",
+      detail: lead.source || lead.status || "No source saved",
+      date: lead.created_at,
       href: "/leads",
     })),
-    ...jobs.slice(0, 5).map((item) => ({
-      id: `job-${item.id}`,
-      type: profile.labels.jobSingular,
-      label: item.service_type || "Untitled work record",
-      detail: `${item.status || "Unknown"} • ${formatCurrency(item.job_value)}`,
-      createdAt: item.created_at,
+    ...jobs.map((job) => ({
+      id: `job-${job.id}`,
+      type: "Work",
+      title: job.service_type || "Untitled work",
+      detail: job.status || "No status saved",
+      date: job.created_at,
       href: "/jobs",
     })),
-    ...sales.slice(0, 5).map((item) => ({
-      id: `sale-${item.id}`,
-      type: profile.labels.saleSingular,
-      label: formatCurrency(item.amount),
-      detail: `${item.payment_status || "Unknown"} • ${
-        item.service_type || "Uncategorized"
-      }`,
-      createdAt: item.created_at,
+    ...sales.map((sale) => ({
+      id: `sale-${sale.id}`,
+      type: "Revenue",
+      title: formatCurrency(sale.amount),
+      detail: sale.service_type || sale.payment_status || "Revenue record",
+      date: sale.created_at,
       href: "/sales",
     })),
+    ...followUps.map((followUp) => ({
+      id: `follow-up-${followUp.id}`,
+      type: "Follow-Up",
+      title: followUp.message || "Follow-up",
+      detail: followUp.status || "Open",
+      date: followUp.created_at,
+      href: "/follow-ups",
+    })),
   ]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, 10);
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 8);
 
   return (
     <AppShell
@@ -366,254 +448,245 @@ export default async function DataHubPage() {
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
-          eyebrow="Data Hub"
-          title="Business data command center"
-          description="A clean access layer for the records, imports, quality checks, and activity that power your dashboards."
+          eyebrow="Insights"
+          title="Data health and activity"
+          description="See cleanup issues, import health, and recent records across the workspace."
           actions={
-            <Link
-              href="/imports"
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Import data
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/imports"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Import data
+              </Link>
+
+              <Link
+                href="/workspace"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Back to Home
+              </Link>
+            </div>
           }
         />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Data health"
-            value={`${dataHealthScore}%`}
-            helper={`${dataIssueCount} cleanup items found`}
-            tone={dataHealthScore < 85 ? "warning" : "default"}
+            label="Health score"
+            value={`${healthScore}%`}
+            helper={
+              totalCleanupIssues > 0
+                ? `${totalCleanupIssues} cleanup issues found`
+                : "No cleanup issues found"
+            }
+            tone={getHealthTone(healthScore)}
           />
 
           <StatCard
-            label="Total records"
+            label="Tracked records"
             value={totalRecords}
-            helper="Across records, imports, and AI reports"
+            helper="People, opportunities, work, revenue, and follow-ups"
           />
 
           <StatCard
-            label="Pipeline value"
-            value={formatCurrency(totalPipelineValue)}
-            helper={`Estimated value across ${profile.labels.leadPlural.toLowerCase()}`}
+            label="Imported rows"
+            value={importedRows}
+            helper={`${committedSessions.length} committed imports`}
+            tone={importedRows > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Revenue stored"
-            value={formatCurrency(totalRevenue)}
-            helper={`Total ${profile.labels.salePlural.toLowerCase()} value`}
-            tone="positive"
+            label="Import issues"
+            value={failedImports.length + failedSyncRuns.length}
+            helper="Failed imports or sync runs"
+            tone={
+              failedImports.length + failedSyncRuns.length > 0
+                ? "danger"
+                : "positive"
+            }
           />
         </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.82fr_1.18fr]">
-          <SectionCard
-            title="Data quality score"
-            description="A simple signal for whether your records are clean enough to trust reporting."
-          >
-            <div className="p-6">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">
-                      Current score
-                    </p>
-                    <p className="mt-2 text-5xl font-semibold tracking-tight text-slate-950">
-                      {dataHealthScore}%
-                    </p>
-                  </div>
-
-                  <StatusBadge tone={getScoreTone(dataHealthScore)}>
-                    {dataHealthScore >= 90
-                      ? "Clean"
-                      : dataHealthScore >= 75
-                        ? "Usable"
-                        : "Needs cleanup"}
-                  </StatusBadge>
-                </div>
-
-                <div className="mt-6 h-3 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-slate-950"
-                    style={{ width: `${dataHealthScore}%` }}
-                  />
-                </div>
-
-                <p className="mt-4 text-sm leading-6 text-slate-600">
-                  FrontierOps checks for missing contact info, unlinked records,
-                  missing values, missing sources, and disconnected follow-ups.
-                  Cleaner records make the CRM, reports, and AI summaries more
-                  useful.
-                </p>
-              </div>
-            </div>
-          </SectionCard>
-
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_0.9fr] items-start">
           <SectionCard
             title="Cleanup queue"
-            description="The most important data issues to clean up first."
+            description="Grouped data issues that can affect reporting and follow-up."
           >
-            <div className="divide-y divide-slate-100">
-              {cleanupItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="grid gap-4 p-5 hover:bg-slate-50 md:grid-cols-[1fr_90px]"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-950">{item.label}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  <div className="md:text-right">
-                    <StatusBadge tone={item.value > 0 ? "warning" : "success"}>
-                      {item.value}
-                    </StatusBadge>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SectionCard>
-        </section>
-
-        <SectionCard
-          title="Record collections"
-          description="The main data sets FrontierOps is organizing for this business."
-        >
-          <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-            {recordCollections.map((collection) => (
-              <Link
-                key={collection.title}
-                href={collection.href}
-                className="rounded-3xl border border-slate-200 bg-slate-50 p-5 hover:bg-white hover:shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-semibold text-slate-950">
-                      {collection.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {collection.description}
-                    </p>
-                  </div>
-
-                  <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700">
-                    {collection.count}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </SectionCard>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_0.9fr]">
-          <SectionCard
-            title="Recent records"
-            description="Newest records created across the business workspace."
-          >
-            {recentRecords.length === 0 ? (
+            {cleanupGroups.length === 0 ? (
               <EmptyState
-                title="No records yet"
-                description="Add customers, opportunities, work, or revenue records to start building the business data layer."
+                title="Data looks clean"
+                description="No major cleanup issues were found in the current workspace."
               />
             ) : (
               <div className="divide-y divide-slate-100">
-                {recentRecords.map((item) => (
-                  <Link
+                {cleanupGroups.map((item) => (
+                  <article
                     key={item.id}
-                    href={item.href}
-                    className="grid gap-3 p-5 hover:bg-slate-50 md:grid-cols-[130px_1fr_120px]"
+                    className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between"
                   >
-                    <p className="text-sm font-semibold text-slate-500">
-                      {item.type}
-                    </p>
-
                     <div>
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {item.count}
+                        </span>
+                      </div>
+
                       <p className="font-semibold text-slate-950">
-                        {item.label}
+                        {item.title}
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm leading-6 text-slate-500">
                         {item.detail}
                       </p>
                     </div>
 
-                    <p className="text-sm font-medium text-slate-500 md:text-right">
-                      {formatDate(item.createdAt)}
-                    </p>
-                  </Link>
+                    <Link
+                      href={item.href}
+                      className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Review
+                    </Link>
+                  </article>
                 ))}
               </div>
             )}
           </SectionCard>
 
           <SectionCard
-            title="Migration history"
-            description="Recent imports and AI reports generated from business data."
+            title="Import health"
+            description="Recent import sessions and sync runs."
           >
-            <div className="divide-y divide-slate-100">
-              {imports.length === 0 && aiReports.length === 0 ? (
-                <EmptyState
-                  title="No migration history yet"
-                  description="Import a customer list or generate an AI report to start building history."
-                />
-              ) : (
-                <>
-                  {imports.map((item) => (
-                    <div key={`import-${item.id}`} className="p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {item.file_name}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-600">
-                            {item.import_type} import • {item.records_created}{" "}
-                            records
-                          </p>
-                        </div>
+            {importSessions.length === 0 && syncRuns.length === 0 ? (
+              <EmptyState
+                title="No import activity yet"
+                description="Import CSV or Google Sheets data to create history here."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {importSessions.slice(0, 5).map((session) => (
+                  <article key={session.id} className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {session.file_name ||
+                            session.source_name ||
+                            "Import session"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {getSourceLabel(session.source_type)} ·{" "}
+                          {getRecordTypeLabel(session.record_type)}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {session.valid_rows} ready · {session.duplicate_rows}{" "}
+                          duplicates · {session.error_rows} errors
+                        </p>
+                      </div>
 
-                        <StatusBadge
-                          tone={
-                            item.status === "completed" ? "success" : "neutral"
-                          }
-                        >
-                          {item.status}
+                      <div className="text-right">
+                        <StatusBadge tone={getStatusTone(session.status)}>
+                          {session.status}
                         </StatusBadge>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {formatDateTime(
+                            session.committed_at || session.created_at,
+                          )}
+                        </p>
                       </div>
-
-                      <p className="mt-2 text-xs font-medium text-slate-500">
-                        {formatDate(item.created_at)}
-                      </p>
                     </div>
-                  ))}
+                  </article>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </section>
 
-                  {aiReports.map((item) => (
-                    <div key={`ai-${item.id}`} className="p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            AI report generated
-                          </p>
-                          <p className="mt-1 text-sm text-slate-600">
-                            {item.report_type.replace("_", " ")}
-                          </p>
-                        </div>
-
-                        <StatusBadge>AI</StatusBadge>
-                      </div>
-
-                      <p className="mt-2 text-xs font-medium text-slate-500">
-                        {formatDate(item.created_at)}
-                      </p>
-                    </div>
-                  ))}
-                </>
-              )}
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.15fr] items-start">
+          <SectionCard
+            title="Record mix"
+            description="Current records by business area."
+          >
+            <div className="grid gap-3 p-4 md:grid-cols-2">
+              {[
+                {
+                  label: "People",
+                  value: customers.length,
+                  href: "/customers",
+                },
+                {
+                  label: "Opportunities",
+                  value: leads.length,
+                  href: "/leads",
+                },
+                { label: "Work", value: jobs.length, href: "/jobs" },
+                { label: "Revenue", value: sales.length, href: "/sales" },
+                {
+                  label: "Follow-ups",
+                  value: followUps.length,
+                  href: "/follow-ups",
+                },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                >
+                  <p className="text-sm font-medium text-slate-500">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-950">
+                    {item.value}
+                  </p>
+                </Link>
+              ))}
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Recently added records"
+            description="Newest records created across the workspace."
+          >
+            {recentRecords.length === 0 ? (
+              <EmptyState
+                title="No records added yet"
+                description="Import data or create records to start building the workspace."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentRecords.map((item) => (
+                  <article
+                    key={item.id}
+                    className="grid gap-3 p-4 md:grid-cols-[120px_1fr_120px] md:items-center"
+                  >
+                    <div>
+                      <StatusBadge tone="neutral">{item.type}</StatusBadge>
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {item.detail}
+                      </p>
+                    </div>
+
+                    <div className="md:text-right">
+                      <p className="text-sm font-medium text-slate-500">
+                        {formatDate(item.date)}
+                      </p>
+                      <Link
+                        href={item.href}
+                        className="mt-2 inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Review
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </SectionCard>
         </section>
       </div>
