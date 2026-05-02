@@ -10,9 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
 
-type LeadRecord = {
+type OpportunityRecord = {
   id: string;
-  company_id: string;
   customer_id: string | null;
   service_requested: string | null;
   status: string | null;
@@ -23,7 +22,7 @@ type LeadRecord = {
   created_at: string;
 };
 
-type CustomerRecord = {
+type PersonRecord = {
   id: string;
   name: string | null;
   email: string | null;
@@ -38,18 +37,58 @@ function formatCurrency(value: number | null | undefined) {
   }).format(Number(value || 0));
 }
 
-function isTodayOrPast(date: string | null) {
+function getToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function parseDateOnly(date: string | null) {
   if (!date) {
+    return null;
+  }
+
+  const datePart = date.includes("T") ? date.slice(0, 10) : date;
+  const [year, month, day] = datePart.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const value = new Date(year, month - 1, day);
+  value.setHours(0, 0, 0, 0);
+
+  return value;
+}
+
+function isTodayOrPast(date: string | null) {
+  const value = parseDateOnly(date);
+
+  if (!value) {
     return false;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  return value <= getToday();
+}
 
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
+function isOverdue(date: string | null) {
+  const value = parseDateOnly(date);
 
-  return target <= today;
+  if (!value) {
+    return false;
+  }
+
+  return value < getToday();
+}
+
+function isDueToday(date: string | null) {
+  const value = parseDateOnly(date);
+
+  if (!value) {
+    return false;
+  }
+
+  return value.getTime() === getToday().getTime();
 }
 
 function getStatusTone(status: string | null) {
@@ -87,6 +126,7 @@ function isWon(status: string | null) {
 
 function isLost(status: string | null) {
   const normalized = String(status || "").toLowerCase();
+
   return (
     normalized.includes("lost") ||
     normalized.includes("cancel") ||
@@ -94,16 +134,24 @@ function isLost(status: string | null) {
   );
 }
 
-function getFollowUpText(date: string | null) {
+function isClosed(status: string | null) {
+  return isWon(status) || isLost(status);
+}
+
+function getFollowUpLabel(date: string | null) {
   if (!date) {
-    return "No follow-up set";
+    return "Add follow-up";
   }
 
-  if (isTodayOrPast(date)) {
-    return `Due ${formatDateOnly(date)}`;
+  if (isOverdue(date)) {
+    return `Overdue ${formatDateOnly(date)}`;
   }
 
-  return `Follow up ${formatDateOnly(date)}`;
+  if (isDueToday(date)) {
+    return "Due today";
+  }
+
+  return `Due ${formatDateOnly(date)}`;
 }
 
 function getFollowUpTone(date: string | null) {
@@ -111,49 +159,135 @@ function getFollowUpTone(date: string | null) {
     return "warning" as const;
   }
 
-  if (isTodayOrPast(date)) {
+  if (isOverdue(date)) {
     return "danger" as const;
+  }
+
+  if (isDueToday(date)) {
+    return "warning" as const;
   }
 
   return "neutral" as const;
 }
 
-function getOpportunityIssues(lead: LeadRecord) {
+function getStageDescription(status: string | null) {
+  const normalized = String(status || "").toLowerCase();
+
+  if (normalized.includes("new")) {
+    return "New opportunity that needs first review or contact.";
+  }
+
+  if (normalized.includes("contact")) {
+    return "Contact has started and the opportunity needs next steps.";
+  }
+
+  if (normalized.includes("estimate")) {
+    return "Estimate has been sent and needs follow-up.";
+  }
+
+  if (normalized.includes("follow")) {
+    return "Opportunity is waiting on a follow-up or response.";
+  }
+
+  if (normalized.includes("won")) {
+    return "Opportunity was won and can move toward work or revenue.";
+  }
+
+  if (
+    normalized.includes("lost") ||
+    normalized.includes("cancel") ||
+    normalized.includes("declined")
+  ) {
+    return "Opportunity is no longer moving forward.";
+  }
+
+  return "Opportunity using a custom or imported status.";
+}
+
+function getOpportunityNextStep(opportunity: OpportunityRecord) {
+  if (!opportunity.customer_id) {
+    return "Link this opportunity to the person or business it belongs to.";
+  }
+
+  if (!opportunity.source) {
+    return "Add a source so you know where this opportunity came from.";
+  }
+
+  if (
+    opportunity.estimated_value === null ||
+    opportunity.estimated_value === undefined
+  ) {
+    return "Add an estimated value so the pipeline can be prioritized.";
+  }
+
+  if (!opportunity.next_follow_up_date && !isClosed(opportunity.status)) {
+    return "Add a next follow-up date so this does not get forgotten.";
+  }
+
+  if (
+    opportunity.next_follow_up_date &&
+    isTodayOrPast(opportunity.next_follow_up_date) &&
+    !isClosed(opportunity.status)
+  ) {
+    return "This opportunity needs follow-up attention.";
+  }
+
+  if (isWon(opportunity.status)) {
+    return "This opportunity is won. Confirm it is reflected in work or revenue.";
+  }
+
+  if (isLost(opportunity.status)) {
+    return "This opportunity is closed lost and should stay out of active pipeline.";
+  }
+
+  return "Keep this opportunity moving toward a decision.";
+}
+
+function getOpportunityIssues(opportunity: OpportunityRecord) {
   const issues: {
     label: string;
     tone: "success" | "warning" | "danger" | "neutral";
   }[] = [];
 
-  if (!lead.customer_id) {
+  if (!opportunity.customer_id) {
     issues.push({
-      label: "No person linked",
+      label: "Link person",
       tone: "warning",
     });
   }
 
-  if (!lead.source) {
+  if (!opportunity.source) {
     issues.push({
-      label: "No source",
+      label: "Add source",
       tone: "neutral",
     });
   }
 
-  if (lead.estimated_value === null || lead.estimated_value === undefined) {
+  if (
+    opportunity.estimated_value === null ||
+    opportunity.estimated_value === undefined
+  ) {
     issues.push({
-      label: "No estimate",
+      label: "Add estimate",
       tone: "neutral",
     });
   }
 
-  if (!lead.next_follow_up_date) {
+  if (!opportunity.next_follow_up_date && !isClosed(opportunity.status)) {
     issues.push({
-      label: "No follow-up",
+      label: "Add follow-up",
       tone: "warning",
     });
-  } else if (isTodayOrPast(lead.next_follow_up_date)) {
+  }
+
+  if (
+    opportunity.next_follow_up_date &&
+    isTodayOrPast(opportunity.next_follow_up_date) &&
+    !isClosed(opportunity.status)
+  ) {
     issues.push({
       label: "Follow-up due",
-      tone: "danger",
+      tone: isOverdue(opportunity.next_follow_up_date) ? "danger" : "warning",
     });
   }
 
@@ -167,7 +301,14 @@ function getOpportunityIssues(lead: LeadRecord) {
   return issues;
 }
 
-export default async function CrmPage() {
+export default async function PipelinePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const params = await searchParams;
+  const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
+
   const supabase = await createClient();
 
   const {
@@ -186,166 +327,143 @@ export default async function CrmPage() {
 
   const { company } = currentCompany;
 
-  const [leadsResult, customersResult] = await Promise.all([
+  const [opportunitiesResult, peopleResult] = await Promise.all([
     supabase
       .from("leads")
       .select(
-        "id, company_id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
+        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
       )
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(250),
 
     supabase
       .from("customers")
       .select("id, name, email, phone")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(250),
   ]);
 
-  if (leadsResult.error) {
-    throw new Error(leadsResult.error.message);
+  if (opportunitiesResult.error) {
+    throw new Error(opportunitiesResult.error.message);
   }
 
-  if (customersResult.error) {
-    throw new Error(customersResult.error.message);
+  if (peopleResult.error) {
+    throw new Error(peopleResult.error.message);
   }
 
-  const leads = (leadsResult.data || []) as LeadRecord[];
-  const customers = (customersResult.data || []) as CustomerRecord[];
+  const opportunities = (opportunitiesResult.data || []) as OpportunityRecord[];
+  const people = (peopleResult.data || []) as PersonRecord[];
 
-  const customerById = new Map(
-    customers.map((customer) => [customer.id, customer]),
+  const personById = new Map(people.map((person) => [person.id, person]));
+
+  const openOpportunities = opportunities.filter(
+    (opportunity) => !isClosed(opportunity.status),
   );
 
-  const openLeads = leads.filter(
-    (lead) => !isWon(lead.status) && !isLost(lead.status),
+  const wonOpportunities = opportunities.filter((opportunity) =>
+    isWon(opportunity.status),
   );
-  const wonLeads = leads.filter((lead) => isWon(lead.status));
-  const lostLeads = leads.filter((lead) => isLost(lead.status));
 
-  const openPipelineValue = openLeads.reduce(
-    (sum, lead) => sum + Number(lead.estimated_value || 0),
+  const lostOpportunities = opportunities.filter((opportunity) =>
+    isLost(opportunity.status),
+  );
+
+  const openValue = openOpportunities.reduce(
+    (sum, opportunity) => sum + Number(opportunity.estimated_value || 0),
     0,
   );
 
-  const wonPipelineValue = wonLeads.reduce(
-    (sum, lead) => sum + Number(lead.estimated_value || 0),
+  const wonValue = wonOpportunities.reduce(
+    (sum, opportunity) => sum + Number(opportunity.estimated_value || 0),
     0,
   );
 
-  const followUpNeeded = openLeads.filter(
-    (lead) =>
-      !lead.next_follow_up_date || isTodayOrPast(lead.next_follow_up_date),
+  const followUpNeeded = openOpportunities.filter(
+    (opportunity) =>
+      !opportunity.next_follow_up_date ||
+      isTodayOrPast(opportunity.next_follow_up_date),
   );
 
-  const missingSource = openLeads.filter((lead) => !lead.source);
-  const missingEstimate = openLeads.filter(
-    (lead) =>
-      lead.estimated_value === null || lead.estimated_value === undefined,
+  const missingEstimate = openOpportunities.filter(
+    (opportunity) =>
+      opportunity.estimated_value === null ||
+      opportunity.estimated_value === undefined,
   );
-  const missingCustomer = openLeads.filter((lead) => !lead.customer_id);
 
-  const cleanupGroups = [
-    {
-      id: "missing-source",
-      label: "Add source",
-      title: "Opportunities need sources",
-      detail: "Source tracking helps show what marketing is working.",
-      count: missingSource.length,
-      href: "/leads",
-    },
-    {
-      id: "missing-estimate",
-      label: "Add estimate",
-      title: "Opportunities need estimated values",
-      detail:
-        "Estimated value helps prioritize the most important opportunities.",
-      count: missingEstimate.length,
-      href: "/leads",
-    },
-    {
-      id: "missing-customer",
-      label: "Link opportunity",
-      title: "Opportunities need a person or business",
-      detail: "Pipeline records should usually be connected to someone.",
-      count: missingCustomer.length,
-      href: "/leads",
-    },
-  ].filter((item) => item.count > 0);
+  const stageGroups = Array.from(
+    opportunities.reduce((map, opportunity) => {
+      const status = opportunity.status || "New";
+      const current = map.get(status) || {
+        status,
+        count: 0,
+        value: 0,
+        followUpNeeded: 0,
+      };
 
-  const prioritizedOpportunities = [...openLeads]
-    .sort((a, b) => {
-      const aNeedsFollowUp =
-        !a.next_follow_up_date || isTodayOrPast(a.next_follow_up_date);
-      const bNeedsFollowUp =
-        !b.next_follow_up_date || isTodayOrPast(b.next_follow_up_date);
+      current.count += 1;
+      current.value += Number(opportunity.estimated_value || 0);
 
-      if (aNeedsFollowUp !== bNeedsFollowUp) {
-        return aNeedsFollowUp ? -1 : 1;
+      if (
+        !isClosed(status) &&
+        (!opportunity.next_follow_up_date ||
+          isTodayOrPast(opportunity.next_follow_up_date))
+      ) {
+        current.followUpNeeded += 1;
       }
 
-      return Number(b.estimated_value || 0) - Number(a.estimated_value || 0);
-    })
-    .slice(0, 12);
+      map.set(status, current);
 
-  const statusGroups = Array.from(
-    openLeads.reduce(
-      (map, lead) => {
-        const status = lead.status || "Open";
-
-        const current = map.get(status) || {
-          status,
-          count: 0,
-          value: 0,
-          followUpNeeded: 0,
-          topOpportunity: null as LeadRecord | null,
-        };
-
-        current.count += 1;
-        current.value += Number(lead.estimated_value || 0);
-
-        if (
-          !lead.next_follow_up_date ||
-          isTodayOrPast(lead.next_follow_up_date)
-        ) {
-          current.followUpNeeded += 1;
-        }
-
-        if (
-          !current.topOpportunity ||
-          Number(lead.estimated_value || 0) >
-            Number(current.topOpportunity.estimated_value || 0)
-        ) {
-          current.topOpportunity = lead;
-        }
-
-        map.set(status, current);
-
-        return map;
-      },
-      new Map<
-        string,
-        {
-          status: string;
-          count: number;
-          value: number;
-          followUpNeeded: number;
-          topOpportunity: LeadRecord | null;
-        }
-      >(),
-    ),
+      return map;
+    }, new Map<string, { status: string; count: number; value: number; followUpNeeded: number }>()),
   )
     .map(([, group]) => group)
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => {
+      const order = [
+        "New",
+        "Contacted",
+        "Estimate Sent",
+        "Follow Up",
+        "Won",
+        "Lost",
+      ];
 
-  const recentlyClosed = [...wonLeads, ...lostLeads]
+      const aIndex = order.indexOf(a.status);
+      const bIndex = order.indexOf(b.status);
+
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+      }
+
+      return b.count - a.count;
+    });
+
+  const prioritizedOpportunities = [...openOpportunities].sort((a, b) => {
+    const aNeedsFollowUp =
+      !a.next_follow_up_date || isTodayOrPast(a.next_follow_up_date);
+    const bNeedsFollowUp =
+      !b.next_follow_up_date || isTodayOrPast(b.next_follow_up_date);
+
+    if (aNeedsFollowUp !== bNeedsFollowUp) {
+      return aNeedsFollowUp ? -1 : 1;
+    }
+
+    return Number(b.estimated_value || 0) - Number(a.estimated_value || 0);
+  });
+
+  const visibleOpportunities = selectedStatus
+    ? opportunities.filter(
+        (opportunity) => (opportunity.status || "New") === selectedStatus,
+      )
+    : prioritizedOpportunities;
+
+  const recentlyClosed = [...wonOpportunities, ...lostOpportunities]
     .sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )
-    .slice(0, 6);
+    .slice(0, 8);
 
   return (
     <AppShell
@@ -357,22 +475,22 @@ export default async function CrmPage() {
       <div className="space-y-5">
         <PageHeader
           eyebrow="Pipeline"
-          title="Open opportunities"
-          description="Track potential business, follow-up timing, source quality, and pipeline value."
+          title="Track opportunity movement"
+          description="See where opportunities sit, what needs follow-up, and which records are ready to become work or revenue."
           actions={
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/leads"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
                 Manage opportunities
               </Link>
 
               <Link
-                href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                href="/follow-ups"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
-                Import data
+                Follow-ups
               </Link>
             </div>
           }
@@ -381,13 +499,13 @@ export default async function CrmPage() {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Open pipeline"
-            value={formatCurrency(openPipelineValue)}
-            helper={`${openLeads.length} open opportunities`}
-            tone={openPipelineValue > 0 ? "positive" : "default"}
+            value={formatCurrency(openValue)}
+            helper={`${openOpportunities.length} active opportunities`}
+            tone={openValue > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Needs follow-up"
+            label="Follow-up needed"
             value={followUpNeeded.length}
             helper="Missing, due, or overdue follow-ups"
             tone={followUpNeeded.length > 0 ? "warning" : "positive"}
@@ -395,69 +513,79 @@ export default async function CrmPage() {
 
           <StatCard
             label="Won value"
-            value={formatCurrency(wonPipelineValue)}
-            helper={`${wonLeads.length} won opportunities`}
-            tone={wonPipelineValue > 0 ? "positive" : "default"}
+            value={formatCurrency(wonValue)}
+            helper={`${wonOpportunities.length} won opportunities`}
+            tone={wonValue > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Cleanup issues"
-            value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)}
-            helper="Missing source, estimate, or linked person"
-            tone={cleanupGroups.length > 0 ? "warning" : "positive"}
+            label="Missing estimates"
+            value={missingEstimate.length}
+            helper="Open opportunities without value"
+            tone={missingEstimate.length > 0 ? "warning" : "positive"}
           />
         </section>
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
-            title="Open opportunities"
-            description="Prioritized by follow-up need, missing details, and estimated value."
+            title={
+              selectedStatus
+                ? `${selectedStatus} opportunities`
+                : "Pipeline queue"
+            }
+            description={
+              selectedStatus
+                ? `Showing opportunities currently marked ${selectedStatus}.`
+                : "Open opportunities sorted by follow-up need and estimated value."
+            }
           >
-            {prioritizedOpportunities.length === 0 ? (
+            {visibleOpportunities.length === 0 ? (
               <EmptyState
-                title="No open opportunities"
-                description="New opportunities will appear here when they are added or imported."
+                title="No opportunities found"
+                description="Create or import opportunities to start building the pipeline."
               />
             ) : (
-              <div>
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">
-                      {followUpNeeded.length} need follow-up
+              <>
+                {selectedStatus && (
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                    <p className="text-sm font-semibold text-slate-700">
+                      Filtered by stage: {selectedStatus}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Open opportunities are sorted by follow-up risk and value.
-                    </p>
-                  </div>
 
-                  <Link
-                    href="/leads"
-                    className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Manage all
-                  </Link>
-                </div>
+                    <Link
+                      href="/crm"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Clear filter
+                    </Link>
+                  </div>
+                )}
 
                 <div className="divide-y divide-slate-100">
-                  {prioritizedOpportunities.map((lead) => {
-                    const customer = lead.customer_id
-                      ? customerById.get(lead.customer_id)
+                  {visibleOpportunities.map((opportunity) => {
+                    const person = opportunity.customer_id
+                      ? personById.get(opportunity.customer_id)
                       : null;
 
-                    const issues = getOpportunityIssues(lead);
+                    const issues = getOpportunityIssues(opportunity);
 
                     return (
-                      <article key={lead.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_130px_160px_90px] md:items-center">
+                      <article key={opportunity.id} className="p-4">
+                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px_90px] md:items-start">
                           <div>
                             <p className="font-semibold text-slate-950">
-                              {lead.service_requested || "Untitled opportunity"}
+                              {opportunity.service_requested ||
+                                "Untitled opportunity"}
                             </p>
 
                             <p className="mt-1 text-sm text-slate-500">
-                              {customer?.name ||
-                                lead.source ||
+                              {person?.name ||
+                                opportunity.source ||
                                 "No person or source saved"}
+                            </p>
+
+                            <p className="mt-3 text-sm leading-6 text-slate-600">
+                              {getOpportunityNextStep(opportunity)}
                             </p>
 
                             <div className="mt-3 flex flex-wrap gap-2">
@@ -477,168 +605,117 @@ export default async function CrmPage() {
                               Value
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatCurrency(lead.estimated_value)}
+                              {formatCurrency(opportunity.estimated_value)}
                             </p>
 
                             <p className="mt-3 text-xs font-medium text-slate-500">
                               Source
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {lead.source || "Not set"}
+                              {opportunity.source || "Not set"}
                             </p>
                           </div>
 
                           <div>
                             <p className="text-xs font-medium text-slate-500">
-                              Next step
+                              Follow-up
                             </p>
                             <div className="mt-1">
                               <StatusBadge
-                                tone={getFollowUpTone(lead.next_follow_up_date)}
+                                tone={getFollowUpTone(
+                                  opportunity.next_follow_up_date,
+                                )}
                               >
-                                {getFollowUpText(lead.next_follow_up_date)}
+                                {getFollowUpLabel(
+                                  opportunity.next_follow_up_date,
+                                )}
                               </StatusBadge>
                             </div>
 
                             <p className="mt-3 text-xs font-medium text-slate-500">
-                              Status
+                              Stage
                             </p>
                             <div className="mt-1">
-                              <StatusBadge tone={getStatusTone(lead.status)}>
-                                {lead.status || "Open"}
+                              <StatusBadge
+                                tone={getStatusTone(opportunity.status)}
+                              >
+                                {opportunity.status || "New"}
                               </StatusBadge>
                             </div>
                           </div>
 
                           <div className="md:text-right">
                             <Link
-                              href={`/leads/${lead.id}/edit`}
+                              href={`/leads/${opportunity.id}/edit`}
                               className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                             >
                               Open
                             </Link>
                           </div>
                         </div>
-
-                        {lead.notes && (
-                          <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                            {lead.notes}
-                          </p>
-                        )}
                       </article>
                     );
                   })}
                 </div>
-              </div>
+              </>
             )}
           </SectionCard>
 
-          <div className="space-y-5">
-            <SectionCard
-              title="Pipeline health"
-              description="Grouped issues affecting pipeline reporting."
-            >
-              {cleanupGroups.length === 0 ? (
-                <EmptyState
-                  title="Pipeline data looks clean"
-                  description="No missing sources, estimates, or customer links were found."
-                />
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {cleanupGroups.map((item) => (
-                    <article
-                      key={item.id}
-                      className="flex items-start justify-between gap-4 p-4"
-                    >
-                      <div>
-                        <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                        <p className="mt-2 font-semibold text-slate-950">
-                          {item.title}
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          {item.detail}
-                        </p>
-                      </div>
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {item.count}
-                      </span>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </SectionCard>
-          </div>
-        </section>
-
-        <SectionCard
-          title="Pipeline by status"
-          description="Open opportunity value, count, and follow-up risk by current stage."
-        >
-          {statusGroups.length === 0 ? (
-            <EmptyState
-              title="No open pipeline"
-              description="Add or import opportunities to start building a pipeline."
-            />
-          ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
-              {statusGroups.map((group) => (
-                <div
-                  key={group.status}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
+          <SectionCard
+            title="Pipeline stages"
+            description="Use stages to filter the opportunity queue."
+          >
+            {stageGroups.length === 0 ? (
+              <EmptyState
+                title="No stages yet"
+                description="Stages will appear after opportunities are added."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {stageGroups.map((group) => (
+                  <article
+                    key={group.status}
+                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                  >
                     <div>
                       <StatusBadge tone={getStatusTone(group.status)}>
                         {group.status}
                       </StatusBadge>
 
-                      <p className="mt-3 text-2xl font-semibold text-slate-950">
-                        {formatCurrency(group.value)}
+                      <p className="mt-2 font-semibold text-slate-950">
+                        {group.count} opportunities
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        {group.count} open opportunities
+                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                        {getStageDescription(group.status)}
                       </p>
+
+                      {!isClosed(group.status) && group.followUpNeeded > 0 && (
+                        <span className="mt-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                          {group.followUpNeeded} need follow-up
+                        </span>
+                      )}
                     </div>
 
-                    {group.followUpNeeded > 0 && (
-                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-                        {group.followUpNeeded} follow-up
-                      </span>
-                    )}
-                  </div>
-
-                  {group.topOpportunity && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        Top opportunity
-                      </p>
-
-                      <p className="mt-1 line-clamp-1 text-sm font-semibold text-slate-950">
-                        {group.topOpportunity.service_requested ||
-                          "Untitled opportunity"}
-                      </p>
-
-                      <div className="mt-2 flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-700">
-                          {formatCurrency(group.topOpportunity.estimated_value)}
-                        </p>
-
-                        <Link
-                          href={`/leads/${group.topOpportunity.id}/edit`}
-                          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                          Open
-                        </Link>
-                      </div>
+                    <div className="md:text-right">
+                      <Link
+                        href={
+                          selectedStatus === group.status
+                            ? "/crm"
+                            : `/crm?status=${encodeURIComponent(group.status)}`
+                        }
+                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        {selectedStatus === group.status ? "Clear" : "Review"}
+                      </Link>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </SectionCard>
+                  </article>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </section>
+
         <SectionCard
           title="Recently closed"
           description="Won and lost opportunities moved out of the active pipeline."
@@ -650,38 +727,47 @@ export default async function CrmPage() {
             />
           ) : (
             <div className="divide-y divide-slate-100">
-              {recentlyClosed.map((lead) => (
-                <article
-                  key={lead.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_140px_120px_100px] md:items-center"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {lead.service_requested || "Untitled opportunity"}
+              {recentlyClosed.map((opportunity) => {
+                const person = opportunity.customer_id
+                  ? personById.get(opportunity.customer_id)
+                  : null;
+
+                return (
+                  <article
+                    key={opportunity.id}
+                    className="grid gap-3 p-4 md:grid-cols-[1fr_130px_120px_90px] md:items-center"
+                  >
+                    <div>
+                      <p className="font-semibold text-slate-950">
+                        {opportunity.service_requested ||
+                          "Untitled opportunity"}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {person?.name ||
+                          opportunity.source ||
+                          "No source saved"}
+                      </p>
+                    </div>
+
+                    <p className="text-sm font-semibold text-slate-700">
+                      {formatCurrency(opportunity.estimated_value)}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {lead.source || "No source saved"}
-                    </p>
-                  </div>
 
-                  <p className="text-sm font-semibold text-slate-700">
-                    {formatCurrency(lead.estimated_value)}
-                  </p>
+                    <StatusBadge tone={getStatusTone(opportunity.status)}>
+                      {opportunity.status || "Closed"}
+                    </StatusBadge>
 
-                  <StatusBadge tone={getStatusTone(lead.status)}>
-                    {lead.status || "Closed"}
-                  </StatusBadge>
-
-                  <div className="md:text-right">
-                    <Link
-                      href={`/leads/${lead.id}/edit`}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      View
-                    </Link>
-                  </div>
-                </article>
-              ))}
+                    <div className="md:text-right">
+                      <Link
+                        href={`/leads/${opportunity.id}/edit`}
+                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </SectionCard>
@@ -689,8 +775,3 @@ export default async function CrmPage() {
     </AppShell>
   );
 }
-
-
-
-
-
