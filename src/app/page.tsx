@@ -373,6 +373,25 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <footer className="border-t border-slate-200 bg-white px-4 py-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+          <p>© 2026 FrontierOps. All rights reserved.</p>
+
+          <div className="flex gap-4">
+            <Link
+              href="/privacy"
+              className="font-semibold hover:text-slate-950"
+            >
+              Privacy
+            </Link>
+
+            <Link href="/terms" className="font-semibold hover:text-slate-950">
+              Terms
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
