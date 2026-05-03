@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -250,15 +249,6 @@ export default async function SettingsPage() {
           }
         />
 
-        {integrationsResult.error && (
-          <ErrorState
-            title="Connected tools could not load"
-            description="Workspace settings are still available, but integration status could not be loaded."
-            actionLabel="Refresh settings"
-            actionHref="/settings"
-          />
-        )}
-
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <SectionCard
             title="Business profile"
@@ -484,3 +474,4 @@ export default async function SettingsPage() {
     </AppShell>
   );
 }
+
