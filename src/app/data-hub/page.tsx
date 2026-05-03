@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -295,7 +295,7 @@ export default async function DataHubPage() {
   );
 
   const customersMissingContact = customers.filter(
-    (customer) => !customer.phone && !customer.email,
+    (customer) => !customer.phone || !customer.email,
   );
 
   const customersMissingAddress = customers.filter(
@@ -410,8 +410,8 @@ export default async function DataHubPage() {
       id: "customers-missing-contact",
       area: "People",
       label: "Add contact",
-      title: "People missing phone and email",
-      detail: "These records are harder to contact or follow up with.",
+      title: "People with incomplete contact info",
+      detail: "These records are missing either phone or email.",
       count: customersMissingContact.length,
       href: "/customers",
       tone: getIssueTone(customersMissingContact.length),
@@ -640,7 +640,7 @@ export default async function DataHubPage() {
       id: `customer-${customer.id}`,
       type: "Person",
       title: customer.name || "Unnamed person",
-      detail: customer.email || customer.phone || "No contact saved",
+      detail: customer.email || customer.phone || "Incomplete contact saved",
       date: customer.created_at,
       href: `/customers/${customer.id}/edit`,
     })),
@@ -928,3 +928,4 @@ export default async function DataHubPage() {
     </AppShell>
   );
 }
+

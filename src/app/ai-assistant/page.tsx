@@ -1,27 +1,21 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompany } from "@/lib/current-company";
+import { formatTimestampDate } from "@/lib/date-format";
 import { GenerateSummaryButton } from "./GenerateSummaryButton";
 
-function formatDate(date: string | null) {
-  if (!date) {
-    return "—";
-  }
-
-  return new Date(date).toLocaleString();
-}
-
-function formatCurrency(value: number | string | null) {
-  return `$${Number(value || 0).toLocaleString()}`;
-}
+type AiReport = {
+  id: string;
+  report_type: string | null;
+  summary: string | null;
+  created_at: string;
+};
 
 export default async function AiAssistantPage() {
   const supabase = await createClient();
@@ -41,190 +35,21 @@ export default async function AiAssistantPage() {
   }
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
 
-  const [
-    customersResult,
-    leadsResult,
-    jobsResult,
-    salesResult,
-    followUpsResult,
-    reportsResult,
-  ] = await Promise.all([
-    supabase
-      .from("customers")
-      .select("id, phone, email, address")
-      .eq("company_id", company.id),
+  const { data, error } = await supabase
+    .from("ai_reports")
+    .select("id, report_type, summary, created_at")
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false })
+    .limit(6);
 
-    supabase
-      .from("leads")
-      .select("id, status, estimated_value, source")
-      .eq("company_id", company.id),
-
-    supabase
-      .from("jobs")
-      .select("id, status, job_value, paid_status")
-      .eq("company_id", company.id),
-
-    supabase
-      .from("sales")
-      .select("id, amount, payment_status, service_type, source")
-      .eq("company_id", company.id),
-
-    supabase
-      .from("follow_ups")
-      .select("id, status, due_date")
-      .eq("company_id", company.id),
-
-    supabase
-      .from("ai_reports")
-      .select("id, report_type, summary, created_at")
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(12),
-  ]);
-
-  if (customersResult.error) {
-    throw new Error(customersResult.error.message);
+  if (error) {
+    throw new Error(error.message);
   }
 
-  if (leadsResult.error) {
-    throw new Error(leadsResult.error.message);
-  }
-
-  if (jobsResult.error) {
-    throw new Error(jobsResult.error.message);
-  }
-
-  if (salesResult.error) {
-    throw new Error(salesResult.error.message);
-  }
-
-  if (followUpsResult.error) {
-    throw new Error(followUpsResult.error.message);
-  }
-
-  if (reportsResult.error) {
-    throw new Error(reportsResult.error.message);
-  }
-
-  const customers = customersResult.data || [];
-  const leads = leadsResult.data || [];
-  const jobs = jobsResult.data || [];
-  const sales = salesResult.data || [];
-  const followUps = followUpsResult.data || [];
-  const reports = reportsResult.data || [];
-
-  const openLeads = leads.filter(
-    (lead) => lead.status !== "Won" && lead.status !== "Lost",
-  ).length;
-
-  const openPipelineValue = leads
-    .filter((lead) => lead.status !== "Won" && lead.status !== "Lost")
-    .reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0);
-
-  const activeJobs = jobs.filter(
-    (job) => job.status === "Scheduled" || job.status === "In Progress",
-  ).length;
-
-  const totalRevenue = sales.reduce(
-    (sum, sale) => sum + Number(sale.amount || 0),
-    0,
-  );
-
-  const unpaidRevenue = sales
-    .filter((sale) => sale.payment_status !== "Paid")
-    .reduce((sum, sale) => sum + Number(sale.amount || 0), 0);
-
-  const openFollowUps = followUps.filter(
-    (followUp) => followUp.status === "Open",
-  ).length;
-
-  const missingCustomerContact = customers.filter(
-    (customer) => !customer.phone && !customer.email,
-  ).length;
-
-  const missingLeadSource = leads.filter((lead) => !lead.source).length;
-
-  const missingSaleSource = sales.filter((sale) => !sale.source).length;
-
-  const dataIssues =
-    missingCustomerContact + missingLeadSource + missingSaleSource;
-
+  const reports = (data || []) as AiReport[];
   const latestReport = reports[0];
-
-  const advisorInputs = [
-    {
-      label: profile.labels.customerPlural,
-      value: customers.length,
-      description:
-        "Contact records, missing details, and relationship context.",
-      href: "/customers",
-    },
-    {
-      label: profile.labels.leadPlural,
-      value: leads.length,
-      description: "Pipeline status, source tracking, and estimated value.",
-      href: "/leads",
-    },
-    {
-      label: profile.labels.jobPlural,
-      value: jobs.length,
-      description: "Scheduled, active, completed, and paid work records.",
-      href: "/jobs",
-    },
-    {
-      label: profile.labels.salePlural,
-      value: sales.length,
-      description: "Revenue, payment status, source, and service category.",
-      href: "/sales",
-    },
-    {
-      label: profile.labels.followUpPlural,
-      value: followUps.length,
-      description: "Open reminders, overdue actions, and relationship tasks.",
-      href: "/follow-ups",
-    },
-  ];
-
-  const recommendedChecks = [
-    {
-      title: "Follow-up risk",
-      description:
-        openFollowUps > 0
-          ? `${openFollowUps} open follow-ups may need attention.`
-          : "No open follow-ups are showing right now.",
-      tone: openFollowUps > 0 ? ("warning" as const) : ("success" as const),
-      href: "/follow-ups",
-    },
-    {
-      title: "Pipeline value",
-      description:
-        openPipelineValue > 0
-          ? `${formatCurrency(openPipelineValue)} is sitting in open pipeline records.`
-          : "No open pipeline value is currently showing.",
-      tone: openPipelineValue > 0 ? ("warning" as const) : ("neutral" as const),
-      href: "/crm",
-    },
-    {
-      title: "Unpaid revenue",
-      description:
-        unpaidRevenue > 0
-          ? `${formatCurrency(unpaidRevenue)} is marked unpaid or partial.`
-          : "No unpaid revenue is currently showing.",
-      tone: unpaidRevenue > 0 ? ("warning" as const) : ("success" as const),
-      href: "/sales",
-    },
-    {
-      title: "Data cleanup",
-      description:
-        dataIssues > 0
-          ? `${dataIssues} records are missing important reporting fields.`
-          : "Core records look clean enough for useful reporting.",
-      tone: dataIssues > 0 ? ("warning" as const) : ("success" as const),
-      href: "/data-hub",
-    },
-  ];
+  const previousReports = reports.slice(1);
 
   return (
     <AppShell
@@ -233,180 +58,137 @@ export default async function AiAssistantPage() {
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         <PageHeader
-          eyebrow="Intelligence"
-          title="AI Advisor"
-          description="Generate a plain-English business brief from live relationships, opportunities, work, revenue, actions, and data quality."
+          eyebrow="AI Assistant"
+          title="Generate an operating brief"
+          description="Gemini reviews the workspace and turns your business data into a short, practical brief."
           actions={
-            <Link
-              href="/workspace"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Back to Today
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/workspace"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Home
+              </Link>
+
+              <Link
+                href="/imports"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Import data
+              </Link>
+            </div>
           }
         />
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            label="Open pipeline"
-            value={openLeads}
-            helper={`${formatCurrency(openPipelineValue)} estimated value`}
-          />
+        <GenerateSummaryButton />
 
-          <StatCard
-            label="Active work"
-            value={activeJobs}
-            helper={`${profile.labels.jobPlural} scheduled or in progress`}
-          />
-
-          <StatCard
-            label="Unpaid revenue"
-            value={formatCurrency(unpaidRevenue)}
-            helper={`${formatCurrency(totalRevenue)} total stored revenue`}
-            tone={unpaidRevenue > 0 ? "warning" : "default"}
-          />
-
-          <StatCard
-            label="Data issues"
-            value={dataIssues}
-            helper="Missing contact or source data"
-            tone={dataIssues > 0 ? "warning" : "default"}
-          />
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.78fr_1.22fr]">
-          <GenerateSummaryButton />
-
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
           <SectionCard
-            title="What the advisor reviews"
-            description={`The AI summary is tailored to ${profile.label.toLowerCase()} and uses the business records already stored in FrontierOps.`}
-          >
-            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
-              {advisorInputs.map((input) => (
-                <Link
-                  key={input.label}
-                  href={input.href}
-                  className="rounded-3xl border border-slate-200 bg-slate-50 p-5 hover:bg-white hover:shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-lg font-semibold text-slate-950">
-                        {input.label}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        {input.description}
-                      </p>
-                    </div>
-
-                    <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700">
-                      {input.value}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SectionCard>
-        </section>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-          <SectionCard
-            title="Recommended checks"
-            description="The main areas the AI brief should explain in plain English."
-          >
-            <div className="divide-y divide-slate-100">
-              {recommendedChecks.map((check) => (
-                <Link
-                  key={check.title}
-                  href={check.href}
-                  className="flex items-start justify-between gap-4 p-5 hover:bg-slate-50"
-                >
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {check.title}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {check.description}
-                    </p>
-                  </div>
-
-                  <StatusBadge tone={check.tone}>
-                    {check.tone === "warning" ? "Review" : "Clear"}
-                  </StatusBadge>
-                </Link>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Latest AI brief"
-            description="The most recent generated summary for this workspace."
+            title="Latest brief"
+            description="The most recent Gemini-generated operating report."
           >
             {!latestReport ? (
               <EmptyState
-                title="No AI brief yet"
-                description="Generate your first summary to see what needs attention and what actions are recommended."
+                title="No AI brief generated yet"
+                description="Generate your first brief to see priorities, risks, and next steps."
               />
             ) : (
-              <article className="p-5">
-                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {latestReport.report_type.replace("_", " ")}
-                    </p>
+              <div className="p-5">
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <StatusBadge tone="neutral">Gemini brief</StatusBadge>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      {formatDate(latestReport.created_at)}
+                    <p className="text-sm font-medium text-slate-500">
+                      {formatTimestampDate(latestReport.created_at)}
                     </p>
                   </div>
 
-                  <StatusBadge>Latest</StatusBadge>
+                  <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                    {latestReport.summary}
+                  </div>
                 </div>
-
-                <div className="mt-5 whitespace-pre-wrap rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
-                  {latestReport.summary}
-                </div>
-              </article>
+              </div>
             )}
+          </SectionCard>
+
+          <SectionCard
+            title="What Gemini reviews"
+            description="The brief is generated from live workspace data."
+          >
+            <div className="space-y-3 p-4">
+              {[
+                {
+                  title: "People",
+                  detail: "Contacts, missing info, and customer records.",
+                },
+                {
+                  title: "Opportunities",
+                  detail: "Open pipeline, estimates, sources, and follow-ups.",
+                },
+                {
+                  title: "Work",
+                  detail: "Active jobs, stages, values, and payment status.",
+                },
+                {
+                  title: "Revenue",
+                  detail: "Paid, unpaid, partial, and source tracking.",
+                },
+                {
+                  title: "Follow-ups",
+                  detail: "Due dates, overdue items, and open reminders.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <p className="font-semibold text-slate-950">{item.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    {item.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
           </SectionCard>
         </section>
 
-        <SectionCard
-          title="Saved AI reports"
-          description="A history of generated summaries and operating recommendations."
-        >
-          {reports.length === 0 ? (
-            <EmptyState
-              title="No saved reports yet"
-              description="Generated summaries will be saved here so the business can track recommendations over time."
-            />
-          ) : (
+        {previousReports.length > 0 && (
+          <SectionCard
+            title="Previous briefs"
+            description="Older saved AI reports. Kept collapsed so the page stays clean."
+          >
             <div className="divide-y divide-slate-100">
-              {reports.map((report) => (
-                <article key={report.id} className="p-5">
-                  <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
+              {previousReports.map((report) => (
+                <details key={report.id} className="group p-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        {report.report_type.replace("_", " ")}
+                      <p className="font-semibold text-slate-950">
+                        Gemini operating brief
                       </p>
-
                       <p className="mt-1 text-sm text-slate-500">
-                        {formatDate(report.created_at)}
+                        {formatTimestampDate(report.created_at)}
                       </p>
                     </div>
 
-                    <StatusBadge>AI</StatusBadge>
-                  </div>
+                    <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:hidden">
+                      Open
+                    </span>
 
-                  <div className="mt-4 whitespace-pre-wrap rounded-3xl bg-slate-50 p-5 text-sm leading-7 text-slate-700">
+                    <span className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:inline-flex">
+                      Close
+                    </span>
+                  </summary>
+
+                  <div className="mt-4 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
                     {report.summary}
                   </div>
-                </article>
+                </details>
               ))}
             </div>
-          )}
-        </SectionCard>
+          </SectionCard>
+        )}
       </div>
     </AppShell>
   );

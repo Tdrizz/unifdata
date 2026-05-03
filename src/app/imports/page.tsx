@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
@@ -12,8 +12,11 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { CsvImportSessionFlow } from "./CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "./GoogleSheetsImportFlow";
 
-function formatDate(date: string | null) {
-  if (!date) return "—";
+function formatTimestamp(date: string | null) {
+  if (!date) {
+    return "—";
+  }
+
   return new Date(date).toLocaleString();
 }
 
@@ -35,22 +38,26 @@ function getStatusTone(status: string | null) {
     return "warning" as const;
   }
 
+  if (status === "cancelled") {
+    return "neutral" as const;
+  }
+
   return "neutral" as const;
 }
 
-function getRecordTypeLabel(recordType: string) {
+function getRecordTypeLabel(recordType: string | null) {
   const labels: Record<string, string> = {
-    relationships: "Relationships",
+    relationships: "People",
     opportunities: "Opportunities",
     work: "Work",
     revenue: "Revenue",
-    actions: "Actions",
+    actions: "Follow-ups",
   };
 
-  return labels[recordType] || recordType;
+  return labels[recordType || ""] || recordType || "Records";
 }
 
-function getSourceLabel(sourceType: string) {
+function getSourceLabel(sourceType: string | null) {
   const labels: Record<string, string> = {
     csv: "CSV",
     google_sheets: "Google Sheets",
@@ -59,7 +66,16 @@ function getSourceLabel(sourceType: string) {
     square: "Square",
   };
 
-  return labels[sourceType] || sourceType;
+  return labels[sourceType || ""] || sourceType || "Source";
+}
+
+function isReviewStatus(status: string | null) {
+  return (
+    status === "draft" ||
+    status === "analyzing" ||
+    status === "ready" ||
+    status === "failed"
+  );
 }
 
 export default async function ImportsPage() {
@@ -83,19 +99,12 @@ export default async function ImportsPage() {
   const profile = getIndustryProfile(company.business_sector);
 
   const [
-    importsResult,
     customersResult,
     syncConnectionsResult,
     syncRunsResult,
     importSessionsResult,
     integrationsResult,
   ] = await Promise.all([
-    supabase
-      .from("imports")
-      .select("id, file_name, import_type, status, records_created, created_at")
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
-
     supabase
       .from("customers")
       .select("id, name, phone, email, address, customer_type, created_at")
@@ -117,7 +126,7 @@ export default async function ImportsPage() {
       )
       .eq("company_id", company.id)
       .order("started_at", { ascending: false })
-      .limit(5),
+      .limit(8),
 
     supabase
       .from("import_sessions")
@@ -125,9 +134,16 @@ export default async function ImportsPage() {
         "id, source_type, source_name, file_name, record_type, status, total_rows, valid_rows, duplicate_rows, error_rows, created_rows, updated_rows, skipped_rows, created_at, committed_at",
       )
       .eq("company_id", company.id)
-      .in("status", ["draft", "analyzing", "ready", "failed"])
+      .in("status", [
+        "draft",
+        "analyzing",
+        "ready",
+        "failed",
+        "committed",
+        "cancelled",
+      ])
       .order("created_at", { ascending: false })
-      .limit(6),
+      .limit(20),
 
     supabase
       .from("integrations")
@@ -136,19 +152,26 @@ export default async function ImportsPage() {
       .order("created_at", { ascending: false }),
   ]);
 
-  if (importsResult.error) throw new Error(importsResult.error.message);
-  if (customersResult.error) throw new Error(customersResult.error.message);
+  if (customersResult.error) {
+    throw new Error(customersResult.error.message);
+  }
+
   if (syncConnectionsResult.error) {
     throw new Error(syncConnectionsResult.error.message);
   }
-  if (syncRunsResult.error) throw new Error(syncRunsResult.error.message);
+
+  if (syncRunsResult.error) {
+    throw new Error(syncRunsResult.error.message);
+  }
+
   if (importSessionsResult.error) {
     throw new Error(importSessionsResult.error.message);
   }
-  if (integrationsResult.error)
-    throw new Error(integrationsResult.error.message);
 
-  const importRecords = importsResult.data || [];
+  if (integrationsResult.error) {
+    throw new Error(integrationsResult.error.message);
+  }
+
   const customerRecords = customersResult.data || [];
   const connectionRecords = syncConnectionsResult.data || [];
   const syncRunRecords = syncRunsResult.data || [];
@@ -161,21 +184,30 @@ export default async function ImportsPage() {
       integration.status === "active",
   );
 
-  const completedImports = importRecords.filter(
-    (item) => item.status === "completed",
-  ).length;
+  const reviewSessions = importSessionRecords.filter((session) =>
+    isReviewStatus(session.status),
+  );
 
-  const totalImportedRecords = importRecords.reduce(
-    (sum, item) => sum + Number(item.records_created || 0),
+  const committedSessions = importSessionRecords.filter(
+    (session) => session.status === "committed",
+  );
+
+  const completedImports = committedSessions.length;
+
+  const totalImportedRecords = committedSessions.reduce(
+    (sum, session) =>
+      sum +
+      Number(session.created_rows || 0) +
+      Number(session.updated_rows || 0),
     0,
   );
 
-  const openReviewSessions = importSessionRecords.filter(
+  const openReviewSessions = reviewSessions.filter(
     (session) => session.status === "ready" || session.status === "analyzing",
   ).length;
 
   const missingContact = customerRecords.filter(
-    (customer) => !customer.phone && !customer.email,
+    (customer) => !customer.phone || !customer.email,
   ).length;
 
   const missingAddress = customerRecords.filter(
@@ -196,13 +228,30 @@ export default async function ImportsPage() {
           eyebrow="Import"
           title="Bring data into FrontierOps"
           description="Upload CSV files or choose a Google Sheet, review the rows, fix issues, and commit clean records."
+          actions={
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/data-hub"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Data Hub
+              </Link>
+
+              <Link
+                href="/workspace"
+                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              >
+                Home
+              </Link>
+            </div>
+          }
         />
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Committed imports"
             value={completedImports}
-            helper={`${totalImportedRecords} records created`}
+            helper={`${totalImportedRecords} records created or updated`}
             tone={completedImports > 0 ? "positive" : "default"}
           />
 
@@ -242,6 +291,7 @@ export default async function ImportsPage() {
                     tools.
                   </p>
                 </div>
+
                 <StatusBadge tone="success">Ready</StatusBadge>
               </div>
 
@@ -256,6 +306,7 @@ export default async function ImportsPage() {
                     Choose a sheet, select a tab, and review rows before commit.
                   </p>
                 </div>
+
                 <StatusBadge
                   tone={googleSheetsIntegration ? "success" : "warning"}
                 >
@@ -298,23 +349,22 @@ export default async function ImportsPage() {
           </div>
         </SectionCard>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
-          {" "}
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <SectionCard
             title="Needs review"
             description="Imports waiting for edits, duplicate decisions, or final commit."
           >
-            {importSessionRecords.length === 0 ? (
+            {reviewSessions.length === 0 ? (
               <EmptyState
                 title="Nothing waiting for review"
                 description="Upload a CSV or choose a Google Sheet to start a new import."
               />
             ) : (
               <div className="divide-y divide-slate-100">
-                {importSessionRecords.map((session) => (
+                {reviewSessions.map((session) => (
                   <article
                     key={session.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px]"
+                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px] md:items-center"
                   >
                     <div>
                       <p className="line-clamp-1 font-semibold text-slate-950">
@@ -331,7 +381,7 @@ export default async function ImportsPage() {
                     <div>
                       <p className="text-xs font-medium text-slate-500">Rows</p>
                       <p className="mt-1 text-sm font-semibold text-slate-700">
-                        {session.total_rows}
+                        {session.total_rows || 0}
                       </p>
                     </div>
 
@@ -340,8 +390,9 @@ export default async function ImportsPage() {
                         Review
                       </p>
                       <p className="mt-1 text-sm font-semibold text-slate-700">
-                        {session.valid_rows} ready · {session.duplicate_rows}{" "}
-                        dupes · {session.error_rows} errors
+                        {session.valid_rows || 0} ready ·{" "}
+                        {session.duplicate_rows || 0} dupes ·{" "}
+                        {session.error_rows || 0} errors
                       </p>
                     </div>
 
@@ -362,11 +413,12 @@ export default async function ImportsPage() {
               </div>
             )}
           </SectionCard>
+
           <SectionCard
             title="Data quality"
             description={`Missing details across ${profile.labels.customerPlural.toLowerCase()}.`}
           >
-            <div className="grid gap-3 p-4 md:grid-cols-3">
+            <div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-1">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-medium text-slate-500">
                   {profile.labels.customerPlural}
@@ -380,12 +432,12 @@ export default async function ImportsPage() {
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-medium text-slate-500">No contact</p>
+                <p className="text-xs font-medium text-slate-500">Incomplete contact</p>
                 <p className="mt-2 text-2xl font-semibold text-slate-950">
                   {missingContact}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Missing phone and email.
+                  Missing phone or email.
                 </p>
               </div>
 
@@ -400,10 +452,10 @@ export default async function ImportsPage() {
               </div>
             </div>
           </SectionCard>
-        </div>
+        </section>
 
         {connectionRecords.length > 0 ? (
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr] items-start">
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr] items-start">
             <SectionCard
               title="Saved syncs"
               description="Connections configured for repeat syncing."
@@ -412,14 +464,15 @@ export default async function ImportsPage() {
                 {connectionRecords.map((connection) => (
                   <article
                     key={connection.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px]"
+                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px] md:items-center"
                   >
                     <div>
                       <p className="font-semibold text-slate-950">
                         {connection.name}
                       </p>
                       <p className="mt-1 text-sm text-slate-500">
-                        {connection.source_name || connection.source_type}
+                        {connection.source_name ||
+                          getSourceLabel(connection.source_type)}
                       </p>
                     </div>
 
@@ -457,17 +510,17 @@ export default async function ImportsPage() {
                       source_type?: string;
                       file_name?: string;
                       record_type?: string;
-                    };
+                    } | null;
 
                     return (
                       <article
                         key={run.id}
-                        className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px]"
+                        className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
                       >
                         <div>
                           <p className="line-clamp-1 font-semibold text-slate-950">
                             {metadata?.file_name ||
-                              getSourceLabel(metadata?.source_type || "") ||
+                              getSourceLabel(metadata?.source_type || null) ||
                               "Import run"}
                           </p>
                           <p className="mt-1 text-sm text-slate-500">
@@ -480,14 +533,14 @@ export default async function ImportsPage() {
                         <div>
                           <p className="text-xs text-slate-500">Created</p>
                           <p className="text-sm font-semibold text-slate-700">
-                            {run.records_created}
+                            {run.records_created || 0}
                           </p>
                         </div>
 
                         <div>
                           <p className="text-xs text-slate-500">Updated</p>
                           <p className="text-sm font-semibold text-slate-700">
-                            {run.records_updated}
+                            {run.records_updated || 0}
                           </p>
                         </div>
 
@@ -496,7 +549,7 @@ export default async function ImportsPage() {
                             {run.status}
                           </StatusBadge>
                           <p className="mt-2 text-xs text-slate-500">
-                            {formatDate(run.finished_at || run.started_at)}
+                            {formatTimestamp(run.finished_at || run.started_at)}
                           </p>
                         </div>
                       </article>
@@ -505,7 +558,7 @@ export default async function ImportsPage() {
                 </div>
               )}
             </SectionCard>
-          </div>
+          </section>
         ) : (
           <SectionCard
             title="Recent activity"
@@ -523,17 +576,17 @@ export default async function ImportsPage() {
                     source_type?: string;
                     file_name?: string;
                     record_type?: string;
-                  };
+                  } | null;
 
                   return (
                     <article
                       key={run.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px]"
+                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
                     >
                       <div>
                         <p className="line-clamp-1 font-semibold text-slate-950">
                           {metadata?.file_name ||
-                            getSourceLabel(metadata?.source_type || "") ||
+                            getSourceLabel(metadata?.source_type || null) ||
                             "Import run"}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
@@ -546,14 +599,14 @@ export default async function ImportsPage() {
                       <div>
                         <p className="text-xs text-slate-500">Created</p>
                         <p className="text-sm font-semibold text-slate-700">
-                          {run.records_created}
+                          {run.records_created || 0}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-xs text-slate-500">Updated</p>
                         <p className="text-sm font-semibold text-slate-700">
-                          {run.records_updated}
+                          {run.records_updated || 0}
                         </p>
                       </div>
 
@@ -562,7 +615,7 @@ export default async function ImportsPage() {
                           {run.status}
                         </StatusBadge>
                         <p className="mt-2 text-xs text-slate-500">
-                          {formatDate(run.finished_at || run.started_at)}
+                          {formatTimestamp(run.finished_at || run.started_at)}
                         </p>
                       </div>
                     </article>
@@ -576,3 +629,4 @@ export default async function ImportsPage() {
     </AppShell>
   );
 }
+

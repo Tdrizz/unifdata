@@ -33,10 +33,13 @@ export function AppShell({
       className="min-h-screen bg-[#eef2f7] text-slate-950"
     >
       <div className="flex min-h-screen">
-        <aside className="hidden w-76 shrink-0 flex-col border-r border-slate-900 bg-[#090e1a] p-4 text-white md:flex">
+        <aside
+          className="hidden w-76 shrink-0 flex-col border-r border-white/10 p-4 text-white md:flex"
+          style={{ backgroundColor: "var(--fo-primary)" }}
+        >
           <Link
             href="/workspace"
-            className="rounded-3xl border border-white/10 bg-white/6 p-4 shadow-sm hover:bg-white/10"
+            className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-sm hover:bg-white/15"
           >
             <ProductMark companyName={companyName} inverse />
           </Link>
@@ -45,12 +48,12 @@ export function AppShell({
             <AppNav />
           </div>
 
-          <div className="mt-6 rounded-3xl border border-white/10 bg-white/6 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
               Signed in
             </p>
 
-            <p className="mt-2 truncate text-sm font-medium text-slate-300">
+            <p className="mt-2 truncate text-sm font-medium text-white/80">
               {userEmail}
             </p>
 

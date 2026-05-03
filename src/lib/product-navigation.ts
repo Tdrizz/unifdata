@@ -73,6 +73,11 @@ export const productNavigation: ProductNavGroup[] = [
         label: "AI Advisor",
         description: "Business summary",
       },
+      {
+        label: "Settings",
+        href: "/settings",
+        description: "Workspace, integrations, and account",
+      },
     ],
   },
 ];

@@ -427,13 +427,13 @@ const activeWorkValue = activeWork.reduce(
 
   const cleanupItems: QueueItem[] = [
     ...customers
-      .filter((customer) => !customer.phone && !customer.email)
+      .filter((customer) => !customer.phone || !customer.email)
       .slice(0, 3)
       .map((customer) => ({
         id: `customer-contact-${customer.id}`,
         label: "Add contact",
         title: customer.name || "Person needs contact",
-        detail: "No phone or email saved.",
+        detail: "Phone or email is missing.",
         href: `/customers/${customer.id}/edit`,
         tone: "neutral" as const,
         priority: 5,
@@ -558,7 +558,7 @@ const activeWorkValue = activeWork.reduce(
       id: `customer-${customer.id}`,
       type: "Person",
       title: customer.name || "Unnamed person",
-      detail: customer.email || customer.phone || "No contact saved",
+      detail: customer.email || customer.phone || "Incomplete contact saved",
       date: customer.created_at,
       href: `/customers/${customer.id}/edit`,
     })),
@@ -940,6 +940,7 @@ const activeWorkValue = activeWork.reduce(
     </AppShell>
   );
 }
+
 
 
 

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -288,7 +288,7 @@ export default async function EditPersonPage({
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-sm font-medium text-slate-500">Contact</p>
                   <p className="mt-1 font-semibold text-slate-950">
-                    {person.phone || person.email || "No contact saved"}
+                    {person.phone || person.email || "Incomplete contact saved"}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
                     {person.phone && person.email
@@ -355,3 +355,4 @@ export default async function EditPersonPage({
     </AppShell>
   );
 }
+
