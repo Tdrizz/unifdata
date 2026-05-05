@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 function getDateOnly(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -262,13 +263,20 @@ export async function POST() {
     (followUp) => isOpenFollowUp(followUp.status) && !followUp.due_date,
   ).length;
 
+  const profile = getIndustryProfile(company.business_sector);
+
+  const isEmptyWorkspace =
+    customers.length === 0 &&
+    leads.length === 0 &&
+    jobs.length === 0 &&
+    sales.length === 0 &&
+    followUps.length === 0;
+
   const metrics = {
-    companyName: company.name,
     date: today,
     totalCustomers,
     customersMissingContact: customersMissingContactCount,
     customersMissingAddress: customersMissingAddressCount,
-    totalOpportunities: leads.length,
     openOpportunities: openLeads.length,
     openPipelineValue: formatCurrency(openPipelineValue),
     opportunitiesDueForFollowUp: opportunitiesDueForFollowUpCount,
@@ -285,114 +293,142 @@ export async function POST() {
   };
 
   const workspaceData = {
-    people: customers.map((customer) => ({
-      name: compactText(customer.name, "Unnamed person"),
-      type: compactText(customer.customer_type),
-      hasPhone: Boolean(customer.phone),
-      hasEmail: Boolean(customer.email),
-      hasAddress: Boolean(customer.address),
-      createdAt: customer.created_at,
-    })),
+    [profile.labels.customerPlural.toLowerCase()]: customers
+      .slice(0, 40)
+      .map((customer) => ({
+        name: compactText(customer.name, "Unnamed"),
+        type: compactText(customer.customer_type),
+        hasPhone: Boolean(customer.phone),
+        hasEmail: Boolean(customer.email),
+        hasAddress: Boolean(customer.address),
+      })),
 
-    opportunities: leads.map((lead) => {
+    [profile.labels.leadPlural.toLowerCase()]: leads.slice(0, 40).map((lead) => {
       const customer = lead.customer_id
         ? customerById.get(lead.customer_id)
         : null;
 
       return {
-        service: compactText(lead.service_requested, "Untitled opportunity"),
-        customer: compactText(customer?.name, "No linked person"),
+        service: compactText(lead.service_requested, "Untitled"),
+        linkedTo: compactText(customer?.name, "No linked record"),
         status: compactText(lead.status, "New"),
         estimatedValue: Number(lead.estimated_value || 0),
         source: compactText(lead.source),
         nextFollowUpDate: lead.next_follow_up_date || null,
-        createdAt: lead.created_at,
       };
     }),
 
-    work: jobs.map((job) => {
+    [profile.labels.jobPlural.toLowerCase()]: jobs.slice(0, 40).map((job) => {
       const customer = job.customer_id
         ? customerById.get(job.customer_id)
         : null;
 
       return {
-        service: compactText(job.service_type, "Untitled work"),
-        customer: compactText(customer?.name, "No linked person"),
+        service: compactText(job.service_type, "Untitled"),
+        linkedTo: compactText(customer?.name, "No linked record"),
         status: compactText(job.status, "Scheduled"),
         value: Number(job.job_value || 0),
         paymentStatus: compactText(job.paid_status),
         startDate: job.start_date || null,
         completedDate: job.completed_date || null,
-        createdAt: job.created_at,
       };
     }),
 
-    revenue: sales.map((sale) => ({
+    [profile.labels.salePlural.toLowerCase()]: sales.slice(0, 40).map((sale) => ({
       service: compactText(sale.service_type, "Revenue record"),
       amount: Number(sale.amount || 0),
       paymentStatus: compactText(sale.payment_status),
       saleDate: sale.sale_date || null,
       source: compactText(sale.source),
-      createdAt: sale.created_at,
     })),
 
-    followUps: followUps.map((followUp) => {
-      const customer = followUp.customer_id
-        ? customerById.get(followUp.customer_id)
-        : null;
+    [profile.labels.followUpPlural.toLowerCase()]: followUps
+      .slice(0, 40)
+      .map((followUp) => {
+        const customer = followUp.customer_id
+          ? customerById.get(followUp.customer_id)
+          : null;
 
-      return {
-        message: compactText(followUp.message, "Follow up"),
-        customer: compactText(customer?.name, "No linked person"),
-        status: compactText(followUp.status, "Open"),
-        dueDate: followUp.due_date || null,
-        createdAt: followUp.created_at,
-      };
-    }),
+        return {
+          message: compactText(followUp.message, "Follow up"),
+          linkedTo: compactText(customer?.name, "No linked record"),
+          status: compactText(followUp.status, "Open"),
+          dueDate: followUp.due_date || null,
+        };
+      }),
   };
 
-  const prompt = `
-You are the AI operating assistant inside FrontierOps. Your job is to help the owner understand what to do next based on their actual workspace data.
-
-You have access to both summary metrics and compact record-level data. Use the record-level data to be specific. If a customer, opportunity, job, payment, or follow-up appears important, mention it by name or title. Do not list everything — prioritize what matters most right now.
+  const systemInstruction = `You are the operating assistant inside FrontierOps, a business management platform.
+Your job is to give ${company.name} a short, direct operating brief based on real workspace data.
+This business runs as a ${profile.label} operation.
+In this workspace: customers are called "${profile.labels.customerPlural}", leads/opportunities are called "${profile.labels.leadPlural}", active work is called "${profile.labels.jobPlural}", payments are called "${profile.labels.salePlural}", and reminders are called "${profile.labels.followUpPlural}".
+Use this vocabulary throughout your brief.
 
 Rules:
-- Do not invent facts or fill gaps with assumptions.
-- Do not repeat phrases like "based on the data provided."
-- Do not use markdown tables, bold text, or hashtags.
-- Keep output in plain text only.
-- Stay under 260 words.
-- Sound like a practical operations assistant, not a generic analytics report.
-- If there are no urgent issues, say so clearly and suggest the next useful operational check.
+- Never invent facts. Only state what the data confirms.
+- Never say "based on the data provided" or similar filler phrases.
+- No markdown: no bold, no tables, no hashtags, no bullet symbols other than plain hyphens.
+- Plain text only.
+- Stay under 280 words.
+- Sound like a practical operations advisor, not a generic analytics report.
+- Use the correct vocabulary for this business type throughout.`;
 
-Always respond in this exact format:
+  const userPrompt = isEmptyWorkspace
+    ? `This is a brand-new workspace for ${company.name}, a ${profile.label} business. No records have been added yet.
+
+Write a practical first-week setup brief. Tell the owner:
+1. What to add first and why it matters for a ${profile.label}.
+2. Which area creates the most operational value earliest — ${profile.labels.customerPlural}, ${profile.labels.leadPlural}, or ${profile.labels.jobPlural}.
+3. The single most common early mistake businesses in this sector make when setting up a workspace like this.
+
+Use this exact format:
 
 Operating Brief
-[2-4 sentences. Start with the single most important thing the owner should understand right now.]
+[2-4 sentences framing where they are and what the first week should accomplish]
 
-Needs Attention
-- [Item 1]
-- [Item 2]
-- [Item 3]
+Getting Started
+- [First action]
+- [Second action]
+- [Third action]
 
-Recommended Next Steps
-1. [Step one]
-2. [Step two]
-3. [Step three]
+Where to Focus First
+1. [Most impactful starting point]
+2. [Second priority]
+3. [Common early mistake to avoid]`
+    : `Here is the current workspace data for ${company.name} as of ${today}.
 
-Metrics:
+Summary metrics:
 ${JSON.stringify(metrics, null, 2)}
 
-Workspace data:
+Record-level data (most recent records, up to 40 per category):
 ${JSON.stringify(workspaceData, null, 2)}
-`;
+
+Write an operating brief. Use the record-level data to be specific — mention names, services, or amounts where they matter. Do not list everything; surface the most important items only.
+
+Use this exact format:
+
+Operating Brief
+[2-4 sentences. Lead with the single most important thing the owner should act on today.]
+
+Needs Attention
+- [Specific item — name it if possible]
+- [Specific item]
+- [Specific item]
+
+Recommended Next Steps
+1. [Concrete action]
+2. [Concrete action]
+3. [Concrete action]`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
-      contents: prompt,
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      config: {
+        systemInstruction,
+      },
+      contents: userPrompt,
     });
 
     const summary = response.text?.trim() || "No summary generated.";
