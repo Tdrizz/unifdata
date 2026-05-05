@@ -26,6 +26,7 @@ https://frontierops.vercel.app
 - Public landing page
 - Public product preview page
 - Public documentation page
+- Privacy policy and terms of service pages
 - Today operating brief
 - Pipeline and relationship overview
 - Data Hub with record quality checks
@@ -34,8 +35,12 @@ https://frontierops.vercel.app
 - Work / delivery records
 - Revenue records
 - Action / follow-up records
-- CSV customer import
-- AI business summaries
+- CSV customer import with staged review flow
+- Google Sheets import (OAuth connect, picker, row review, commit)
+- Import session review: validate rows, resolve duplicates, fix errors before committing
+- AI operating brief (Gemini-generated summary of live workspace data)
+- AI chat: ask questions about your customers, pipeline, revenue, and follow-ups
+- Workspace settings: business profile, industry, brand colors, connected tools
 - Opportunity lifecycle sync:
   - Accepted opportunities create linked work records
   - Accepted opportunities create expected revenue records
@@ -47,6 +52,8 @@ https://frontierops.vercel.app
 /              Public landing page
 /preview       Product preview
 /docs          Public documentation
+/privacy       Privacy policy
+/terms         Terms of service
 /signup        Signup page
 /login         Login page
 /onboarding    Company setup
@@ -58,8 +65,10 @@ https://frontierops.vercel.app
 /jobs          Work / delivery
 /sales         Revenue
 /follow-ups    Actions and reminders
-/imports       CSV imports
-/ai-assistant  AI business summary
+/imports       CSV and Google Sheets imports
+/imports/sessions/[id]  Import session review
+/ai-assistant  AI operating brief and chat
+/settings      Workspace settings
 ```
 
 ## Tech Stack
@@ -70,7 +79,8 @@ https://frontierops.vercel.app
 - Supabase Postgres
 - Supabase Auth
 - Supabase Row Level Security
-- Gemini API
+- Gemini API (`@google/genai`, model: `gemini-2.5-flash`)
+- Zod
 - Vercel
 
 ## Local Setup
@@ -88,9 +98,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 GEMINI_API_KEY=
 GOOGLE_GENERATIVE_AI_API_KEY=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 ```
 
-Only one Gemini key is required, but the app supports both environment variable names.
+Only one Gemini key is required — `GEMINI_API_KEY` is checked first, then `GOOGLE_GENERATIVE_AI_API_KEY`. Google OAuth credentials are required for the Google Sheets integration.
 
 Start the development server:
 
@@ -117,6 +129,8 @@ database/001_initial_schema.sql
 database/002_rls_policies.sql
 database/003_company_industry_profiles.sql
 database/004_import_sync_engine.sql
+database/005_import_sessions.sql
+database/006_consolidate_business_sectors.sql
 ```
 
 Future database work should be added as numbered migrations.
@@ -183,17 +197,40 @@ Payment status remains separate. Accepted business does not automatically mean m
 
 This keeps the business flow connected while still allowing the company to update payment status later.
 
-## Import and Sync Direction
+## Import Engine
 
-FrontierOps is moving toward an import and sync engine.
+The import engine stages all data for review before writing to the workspace.
 
-The goal is to let businesses connect or import data from their current systems, then use FrontierOps as the operating layer above those tools.
-
-Planned sync direction:
+### How it works
 
 ```text
-Phase 1: Better CSV mapping
-Phase 2: Google Sheets read-only sync
+1. Upload CSV or connect Google Sheets
+2. FrontierOps analyzes rows and classifies them as valid, duplicate, or error
+3. Review session: fix errors, decide on duplicates, confirm valid rows
+4. Commit: clean records are written to the workspace
+5. Run history is saved for reference
+```
+
+### Import session statuses
+
+```text
+draft      → uploading / processing
+analyzing  → row classification running
+ready      → rows classified, waiting for user review
+failed     → something went wrong during analysis
+committed  → user confirmed and records were written
+cancelled  → session was abandoned
+```
+
+### Google Sheets integration
+
+Connect a Google account from the Import page. FrontierOps uses OAuth and the Google Picker API — it only reads sheets the user explicitly selects. Once connected, sheets can be imported the same way as CSV files.
+
+### Sync phases
+
+```text
+Phase 1: CSV mapping — done
+Phase 2: Google Sheets read-only import — done
 Phase 3: Scheduled sync runs
 Phase 4: QuickBooks / payments read-only sync
 Phase 5: Industry-specific integrations
@@ -202,12 +239,23 @@ Phase 6: Carefully scoped two-way sync
 
 The product should avoid becoming just another manual CRM. The long-term value is helping businesses connect scattered tools, clean up messy data, and see what needs attention.
 
+## AI Features
+
+### Operating brief
+
+Gemini reads live workspace data and generates a short practical brief covering pipeline health, unpaid revenue, overdue follow-ups, and recommended next steps. Briefs are saved and can be regenerated at any time.
+
+### AI chat
+
+Ask plain-language questions about the workspace. Gemini has access to the same live data as the brief and answers using the correct terminology for the business type. Conversation history is kept for multi-turn questions within a session.
+
 ## Security Notes
 
 - `.env.local` should never be committed.
 - Company data is separated using `company_id`.
 - Supabase Row Level Security protects company records.
-- AI summaries should focus on business activity and avoid unnecessary sensitive customer details.
+- AI summaries focus on business activity and avoid unnecessary sensitive customer details.
+- Google Sheets integration is read-only and requires explicit sheet selection by the user.
 - Sync integrations should start read-only before any two-way sync is considered.
 
 ## Current Status
@@ -219,7 +267,7 @@ The current focus is:
 ```text
 1. Validate the product with real business owners
 2. Improve imports and data migration
-3. Build the import and sync engine
+3. Build scheduled sync runs (Phase 3)
 4. Add cleaner company settings
 5. Improve industry-specific dashboards
 6. Turn repeated manual setup work into product features
