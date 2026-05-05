@@ -6,46 +6,46 @@ import { ProductMark } from "@/components/ProductMark";
 
 const sectors = [
   {
-    label: "Contractors",
+    label: "Home & field services",
+    title: "Home services preview",
+    focus:
+      "4 follow-ups due, $12,400 in open quotes, and 3 client records need cleanup.",
+    stats: [
+      ["Open quote value", "$12.4k"],
+      ["Service visits", "7"],
+      ["Unpaid work", "$3.8k"],
+      ["Data health", "84%"],
+    ],
+    insights: [
+      "Yard cleanups are creating the most quote requests.",
+      "Recurring service brings the most repeat revenue.",
+      "Three clients are missing phone or email.",
+    ],
+  },
+  {
+    label: "Construction",
     title: "Contractor preview",
     focus:
-      "3 estimates pending response, $18,200 in active jobs, and 2 customer records missing addresses.",
+      "3 estimates pending response, $18,200 in active projects, and 2 customer records missing addresses.",
     stats: [
       ["Open estimate value", "$18.2k"],
-      ["Active jobs", "5"],
+      ["Active projects", "5"],
       ["Unpaid work", "$6.1k"],
       ["Data health", "79%"],
     ],
     insights: [
       "Roofing estimates are converting fastest this month.",
       "Two repeat customers haven't been followed up in 30 days.",
-      "Several job records are missing completed dates.",
+      "Several project records are missing completed dates.",
     ],
   },
   {
-    label: "Landscaping",
-    title: "Landscaping preview",
-    focus:
-      "4 follow-ups due, $12,400 in open quotes, and 3 customer records need cleanup.",
-    stats: [
-      ["Open quote value", "$12.4k"],
-      ["Active jobs", "7"],
-      ["Unpaid work", "$3.8k"],
-      ["Data health", "84%"],
-    ],
-    insights: [
-      "Yard cleanups are creating the most quote requests.",
-      "Mowing brings the most repeat revenue.",
-      "Three customers are missing phone or email.",
-    ],
-  },
-  {
-    label: "Dental offices",
-    title: "Dental office preview",
+    label: "Medical & dental",
+    title: "Medical office preview",
     focus:
       "6 recall follow-ups overdue, $8,200 in outstanding balances, and 4 patient records incomplete.",
     stats: [
-      ["Open inquiry value", "$8.2k"],
+      ["Open treatment value", "$8.2k"],
       ["Appointments", "18"],
       ["Outstanding balances", "$4.1k"],
       ["Data health", "91%"],
@@ -54,40 +54,6 @@ const sectors = [
       "Recall follow-ups are the highest priority today.",
       "New patient inquiries are converting from Google.",
       "Most patient records have usable contact details.",
-    ],
-  },
-  {
-    label: "Insurance agencies",
-    title: "Insurance agency preview",
-    focus:
-      "9 renewals due this week, $6,700 in open prospects, and several policies missing source tracking.",
-    stats: [
-      ["Open prospect value", "$6.7k"],
-      ["Renewals due", "9"],
-      ["Unpaid commissions", "$1.25k"],
-      ["Data health", "79%"],
-    ],
-    insights: [
-      "Renewal follow-ups should be handled before Friday.",
-      "Referral leads are converting better than paid ads.",
-      "Several policies are missing source tracking.",
-    ],
-  },
-  {
-    label: "Auto dealerships",
-    title: "Auto dealership preview",
-    focus:
-      "5 vehicle inquiries need follow-up, $42,000 in pending deals, and 2 customer files incomplete.",
-    stats: [
-      ["Open deal value", "$42k"],
-      ["Active inquiries", "5"],
-      ["Unpaid sales", "$11.5k"],
-      ["Data health", "88%"],
-    ],
-    insights: [
-      "Trade-in inquiries are converting to deals this week.",
-      "Two high-value prospects haven't been contacted in 5 days.",
-      "Finance records are missing for three recent sales.",
     ],
   },
   {
@@ -105,6 +71,23 @@ const sectors = [
       "Two proposals have been open for more than two weeks.",
       "Retainer clients are producing the most stable revenue.",
       "One client file is missing a primary contact email.",
+    ],
+  },
+  {
+    label: "General business",
+    title: "General business preview",
+    focus:
+      "5 actions due, $9,400 in open opportunities, and 2 records missing contact details.",
+    stats: [
+      ["Open opportunity value", "$9.4k"],
+      ["Active work", "4"],
+      ["Unpaid revenue", "$2.6k"],
+      ["Data health", "86%"],
+    ],
+    insights: [
+      "Two opportunities haven't been touched in over two weeks.",
+      "Referral relationships are producing the strongest revenue.",
+      "A handful of records are missing addresses or sources.",
     ],
   },
 ];
@@ -149,7 +132,7 @@ const workflowCards = [
 ];
 
 export default function HomePage() {
-  const [activeSector, setActiveSector] = useState(1); // default: Landscaping
+  const [activeSector, setActiveSector] = useState(0); // default: Home & field services
   const sector = sectors[activeSector];
 
   return (

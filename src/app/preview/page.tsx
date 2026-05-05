@@ -5,46 +5,46 @@ import { ProductMark } from "@/components/ProductMark";
 export const metadata: Metadata = {
   title: "Product Preview",
   description:
-    "See how FrontierOps adapts to different business types — landscaping, dental, insurance, contracting, auto, and professional services.",
+    "See how FrontierOps adapts to different business types — home services, construction, medical, professional services, and general business.",
 };
 
 const sectors = [
   {
-    sector: "Landscaping",
-    focus: "Open quotes, recurring services, unpaid jobs, customer follow-ups",
+    sector: "Home & Field Services",
+    focus: "Open quotes, scheduled service, unpaid work, client follow-ups",
     metrics: [
       ["Open quote value", "$12,400"],
-      ["Active service jobs", "7"],
+      ["Service visits", "7"],
       ["Unpaid work", "$3,850"],
       ["Data health", "84%"],
     ],
     insights: [
-      "Yard cleanups are creating the most customer interest.",
-      "Mowing is producing the most repeat revenue.",
-      "Three customer records are missing contact details.",
+      "Yard cleanups are creating the most quote requests.",
+      "Recurring service is producing the most repeat revenue.",
+      "Three client records are missing contact details.",
     ],
   },
   {
-    sector: "Contracting",
-    focus: "Estimates, active jobs, unpaid work, customer follow-ups",
+    sector: "Construction",
+    focus: "Estimates, active projects, unpaid work, customer follow-ups",
     metrics: [
       ["Open estimate value", "$18,200"],
-      ["Active jobs", "5"],
+      ["Active projects", "5"],
       ["Unpaid work", "$6,100"],
       ["Data health", "79%"],
     ],
     insights: [
       "Roofing estimates are converting fastest this month.",
       "Two repeat customers haven't been followed up in 30 days.",
-      "Several job records are missing completed dates.",
+      "Several project records are missing completed dates.",
     ],
   },
   {
-    sector: "Dental Office",
+    sector: "Medical & Dental",
     focus:
-      "New patient inquiries, appointments, treatment follow-ups, collections",
+      "Patient inquiries, appointments, treatment follow-ups, collections",
     metrics: [
-      ["Open inquiry value", "$8,200"],
+      ["Open treatment value", "$8,200"],
       ["Appointments", "18"],
       ["Outstanding balances", "$4,100"],
       ["Data health", "91%"],
@@ -53,37 +53,6 @@ const sectors = [
       "Recall follow-ups are the highest priority today.",
       "New patient inquiries are converting from Google.",
       "Most patient records have usable contact details.",
-    ],
-  },
-  {
-    sector: "Insurance Agency",
-    focus:
-      "Prospects, renewals, policy follow-ups, commissions, client records",
-    metrics: [
-      ["Open prospect value", "$6,700"],
-      ["Renewals due", "9"],
-      ["Unpaid commissions", "$1,250"],
-      ["Data health", "79%"],
-    ],
-    insights: [
-      "Renewal follow-ups should be handled before Friday.",
-      "Referral leads are converting better than paid ads.",
-      "Several policies are missing source tracking.",
-    ],
-  },
-  {
-    sector: "Auto Dealership",
-    focus: "Vehicle inquiries, pending deals, unpaid sales, customer files",
-    metrics: [
-      ["Open deal value", "$42,000"],
-      ["Active inquiries", "5"],
-      ["Unpaid sales", "$11,500"],
-      ["Data health", "88%"],
-    ],
-    insights: [
-      "Trade-in inquiries are converting to deals this week.",
-      "Two high-value prospects haven't been contacted in 5 days.",
-      "Finance records are missing for three recent sales.",
     ],
   },
   {
@@ -99,6 +68,22 @@ const sectors = [
       "Two proposals have been open for more than two weeks.",
       "Retainer clients are producing the most stable revenue.",
       "One client file is missing a primary contact email.",
+    ],
+  },
+  {
+    sector: "General Business",
+    focus:
+      "Open opportunities, active work, unpaid revenue, daily follow-ups",
+    metrics: [
+      ["Open opportunity value", "$9,400"],
+      ["Active work", "4"],
+      ["Unpaid revenue", "$2,600"],
+      ["Data health", "86%"],
+    ],
+    insights: [
+      "Two opportunities haven't been touched in over two weeks.",
+      "Referral relationships are producing the strongest revenue.",
+      "A handful of records are missing addresses or sources.",
     ],
   },
 ];
@@ -185,9 +170,9 @@ export default function PreviewPage() {
               </h1>
               <p className="mt-4 text-base leading-8 text-slate-600">
                 FrontierOps adapts its dashboard language and metrics to the
-                type of company using it. A dental office, insurance agency,
-                contractor, and service business should not all run from the
-                same generic workspace.
+                type of company using it. A medical office, contractor, and home
+                services crew should not all run from the same generic
+                workspace.
               </p>
             </div>
             <Link
