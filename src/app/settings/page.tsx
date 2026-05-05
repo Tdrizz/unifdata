@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions, industryProfiles } from "@/lib/industry-profiles";
+import { ColorPickers } from "@/components/settings/ColorPickers";
 
 const validBusinessSectors = new Set(Object.keys(industryProfiles));
 
@@ -294,65 +295,16 @@ export default async function SettingsPage() {
               </div>
 
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-950">Appearance</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Pick the colors used for workspace branding and accents.
-                    </p>
-                  </div>
-
-                  <div className="flex overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                    <div
-                      className="h-12 w-16"
-                      style={{ backgroundColor: brandColor }}
-                    />
-                    <div
-                      className="h-12 w-16"
-                      style={{ backgroundColor: accentColor }}
-                    />
-                  </div>
+                <div className="mb-4">
+                  <p className="font-semibold text-slate-950">Appearance</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Pick the colors used for workspace branding and accents.
+                  </p>
                 </div>
-
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Brand color
-                    <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
-                      <input
-                        name="brand_color"
-                        type="color"
-                        defaultValue={brandColor}
-                        className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white"
-                      />
-
-                      <input
-                        name="brand_color_text"
-                        value={brandColor}
-                        readOnly
-                        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 outline-none"
-                      />
-                    </div>
-                  </label>
-
-                  <label className="block text-sm font-medium text-slate-700">
-                    Accent color
-                    <div className="mt-2 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
-                      <input
-                        name="accent_color"
-                        type="color"
-                        defaultValue={accentColor}
-                        className="h-11 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white"
-                      />
-
-                      <input
-                        name="accent_color_text"
-                        value={accentColor}
-                        readOnly
-                        className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 outline-none"
-                      />
-                    </div>
-                  </label>
-                </div>
+                <ColorPickers
+                  defaultBrandColor={brandColor}
+                  defaultAccentColor={accentColor}
+                />
               </div>
 
               <div className="flex justify-end">
