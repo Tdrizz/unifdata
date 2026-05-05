@@ -86,6 +86,34 @@ export async function POST() {
   const { company } = currentCompany;
   const supabase = await createClient();
 
+  // Rate limit: one brief per 10 minutes per company
+  const COOLDOWN_MINUTES = 10;
+  const { data: lastReport } = await supabase
+    .from("ai_reports")
+    .select("created_at")
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastReport) {
+    const lastAt = new Date(lastReport.created_at).getTime();
+    const secondsAgo = Math.floor((Date.now() - lastAt) / 1000);
+    const cooldownSeconds = COOLDOWN_MINUTES * 60;
+
+    if (secondsAgo < cooldownSeconds) {
+      const secondsLeft = cooldownSeconds - secondsAgo;
+      const minutesLeft = Math.ceil(secondsLeft / 60);
+      return NextResponse.json(
+        {
+          error: `A brief was just generated. Please wait ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"} before generating another.`,
+          retryAfterSeconds: secondsLeft,
+        },
+        { status: 429 },
+      );
+    }
+  }
+
   const startOfMonth = getStartOfMonth();
   const today = getTodayString();
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { RefreshButton } from "./RefreshButton";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -619,6 +620,8 @@ export default async function WorkspacePage() {
           description={profile.dailyFocus}
           actions={
             <div className="flex flex-wrap gap-2">
+              <RefreshButton />
+
               <Link
                 href="/follow-ups"
                 className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"

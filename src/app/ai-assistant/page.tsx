@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,6 +10,8 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { GenerateSummaryButton } from "./GenerateSummaryButton";
+import { BriefDisplay } from "./BriefDisplay";
+import { AiChat } from "./AiChat";
 
 type AiReport = {
   id: string;
@@ -102,14 +104,12 @@ export default async function AiAssistantPage() {
                 <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <StatusBadge tone="neutral">Gemini brief</StatusBadge>
-
                     <p className="text-sm font-medium text-slate-500">
                       {formatTimestampDate(latestReport.created_at)}
                     </p>
                   </div>
-
-                  <div className="mt-5 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                    {latestReport.summary}
+                  <div className="mt-5">
+                    <BriefDisplay summary={latestReport.summary || ""} />
                   </div>
                 </div>
               </div>
@@ -157,6 +157,14 @@ export default async function AiAssistantPage() {
           </SectionCard>
         </section>
 
+        {/* AI Chat */}
+        <SectionCard
+          title="Ask Gemini"
+          description={`Ask anything about your ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, revenue, or follow-ups.`}
+        >
+          <AiChat />
+        </SectionCard>
+
         {previousReports.length > 0 && (
           <SectionCard
             title="Previous briefs"
@@ -184,8 +192,8 @@ export default async function AiAssistantPage() {
                     </span>
                   </summary>
 
-                  <div className="mt-4 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                    {report.summary}
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <BriefDisplay summary={report.summary || ""} />
                   </div>
                 </details>
               ))}
