@@ -224,6 +224,7 @@ export default async function SettingsPage() {
       userEmail={user.email || ""}
       brandColor={brandColor}
       accentColor={accentColor}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader

@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type ManualFollowUpRecord = {
   id: string;
@@ -378,6 +379,7 @@ export default async function FollowUpsPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function createFollowUp(formData: FormData) {
     "use server";
@@ -649,12 +651,13 @@ const overdueActions = actions.filter((action) =>
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Follow-Ups"
+          eyebrow={profile.labels.followUpPlural}
           title="Priority follow-up queue"
-          description="Manual follow-ups and opportunity follow-up dates are sorted by urgency and due date."
+          description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates are sorted by urgency and due date.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

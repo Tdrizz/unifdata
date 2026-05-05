@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type FollowUpRecord = {
   id: string;
@@ -281,6 +282,7 @@ export default async function EditFollowUpPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function updateFollowUp(formData: FormData) {
     "use server";
@@ -364,12 +366,13 @@ export default async function EditFollowUpPage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
           eyebrow="Edit follow-up"
           title={action.message || "Untitled follow-up"}
-          description="Update the linked person, action, due date, and status for this follow-up."
+          description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, action, due date, and status for this follow-up.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

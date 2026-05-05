@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type RevenueRecord = {
   id: string;
@@ -193,6 +194,7 @@ export default async function RevenuePage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
   const today = getTodayDate();
 
   async function createRevenue(formData: FormData) {
@@ -386,12 +388,13 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Revenue"
-          title="Track payments and collected work"
-          description="Use this page to see paid revenue, unpaid revenue, payment status, and what sources are generating money."
+          eyebrow={profile.labels.salePlural}
+          title={`Track ${profile.labels.salePlural.toLowerCase()} and collected work`}
+          description={`Use this page to see paid ${profile.labels.salePlural.toLowerCase()}, unpaid ${profile.labels.salePlural.toLowerCase()}, payment status, and what sources are generating money.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

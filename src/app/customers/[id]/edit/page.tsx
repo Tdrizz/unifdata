@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type PersonRecord = {
   id: string;
@@ -95,6 +96,7 @@ export default async function EditPersonPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function updatePerson(formData: FormData) {
     "use server";
@@ -163,11 +165,12 @@ export default async function EditPersonPage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Edit person"
-          title={person.name || "Unnamed person"}
+          eyebrow={`Edit ${profile.labels.customerSingular.toLowerCase()}`}
+          title={person.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
           description="Update contact details, address, type, and notes for this person or business."
           actions={
             <div className="flex flex-wrap gap-2">

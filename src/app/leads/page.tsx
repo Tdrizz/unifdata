@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type OpportunityRecord = {
   id: string;
@@ -210,6 +211,7 @@ export default async function OpportunitiesPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function createOpportunity(formData: FormData) {
     "use server";
@@ -329,23 +331,23 @@ export default async function OpportunitiesPage() {
   const cleanupGroups = [
     {
       id: "missing-person",
-      label: "Link person",
-      title: "Opportunities need people or businesses",
+      label: `Link ${profile.labels.customerSingular.toLowerCase()}`,
+      title: `${profile.labels.leadPlural} need ${profile.labels.customerPlural.toLowerCase()} or businesses`,
       detail: "Pipeline records should usually be connected to someone.",
       count: missingPerson.length,
     },
     {
       id: "missing-source",
       label: "Add source",
-      title: "Opportunities need sources",
+      title: `${profile.labels.leadPlural} need sources`,
       detail: "Source tracking helps show which marketing is working.",
       count: missingSource.length,
     },
     {
       id: "missing-estimate",
       label: "Add estimate",
-      title: "Opportunities need estimated values",
-      detail: "Estimated value helps prioritize important opportunities.",
+      title: `${profile.labels.leadPlural} need estimated values`,
+      detail: `Estimated value helps prioritize important ${profile.labels.leadPlural.toLowerCase()}.`,
       count: missingEstimate.length,
     },
   ].filter((item) => item.count > 0);
@@ -398,12 +400,13 @@ export default async function OpportunitiesPage() {
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Opportunities"
-          title="Manage potential business"
-          description="Create, review, and clean up opportunities before they become work and revenue."
+          eyebrow={profile.labels.leadPlural}
+          title={`Manage ${profile.labels.leadPlural.toLowerCase()}`}
+          description={`Create, review, and clean up ${profile.labels.leadPlural.toLowerCase()} before they become ${profile.labels.jobPlural.toLowerCase()} and ${profile.labels.salePlural.toLowerCase()}.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link
@@ -427,7 +430,7 @@ export default async function OpportunitiesPage() {
           <StatCard
             label="Open value"
             value={formatCurrency(openValue)}
-            helper={`${openOpportunities.length} open opportunities`}
+            helper={`${openOpportunities.length} open ${profile.labels.leadPlural.toLowerCase()}`}
             tone={openValue > 0 ? "positive" : "default"}
           />
 
@@ -441,7 +444,7 @@ export default async function OpportunitiesPage() {
           <StatCard
             label="Won value"
             value={formatCurrency(wonValue)}
-            helper={`${wonOpportunities.length} won opportunities`}
+            helper={`${wonOpportunities.length} won ${profile.labels.leadPlural.toLowerCase()}`}
             tone={wonValue > 0 ? "positive" : "default"}
           />
 
@@ -454,8 +457,8 @@ export default async function OpportunitiesPage() {
         </section>
 
         <SectionCard
-          title="Add opportunity"
-          description="Create a new opportunity manually and optionally link it to a person or business."
+          title={`Add ${profile.labels.leadSingular.toLowerCase()}`}
+          description={`Create a new ${profile.labels.leadSingular.toLowerCase()} manually and optionally link it to a ${profile.labels.customerSingular.toLowerCase()} or business.`}
         >
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
@@ -467,7 +470,7 @@ export default async function OpportunitiesPage() {
               </div>
 
               <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
-                Add opportunity
+                Add {profile.labels.leadSingular.toLowerCase()}
               </span>
 
               <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
@@ -486,7 +489,7 @@ export default async function OpportunitiesPage() {
                     name="customer_id"
                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   >
-                    <option value="">No linked person yet</option>
+                    <option value="">No linked {profile.labels.customerSingular.toLowerCase()} yet</option>
                     {people.map((person) => (
                       <option key={person.id} value={person.id}>
                         {person.name ||
@@ -574,7 +577,7 @@ export default async function OpportunitiesPage() {
                   type="submit"
                   className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
                 >
-                  Create opportunity
+                  Create {profile.labels.leadSingular.toLowerCase()}
                 </button>
               </div>
             </form>
@@ -583,13 +586,13 @@ export default async function OpportunitiesPage() {
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
-            title="Open opportunities"
+            title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
             description="Prioritized by follow-up need, missing details, and estimated value."
           >
             {prioritizedOpenOpportunities.length === 0 ? (
               <EmptyState
-                title="No open opportunities"
-                description="Add or import opportunities to start building the pipeline."
+                title={`No open ${profile.labels.leadPlural.toLowerCase()}`}
+                description={`Add or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
               />
             ) : (
               <div className="divide-y divide-slate-100">
@@ -612,7 +615,7 @@ export default async function OpportunitiesPage() {
                           <p className="mt-1 text-sm text-slate-500">
                             {person?.name ||
                               opportunity.source ||
-                              "No person or source saved"}
+                              `No ${profile.labels.customerSingular.toLowerCase()} or source saved`}
                           </p>
 
                           <div className="mt-3 flex flex-wrap gap-2">
@@ -690,13 +693,13 @@ export default async function OpportunitiesPage() {
 
           <div className="space-y-5">
             <SectionCard
-              title="Opportunity health"
+              title={`${profile.labels.leadSingular} health`}
               description="Grouped issues affecting pipeline quality."
             >
               {cleanupGroups.length === 0 ? (
                 <EmptyState
-                  title="Opportunities look clean"
-                  description="No missing person links, sources, or estimates were found."
+                  title={`${profile.labels.leadPlural} look clean`}
+                  description={`No missing ${profile.labels.customerSingular.toLowerCase()} links, sources, or estimates were found.`}
                 />
               ) : (
                 <div className="divide-y divide-slate-100">
@@ -745,7 +748,7 @@ export default async function OpportunitiesPage() {
                           {group.source}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
-                          {group.count} opportunities
+                          {group.count} {profile.labels.leadPlural.toLowerCase()}
                         </p>
                       </div>
 
@@ -762,12 +765,12 @@ export default async function OpportunitiesPage() {
 
         <SectionCard
           title="Recently closed"
-          description="Won and lost opportunities moved out of the active pipeline."
+          description={`Won and lost ${profile.labels.leadPlural.toLowerCase()} moved out of the active pipeline.`}
         >
           {recentlyClosed.length === 0 ? (
             <EmptyState
-              title="No closed opportunities yet"
-              description="Won or lost opportunities will appear here once statuses are updated."
+              title={`No closed ${profile.labels.leadPlural.toLowerCase()} yet`}
+              description={`Won or lost ${profile.labels.leadPlural.toLowerCase()} will appear here once statuses are updated.`}
             />
           ) : (
             <div className="divide-y divide-slate-100">
