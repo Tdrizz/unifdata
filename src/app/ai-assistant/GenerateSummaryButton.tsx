@@ -30,6 +30,15 @@ export function GenerateSummaryButton() {
         return;
       }
 
+      if (response.status === 503) {
+        setMessageTone("warning");
+        setMessage(
+          data.error ||
+            "Gemini is under high demand right now. Wait a moment and try again.",
+        );
+        return;
+      }
+
       if (!response.ok) {
         setMessageTone("error");
         setMessage(data.error || "Failed to generate brief.");
