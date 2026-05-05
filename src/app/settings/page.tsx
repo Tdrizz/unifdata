@@ -9,6 +9,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
+import { businessSectorOptions, industryProfiles } from "@/lib/industry-profiles";
+
+const validBusinessSectors = new Set(Object.keys(industryProfiles));
 
 type IntegrationRecord = {
   id: string;
@@ -129,7 +132,10 @@ export default async function SettingsPage() {
     const { company } = currentCompany;
 
     const name = getFormString(formData, "name");
-    const businessSector = getFormString(formData, "business_sector");
+    const rawSector = getFormString(formData, "business_sector");
+    const businessSector = validBusinessSectors.has(rawSector)
+      ? rawSector
+      : "general";
 
     const brandColor = normalizeHexColor(
       getFormString(formData, "brand_color"),
@@ -164,7 +170,7 @@ export default async function SettingsPage() {
       .from("companies")
       .update({
         name,
-        business_sector: businessSector || null,
+        business_sector: businessSector,
         brand_color: brandColor,
         accent_color: accentColor,
       })
@@ -178,7 +184,7 @@ export default async function SettingsPage() {
 
     if (!updatedCompany) {
       throw new Error(
-        "Settings did not save. The companies update policy is likely blocking this update.",
+        "Settings could not be saved. Please try again or contact support if the issue persists.",
       );
     }
 
@@ -270,12 +276,20 @@ export default async function SettingsPage() {
 
                 <label className="block text-sm font-medium text-slate-700">
                   Business sector
-                  <input
+                  <select
                     name="business_sector"
-                    defaultValue={company.business_sector || ""}
-                    placeholder="Flooring, construction, home services..."
+                    defaultValue={company.business_sector || "general"}
                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  />
+                  >
+                    {businessSectorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-2 block text-xs leading-5 text-slate-500">
+                    Controls the language and priorities shown in dashboards.
+                  </span>
                 </label>
               </div>
 

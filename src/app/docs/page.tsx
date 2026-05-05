@@ -116,31 +116,27 @@ const pages = [
 
 const sectors = [
   {
-    sector: "Field Service",
-    wording: "Clients, quotes, service visits, payments, and client actions.",
+    sector: "General Business",
+    wording:
+      "Relationships, opportunities, work items, revenue records, and actions.",
   },
   {
-    sector: "Dental / Medical",
+    sector: "Medical / Dental / Healthcare",
     wording:
       "Patients, treatment opportunities, appointments, collections, and patient actions.",
   },
   {
-    sector: "Insurance",
+    sector: "Construction / Contractor",
     wording:
-      "Clients, policy opportunities, policy tasks, commission records, and renewal actions.",
+      "Customers, estimates, projects, payments, and project actions.",
   },
   {
-    sector: "Automotive",
-    wording:
-      "Customers, vehicle opportunities, deal tasks, vehicle sales, and customer actions.",
+    sector: "Home & Field Services",
+    wording: "Clients, quotes, service visits, payments, and client actions.",
   },
   {
     sector: "Professional Services",
     wording: "Clients, proposals, projects, invoices, and client actions.",
-  },
-  {
-    sector: "Retail",
-    wording: "Customers, inquiries, orders, sales, and customer actions.",
   },
 ];
 

@@ -14,13 +14,14 @@ export default function SignupPage() {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"error" | "info">("error");
 
   async function handleSignup(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
@@ -28,7 +29,16 @@ export default function SignupPage() {
     setLoading(false);
 
     if (error) {
+      setMessageTone("error");
       setMessage(error.message);
+      return;
+    }
+
+    if (!data.session) {
+      setMessageTone("info");
+      setMessage(
+        "Account created. Check your email for a confirmation link to finish signing in.",
+      );
       return;
     }
 
@@ -84,7 +94,13 @@ export default function SignupPage() {
       </form>
 
       {message && (
-        <div className="mt-4 rounded-2xl border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
+        <div
+          className={
+            messageTone === "info"
+              ? "mt-4 rounded-2xl border border-emerald-300/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
+              : "mt-4 rounded-2xl border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100"
+          }
+        >
           {message}
         </div>
       )}
