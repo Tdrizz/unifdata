@@ -479,6 +479,22 @@ Recommended Next Steps
     const message =
       error instanceof Error ? error.message : "Failed to generate summary.";
 
+    const isOverloaded =
+      message.includes("503") ||
+      message.toLowerCase().includes("unavailable") ||
+      message.toLowerCase().includes("high demand") ||
+      message.toLowerCase().includes("try again later");
+
+    if (isOverloaded) {
+      return NextResponse.json(
+        {
+          error:
+            "Gemini is experiencing high demand right now. Wait a moment and try again.",
+        },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
