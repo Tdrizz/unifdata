@@ -142,14 +142,25 @@ export function CsvImportSessionFlow() {
         type="button"
         onClick={analyzeCsv}
         disabled={!file || analyzing}
-        className="w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
+        {analyzing && (
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        )}
         {analyzing ? "Analyzing CSV..." : "Analyze CSV"}
       </button>
 
       {message && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm font-semibold text-slate-700">
-          {message}
+        <div className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-sm font-semibold text-slate-700">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage("")}
+            className="shrink-0 text-slate-400 hover:text-slate-600"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
     </div>
