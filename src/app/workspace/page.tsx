@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, parseDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
   id: string;
@@ -272,6 +273,7 @@ export default async function WorkspacePage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   const [
     customersResult,
@@ -365,7 +367,7 @@ export default async function WorkspacePage() {
     (sum, lead) => sum + Number(lead.estimated_value || 0),
     0,
   );
-const activeWorkValue = activeWork.reduce(
+  const activeWorkValue = activeWork.reduce(
     (sum, work) => sum + Number(work.job_value || 0),
     0,
   );
@@ -398,7 +400,7 @@ const activeWorkValue = activeWork.reduce(
     .filter((lead) => Boolean(lead.next_follow_up_date))
     .map((lead) => ({
       id: `opportunity-follow-up-${lead.id}`,
-      label: "Opportunity follow-up",
+      label: `${profile.labels.leadSingular} follow-up`,
       title: lead.service_requested || "Follow up on opportunity",
       detail: getFollowUpLabel(lead.next_follow_up_date),
       href: `/leads/${lead.id}/edit`,
@@ -432,7 +434,7 @@ const activeWorkValue = activeWork.reduce(
       .map((customer) => ({
         id: `customer-contact-${customer.id}`,
         label: "Add contact",
-        title: customer.name || "Person needs contact",
+        title: customer.name || `${profile.labels.customerSingular} needs contact`,
         detail: "Phone or email is missing.",
         href: `/customers/${customer.id}/edit`,
         tone: "neutral" as const,
@@ -445,7 +447,7 @@ const activeWorkValue = activeWork.reduce(
       .map((customer) => ({
         id: `customer-address-${customer.id}`,
         label: "Add address",
-        title: customer.name || "Person needs address",
+        title: customer.name || `${profile.labels.customerSingular} needs address`,
         detail: "No address saved.",
         href: `/customers/${customer.id}/edit`,
         tone: "neutral" as const,
@@ -458,7 +460,7 @@ const activeWorkValue = activeWork.reduce(
       .map((lead) => ({
         id: `lead-source-${lead.id}`,
         label: "Add source",
-        title: lead.service_requested || "Opportunity needs source",
+        title: lead.service_requested || `${profile.labels.leadSingular} needs source`,
         detail: "Source helps show what marketing is working.",
         href: `/leads/${lead.id}/edit`,
         tone: "neutral" as const,
@@ -474,7 +476,7 @@ const activeWorkValue = activeWork.reduce(
       .map((lead) => ({
         id: `lead-value-${lead.id}`,
         label: "Add estimate",
-        title: lead.service_requested || "Opportunity needs estimate",
+        title: lead.service_requested || `${profile.labels.leadSingular} needs estimate`,
         detail: "Estimated value helps prioritize the pipeline.",
         href: `/leads/${lead.id}/edit`,
         tone: "neutral" as const,
@@ -486,9 +488,9 @@ const activeWorkValue = activeWork.reduce(
       .slice(0, 3)
       .map((work) => ({
         id: `work-value-${work.id}`,
-        label: "Add work value",
-        title: work.service_type || "Work needs value",
-        detail: "Work value keeps operational reporting accurate.",
+        label: `Add ${profile.labels.jobSingular.toLowerCase()} value`,
+        title: work.service_type || `${profile.labels.jobSingular} needs value`,
+        detail: "Value keeps operational reporting accurate.",
         href: `/jobs/${work.id}/edit`,
         tone: "neutral" as const,
         priority: 5,
@@ -556,8 +558,8 @@ const activeWorkValue = activeWork.reduce(
   const recentRecords = [
     ...customers.map((customer) => ({
       id: `customer-${customer.id}`,
-      type: "Person",
-      title: customer.name || "Unnamed person",
+      type: profile.labels.customerSingular,
+      title: customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`,
       detail: customer.email || customer.phone || "Incomplete contact saved",
       date: customer.created_at,
       href: `/customers/${customer.id}/edit`,
@@ -565,8 +567,8 @@ const activeWorkValue = activeWork.reduce(
 
     ...leads.map((lead) => ({
       id: `lead-${lead.id}`,
-      type: "Opportunity",
-      title: lead.service_requested || "Untitled opportunity",
+      type: profile.labels.leadSingular,
+      title: lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`,
       detail: lead.source || lead.status || "No source saved",
       date: lead.created_at,
       href: `/leads/${lead.id}/edit`,
@@ -574,8 +576,8 @@ const activeWorkValue = activeWork.reduce(
 
     ...workRecords.map((work) => ({
       id: `work-${work.id}`,
-      type: "Work",
-      title: work.service_type || "Untitled work",
+      type: profile.labels.jobSingular,
+      title: work.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`,
       detail: work.status || "No stage saved",
       date: work.created_at,
       href: `/jobs/${work.id}/edit`,
@@ -583,9 +585,9 @@ const activeWorkValue = activeWork.reduce(
 
     ...revenueRecords.map((record) => ({
       id: `revenue-${record.id}`,
-      type: "Revenue",
+      type: profile.labels.saleSingular,
       title: formatCurrency(record.amount),
-      detail: record.service_type || record.payment_status || "Revenue record",
+      detail: record.service_type || record.payment_status || `${profile.labels.saleSingular} record`,
       date: record.created_at,
       href: `/sales/${record.id}/edit`,
     })),
@@ -608,12 +610,13 @@ const activeWorkValue = activeWork.reduce(
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
           eyebrow="Home"
-          title="Today’s operating view"
-          description="See the most important follow-ups, pipeline movement, active work, and cleanup issues in one place."
+          title={profile.headline}
+          description={profile.dailyFocus}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link
@@ -642,23 +645,23 @@ const activeWorkValue = activeWork.reduce(
           />
 
           <StatCard
-            label="Open pipeline"
+            label={profile.priorityNames.pipeline}
             value={formatCurrency(openPipelineValue)}
-            helper={`${openLeads.length} open opportunities`}
+            helper={`${openLeads.length} open ${profile.labels.leadPlural.toLowerCase()}`}
             tone={openPipelineValue > 0 ? "positive" : "default"}
           />
 
           <StatCard
-            label="Active work"
+            label={profile.priorityNames.activeWork}
             value={activeWork.length}
             helper={`${formatCurrency(activeWorkValue)} active value`}
             tone={activeWork.length > 0 ? "warning" : "default"}
           />
 
           <StatCard
-            label="Payment needed"
+            label={`${profile.labels.saleSingular} needed`}
             value={formatCurrency(unpaidRevenueValue)}
-            helper={`${unpaidRevenue.length} records need collection`}
+            helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} need collection`}
             tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
           />
         </section>
@@ -708,12 +711,12 @@ const activeWorkValue = activeWork.reduce(
 
           <SectionCard
             title="Follow-up schedule"
-            description="Manual follow-ups and opportunity follow-up dates, sorted by due date."
+            description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates, sorted by due date.`}
           >
             {followUpSchedule.length === 0 ? (
               <EmptyState
                 title="No follow-ups scheduled"
-                description="Add a manual follow-up or set a next follow-up date on an opportunity."
+                description={`Add a manual follow-up or set a next follow-up date on a ${profile.labels.leadSingular.toLowerCase()}.`}
               />
             ) : (
               <div className="divide-y divide-slate-100">
@@ -751,21 +754,20 @@ const activeWorkValue = activeWork.reduce(
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <SectionCard
-            title="Open opportunities"
-            description="Potential business sorted by follow-up need and estimated value."
+            title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
+            description={`${profile.labels.leadPlural} sorted by follow-up need and estimated value.`}
           >
             {prioritizedOpportunities.length === 0 ? (
               <EmptyState
-                title="No open opportunities"
-                description="Create or import opportunities to start building the pipeline."
+                title={`No open ${profile.labels.leadPlural.toLowerCase()}`}
+                description={`Create or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
               />
             ) : (
               <div>
                 <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
                   <div>
                     <p className="text-sm font-semibold text-slate-950">
-                      {opportunitiesNeedingFollowUp.length} need follow-up
-                      attention
+                      {opportunitiesNeedingFollowUp.length} {profile.labels.leadPlural.toLowerCase()} need follow-up
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
                       Missing, due, or overdue follow-up dates.
@@ -798,7 +800,7 @@ const activeWorkValue = activeWork.reduce(
                           <p className="mt-1 text-sm text-slate-500">
                             {customer?.name ||
                               lead.source ||
-                              "No person linked"}
+                              `No ${profile.labels.customerSingular.toLowerCase()} linked`}
                           </p>
                         </div>
 
@@ -843,13 +845,13 @@ const activeWorkValue = activeWork.reduce(
           </SectionCard>
 
           <SectionCard
-            title="Active work"
-            description="Work that is scheduled, active, or not yet complete."
+            title={`Active ${profile.labels.jobPlural.toLowerCase()}`}
+            description={`${profile.labels.jobPlural} that are scheduled, active, or not yet complete.`}
           >
             {prioritizedWork.length === 0 ? (
               <EmptyState
-                title="No active work"
-                description="Create or import work records to track delivery."
+                title={`No active ${profile.labels.jobPlural.toLowerCase()}`}
+                description={`Create or import ${profile.labels.jobPlural.toLowerCase()} to track delivery.`}
               />
             ) : (
               <div className="divide-y divide-slate-100">
@@ -892,7 +894,7 @@ const activeWorkValue = activeWork.reduce(
 
         <SectionCard
           title="Recently added records"
-          description="Newest records added across people, opportunities, work, revenue, and follow-ups."
+          description={`Newest records added across ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, ${profile.labels.jobPlural.toLowerCase()}, ${profile.labels.salePlural.toLowerCase()}, and follow-ups.`}
         >
           {recentRecords.length === 0 ? (
             <EmptyState
@@ -940,7 +942,3 @@ const activeWorkValue = activeWork.reduce(
     </AppShell>
   );
 }
-
-
-
-

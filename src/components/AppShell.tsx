@@ -15,12 +15,14 @@ export function AppShell({
   userEmail,
   brandColor = "#0f172a",
   accentColor = "#2563eb",
+  businessSector,
 }: {
   children: ReactNode;
   companyName: string;
   userEmail: string;
   brandColor?: string;
   accentColor?: string;
+  businessSector?: string | null;
 }) {
   const themeStyle: ThemeStyle = {
     "--fo-primary": brandColor,
@@ -45,7 +47,7 @@ export function AppShell({
           </Link>
 
           <div className="mt-6 flex-1 overflow-y-auto pr-1">
-            <AppNav />
+            <AppNav businessSector={businessSector} />
           </div>
 
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-4">
@@ -74,7 +76,7 @@ export function AppShell({
             </div>
 
             <div className="mt-3">
-              <AppNav mobile />
+              <AppNav mobile businessSector={businessSector} />
             </div>
           </header>
 

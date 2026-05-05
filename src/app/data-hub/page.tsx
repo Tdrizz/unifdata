@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
   id: string;
@@ -206,6 +207,7 @@ export default async function DataHubPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   const [
     customersResult,
@@ -694,11 +696,12 @@ export default async function DataHubPage() {
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
           eyebrow="Data Hub"
-          title="Check data quality across the workspace"
+          title={`Check data quality across your ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, and ${profile.labels.jobPlural.toLowerCase()}`}
           description="See what data is clean, what needs cleanup, and where imported or manual records need attention."
           actions={
             <div className="flex flex-wrap gap-2">

@@ -4,16 +4,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   getFlatProductNavigation,
+  getFlatProductNavigationForProfile,
+  getProductNavigation,
   productNavigation,
 } from "@/lib/product-navigation";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
-export function AppNav({ mobile = false }: { mobile?: boolean }) {
+export function AppNav({
+  mobile = false,
+  businessSector,
+}: {
+  mobile?: boolean;
+  businessSector?: string | null;
+}) {
   const pathname = usePathname();
+  const profile = getIndustryProfile(businessSector);
 
   if (mobile) {
+    const items = businessSector
+      ? getFlatProductNavigationForProfile(profile)
+      : getFlatProductNavigation();
+
     return (
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {getFlatProductNavigation().map((item) => {
+        {items.map((item) => {
           const active = pathname === item.href;
 
           return (
@@ -42,9 +56,13 @@ export function AppNav({ mobile = false }: { mobile?: boolean }) {
     );
   }
 
+  const navGroups = businessSector
+    ? getProductNavigation(profile)
+    : productNavigation;
+
   return (
     <nav className="space-y-6">
-      {productNavigation.map((group) => (
+      {navGroups.map((group) => (
         <div key={group.label}>
           <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
             {group.label}

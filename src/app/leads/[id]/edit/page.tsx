@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type OpportunityRecord = {
   id: string;
@@ -156,6 +157,7 @@ export default async function EditOpportunityPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function updateOpportunity(formData: FormData) {
     "use server";
@@ -246,12 +248,13 @@ export default async function EditOpportunityPage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Edit opportunity"
-          title={opportunity.service_requested || "Untitled opportunity"}
-          description="Update the linked person, value, source, status, follow-up date, and notes."
+          eyebrow={`Edit ${profile.labels.leadSingular.toLowerCase()}`}
+          title={opportunity.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+          description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, value, source, status, follow-up date, and notes.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type OpportunityRecord = {
   id: string;
@@ -326,6 +327,7 @@ export default async function PipelinePage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   const [opportunitiesResult, peopleResult] = await Promise.all([
     supabase
@@ -471,12 +473,13 @@ export default async function PipelinePage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
           eyebrow="Pipeline"
-          title="Track opportunity movement"
-          description="See where opportunities sit, what needs follow-up, and which records are ready to become work or revenue."
+          title={`Track ${profile.labels.leadSingular.toLowerCase()} movement`}
+          description={`See where ${profile.labels.leadPlural.toLowerCase()} sit, what needs follow-up, and which records are ready to become ${profile.labels.jobPlural.toLowerCase()} or ${profile.labels.salePlural.toLowerCase()}.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link
