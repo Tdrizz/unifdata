@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type WorkRecord = {
   id: string;
@@ -245,6 +246,7 @@ export default async function EditWorkPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function updateWork(formData: FormData) {
     "use server";
@@ -354,12 +356,13 @@ export default async function EditWorkPage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Edit work"
-          title={work.service_type || "Untitled work"}
-          description="Update the linked person, opportunity, stage, payment status, dates, and work value."
+          eyebrow={`Edit ${profile.labels.jobSingular.toLowerCase()}`}
+          title={work.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
+          description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, ${profile.labels.leadSingular.toLowerCase()}, stage, payment status, dates, and value.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

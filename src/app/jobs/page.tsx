@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type WorkRecord = {
   id: string;
@@ -269,6 +270,7 @@ export default async function WorkPage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function createWork(formData: FormData) {
     "use server";
@@ -473,12 +475,13 @@ export default async function WorkPage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Work"
-          title="Track jobs, projects, and active delivery"
-          description="Use this page to see what work is planned, active, complete, cancelled, or still needs payment."
+          eyebrow={profile.labels.jobPlural}
+          title={`Track ${profile.labels.jobPlural.toLowerCase()} and active delivery`}
+          description={`Use this page to see what ${profile.labels.jobPlural.toLowerCase()} are planned, active, complete, cancelled, or still need payment.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

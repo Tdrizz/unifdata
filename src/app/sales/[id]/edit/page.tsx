@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type RevenueRecord = {
   id: string;
@@ -205,6 +206,7 @@ export default async function EditRevenuePage({
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function updateRevenue(formData: FormData) {
     "use server";
@@ -273,12 +275,13 @@ export default async function EditRevenuePage({
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Edit revenue"
+          eyebrow={`Edit ${profile.labels.saleSingular.toLowerCase()}`}
           title={record.service_type || formatCurrency(record.amount)}
-          description="Update amount, payment status, revenue date, source, and service category."
+          description={`Update amount, payment status, ${profile.labels.saleSingular.toLowerCase()} date, source, and service category.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link

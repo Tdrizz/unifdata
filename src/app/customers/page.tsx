@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
   id: string;
@@ -97,6 +98,7 @@ export default async function CustomersPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   async function createCustomer(formData: FormData) {
     "use server";
@@ -164,12 +166,13 @@ export default async function CustomersPage() {
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#0f172a"}
       accentColor={company.accent_color || "#2563eb"}
+      businessSector={company.business_sector}
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="People"
-          title="People and businesses"
-          description="Manage customer records and quickly see which contact fields are missing."
+          eyebrow={profile.labels.customerPlural}
+          title={`${profile.labels.customerPlural} and businesses`}
+          description={`Manage ${profile.labels.customerSingular.toLowerCase()} records and quickly see which contact fields are missing.`}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link
@@ -183,7 +186,7 @@ export default async function CustomersPage() {
                 href="/leads"
                 className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
-                Opportunities
+                {profile.labels.leadPlural}
               </Link>
             </div>
           }
@@ -197,7 +200,7 @@ export default async function CustomersPage() {
               </p>
 
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
-                {customers.length} people in your workspace
+                {customers.length} {profile.labels.customerPlural.toLowerCase()} in your workspace
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -233,7 +236,7 @@ export default async function CustomersPage() {
           <div className="grid grid-cols-2 gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-4">
             {[
               {
-                label: "People",
+                label: profile.labels.customerPlural,
                 value: customers.length,
                 helper: "Saved records",
               },
@@ -272,10 +275,10 @@ export default async function CustomersPage() {
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
             <div>
               <p className="text-sm font-semibold text-slate-950">
-                Add person or business
+                Add {profile.labels.customerSingular.toLowerCase()} or business
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Add a record manually without leaving the People page.
+                Add a record manually without leaving the {profile.labels.customerPlural} page.
               </p>
             </div>
 
@@ -358,7 +361,7 @@ export default async function CustomersPage() {
                 type="submit"
                 className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
               >
-                Add person
+                Add {profile.labels.customerSingular.toLowerCase()}
               </button>
             </div>
           </form>
@@ -366,12 +369,12 @@ export default async function CustomersPage() {
 
         <SectionCard
           title="Directory"
-          description="Open a record to edit contact details, address, type, or notes."
+          description={`Open a record to edit contact details, address, type, or notes.`}
         >
           {customers.length === 0 ? (
             <EmptyState
-              title="No people yet"
-              description="Add someone manually or import people from CSV or Google Sheets."
+              title={`No ${profile.labels.customerPlural.toLowerCase()} yet`}
+              description={`Add a ${profile.labels.customerSingular.toLowerCase()} manually or import from CSV or Google Sheets.`}
             />
           ) : (
             <div className="divide-y divide-slate-100">
@@ -383,7 +386,7 @@ export default async function CustomersPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-slate-950">
-                        {customer.name || "Unnamed person"}
+                        {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
                       </p>
 
                       <StatusBadge tone={getContactTone(customer)}>
