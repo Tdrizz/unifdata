@@ -1,13 +1,19 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { SummaryCard } from "@/components/ui/SummaryCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { FormField } from "@/components/ui/FormField";
+import { Input, Textarea } from "@/components/ui/Input";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { getFormString } from "@/lib/utils";
 
 type PersonRecord = {
   id: string;
@@ -19,16 +25,6 @@ type PersonRecord = {
   notes: string | null;
   created_at: string;
 };
-
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
 
 function getPersonIssues(person: PersonRecord) {
   const issues: {
@@ -74,10 +70,13 @@ function getPersonIssues(person: PersonRecord) {
 
 export default async function EditPersonPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
 
@@ -118,7 +117,7 @@ export default async function EditPersonPage({
     const notes = getFormString(formData, "notes");
 
     if (!name) {
-      throw new Error("Name is required.");
+      redirect(`/customers/${id}/edit?error=Name+is+required.`);
     }
 
     const { error } = await supabase
@@ -135,7 +134,9 @@ export default async function EditPersonPage({
       .eq("company_id", company.id);
 
     if (error) {
-      throw new Error(error.message);
+      redirect(
+        `/customers/${id}/edit?error=${encodeURIComponent(error.message)}`,
+      );
     }
 
     redirect("/customers");
@@ -197,72 +198,62 @@ export default async function EditPersonPage({
             description="These fields help connect people to opportunities, work, revenue, and follow-ups."
           >
             <form action={updatePerson} className="space-y-5 p-5">
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Name
-                  <input
+                <FormField label="Name">
+                  <Input
                     name="name"
                     required
                     defaultValue={person.name || ""}
-                    placeholder="John Smith, ABC Flooring, Ocean View Home..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder="John Smith, ABC Flooring, Ocean View Home…"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Type
-                  <input
+                <FormField label="Type">
+                  <Input
                     name="customer_type"
                     defaultValue={person.customer_type || ""}
-                    placeholder="Customer, lead, residential, commercial..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    placeholder="Customer, lead, residential, commercial…"
                   />
-                </label>
+                </FormField>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Phone
-                  <input
+                <FormField label="Phone">
+                  <Input
                     name="phone"
                     defaultValue={person.phone || ""}
                     placeholder="808-555-1234"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Email
-                  <input
+                <FormField label="Email">
+                  <Input
                     name="email"
                     type="email"
                     defaultValue={person.email || ""}
                     placeholder="customer@example.com"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
               </div>
 
-              <label className="block text-sm font-medium text-slate-700">
-                Address
-                <input
+              <FormField label="Address">
+                <Input
                   name="address"
                   defaultValue={person.address || ""}
                   placeholder="Service address, city, or area"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                 />
-              </label>
+              </FormField>
 
-              <label className="block text-sm font-medium text-slate-700">
-                Notes
-                <textarea
+              <FormField label="Notes">
+                <Textarea
                   name="notes"
                   rows={5}
                   defaultValue={person.notes || ""}
-                  placeholder="Add preferences, project details, contact history, or anything important..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  placeholder="Add preferences, project details, contact history, or anything important…"
                 />
-              </label>
+              </FormField>
 
               <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
                 <Link
@@ -272,12 +263,7 @@ export default async function EditPersonPage({
                   Cancel
                 </Link>
 
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Save person
-                </button>
+                <SubmitButton>Save person</SubmitButton>
               </div>
             </form>
           </SectionCard>
@@ -288,40 +274,28 @@ export default async function EditPersonPage({
               description="How this person is currently stored."
             >
               <div className="space-y-4 p-5">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Contact</p>
-                  <p className="mt-1 font-semibold text-slate-950">
-                    {person.phone || person.email || "Incomplete contact saved"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {person.phone && person.email
+                <SummaryCard
+                  label="Contact"
+                  value={person.phone || person.email || "Incomplete contact saved"}
+                  helper={
+                    person.phone && person.email
                       ? person.email
-                      : "Phone or email helps with follow-up."}
-                  </p>
-                </div>
+                      : "Phone or email helps with follow-up."
+                  }
+                />
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Type</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {person.customer_type || "Not set"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Added</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {formatTimestampDate(person.created_at)}
-                    </p>
-                  </div>
+                  <SummaryCard label="Type" value={person.customer_type} />
+                  <SummaryCard
+                    label="Added"
+                    value={formatTimestampDate(person.created_at)}
+                  />
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Address</p>
-                  <p className="mt-1 font-semibold text-slate-950">
-                    {person.address || "No address saved"}
-                  </p>
-                </div>
+                <SummaryCard
+                  label="Address"
+                  value={person.address || "No address saved"}
+                />
               </div>
             </SectionCard>
 
@@ -337,14 +311,12 @@ export default async function EditPersonPage({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-
                       <p className="text-sm font-medium text-slate-500">
                         {issue.label === "Looks clean"
                           ? "No action needed"
                           : "Needs update"}
                       </p>
                     </div>
-
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {issue.detail}
                     </p>
@@ -358,4 +330,3 @@ export default async function EditPersonPage({
     </AppShell>
   );
 }
-

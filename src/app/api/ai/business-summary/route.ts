@@ -4,60 +4,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-
-function getDateOnly(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
+import { getTodayString } from "@/lib/date-format";
+import { formatCurrency, compactText } from "@/lib/utils";
+import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
+import { GEMINI_MODEL } from "@/lib/constants";
 
 function getStartOfMonth() {
   const now = new Date();
-  return getDateOnly(new Date(now.getFullYear(), now.getMonth(), 1));
-}
-
-function getTodayString() {
-  return getDateOnly(new Date());
-}
-
-function formatCurrency(value: number) {
-  return `$${Math.round(value).toLocaleString()}`;
-}
-
-function isClosedOpportunity(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("won") ||
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  );
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue") ||
-    normalized.includes("pending")
-  );
-}
-
-function isOpenFollowUp(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return !(
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  );
-}
-
-function compactText(value: string | null | undefined, fallback = "Not set") {
-  const text = String(value || "").trim();
-  return text || fallback;
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 }
 
 export async function POST() {
@@ -452,7 +406,7 @@ Recommended Next Steps
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      model: GEMINI_MODEL,
       config: {
         systemInstruction,
       },

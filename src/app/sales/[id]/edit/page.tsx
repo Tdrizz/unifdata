@@ -3,11 +3,18 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { SummaryCard } from "@/components/ui/SummaryCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { FormField } from "@/components/ui/FormField";
+import { Input, Select } from "@/components/ui/Input";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { getFormString, getOptionalNumber, getDateInputValue, formatCurrency } from "@/lib/utils";
+import { getRevenueTone, isUnpaid } from "@/lib/status";
 
 type RevenueRecord = {
   id: string;
@@ -18,84 +25,6 @@ type RevenueRecord = {
   source: string | null;
   created_at: string;
 };
-
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getOptionalNumber(formData: FormData, key: string) {
-  const value = getFormString(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function getDateInputValue(date: string | null) {
-  if (!date) {
-    return "";
-  }
-
-  return date.includes("T") ? date.slice(0, 10) : date;
-}
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("paid") && !normalized.includes("unpaid")) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  ) {
-    return "danger" as const;
-  }
-
-  if (normalized.includes("pending")) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
-function isPaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return normalized === "paid";
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  );
-}
 
 function getRevenueNextStep(record: RevenueRecord) {
   if (record.amount === null || record.amount === undefined) {
@@ -118,7 +47,7 @@ function getRevenueNextStep(record: RevenueRecord) {
     return "Add a revenue date so this appears in the right reporting period.";
   }
 
-  if (isPaid(record.payment_status)) {
+  if (String(record.payment_status || "").toLowerCase() === "paid") {
     return "Revenue is marked collected. Keep the source and date accurate.";
   }
 
@@ -174,8 +103,7 @@ function getRevenueIssues(record: RevenueRecord) {
     issues.push({
       label: "Looks clean",
       tone: "success",
-      detail:
-        "This revenue record has amount, date, source, and payment status.",
+      detail: "This revenue record has amount, date, source, and payment status.",
     });
   }
 
@@ -184,10 +112,13 @@ function getRevenueIssues(record: RevenueRecord) {
 
 export default async function EditRevenuePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
 
@@ -195,15 +126,10 @@ export default async function EditRevenuePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const currentCompany = await getCurrentCompany();
-
-  if (!currentCompany) {
-    redirect("/onboarding");
-  }
+  if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
@@ -213,10 +139,7 @@ export default async function EditRevenuePage({
 
     const supabase = await createClient();
     const currentCompany = await getCurrentCompany();
-
-    if (!currentCompany) {
-      redirect("/onboarding");
-    }
+    if (!currentCompany) redirect("/onboarding");
 
     const { company } = currentCompany;
 
@@ -227,7 +150,7 @@ export default async function EditRevenuePage({
     const source = getFormString(formData, "source");
 
     if (amount === null) {
-      throw new Error("Revenue amount is required.");
+      redirect(`/sales/${id}/edit?error=Revenue+amount+is+required.`);
     }
 
     const { error } = await supabase
@@ -243,7 +166,7 @@ export default async function EditRevenuePage({
       .eq("company_id", company.id);
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
     }
 
     redirect("/sales");
@@ -251,20 +174,13 @@ export default async function EditRevenuePage({
 
   const { data, error } = await supabase
     .from("sales")
-    .select(
-      "id, amount, payment_status, sale_date, service_type, source, created_at",
-    )
+    .select("id, amount, payment_status, sale_date, service_type, source, created_at")
     .eq("id", id)
     .eq("company_id", company.id)
     .maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!data) {
-    redirect("/sales");
-  }
+  if (error) throw new Error(error.message);
+  if (!data) redirect("/sales");
 
   const record = data as RevenueRecord;
   const issues = getRevenueIssues(record);
@@ -290,7 +206,6 @@ export default async function EditRevenuePage({
               >
                 Back to Revenue
               </Link>
-
               <Link
                 href="/jobs"
                 className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
@@ -307,10 +222,11 @@ export default async function EditRevenuePage({
             description="These fields control how this record appears in Home, Revenue, and reporting."
           >
             <form action={updateRevenue} className="space-y-5 p-5">
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-3">
-                <label className="text-sm font-medium text-slate-700">
-                  Amount
-                  <input
+                <FormField label="Amount">
+                  <Input
                     name="amount"
                     type="number"
                     step="0.01"
@@ -318,55 +234,43 @@ export default async function EditRevenuePage({
                     required
                     defaultValue={record.amount ?? ""}
                     placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Payment status
-                  <select
-                    name="payment_status"
-                    defaultValue={record.payment_status || "Paid"}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Payment status">
+                  <Select name="payment_status" defaultValue={record.payment_status || "Paid"}>
                     <option value="Paid">Paid</option>
                     <option value="Unpaid">Unpaid</option>
                     <option value="Partial">Partial</option>
                     <option value="Pending">Pending</option>
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Revenue date
-                  <input
+                <FormField label="Revenue date">
+                  <Input
                     name="sale_date"
                     type="date"
                     defaultValue={getDateInputValue(record.sale_date)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Service or category
-                  <input
+                <FormField label="Service or category">
+                  <Input
                     name="service_type"
                     defaultValue={record.service_type || ""}
                     placeholder="Flooring install, website build, monthly service..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Source
-                  <input
+                <FormField label="Source">
+                  <Input
                     name="source"
                     defaultValue={record.source || ""}
                     placeholder="Referral, Google, Website, Facebook..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
               </div>
 
               <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
@@ -376,13 +280,7 @@ export default async function EditRevenuePage({
                 >
                   Cancel
                 </Link>
-
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Save revenue
-                </button>
+                <SubmitButton>Save revenue</SubmitButton>
               </div>
             </form>
           </SectionCard>
@@ -394,28 +292,21 @@ export default async function EditRevenuePage({
             >
               <div className="space-y-4 p-5">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">
-                    Next step
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">Next step</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">
                     {getRevenueNextStep(record)}
                   </p>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
+                  <SummaryCard
+                    label="Amount"
+                    value={formatCurrency(record.amount)}
+                  />
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Amount</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-950">
-                      {formatCurrency(record.amount)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">
-                      Payment
-                    </p>
+                    <p className="text-sm font-medium text-slate-500">Payment</p>
                     <div className="mt-2">
-                      <StatusBadge tone={getStatusTone(record.payment_status)}>
+                      <StatusBadge tone={getRevenueTone(record.payment_status)}>
                         {record.payment_status || "Not set"}
                       </StatusBadge>
                     </div>
@@ -423,30 +314,21 @@ export default async function EditRevenuePage({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Date</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {formatDateOnly(record.sale_date)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Added</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {formatTimestampDate(record.created_at)}
-                    </p>
-                  </div>
+                  <SummaryCard
+                    label="Date"
+                    value={formatDateOnly(record.sale_date)}
+                  />
+                  <SummaryCard
+                    label="Added"
+                    value={formatTimestampDate(record.created_at)}
+                  />
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Source</p>
-                  <p className="mt-1 font-semibold text-slate-950">
-                    {record.source || "No source saved"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Source helps show what generated this revenue.
-                  </p>
-                </div>
+                <SummaryCard
+                  label="Source"
+                  value={record.source || "No source saved"}
+                  helper="Source helps show what generated this revenue."
+                />
               </div>
             </SectionCard>
 
@@ -462,14 +344,12 @@ export default async function EditRevenuePage({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-
                       <p className="text-sm font-medium text-slate-500">
                         {issue.label === "Looks clean"
                           ? "No action needed"
                           : "Needs update"}
                       </p>
                     </div>
-
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {issue.detail}
                     </p>

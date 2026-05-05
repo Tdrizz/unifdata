@@ -8,7 +8,15 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { formatDateOnly, formatTimestampDate, isTodayOrPast } from "@/lib/date-format";
+import { formatCurrency } from "@/lib/utils";
+import {
+  isClosedOpportunity,
+  isCompleteWork,
+  isCancelledWork,
+  isUnpaid,
+  isOpenFollowUp,
+} from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
@@ -83,95 +91,6 @@ type RecentRecord = {
   date: string;
   href: string;
 };
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-function parseDateOnly(date: string | null) {
-  if (!date) {
-    return null;
-  }
-
-  const datePart = date.includes("T") ? date.slice(0, 10) : date;
-  const [year, month, day] = datePart.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  const value = new Date(year, month - 1, day);
-  value.setHours(0, 0, 0, 0);
-
-  return value;
-}
-
-function isTodayOrPast(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value <= getToday();
-}
-
-function isClosedOpportunity(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("won") ||
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  );
-}
-
-function isCompleteWork(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("finished")
-  );
-}
-
-function isCancelledWork(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return normalized.includes("cancel");
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  );
-}
-
-function isCompleteFollowUp(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  );
-}
 
 function getHealthTone(score: number) {
   if (score >= 90) {
@@ -293,7 +212,7 @@ export default async function DataHubPage() {
   );
 
   const openFollowUps = followUps.filter(
-    (followUp) => !isCompleteFollowUp(followUp.status),
+    (followUp) => isOpenFollowUp(followUp.status),
   );
 
   const customersMissingContact = customers.filter(

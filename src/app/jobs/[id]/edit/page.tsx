@@ -3,11 +3,18 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { SummaryCard } from "@/components/ui/SummaryCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { FormField } from "@/components/ui/FormField";
+import { Input, Select } from "@/components/ui/Input";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { getFormString, getOptionalNumber, getDateInputValue, formatCurrency } from "@/lib/utils";
+import { isCompleteWork, isUnpaid, getWorkTone } from "@/lib/status";
 
 type WorkRecord = {
   id: string;
@@ -36,130 +43,25 @@ type OpportunityRecord = {
   estimated_value: number | null;
 };
 
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getOptionalNumber(formData: FormData, key: string) {
-  const value = getFormString(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function getDateInputValue(date: string | null) {
-  if (!date) {
-    return "";
-  }
-
-  return date.includes("T") ? date.slice(0, 10) : date;
-}
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("paid")
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("cancel") ||
-    normalized.includes("failed") ||
-    normalized.includes("overdue")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("scheduled") ||
-    normalized.includes("active") ||
-    normalized.includes("progress") ||
-    normalized.includes("unpaid") ||
-    normalized.includes("partial")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
-function isComplete(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("finished")
-  );
-}
-
 function isCancelled(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return normalized.includes("cancel");
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due")
-  );
+  return String(status || "").toLowerCase().includes("cancel");
 }
 
 function getWorkNextStep(work: WorkRecord) {
-  if (!work.customer_id) {
+  if (!work.customer_id)
     return "Link this work to the person or business it belongs to.";
-  }
-
-  if (!work.lead_id) {
+  if (!work.lead_id)
     return "Link this work to the opportunity it came from if one exists.";
-  }
-
-  if (work.job_value === null || work.job_value === undefined) {
+  if (work.job_value === null || work.job_value === undefined)
     return "Add a work value so this shows correctly in reporting.";
-  }
-
-  if (!work.start_date && !isComplete(work.status)) {
+  if (!work.start_date && !isCompleteWork(work.status))
     return "Add a start date so the team knows when this work begins.";
-  }
-
-  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+  if (isCompleteWork(work.status) && isUnpaid(work.paid_status))
     return "Work is complete, but payment still needs attention.";
-  }
-
-  if (isCancelled(work.status)) {
+  if (isCancelled(work.status))
     return "This work is cancelled. Keep it out of active planning.";
-  }
-
-  if (isComplete(work.status)) {
+  if (isCompleteWork(work.status))
     return "This work is complete. Confirm payment and reporting are correct.";
-  }
-
   return "Keep this work updated as it moves toward completion.";
 }
 
@@ -170,64 +72,60 @@ function getWorkIssues(work: WorkRecord) {
     detail: string;
   }[] = [];
 
-  if (!work.customer_id) {
+  if (!work.customer_id)
     issues.push({
       label: "Link person",
       tone: "warning",
       detail: "Work should usually connect to whoever it is for.",
     });
-  }
 
-  if (!work.lead_id) {
+  if (!work.lead_id)
     issues.push({
       label: "Link opportunity",
       tone: "neutral",
-      detail:
-        "Linking work to an opportunity keeps the full lifecycle connected.",
+      detail: "Linking work to an opportunity keeps the full lifecycle connected.",
     });
-  }
 
-  if (work.job_value === null || work.job_value === undefined) {
+  if (work.job_value === null || work.job_value === undefined)
     issues.push({
       label: "Add value",
       tone: "neutral",
       detail: "Work value keeps active and completed work reporting accurate.",
     });
-  }
 
-  if (!work.start_date && !isComplete(work.status)) {
+  if (!work.start_date && !isCompleteWork(work.status))
     issues.push({
       label: "Add start date",
       tone: "neutral",
       detail: "Start date helps with scheduling and planning.",
     });
-  }
 
-  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+  if (isCompleteWork(work.status) && isUnpaid(work.paid_status))
     issues.push({
       label: "Payment needed",
       tone: "danger",
       detail: "Completed work should be checked against payment.",
     });
-  }
 
-  if (issues.length === 0) {
+  if (issues.length === 0)
     issues.push({
       label: "Looks clean",
       tone: "success",
       detail: "This work record has the key fields needed for reporting.",
     });
-  }
 
   return issues;
 }
 
 export default async function EditWorkPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
 
@@ -235,15 +133,10 @@ export default async function EditWorkPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const currentCompany = await getCurrentCompany();
-
-  if (!currentCompany) {
-    redirect("/onboarding");
-  }
+  if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
@@ -253,10 +146,7 @@ export default async function EditWorkPage({
 
     const supabase = await createClient();
     const currentCompany = await getCurrentCompany();
-
-    if (!currentCompany) {
-      redirect("/onboarding");
-    }
+    if (!currentCompany) redirect("/onboarding");
 
     const { company } = currentCompany;
 
@@ -270,7 +160,7 @@ export default async function EditWorkPage({
     const paidStatus = getFormString(formData, "paid_status") || "Unpaid";
 
     if (!serviceType) {
-      throw new Error("Work name is required.");
+      redirect(`/jobs/${id}/edit?error=Work+name+is+required.`);
     }
 
     const { error } = await supabase
@@ -289,7 +179,7 @@ export default async function EditWorkPage({
       .eq("company_id", company.id);
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/jobs/${id}/edit?error=${encodeURIComponent(error.message)}`);
     }
 
     redirect("/jobs");
@@ -320,34 +210,20 @@ export default async function EditWorkPage({
       .limit(250),
   ]);
 
-  if (workResult.error) {
-    throw new Error(workResult.error.message);
-  }
-
-  if (peopleResult.error) {
-    throw new Error(peopleResult.error.message);
-  }
-
-  if (opportunitiesResult.error) {
-    throw new Error(opportunitiesResult.error.message);
-  }
-
-  if (!workResult.data) {
-    redirect("/jobs");
-  }
+  if (workResult.error) throw new Error(workResult.error.message);
+  if (peopleResult.error) throw new Error(peopleResult.error.message);
+  if (opportunitiesResult.error) throw new Error(opportunitiesResult.error.message);
+  if (!workResult.data) redirect("/jobs");
 
   const work = workResult.data as WorkRecord;
   const people = (peopleResult.data || []) as PersonRecord[];
   const opportunities = (opportunitiesResult.data || []) as OpportunityRecord[];
-
   const linkedPerson = work.customer_id
-    ? people.find((person) => person.id === work.customer_id)
+    ? people.find((p) => p.id === work.customer_id)
     : null;
-
   const linkedOpportunity = work.lead_id
-    ? opportunities.find((opportunity) => opportunity.id === work.lead_id)
+    ? opportunities.find((o) => o.id === work.lead_id)
     : null;
-
   const issues = getWorkIssues(work);
 
   return (
@@ -361,7 +237,10 @@ export default async function EditWorkPage({
       <div className="space-y-5">
         <PageHeader
           eyebrow={`Edit ${profile.labels.jobSingular.toLowerCase()}`}
-          title={work.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
+          title={
+            work.service_type ||
+            `Untitled ${profile.labels.jobSingular.toLowerCase()}`
+          }
           description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, ${profile.labels.leadSingular.toLowerCase()}, stage, payment status, dates, and value.`}
           actions={
             <div className="flex flex-wrap gap-2">
@@ -371,7 +250,6 @@ export default async function EditWorkPage({
               >
                 Back to Work
               </Link>
-
               <Link
                 href="/sales"
                 className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
@@ -388,118 +266,88 @@ export default async function EditWorkPage({
             description="These fields control how this work appears in Home, Work, and reporting."
           >
             <form action={updateWork} className="space-y-5 p-5">
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Link to person or business
-                  <select
-                    name="customer_id"
-                    defaultValue={work.customer_id || ""}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Link to person or business">
+                  <Select name="customer_id" defaultValue={work.customer_id || ""}>
                     <option value="">No linked person yet</option>
                     {people.map((person) => (
                       <option key={person.id} value={person.id}>
-                        {person.name ||
-                          person.email ||
-                          person.phone ||
-                          "Unnamed person"}
+                        {person.name || person.email || person.phone || "Unnamed person"}
                       </option>
                     ))}
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Link to opportunity
-                  <select
-                    name="lead_id"
-                    defaultValue={work.lead_id || ""}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Link to opportunity">
+                  <Select name="lead_id" defaultValue={work.lead_id || ""}>
                     <option value="">No linked opportunity yet</option>
-                    {opportunities.map((opportunity) => (
-                      <option key={opportunity.id} value={opportunity.id}>
-                        {opportunity.service_requested ||
-                          formatCurrency(opportunity.estimated_value)}
+                    {opportunities.map((opp) => (
+                      <option key={opp.id} value={opp.id}>
+                        {opp.service_requested || formatCurrency(opp.estimated_value)}
                       </option>
                     ))}
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
               </div>
 
-              <label className="block text-sm font-medium text-slate-700">
-                Work name
-                <input
+              <FormField label="Work name">
+                <Input
                   name="service_type"
                   required
                   defaultValue={work.service_type || ""}
-                  placeholder="Flooring install, website build, service visit..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  placeholder="Flooring install, website build, service visit…"
                 />
-              </label>
+              </FormField>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <label className="text-sm font-medium text-slate-700">
-                  Work value
-                  <input
+                <FormField label="Work value">
+                  <Input
                     name="job_value"
                     type="number"
                     step="0.01"
                     min="0"
                     defaultValue={work.job_value ?? ""}
                     placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Work stage
-                  <select
-                    name="status"
-                    defaultValue={work.status || "Scheduled"}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Work stage">
+                  <Select name="status" defaultValue={work.status || "Scheduled"}>
                     <option value="Scheduled">Scheduled</option>
                     <option value="Active">Active</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Completed">Completed</option>
                     <option value="Cancelled">Cancelled</option>
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Payment status
-                  <select
-                    name="paid_status"
-                    defaultValue={work.paid_status || "Unpaid"}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Payment status">
+                  <Select name="paid_status" defaultValue={work.paid_status || "Unpaid"}>
                     <option value="Unpaid">Unpaid</option>
                     <option value="Partial">Partial</option>
                     <option value="Paid">Paid</option>
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Start date
-                  <input
+                <FormField label="Start date">
+                  <Input
                     name="start_date"
                     type="date"
                     defaultValue={getDateInputValue(work.start_date)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Completed date
-                  <input
+                <FormField label="Completed date">
+                  <Input
                     name="completed_date"
                     type="date"
                     defaultValue={getDateInputValue(work.completed_date)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
               </div>
 
               <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
@@ -509,13 +357,7 @@ export default async function EditWorkPage({
                 >
                   Cancel
                 </Link>
-
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Save work
-                </button>
+                <SubmitButton>Save work</SubmitButton>
               </div>
             </form>
           </SectionCard>
@@ -527,26 +369,21 @@ export default async function EditWorkPage({
             >
               <div className="space-y-4 p-5">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">
-                    Next step
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">Next step</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">
                     {getWorkNextStep(work)}
                   </p>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Value</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-950">
-                      {formatCurrency(work.job_value)}
-                    </p>
-                  </div>
-
+                  <SummaryCard
+                    label="Value"
+                    value={formatCurrency(work.job_value)}
+                  />
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-medium text-slate-500">Stage</p>
                     <div className="mt-2">
-                      <StatusBadge tone={getStatusTone(work.status)}>
+                      <StatusBadge tone={getWorkTone(work.status)}>
                         {work.status || "Scheduled"}
                       </StatusBadge>
                     </div>
@@ -554,49 +391,36 @@ export default async function EditWorkPage({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">
-                      Linked person
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {linkedPerson?.name || "No person linked"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {linkedPerson?.email ||
-                        linkedPerson?.phone ||
-                        "Connect this work to a person or business."}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">
-                      Linked opportunity
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {linkedOpportunity?.service_requested ||
-                        "No opportunity linked"}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {linkedOpportunity?.status ||
-                        "Optional, but useful for lifecycle tracking."}
-                    </p>
-                  </div>
+                  <SummaryCard
+                    label="Linked person"
+                    value={linkedPerson?.name || "No person linked"}
+                    helper={
+                      linkedPerson?.email ||
+                      linkedPerson?.phone ||
+                      "Connect this work to a person or business."
+                    }
+                  />
+                  <SummaryCard
+                    label="Linked opportunity"
+                    value={
+                      linkedOpportunity?.service_requested || "No opportunity linked"
+                    }
+                    helper={
+                      linkedOpportunity?.status ||
+                      "Optional, but useful for lifecycle tracking."
+                    }
+                  />
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Start</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {formatDateOnly(work.start_date)}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-medium text-slate-500">Added</p>
-                    <p className="mt-1 font-semibold text-slate-950">
-                      {formatTimestampDate(work.created_at)}
-                    </p>
-                  </div>
+                  <SummaryCard
+                    label="Start"
+                    value={formatDateOnly(work.start_date)}
+                  />
+                  <SummaryCard
+                    label="Added"
+                    value={formatTimestampDate(work.created_at)}
+                  />
                 </div>
               </div>
             </SectionCard>
@@ -613,14 +437,12 @@ export default async function EditWorkPage({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-
                       <p className="text-sm font-medium text-slate-500">
                         {issue.label === "Looks clean"
                           ? "No action needed"
                           : "Needs update"}
                       </p>
                     </div>
-
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {issue.detail}
                     </p>
