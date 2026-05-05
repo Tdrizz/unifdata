@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
+import { getFormString } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
@@ -20,16 +21,6 @@ type CustomerRecord = {
   notes: string | null;
   created_at: string;
 };
-
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
 
 function getPrimaryContact(customer: CustomerRecord) {
   if (customer.email && customer.phone) {

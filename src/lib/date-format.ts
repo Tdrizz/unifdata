@@ -39,3 +39,25 @@ export function getTodayDateOnly() {
   today.setHours(0, 0, 0, 0);
   return today;
 }
+
+export function getTodayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function isTodayOrPast(date: string | null | undefined) {
+  const value = parseDateOnly(date);
+  if (!value) return false;
+  return value <= getTodayDateOnly();
+}
+
+export function isOverdue(date: string | null | undefined) {
+  const value = parseDateOnly(date);
+  if (!value) return false;
+  return value < getTodayDateOnly();
+}
+
+export function isDueToday(date: string | null | undefined) {
+  const value = parseDateOnly(date);
+  if (!value) return false;
+  return value.getTime() === getTodayDateOnly().getTime();
+}

@@ -364,8 +364,16 @@ export function ImportSessionReviewClient({
   return (
     <div className="space-y-6">
       {message && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-          {message}
+        <div className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-700">{message}</p>
+          <button
+            type="button"
+            onClick={() => setMessage("")}
+            className="shrink-0 text-slate-400 hover:text-slate-600"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
         </div>
       )}
 

@@ -8,7 +8,17 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly } from "@/lib/date-format";
+import {
+  formatDateOnly,
+  isTodayOrPast,
+  isOverdue,
+  isDueToday,
+} from "@/lib/date-format";
+import { formatCurrency } from "@/lib/utils";
+import {
+  isClosedOpportunity,
+  getOpportunityTone,
+} from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type OpportunityRecord = {
@@ -30,96 +40,6 @@ type PersonRecord = {
   phone: string | null;
 };
 
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-function parseDateOnly(date: string | null) {
-  if (!date) {
-    return null;
-  }
-
-  const datePart = date.includes("T") ? date.slice(0, 10) : date;
-  const [year, month, day] = datePart.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  const value = new Date(year, month - 1, day);
-  value.setHours(0, 0, 0, 0);
-
-  return value;
-}
-
-function isTodayOrPast(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value <= getToday();
-}
-
-function isOverdue(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value < getToday();
-}
-
-function isDueToday(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value.getTime() === getToday().getTime();
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("won") || normalized.includes("accepted")) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("new") ||
-    normalized.includes("open") ||
-    normalized.includes("contact") ||
-    normalized.includes("estimate") ||
-    normalized.includes("follow")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
 function isWon(status: string | null) {
   const normalized = String(status || "").toLowerCase();
   return normalized.includes("won") || normalized.includes("accepted");
@@ -136,7 +56,7 @@ function isLost(status: string | null) {
 }
 
 function isClosed(status: string | null) {
-  return isWon(status) || isLost(status);
+  return isClosedOpportunity(status);
 }
 
 function getFollowUpLabel(date: string | null) {
@@ -640,7 +560,7 @@ export default async function PipelinePage({
                             </p>
                             <div className="mt-1">
                               <StatusBadge
-                                tone={getStatusTone(opportunity.status)}
+                                tone={getOpportunityTone(opportunity.status)}
                               >
                                 {opportunity.status || "New"}
                               </StatusBadge>
@@ -681,7 +601,7 @@ export default async function PipelinePage({
                     className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
                   >
                     <div>
-                      <StatusBadge tone={getStatusTone(group.status)}>
+                      <StatusBadge tone={getOpportunityTone(group.status)}>
                         {group.status}
                       </StatusBadge>
 
@@ -756,7 +676,7 @@ export default async function PipelinePage({
                       {formatCurrency(opportunity.estimated_value)}
                     </p>
 
-                    <StatusBadge tone={getStatusTone(opportunity.status)}>
+                    <StatusBadge tone={getOpportunityTone(opportunity.status)}>
                       {opportunity.status || "Closed"}
                     </StatusBadge>
 
