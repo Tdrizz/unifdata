@@ -46,9 +46,9 @@ export default async function OnboardingPage() {
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              A dental office, insurance agency, dealership, contractor, and
-              service business should not operate from the same generic
-              workspace.
+              A medical office, contractor, home services crew, and
+              professional services firm should not operate from the same
+              generic workspace.
             </p>
           </div>
         </section>
@@ -113,7 +113,7 @@ export default async function OnboardingPage() {
               <input
                 name="industry"
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-                placeholder="Excavation, dental office, landscaping, IT services..."
+                placeholder="Excavation, dental office, landscaping, accounting, IT services..."
               />
             </div>
 
@@ -125,9 +125,10 @@ export default async function OnboardingPage() {
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
             <p className="font-semibold text-white">What changes by sector?</p>
             <p className="mt-1">
-              Relationships can become patients, clients, or customers.
-              Opportunities can become treatment plans, quotes, policies,
-              proposals, deals, or inquiries.
+              Relationships become patients, clients, or customers.
+              Opportunities become treatment plans, quotes, estimates, or
+              proposals — and the dashboard, navigation, and reports follow the
+              same language throughout.
             </p>
           </div>
         </section>

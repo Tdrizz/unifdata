@@ -4,9 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   getFlatProductNavigation,
-  getFlatProductNavigationForProfile,
   getProductNavigation,
-  productNavigation,
 } from "@/lib/product-navigation";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
@@ -21,9 +19,7 @@ export function AppNav({
   const profile = getIndustryProfile(businessSector);
 
   if (mobile) {
-    const items = businessSector
-      ? getFlatProductNavigationForProfile(profile)
-      : getFlatProductNavigation();
+    const items = getFlatProductNavigation(profile);
 
     return (
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -56,9 +52,7 @@ export function AppNav({
     );
   }
 
-  const navGroups = businessSector
-    ? getProductNavigation(profile)
-    : productNavigation;
+  const navGroups = getProductNavigation(profile);
 
   return (
     <nav className="space-y-6">

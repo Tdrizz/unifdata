@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import { GenerateSummaryButton } from "./GenerateSummaryButton";
 
 type AiReport = {
@@ -35,6 +36,7 @@ export default async function AiAssistantPage() {
   }
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   const { data, error } = await supabase
     .from("ai_reports")
@@ -121,23 +123,23 @@ export default async function AiAssistantPage() {
             <div className="space-y-3 p-4">
               {[
                 {
-                  title: "People",
-                  detail: "Contacts, missing info, and customer records.",
+                  title: profile.labels.customerPlural,
+                  detail: "Contacts, missing info, and core records.",
                 },
                 {
-                  title: "Opportunities",
-                  detail: "Open pipeline, estimates, sources, and follow-ups.",
+                  title: profile.labels.leadPlural,
+                  detail: "Open pipeline, sources, values, and follow-ups.",
                 },
                 {
-                  title: "Work",
-                  detail: "Active jobs, stages, values, and payment status.",
+                  title: profile.labels.jobPlural,
+                  detail: "Active stages, values, and payment status.",
                 },
                 {
-                  title: "Revenue",
+                  title: profile.labels.salePlural,
                   detail: "Paid, unpaid, partial, and source tracking.",
                 },
                 {
-                  title: "Follow-ups",
+                  title: profile.labels.followUpPlural,
                   detail: "Due dates, overdue items, and open reminders.",
                 },
               ].map((item) => (
