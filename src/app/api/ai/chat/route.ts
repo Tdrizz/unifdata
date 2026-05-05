@@ -4,45 +4,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { getTodayString } from "@/lib/date-format";
+import { compactText } from "@/lib/utils";
+import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
+import { GEMINI_MODEL } from "@/lib/constants";
 
 type ChatMessage = {
   role: "user" | "model";
   text: string;
 };
-
-function compactText(value: string | null | undefined, fallback = "Not set") {
-  return String(value || "").trim() || fallback;
-}
-
-function isClosedOpportunity(status: string | null) {
-  const n = String(status || "").toLowerCase();
-  return (
-    n.includes("won") ||
-    n.includes("lost") ||
-    n.includes("cancel") ||
-    n.includes("declined")
-  );
-}
-
-function isUnpaid(status: string | null) {
-  const n = String(status || "").toLowerCase();
-  return (
-    n.includes("unpaid") ||
-    n.includes("partial") ||
-    n.includes("due") ||
-    n.includes("overdue") ||
-    n.includes("pending")
-  );
-}
-
-function isOpenFollowUp(status: string | null) {
-  const n = String(status || "").toLowerCase();
-  return !(n.includes("complete") || n.includes("done") || n.includes("closed"));
-}
-
-function getTodayString() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export async function POST(request: Request) {
   const apiKey =
@@ -228,7 +198,7 @@ ${JSON.stringify(contextSnapshot, null, 2)}`;
     }));
 
     const chat = ai.chats.create({
-      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      model: GEMINI_MODEL,
       config: { systemInstruction },
       history,
     });

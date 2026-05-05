@@ -9,7 +9,23 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly, parseDateOnly } from "@/lib/date-format";
+import {
+  formatDateOnly,
+  formatTimestampDate,
+  parseDateOnly,
+  isTodayOrPast,
+  isOverdue,
+  isDueToday,
+} from "@/lib/date-format";
+import { formatCurrency } from "@/lib/utils";
+import {
+  isClosedOpportunity,
+  isCompleteWork,
+  isCancelledWork,
+  isUnpaid,
+  isOpenFollowUp,
+  getWorkTone,
+} from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRecord = {
@@ -76,58 +92,6 @@ type QueueItem = {
   priority: number;
 };
 
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function formatTimestampDate(date: string | null | undefined) {
-  if (!date) {
-    return "—";
-  }
-
-  return new Date(date).toLocaleDateString();
-}
-
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-function isTodayOrPast(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value <= getToday();
-}
-
-function isOverdue(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value < getToday();
-}
-
-function isDueToday(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return false;
-  }
-
-  return value.getTime() === getToday().getTime();
-}
-
 function getSortDate(date: string | null | undefined, fallback: string) {
   const parsed = parseDateOnly(date || null);
 
@@ -136,92 +100,6 @@ function getSortDate(date: string | null | undefined, fallback: string) {
   }
 
   return new Date(fallback).getTime();
-}
-
-function isClosedOpportunity(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("won") ||
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  );
-}
-
-function isCompleteWork(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("finished")
-  );
-}
-
-function isCancelledWork(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return normalized.includes("cancel");
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  );
-}
-
-function isCompleteFollowUp(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  );
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("paid") ||
-    normalized.includes("won")
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("failed") ||
-    normalized.includes("overdue") ||
-    normalized.includes("unpaid") ||
-    normalized.includes("partial")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("new") ||
-    normalized.includes("open") ||
-    normalized.includes("pending") ||
-    normalized.includes("follow") ||
-    normalized.includes("estimate") ||
-    normalized.includes("active") ||
-    normalized.includes("progress") ||
-    normalized.includes("scheduled")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
 }
 
 function getFollowUpLabel(date: string | null) {
@@ -379,7 +257,7 @@ export default async function WorkspacePage() {
   );
 
   const manualFollowUpItems: QueueItem[] = followUps
-    .filter((action) => !isCompleteFollowUp(action.status))
+    .filter((action) => isOpenFollowUp(action.status))
     .map((action) => ({
       id: `manual-follow-up-${action.id}`,
       label: "Manual follow-up",
@@ -883,7 +761,7 @@ export default async function WorkspacePage() {
                       </p>
 
                       <div className="md:text-right">
-                        <StatusBadge tone={getStatusTone(work.status)}>
+                        <StatusBadge tone={getWorkTone(work.status)}>
                           {work.status || "Scheduled"}
                         </StatusBadge>
                       </div>

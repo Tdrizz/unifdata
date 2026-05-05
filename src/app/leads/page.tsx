@@ -8,7 +8,9 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly } from "@/lib/date-format";
+import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
+import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
+import { getOpportunityTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type OpportunityRecord = {
@@ -29,78 +31,6 @@ type PersonRecord = {
   email: string | null;
   phone: string | null;
 };
-
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getOptionalNumber(formData: FormData, key: string) {
-  const value = getFormString(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function isTodayOrPast(date: string | null) {
-  if (!date) {
-    return false;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-
-  return target <= today;
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("won") || normalized.includes("accepted")) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("new") ||
-    normalized.includes("open") ||
-    normalized.includes("contact") ||
-    normalized.includes("estimate") ||
-    normalized.includes("follow")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
 
 function isWon(status: string | null) {
   const normalized = String(status || "").toLowerCase();
@@ -662,7 +592,7 @@ export default async function OpportunitiesPage() {
                           </p>
                           <div className="mt-1">
                             <StatusBadge
-                              tone={getStatusTone(opportunity.status)}
+                              tone={getOpportunityTone(opportunity.status)}
                             >
                               {opportunity.status || "Open"}
                             </StatusBadge>
@@ -792,7 +722,7 @@ export default async function OpportunitiesPage() {
                     {formatCurrency(opportunity.estimated_value)}
                   </p>
 
-                  <StatusBadge tone={getStatusTone(opportunity.status)}>
+                  <StatusBadge tone={getOpportunityTone(opportunity.status)}>
                     {opportunity.status || "Closed"}
                   </StatusBadge>
 

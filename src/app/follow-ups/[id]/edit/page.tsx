@@ -3,11 +3,18 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { SummaryCard } from "@/components/ui/SummaryCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { FormField } from "@/components/ui/FormField";
+import { Input, Select } from "@/components/ui/Input";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
+import { formatDateOnly, formatTimestampDate, parseDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { getFormString, getDateInputValue } from "@/lib/utils";
+import { getActionTone } from "@/lib/status";
 
 type FollowUpRecord = {
   id: string;
@@ -25,170 +32,51 @@ type PersonRecord = {
   phone: string | null;
 };
 
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getDateInputValue(date: string | null) {
-  if (!date) {
-    return "";
-  }
-
-  return date.includes("T") ? date.slice(0, 10) : date;
-}
-
-function parseDateOnly(date: string | null) {
-  if (!date) {
-    return null;
-  }
-
-  const datePart = date.includes("T") ? date.slice(0, 10) : date;
-  const [year, month, day] = datePart.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  const value = new Date(year, month - 1, day);
-  value.setHours(0, 0, 0, 0);
-
-  return value;
-}
-
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
 function isComplete(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  );
+  const n = String(status || "").toLowerCase();
+  return n.includes("complete") || n.includes("done") || n.includes("closed");
 }
 
 function isOverdue(date: string | null, status: string | null) {
   const target = parseDateOnly(date);
-
-  if (!target || isComplete(status)) {
-    return false;
-  }
-
-  return target < getToday();
+  if (!target || isComplete(status)) return false;
+  return target < getTodayDateOnly();
 }
 
 function isDueToday(date: string | null, status: string | null) {
   const target = parseDateOnly(date);
-
-  if (!target || isComplete(status)) {
-    return false;
-  }
-
-  return target.getTime() === getToday().getTime();
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("overdue") ||
-    normalized.includes("blocked") ||
-    normalized.includes("failed")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("open") ||
-    normalized.includes("pending") ||
-    normalized.includes("todo") ||
-    normalized.includes("follow")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
+  if (!target || isComplete(status)) return false;
+  return target.getTime() === getTodayDateOnly().getTime();
 }
 
 function getDueTone(action: FollowUpRecord) {
-  if (isComplete(action.status)) {
-    return "success" as const;
-  }
-
-  if (isOverdue(action.due_date, action.status)) {
-    return "danger" as const;
-  }
-
-  if (isDueToday(action.due_date, action.status)) {
-    return "warning" as const;
-  }
-
+  if (isComplete(action.status)) return "success" as const;
+  if (isOverdue(action.due_date, action.status)) return "danger" as const;
+  if (isDueToday(action.due_date, action.status)) return "warning" as const;
   return "neutral" as const;
 }
 
 function getDueLabel(action: FollowUpRecord) {
-  if (isComplete(action.status)) {
-    return "Complete";
-  }
-
-  if (!action.due_date) {
-    return "No due date";
-  }
-
-  if (isOverdue(action.due_date, action.status)) {
-    return `Overdue ${formatDateOnly(action.due_date)}`;
-  }
-
-  if (isDueToday(action.due_date, action.status)) {
-    return "Due today";
-  }
-
+  if (isComplete(action.status)) return "Complete";
+  if (!action.due_date) return "No due date";
+  if (isOverdue(action.due_date, action.status)) return `Overdue ${formatDateOnly(action.due_date)}`;
+  if (isDueToday(action.due_date, action.status)) return "Due today";
   return `Due ${formatDateOnly(action.due_date)}`;
 }
 
 function getActionNextStep(action: FollowUpRecord) {
-  if (!action.customer_id) {
+  if (!action.customer_id)
     return "Link this follow-up to the person or business it belongs to.";
-  }
-
-  if (!action.message) {
+  if (!action.message)
     return "Add a clear action so this follow-up is understandable.";
-  }
-
-  if (!action.due_date && !isComplete(action.status)) {
+  if (!action.due_date && !isComplete(action.status))
     return "Add a due date so this follow-up can be prioritized.";
-  }
-
-  if (isOverdue(action.due_date, action.status)) {
+  if (isOverdue(action.due_date, action.status))
     return "This follow-up is overdue. Review it or mark it complete.";
-  }
-
-  if (isDueToday(action.due_date, action.status)) {
+  if (isDueToday(action.due_date, action.status))
     return "This follow-up is due today.";
-  }
-
-  if (isComplete(action.status)) {
+  if (isComplete(action.status))
     return "This follow-up is complete.";
-  }
-
   return "Keep this follow-up updated as work moves forward.";
 }
 
@@ -199,71 +87,67 @@ function getActionIssues(action: FollowUpRecord) {
     detail: string;
   }[] = [];
 
-  if (!action.customer_id) {
+  if (!action.customer_id)
     issues.push({
       label: "Link person",
       tone: "warning",
       detail: "Follow-ups are more useful when connected to who they are for.",
     });
-  }
 
-  if (!action.message) {
+  if (!action.message)
     issues.push({
       label: "Add action",
       tone: "warning",
       detail: "A clear action makes the follow-up understandable.",
     });
-  }
 
-  if (!action.due_date && !isComplete(action.status)) {
+  if (!action.due_date && !isComplete(action.status))
     issues.push({
       label: "Add due date",
       tone: "neutral",
       detail: "Due dates help the priority queue sort work correctly.",
     });
-  }
 
-  if (isOverdue(action.due_date, action.status)) {
+  if (isOverdue(action.due_date, action.status))
     issues.push({
       label: "Overdue",
       tone: "danger",
       detail: "This follow-up is past due and still open.",
     });
-  }
 
-  if (isDueToday(action.due_date, action.status)) {
+  if (isDueToday(action.due_date, action.status))
     issues.push({
       label: "Due today",
       tone: "warning",
       detail: "This follow-up should be handled today.",
     });
-  }
 
-  if (!action.status) {
+  if (!action.status)
     issues.push({
       label: "Add status",
       tone: "neutral",
       detail: "Status makes it clear whether this is still open or complete.",
     });
-  }
 
-  if (issues.length === 0) {
+  if (issues.length === 0)
     issues.push({
       label: "Looks clean",
       tone: "success",
       detail: "This follow-up has the key fields needed for tracking.",
     });
-  }
 
   return issues;
 }
 
 export default async function EditFollowUpPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
 
@@ -271,15 +155,10 @@ export default async function EditFollowUpPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const currentCompany = await getCurrentCompany();
-
-  if (!currentCompany) {
-    redirect("/onboarding");
-  }
+  if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
@@ -289,10 +168,7 @@ export default async function EditFollowUpPage({
 
     const supabase = await createClient();
     const currentCompany = await getCurrentCompany();
-
-    if (!currentCompany) {
-      redirect("/onboarding");
-    }
+    if (!currentCompany) redirect("/onboarding");
 
     const { company } = currentCompany;
 
@@ -302,7 +178,7 @@ export default async function EditFollowUpPage({
     const status = getFormString(formData, "status") || "Open";
 
     if (!message) {
-      throw new Error("Follow-up action is required.");
+      redirect(`/follow-ups/${id}/edit?error=Follow-up+action+is+required.`);
     }
 
     const { error } = await supabase
@@ -317,7 +193,7 @@ export default async function EditFollowUpPage({
       .eq("company_id", company.id);
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/follow-ups/${id}/edit?error=${encodeURIComponent(error.message)}`);
     }
 
     redirect("/follow-ups");
@@ -339,25 +215,15 @@ export default async function EditFollowUpPage({
       .limit(250),
   ]);
 
-  if (followUpResult.error) {
-    throw new Error(followUpResult.error.message);
-  }
-
-  if (peopleResult.error) {
-    throw new Error(peopleResult.error.message);
-  }
-
-  if (!followUpResult.data) {
-    redirect("/follow-ups");
-  }
+  if (followUpResult.error) throw new Error(followUpResult.error.message);
+  if (peopleResult.error) throw new Error(peopleResult.error.message);
+  if (!followUpResult.data) redirect("/follow-ups");
 
   const action = followUpResult.data as FollowUpRecord;
   const people = (peopleResult.data || []) as PersonRecord[];
-
   const linkedPerson = action.customer_id
     ? people.find((person) => person.id === action.customer_id)
     : null;
-
   const issues = getActionIssues(action);
 
   return (
@@ -381,7 +247,6 @@ export default async function EditFollowUpPage({
               >
                 Back to Follow-Ups
               </Link>
-
               <Link
                 href="/customers"
                 className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
@@ -398,60 +263,45 @@ export default async function EditFollowUpPage({
             description="These fields control how this record appears in Home and the Follow-Up priority queue."
           >
             <form action={updateFollowUp} className="space-y-5 p-5">
-              <label className="block text-sm font-medium text-slate-700">
-                Link to person or business
-                <select
-                  name="customer_id"
-                  defaultValue={action.customer_id || ""}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
+              {errorParam && <DismissError message={errorParam} />}
+
+              <FormField label="Link to person or business">
+                <Select name="customer_id" defaultValue={action.customer_id || ""}>
                   <option value="">No linked person yet</option>
                   {people.map((person) => (
                     <option key={person.id} value={person.id}>
-                      {person.name ||
-                        person.email ||
-                        person.phone ||
-                        "Unnamed person"}
+                      {person.name || person.email || person.phone || "Unnamed person"}
                     </option>
                   ))}
-                </select>
-              </label>
+                </Select>
+              </FormField>
 
-              <label className="block text-sm font-medium text-slate-700">
-                Follow-up action
-                <input
+              <FormField label="Follow-up action">
+                <Input
                   name="message"
                   required
                   defaultValue={action.message || ""}
                   placeholder="Call customer, send quote, check payment, schedule job..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                 />
-              </label>
+              </FormField>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
-                  Due date
-                  <input
+                <FormField label="Due date">
+                  <Input
                     name="due_date"
                     type="date"
                     defaultValue={getDateInputValue(action.due_date)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
-                </label>
+                </FormField>
 
-                <label className="text-sm font-medium text-slate-700">
-                  Status
-                  <select
-                    name="status"
-                    defaultValue={action.status || "Open"}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                  >
+                <FormField label="Status">
+                  <Select name="status" defaultValue={action.status || "Open"}>
                     <option value="Open">Open</option>
                     <option value="Pending">Pending</option>
                     <option value="Follow Up">Follow Up</option>
                     <option value="Complete">Complete</option>
-                  </select>
-                </label>
+                  </Select>
+                </FormField>
               </div>
 
               <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
@@ -461,13 +311,7 @@ export default async function EditFollowUpPage({
                 >
                   Cancel
                 </Link>
-
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Save follow-up
-                </button>
+                <SubmitButton>Save follow-up</SubmitButton>
               </div>
             </form>
           </SectionCard>
@@ -479,9 +323,7 @@ export default async function EditFollowUpPage({
             >
               <div className="space-y-4 p-5">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">
-                    Next step
-                  </p>
+                  <p className="text-sm font-medium text-slate-500">Next step</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">
                     {getActionNextStep(action)}
                   </p>
@@ -500,33 +342,27 @@ export default async function EditFollowUpPage({
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-sm font-medium text-slate-500">Status</p>
                     <div className="mt-2">
-                      <StatusBadge tone={getStatusTone(action.status)}>
+                      <StatusBadge tone={getActionTone(action.status)}>
                         {action.status || "Open"}
                       </StatusBadge>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">
-                    Linked person
-                  </p>
-                  <p className="mt-1 font-semibold text-slate-950">
-                    {linkedPerson?.name || "No person linked"}
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {linkedPerson?.email ||
-                      linkedPerson?.phone ||
-                      "Connect this follow-up to a person or business."}
-                  </p>
-                </div>
+                <SummaryCard
+                  label="Linked person"
+                  value={linkedPerson?.name || "No person linked"}
+                  helper={
+                    linkedPerson?.email ||
+                    linkedPerson?.phone ||
+                    "Connect this follow-up to a person or business."
+                  }
+                />
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Added</p>
-                  <p className="mt-1 font-semibold text-slate-950">
-                    {formatTimestampDate(action.created_at)}
-                  </p>
-                </div>
+                <SummaryCard
+                  label="Added"
+                  value={formatTimestampDate(action.created_at)}
+                />
               </div>
             </SectionCard>
 
@@ -542,14 +378,12 @@ export default async function EditFollowUpPage({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-
                       <p className="text-sm font-medium text-slate-500">
                         {issue.label === "Looks clean"
                           ? "No action needed"
                           : "Needs update"}
                       </p>
                     </div>
-
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {issue.detail}
                     </p>
