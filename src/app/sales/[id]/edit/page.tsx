@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -169,6 +170,8 @@ export default async function EditRevenuePage({
       redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/sales");
+    revalidatePath("/workspace");
     redirect("/sales");
   }
 

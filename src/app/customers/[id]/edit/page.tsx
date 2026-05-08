@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -139,6 +140,8 @@ export default async function EditPersonPage({
       );
     }
 
+    revalidatePath("/customers");
+    revalidatePath("/workspace");
     redirect("/customers");
   }
 

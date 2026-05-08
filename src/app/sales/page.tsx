@@ -1,14 +1,18 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { formatDateOnly } from "@/lib/date-format";
+import { formatDateOnly, getTodayString } from "@/lib/date-format";
+import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
+import { isUnpaid, getRevenueTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type RevenueRecord = {
@@ -21,78 +25,8 @@ type RevenueRecord = {
   created_at: string;
 };
 
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getOptionalNumber(formData: FormData, key: string) {
-  const value = getFormString(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getTodayDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("paid")) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  ) {
-    return "danger" as const;
-  }
-
-  if (normalized.includes("pending")) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
 function isPaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return normalized === "paid" || normalized.includes("paid");
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due") ||
-    normalized.includes("overdue")
-  );
+  return String(status || "").toLowerCase() === "paid";
 }
 
 function getRevenueNextStep(record: RevenueRecord) {
@@ -171,11 +105,12 @@ function getRevenueIssues(record: RevenueRecord) {
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
+  const errorParam = params.error ? decodeURIComponent(params.error) : "";
 
   const supabase = await createClient();
 
@@ -195,7 +130,6 @@ export default async function RevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const today = getTodayDate();
 
   async function createRevenue(formData: FormData) {
     "use server";
@@ -211,12 +145,12 @@ export default async function RevenuePage({
 
     const amount = getOptionalNumber(formData, "amount");
     const paymentStatus = getFormString(formData, "payment_status") || "Paid";
-    const saleDate = getFormString(formData, "sale_date") || getTodayDate();
+    const saleDate = getFormString(formData, "sale_date") || getTodayString();
     const serviceType = getFormString(formData, "service_type");
     const source = getFormString(formData, "source");
 
     if (amount === null) {
-      throw new Error("Revenue amount is required.");
+      redirect("/sales?error=Revenue+amount+is+required.");
     }
 
     const { error } = await supabase.from("sales").insert({
@@ -229,9 +163,11 @@ export default async function RevenuePage({
     });
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/sales?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/sales");
+    revalidatePath("/workspace");
     redirect("/sales");
   }
 
@@ -471,6 +407,8 @@ export default async function RevenuePage({
               action={createRevenue}
               className="border-t border-slate-100 p-5"
             >
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1fr]">
                 <label className="text-sm font-medium text-slate-700">
                   Amount
@@ -504,7 +442,7 @@ export default async function RevenuePage({
                   <input
                     name="sale_date"
                     type="date"
-                    defaultValue={today}
+                    defaultValue={getTodayString()}
                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </label>
@@ -642,7 +580,7 @@ export default async function RevenuePage({
                             </p>
                             <div className="mt-1">
                               <StatusBadge
-                                tone={getStatusTone(record.payment_status)}
+                                tone={getRevenueTone(record.payment_status)}
                               >
                                 {record.payment_status || "Not set"}
                               </StatusBadge>
@@ -684,7 +622,7 @@ export default async function RevenuePage({
                       className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
                     >
                       <div>
-                        <StatusBadge tone={getStatusTone(group.status)}>
+                        <StatusBadge tone={getRevenueTone(group.status)}>
                           {group.status}
                         </StatusBadge>
 
