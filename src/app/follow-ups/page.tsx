@@ -1,13 +1,18 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { parseDateOnly, formatDateOnly, getTodayDateOnly } from "@/lib/date-format";
+import { getFormString } from "@/lib/utils";
+import { isClosedOpportunity, getActionTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type ManualFollowUpRecord = {
@@ -49,57 +54,8 @@ type FollowUpItem = {
   href: string;
 };
 
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function parseDateOnly(date: string | null) {
-  if (!date) {
-    return null;
-  }
-
-  const datePart = date.includes("T") ? date.slice(0, 10) : date;
-  const [year, month, day] = datePart.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return null;
-  }
-
-  const value = new Date(year, month - 1, day);
-  value.setHours(0, 0, 0, 0);
-
-  return value;
-}
-
-function formatDate(date: string | null) {
-  const value = parseDateOnly(date);
-
-  if (!value) {
-    return "â€”";
-  }
-
-  return value.toLocaleDateString();
-}
-
-function getToday() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
-
-function getDateOnly(date: string | null) {
-  return parseDateOnly(date);
-}
-
 function isComplete(status: string | null) {
   const normalized = String(status || "").toLowerCase();
-
   return (
     normalized.includes("complete") ||
     normalized.includes("done") ||
@@ -107,82 +63,22 @@ function isComplete(status: string | null) {
   );
 }
 
-function isOpportunityClosed(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("won") ||
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  );
-}
-
 function isOverdue(date: string | null, status: string | null) {
-  const target = getDateOnly(date);
-
-  if (!target || isComplete(status)) {
-    return false;
-  }
-
-  return target < getToday();
+  const target = parseDateOnly(date);
+  if (!target || isComplete(status)) return false;
+  return target < getTodayDateOnly();
 }
 
 function isDueToday(date: string | null, status: string | null) {
-  const target = getDateOnly(date);
-
-  if (!target || isComplete(status)) {
-    return false;
-  }
-
-  return target.getTime() === getToday().getTime();
+  const target = parseDateOnly(date);
+  if (!target || isComplete(status)) return false;
+  return target.getTime() === getTodayDateOnly().getTime();
 }
 
 function isUpcoming(date: string | null, status: string | null) {
-  const target = getDateOnly(date);
-
-  if (!target || isComplete(status)) {
-    return false;
-  }
-
-  return target > getToday();
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed") ||
-    normalized.includes("won")
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("overdue") ||
-    normalized.includes("blocked") ||
-    normalized.includes("failed") ||
-    normalized.includes("lost") ||
-    normalized.includes("cancel")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("open") ||
-    normalized.includes("pending") ||
-    normalized.includes("todo") ||
-    normalized.includes("follow") ||
-    normalized.includes("new") ||
-    normalized.includes("contact") ||
-    normalized.includes("estimate")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
+  const target = parseDateOnly(date);
+  if (!target || isComplete(status)) return false;
+  return target > getTodayDateOnly();
 }
 
 function getDueTone(action: FollowUpItem) {
@@ -211,14 +107,14 @@ function getDueLabel(action: FollowUpItem) {
   }
 
   if (isOverdue(action.due_date, action.status)) {
-    return `Overdue ${formatDate(action.due_date)}`;
+    return `Overdue ${formatDateOnly(action.due_date)}`;
   }
 
   if (isDueToday(action.due_date, action.status)) {
     return "Due today";
   }
 
-  return `Due ${formatDate(action.due_date)}`;
+  return `Due ${formatDateOnly(action.due_date)}`;
 }
 
 function getActionNextStep(action: FollowUpItem) {
@@ -355,12 +251,13 @@ function getSortDateTime(action: FollowUpItem) {
 export default async function FollowUpsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; due?: string; source?: string }>;
+  searchParams: Promise<{ status?: string; due?: string; source?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedDue = params.due ? decodeURIComponent(params.due) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
+  const errorParam = params.error ? decodeURIComponent(params.error) : "";
 
   const supabase = await createClient();
 
@@ -399,7 +296,7 @@ export default async function FollowUpsPage({
     const status = getFormString(formData, "status") || "Open";
 
     if (!message) {
-      throw new Error("Follow-up action is required.");
+      redirect("/follow-ups?error=Follow-up+action+is+required.");
     }
 
     const { error } = await supabase.from("follow_ups").insert({
@@ -411,9 +308,11 @@ export default async function FollowUpsPage({
     });
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/follow-ups?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/follow-ups");
+    revalidatePath("/workspace");
     redirect("/follow-ups");
   }
 
@@ -477,7 +376,7 @@ export default async function FollowUpsPage({
   const opportunityItems: FollowUpItem[] = opportunities
     .filter(
       (opportunity) =>
-        !isOpportunityClosed(opportunity.status) &&
+        !isClosedOpportunity(opportunity.status) &&
         Boolean(opportunity.next_follow_up_date),
     )
     .map((opportunity) => ({
@@ -734,6 +633,8 @@ const overdueActions = actions.filter((action) =>
               action={createFollowUp}
               className="border-t border-slate-100 p-5"
             >
+              {errorParam && <DismissError message={errorParam} />}
+
               <label className="block text-sm font-medium text-slate-700">
                 Link to person or business
                 <select
@@ -895,7 +796,7 @@ const overdueActions = actions.filter((action) =>
                               Status
                             </p>
                             <div className="mt-1">
-                              <StatusBadge tone={getStatusTone(action.status)}>
+                              <StatusBadge tone={getActionTone(action.status)}>
                                 {action.status || "Not set"}
                               </StatusBadge>
                             </div>
@@ -904,7 +805,7 @@ const overdueActions = actions.filter((action) =>
                               Added
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatDate(action.created_at)}
+                              {formatDateOnly(action.created_at)}
                             </p>
                           </div>
 

@@ -1,10 +1,12 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
@@ -71,7 +73,12 @@ function getCustomerType(customer: CustomerRecord) {
   return customer.customer_type || "No type set";
 }
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: errorParam } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -111,7 +118,7 @@ export default async function CustomersPage() {
     const notes = getFormString(formData, "notes");
 
     if (!name) {
-      throw new Error("Name is required.");
+      redirect("/customers?error=Name+is+required.");
     }
 
     const { error } = await supabase.from("customers").insert({
@@ -125,9 +132,11 @@ export default async function CustomersPage() {
     });
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/customers?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/customers");
+    revalidatePath("/workspace");
     redirect("/customers");
   }
 
@@ -286,6 +295,8 @@ export default async function CustomersPage() {
             action={createCustomer}
             className="space-y-4 border-t border-slate-100 p-5"
           >
+            {errorParam && <DismissError message={errorParam} />}
+
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-medium text-slate-700">
                 Name

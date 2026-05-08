@@ -1,14 +1,18 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly } from "@/lib/date-format";
+import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
+import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type WorkRecord = {
@@ -38,93 +42,6 @@ type OpportunityRecord = {
   estimated_value: number | null;
 };
 
-function getFormString(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
-}
-
-function getOptionalNumber(formData: FormData, key: string) {
-  const value = getFormString(formData, key);
-
-  if (!value) {
-    return null;
-  }
-
-  const number = Number(value);
-
-  return Number.isFinite(number) ? number : null;
-}
-
-function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("paid")
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("cancel") ||
-    normalized.includes("failed") ||
-    normalized.includes("overdue")
-  ) {
-    return "danger" as const;
-  }
-
-  if (
-    normalized.includes("scheduled") ||
-    normalized.includes("active") ||
-    normalized.includes("progress") ||
-    normalized.includes("unpaid") ||
-    normalized.includes("partial")
-  ) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
-function isComplete(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("finished")
-  );
-}
-
-function isCancelled(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return normalized.includes("cancel");
-}
-
-function isUnpaid(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("unpaid") ||
-    normalized.includes("partial") ||
-    normalized.includes("due")
-  );
-}
 
 function getStageExplanation(status: string | null) {
   const normalized = String(status || "").toLowerCase();
@@ -171,11 +88,11 @@ function getWorkNextStep(work: WorkRecord) {
     return "Add a work value so this shows correctly in reporting.";
   }
 
-  if (!work.start_date && !isComplete(work.status)) {
+  if (!work.start_date && !isCompleteWork(work.status)) {
     return "Add a start date so the team knows when this work begins.";
   }
 
-  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+  if (isCompleteWork(work.status) && isUnpaid(work.paid_status)) {
     return "Work is complete, but payment still needs attention.";
   }
 
@@ -183,11 +100,11 @@ function getWorkNextStep(work: WorkRecord) {
     return "Link this work to the opportunity it came from if one exists.";
   }
 
-  if (isCancelled(work.status)) {
+  if (isCancelledWork(work.status)) {
     return "This work is cancelled. Keep it out of active planning.";
   }
 
-  if (isComplete(work.status)) {
+  if (isCompleteWork(work.status)) {
     return "This work is complete. Confirm payment and reporting are correct.";
   }
 
@@ -221,14 +138,14 @@ function getWorkIssues(work: WorkRecord) {
     });
   }
 
-  if (!work.start_date && !isComplete(work.status)) {
+  if (!work.start_date && !isCompleteWork(work.status)) {
     issues.push({
       label: "Add start date",
       tone: "neutral",
     });
   }
 
-  if (isComplete(work.status) && isUnpaid(work.paid_status)) {
+  if (isCompleteWork(work.status) && isUnpaid(work.paid_status)) {
     issues.push({
       label: "Payment needed",
       tone: "danger",
@@ -248,10 +165,11 @@ function getWorkIssues(work: WorkRecord) {
 export default async function WorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ stage?: string }>;
+  searchParams: Promise<{ stage?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const selectedStage = params.stage ? decodeURIComponent(params.stage) : "";
+  const errorParam = params.error ? decodeURIComponent(params.error) : "";
 
   const supabase = await createClient();
 
@@ -294,7 +212,7 @@ export default async function WorkPage({
     const paidStatus = getFormString(formData, "paid_status") || "Unpaid";
 
     if (!serviceType) {
-      throw new Error("Work name is required.");
+      redirect("/jobs?error=Work+name+is+required.");
     }
 
     const { error } = await supabase.from("jobs").insert({
@@ -310,9 +228,11 @@ export default async function WorkPage({
     });
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/jobs?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/jobs");
+    revalidatePath("/workspace");
     redirect("/jobs");
   }
 
@@ -363,10 +283,10 @@ export default async function WorkPage({
   );
 
   const activeWork = workRecords.filter(
-    (work) => !isComplete(work.status) && !isCancelled(work.status),
+    (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
   );
 
-  const completedWork = workRecords.filter((work) => isComplete(work.status));
+  const completedWork = workRecords.filter((work) => isCompleteWork(work.status));
 
   const unpaidWork = workRecords.filter((work) => isUnpaid(work.paid_status));
 
@@ -422,8 +342,8 @@ export default async function WorkPage({
 
   const prioritizedWork = [...workRecords]
     .sort((a, b) => {
-      const aActive = !isComplete(a.status) && !isCancelled(a.status);
-      const bActive = !isComplete(b.status) && !isCancelled(b.status);
+      const aActive = !isCompleteWork(a.status) && !isCancelledWork(a.status);
+      const bActive = !isCompleteWork(b.status) && !isCancelledWork(b.status);
 
       if (aActive !== bActive) {
         return aActive ? -1 : 1;
@@ -554,6 +474,8 @@ export default async function WorkPage({
             </summary>
 
             <form action={createWork} className="border-t border-slate-100 p-5">
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
                   Link to person or business
@@ -766,7 +688,7 @@ export default async function WorkPage({
                             </p>
                             <div className="mt-1">
                               <StatusBadge
-                                tone={getStatusTone(work.paid_status)}
+                                tone={getRevenueTone(work.paid_status)}
                               >
                                 {work.paid_status || "Not set"}
                               </StatusBadge>
@@ -785,7 +707,7 @@ export default async function WorkPage({
                               Stage
                             </p>
                             <div className="mt-1">
-                              <StatusBadge tone={getStatusTone(work.status)}>
+                              <StatusBadge tone={getWorkTone(work.status)}>
                                 {work.status || "Scheduled"}
                               </StatusBadge>
                             </div>
@@ -828,7 +750,7 @@ export default async function WorkPage({
                       className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
                     >
                       <div>
-                        <StatusBadge tone={getStatusTone(group.status)}>
+                        <StatusBadge tone={getWorkTone(group.status)}>
                           {group.status}
                         </StatusBadge>
 
