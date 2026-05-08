@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { parseDateOnly, formatDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { getFormString } from "@/lib/utils";
-import { isClosedOpportunity, getActionTone } from "@/lib/status";
+import { isClosedOpportunity, getGenericTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type ManualFollowUpRecord = {
@@ -796,7 +796,7 @@ const overdueActions = actions.filter((action) =>
                               Status
                             </p>
                             <div className="mt-1">
-                              <StatusBadge tone={getActionTone(action.status)}>
+                              <StatusBadge tone={getGenericTone(action.status)}>
                                 {action.status || "Not set"}
                               </StatusBadge>
                             </div>
