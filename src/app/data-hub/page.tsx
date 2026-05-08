@@ -329,9 +329,9 @@ export default async function DataHubPage() {
   const cleanupItems: CleanupItem[] = [
     {
       id: "customers-missing-contact",
-      area: "People",
+      area: profile.labels.customerPlural,
       label: "Add contact",
-      title: "People with incomplete contact info",
+      title: `${profile.labels.customerPlural} with incomplete contact info`,
       detail: "These records are missing either phone or email.",
       count: customersMissingContact.length,
       href: "/customers",
@@ -339,9 +339,9 @@ export default async function DataHubPage() {
     },
     {
       id: "customers-missing-address",
-      area: "People",
+      area: profile.labels.customerPlural,
       label: "Add address",
-      title: "People missing addresses",
+      title: `${profile.labels.customerPlural} missing addresses`,
       detail:
         "Addresses help with service areas, job planning, and local context.",
       count: customersMissingAddress.length,
@@ -350,9 +350,9 @@ export default async function DataHubPage() {
     },
     {
       id: "customers-missing-type",
-      area: "People",
+      area: profile.labels.customerPlural,
       label: "Add type",
-      title: "People missing types",
+      title: `${profile.labels.customerPlural} missing types`,
       detail: "Types help separate customers, leads, vendors, and accounts.",
       count: customersMissingType.length,
       href: "/customers",
@@ -360,7 +360,7 @@ export default async function DataHubPage() {
     },
     {
       id: "opportunities-missing-person",
-      area: "Opportunities",
+      area: profile.labels.leadPlural,
       label: "Link person",
       title: "Opportunities not connected to people",
       detail:
@@ -371,7 +371,7 @@ export default async function DataHubPage() {
     },
     {
       id: "opportunities-missing-source",
-      area: "Opportunities",
+      area: profile.labels.leadPlural,
       label: "Add source",
       title: "Opportunities missing sources",
       detail: "Source tracking helps show what marketing is working.",
@@ -381,7 +381,7 @@ export default async function DataHubPage() {
     },
     {
       id: "opportunities-missing-value",
-      area: "Opportunities",
+      area: profile.labels.leadPlural,
       label: "Add estimate",
       title: "Opportunities missing estimated value",
       detail:
@@ -392,7 +392,7 @@ export default async function DataHubPage() {
     },
     {
       id: "opportunities-follow-up",
-      area: "Opportunities",
+      area: profile.labels.leadPlural,
       label: "Follow up",
       title: "Opportunities need follow-up attention",
       detail: "These are missing, due, or overdue next follow-up dates.",
@@ -402,7 +402,7 @@ export default async function DataHubPage() {
     },
     {
       id: "work-missing-person",
-      area: "Work",
+      area: profile.labels.jobPlural,
       label: "Link person",
       title: "Work not connected to people",
       detail: "Work records should usually connect to whoever the work is for.",
@@ -412,7 +412,7 @@ export default async function DataHubPage() {
     },
     {
       id: "work-missing-opportunity",
-      area: "Work",
+      area: profile.labels.jobPlural,
       label: "Link opportunity",
       title: "Work not connected to opportunities",
       detail: "Linking work to opportunities keeps the lifecycle connected.",
@@ -422,7 +422,7 @@ export default async function DataHubPage() {
     },
     {
       id: "work-missing-value",
-      area: "Work",
+      area: profile.labels.jobPlural,
       label: "Add value",
       title: "Work records missing value",
       detail: "Work value supports active and completed work reporting.",
@@ -432,7 +432,7 @@ export default async function DataHubPage() {
     },
     {
       id: "work-missing-start",
-      area: "Work",
+      area: profile.labels.jobPlural,
       label: "Add start date",
       title: "Active work missing start dates",
       detail: "Start dates help with scheduling and operational planning.",
@@ -442,7 +442,7 @@ export default async function DataHubPage() {
     },
     {
       id: "revenue-missing-amount",
-      area: "Revenue",
+      area: profile.labels.salePlural,
       label: "Add amount",
       title: "Revenue missing amounts",
       detail: "Amounts are required for accurate revenue reporting.",
@@ -452,7 +452,7 @@ export default async function DataHubPage() {
     },
     {
       id: "revenue-missing-source",
-      area: "Revenue",
+      area: profile.labels.salePlural,
       label: "Add source",
       title: "Revenue missing sources",
       detail: "Sources help show what generated paid work.",
@@ -462,7 +462,7 @@ export default async function DataHubPage() {
     },
     {
       id: "revenue-missing-date",
-      area: "Revenue",
+      area: profile.labels.salePlural,
       label: "Add date",
       title: "Revenue missing dates",
       detail: "Revenue dates keep records in the correct reporting period.",
@@ -472,7 +472,7 @@ export default async function DataHubPage() {
     },
     {
       id: "follow-ups-missing-person",
-      area: "Follow-ups",
+      area: profile.labels.followUpPlural,
       label: "Link person",
       title: "Follow-ups not connected to people",
       detail: "Follow-ups are more useful when tied to who they are for.",
@@ -482,7 +482,7 @@ export default async function DataHubPage() {
     },
     {
       id: "follow-ups-missing-date",
-      area: "Follow-ups",
+      area: profile.labels.followUpPlural,
       label: "Add due date",
       title: "Follow-ups missing due dates",
       detail: "Due dates make the priority queue sort correctly.",
@@ -501,7 +501,7 @@ export default async function DataHubPage() {
   const moduleSummaries = [
     {
       id: "people",
-      title: "People",
+      title: profile.labels.customerPlural,
       href: "/customers",
       count: customers.length,
       issues:
@@ -512,7 +512,7 @@ export default async function DataHubPage() {
     },
     {
       id: "opportunities",
-      title: "Opportunities",
+      title: profile.labels.leadPlural,
       href: "/leads",
       count: opportunities.length,
       issues:
@@ -524,7 +524,7 @@ export default async function DataHubPage() {
     },
     {
       id: "work",
-      title: "Work",
+      title: profile.labels.jobPlural,
       href: "/jobs",
       count: workRecords.length,
       issues:
@@ -536,7 +536,7 @@ export default async function DataHubPage() {
     },
     {
       id: "revenue",
-      title: "Revenue",
+      title: profile.labels.salePlural,
       href: "/sales",
       count: revenueRecords.length,
       issues:
@@ -548,7 +548,7 @@ export default async function DataHubPage() {
     },
     {
       id: "follow-ups",
-      title: "Follow-ups",
+      title: profile.labels.followUpPlural,
       href: "/follow-ups",
       count: followUps.length,
       issues: followUpsMissingPerson.length + followUpsMissingDueDate.length,
@@ -559,7 +559,7 @@ export default async function DataHubPage() {
   const recentRecords: RecentRecord[] = [
     ...customers.map((customer) => ({
       id: `customer-${customer.id}`,
-      type: "Person",
+      type: profile.labels.customerSingular,
       title: customer.name || "Unnamed person",
       detail: customer.email || customer.phone || "Incomplete contact saved",
       date: customer.created_at,
@@ -567,7 +567,7 @@ export default async function DataHubPage() {
     })),
     ...opportunities.map((opportunity) => ({
       id: `opportunity-${opportunity.id}`,
-      type: "Opportunity",
+      type: profile.labels.leadSingular,
       title: opportunity.service_requested || "Untitled opportunity",
       detail: opportunity.next_follow_up_date
         ? `Follow up ${formatDateOnly(opportunity.next_follow_up_date)}`
@@ -577,7 +577,7 @@ export default async function DataHubPage() {
     })),
     ...workRecords.map((work) => ({
       id: `work-${work.id}`,
-      type: "Work",
+      type: profile.labels.jobSingular,
       title: work.service_type || "Untitled work",
       detail: work.start_date
         ? `Starts ${formatDateOnly(work.start_date)}`
@@ -587,7 +587,7 @@ export default async function DataHubPage() {
     })),
     ...revenueRecords.map((record) => ({
       id: `revenue-${record.id}`,
-      type: "Revenue",
+      type: profile.labels.saleSingular,
       title: formatCurrency(record.amount),
       detail: record.sale_date
         ? `Revenue date ${formatDateOnly(record.sale_date)}`
@@ -652,7 +652,7 @@ export default async function DataHubPage() {
           <StatCard
             label="Total records"
             value={totalRecords}
-            helper="People, opportunities, work, revenue, and follow-ups"
+            helper={`${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, ${profile.labels.jobPlural.toLowerCase()}, ${profile.labels.salePlural.toLowerCase()}, and ${profile.labels.followUpPlural.toLowerCase()}`}
             tone={totalRecords > 0 ? "positive" : "default"}
           />
 
