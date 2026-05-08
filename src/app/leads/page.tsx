@@ -1,11 +1,13 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
@@ -123,7 +125,12 @@ function getOpportunityIssues(opportunity: OpportunityRecord) {
   return issues;
 }
 
-export default async function OpportunitiesPage() {
+export default async function OpportunitiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: errorParam } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -164,7 +171,7 @@ export default async function OpportunitiesPage() {
     const notes = getFormString(formData, "notes");
 
     if (!serviceRequested) {
-      throw new Error("Opportunity name is required.");
+      redirect("/leads?error=Opportunity+name+is+required.");
     }
 
     const { error } = await supabase.from("leads").insert({
@@ -179,9 +186,12 @@ export default async function OpportunitiesPage() {
     });
 
     if (error) {
-      throw new Error(error.message);
+      redirect(`/leads?error=${encodeURIComponent(error.message)}`);
     }
 
+    revalidatePath("/leads");
+    revalidatePath("/crm");
+    revalidatePath("/workspace");
     redirect("/leads");
   }
 
@@ -412,6 +422,8 @@ export default async function OpportunitiesPage() {
               action={createOpportunity}
               className="border-t border-slate-100 p-5"
             >
+              {errorParam && <DismissError message={errorParam} />}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-700">
                   Link to person or business
