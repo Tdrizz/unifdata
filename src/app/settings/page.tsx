@@ -85,9 +85,9 @@ function getProviderLabel(provider: string | null) {
     google_sheets: "Google Sheets",
     google: "Google",
     quickbooks: "QuickBooks",
-    stripe: "Stripe",
     square: "Square",
     hubspot: "HubSpot",
+    jobber: "Jobber",
   };
 
   return labels[provider || ""] || titleCase(provider) || "Integration";
@@ -221,10 +221,10 @@ export default async function SettingsPage() {
       .includes("google"),
   );
 
-  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
   const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
   const squareIntegration = integrations.find((i) => i.provider === "square");
   const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
+  const jobberIntegration = integrations.find((i) => i.provider === "jobber");
 
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
 
@@ -411,14 +411,6 @@ export default async function SettingsPage() {
           <div className="divide-y divide-slate-100">
             {[
               {
-                provider: "stripe",
-                label: "Stripe",
-                description: "Syncs customers and payments.",
-                integration: stripeIntegration,
-                startHref: "/api/integrations/stripe/start",
-                syncHref: "/api/sync/stripe",
-              },
-              {
                 provider: "quickbooks",
                 label: "QuickBooks",
                 description: "Syncs customers, invoices, and estimates.",
@@ -441,6 +433,14 @@ export default async function SettingsPage() {
                 integration: hubspotIntegration,
                 startHref: "/api/integrations/hubspot/start",
                 syncHref: "/api/sync/hubspot",
+              },
+              {
+                provider: "jobber",
+                label: "Jobber",
+                description: "Syncs clients, jobs, quotes, and invoices.",
+                integration: jobberIntegration,
+                startHref: "/api/integrations/jobber/start",
+                syncHref: "/api/sync/jobber",
               },
             ].map(({ label, description, integration, startHref }) => (
               <div

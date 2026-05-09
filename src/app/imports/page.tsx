@@ -62,9 +62,9 @@ function getSourceLabel(sourceType: string | null) {
     csv: "CSV",
     google_sheets: "Google Sheets",
     quickbooks: "QuickBooks",
-    stripe: "Stripe",
     square: "Square",
     hubspot: "HubSpot",
+    jobber: "Jobber",
   };
 
   return labels[sourceType || ""] || sourceType || "Source";

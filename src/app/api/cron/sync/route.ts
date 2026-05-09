@@ -7,13 +7,13 @@ import {
   type ImportSourceType,
   type RawImportRow,
 } from "@/lib/import-engine";
-import { getValidStripeAccessToken, fetchStripeCustomers, fetchStripeCharges } from "@/lib/integrations/stripe";
 import { getValidQBAccessToken, getQBRealmIdFromIntegration, fetchQBCustomers, fetchQBInvoices, fetchQBEstimates } from "@/lib/integrations/quickbooks";
 import { getValidSquareAccessToken, fetchSquareCustomers, fetchSquarePayments } from "@/lib/integrations/square";
 import { getValidHubSpotAccessToken, fetchHubSpotContacts, fetchHubSpotDeals } from "@/lib/integrations/hubspot";
+import { getValidJobberAccessToken, fetchJobberClients, fetchJobberJobs, fetchJobberQuotes, fetchJobberInvoices } from "@/lib/integrations/jobber";
 
 type SyncJob = {
-  recordType: "relationships" | "revenue" | "opportunities";
+  recordType: "relationships" | "revenue" | "opportunities" | "work";
   fetcher: () => Promise<RawImportRow[]>;
   sourceType: ImportSourceType;
   sourceName: string;
@@ -24,14 +24,6 @@ async function getJobsForCompanyProvider(
   companyId: string,
   provider: string,
 ): Promise<SyncJob[]> {
-  if (provider === "stripe") {
-    const accessToken = await getValidStripeAccessToken({ supabase, companyId });
-    return [
-      { recordType: "relationships", fetcher: () => fetchStripeCustomers(accessToken), sourceType: "stripe", sourceName: "stripe" },
-      { recordType: "revenue", fetcher: () => fetchStripeCharges(accessToken), sourceType: "stripe", sourceName: "stripe" },
-    ];
-  }
-
   if (provider === "quickbooks") {
     const accessToken = await getValidQBAccessToken({ supabase, companyId });
     const realmId = await getQBRealmIdFromIntegration({ supabase, companyId });
@@ -58,6 +50,16 @@ async function getJobsForCompanyProvider(
     ];
   }
 
+  if (provider === "jobber") {
+    const accessToken = await getValidJobberAccessToken({ supabase, companyId });
+    return [
+      { recordType: "relationships", fetcher: () => fetchJobberClients(accessToken), sourceType: "jobber", sourceName: "jobber" },
+      { recordType: "work", fetcher: () => fetchJobberJobs(accessToken), sourceType: "jobber", sourceName: "jobber" },
+      { recordType: "opportunities", fetcher: () => fetchJobberQuotes(accessToken), sourceType: "jobber", sourceName: "jobber" },
+      { recordType: "revenue", fetcher: () => fetchJobberInvoices(accessToken), sourceType: "jobber", sourceName: "jobber" },
+    ];
+  }
+
   return [];
 }
 
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
     .select("company_id, source_type")
     .eq("status", "active")
     .eq("sync_frequency", "daily")
-    .in("source_type", ["stripe", "quickbooks", "square", "hubspot"]);
+    .in("source_type", ["quickbooks", "square", "hubspot", "jobber"]);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
