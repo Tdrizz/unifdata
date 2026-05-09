@@ -14,6 +14,7 @@ export type ImportSourceType =
   | "quickbooks"
   | "stripe"
   | "square"
+  | "hubspot"
   | "manual";
 
 export type RawImportRow = Record<string, unknown>;

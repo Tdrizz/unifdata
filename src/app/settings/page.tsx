@@ -87,6 +87,7 @@ function getProviderLabel(provider: string | null) {
     quickbooks: "QuickBooks",
     stripe: "Stripe",
     square: "Square",
+    hubspot: "HubSpot",
   };
 
   return labels[provider || ""] || titleCase(provider) || "Integration";
@@ -219,6 +220,11 @@ export default async function SettingsPage() {
       .toLowerCase()
       .includes("google"),
   );
+
+  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
+  const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
+  const squareIntegration = integrations.find((i) => i.provider === "square");
+  const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
 
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
 
@@ -399,13 +405,96 @@ export default async function SettingsPage() {
         </section>
 
         <SectionCard
+          title="Data integrations"
+          description="Connect your business tools. Once connected, FrontierOps syncs their data automatically every day — no CSV exports needed."
+        >
+          <div className="divide-y divide-slate-100">
+            {[
+              {
+                provider: "stripe",
+                label: "Stripe",
+                description: "Syncs customers and payments.",
+                integration: stripeIntegration,
+                startHref: "/api/integrations/stripe/start",
+                syncHref: "/api/sync/stripe",
+              },
+              {
+                provider: "quickbooks",
+                label: "QuickBooks",
+                description: "Syncs customers, invoices, and estimates.",
+                integration: quickbooksIntegration,
+                startHref: "/api/integrations/quickbooks/start",
+                syncHref: "/api/sync/quickbooks",
+              },
+              {
+                provider: "square",
+                label: "Square",
+                description: "Syncs customers and payments.",
+                integration: squareIntegration,
+                startHref: "/api/integrations/square/start",
+                syncHref: "/api/sync/square",
+              },
+              {
+                provider: "hubspot",
+                label: "HubSpot",
+                description: "Syncs contacts and deals.",
+                integration: hubspotIntegration,
+                startHref: "/api/integrations/hubspot/start",
+                syncHref: "/api/sync/hubspot",
+              },
+            ].map(({ label, description, integration, startHref }) => (
+              <div
+                key={label}
+                className="flex flex-wrap items-center justify-between gap-4 p-4"
+              >
+                <div>
+                  <p className="font-semibold text-slate-950">{label}</p>
+                  <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+                  {integration?.provider_account_name && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      {integration.provider_account_name}
+                      {integration.created_at && (
+                        <> · Connected {formatTimestampDate(integration.created_at)}</>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {integration ? (
+                    <>
+                      <StatusBadge tone={getStatusTone(integration.status)}>
+                        {getStatusLabel(integration.status)}
+                      </StatusBadge>
+                      <Link
+                        href={startHref}
+                        className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                      >
+                        Reconnect
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href={startHref}
+                      className="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+                    >
+                      Connect {label}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard
           title="Connected tools"
-          description="External services connected to this workspace."
+          description="All external services connected to this workspace."
         >
           {integrations.length === 0 ? (
             <EmptyState
               title="No connected tools"
-              description="Connect Google Sheets from the Import page when you are ready to import spreadsheet data."
+              description="Connect a data provider above to get started."
             />
           ) : (
             <div className="divide-y divide-slate-100">
