@@ -64,6 +64,7 @@ function getSourceLabel(sourceType: string | null) {
     quickbooks: "QuickBooks",
     stripe: "Stripe",
     square: "Square",
+    hubspot: "HubSpot",
   };
 
   return labels[sourceType || ""] || sourceType || "Source";
