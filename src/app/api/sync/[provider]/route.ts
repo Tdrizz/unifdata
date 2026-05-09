@@ -8,12 +8,12 @@ import {
   type ImportSourceType,
   type RawImportRow,
 } from "@/lib/import-engine";
-import { getValidStripeAccessToken, fetchStripeCustomers, fetchStripeCharges } from "@/lib/integrations/stripe";
 import { getValidQBAccessToken, getQBRealmIdFromIntegration, fetchQBCustomers, fetchQBInvoices, fetchQBEstimates } from "@/lib/integrations/quickbooks";
 import { getValidSquareAccessToken, fetchSquareCustomers, fetchSquarePayments } from "@/lib/integrations/square";
 import { getValidHubSpotAccessToken, fetchHubSpotContacts, fetchHubSpotDeals } from "@/lib/integrations/hubspot";
+import { getValidJobberAccessToken, fetchJobberClients, fetchJobberJobs, fetchJobberQuotes, fetchJobberInvoices } from "@/lib/integrations/jobber";
 
-const SUPPORTED_PROVIDERS = ["stripe", "quickbooks", "square", "hubspot"] as const;
+const SUPPORTED_PROVIDERS = ["quickbooks", "square", "hubspot", "jobber"] as const;
 type SupportedProvider = (typeof SUPPORTED_PROVIDERS)[number];
 
 function isSupportedProvider(value: string): value is SupportedProvider {
@@ -35,37 +35,6 @@ async function syncProvider(
 ): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
-  if (provider === "stripe") {
-    const accessToken = await getValidStripeAccessToken({ supabase, companyId });
-
-    const jobs: { recordType: "relationships" | "revenue"; fetcher: () => Promise<RawImportRow[]> }[] = [
-      { recordType: "relationships", fetcher: () => fetchStripeCustomers(accessToken) },
-      { recordType: "revenue", fetcher: () => fetchStripeCharges(accessToken) },
-    ];
-
-    for (const { recordType, fetcher } of jobs) {
-      try {
-        const rows = await fetcher();
-        const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-        const mapping = guessImportMapping(headers, recordType);
-        const { sessionId } = await createImportSessionFromRows({
-          supabase,
-          companyId,
-          sourceType: "stripe" as ImportSourceType,
-          sourceName: "stripe",
-          fileName: `stripe_${recordType}`,
-          recordType,
-          rows,
-          mapping,
-        });
-        await commitImportSession({ supabase, companyId, importSessionId: sessionId });
-        results.push({ provider, record_type: recordType, rows_synced: rows.length, session_id: sessionId, error: null });
-      } catch (err) {
-        results.push({ provider, record_type: recordType, rows_synced: 0, session_id: null, error: err instanceof Error ? err.message : String(err) });
-      }
-    }
-  }
-
   if (provider === "quickbooks") {
     const accessToken = await getValidQBAccessToken({ supabase, companyId });
     const realmId = await getQBRealmIdFromIntegration({ supabase, companyId });
@@ -82,14 +51,8 @@ async function syncProvider(
         const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
         const mapping = guessImportMapping(headers, recordType);
         const { sessionId } = await createImportSessionFromRows({
-          supabase,
-          companyId,
-          sourceType: "quickbooks" as ImportSourceType,
-          sourceName: realmId,
-          fileName: `quickbooks_${recordType}`,
-          recordType,
-          rows,
-          mapping,
+          supabase, companyId, sourceType: "quickbooks" as ImportSourceType,
+          sourceName: realmId, fileName: `quickbooks_${recordType}`, recordType, rows, mapping,
         });
         await commitImportSession({ supabase, companyId, importSessionId: sessionId });
         results.push({ provider, record_type: recordType, rows_synced: rows.length, session_id: sessionId, error: null });
@@ -113,14 +76,8 @@ async function syncProvider(
         const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
         const mapping = guessImportMapping(headers, recordType);
         const { sessionId } = await createImportSessionFromRows({
-          supabase,
-          companyId,
-          sourceType: "square" as ImportSourceType,
-          sourceName: "square",
-          fileName: `square_${recordType}`,
-          recordType,
-          rows,
-          mapping,
+          supabase, companyId, sourceType: "square" as ImportSourceType,
+          sourceName: "square", fileName: `square_${recordType}`, recordType, rows, mapping,
         });
         await commitImportSession({ supabase, companyId, importSessionId: sessionId });
         results.push({ provider, record_type: recordType, rows_synced: rows.length, session_id: sessionId, error: null });
@@ -144,14 +101,35 @@ async function syncProvider(
         const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
         const mapping = guessImportMapping(headers, recordType);
         const { sessionId } = await createImportSessionFromRows({
-          supabase,
-          companyId,
-          sourceType: "hubspot" as ImportSourceType,
-          sourceName: "hubspot",
-          fileName: `hubspot_${recordType}`,
-          recordType,
-          rows,
-          mapping,
+          supabase, companyId, sourceType: "hubspot" as ImportSourceType,
+          sourceName: "hubspot", fileName: `hubspot_${recordType}`, recordType, rows, mapping,
+        });
+        await commitImportSession({ supabase, companyId, importSessionId: sessionId });
+        results.push({ provider, record_type: recordType, rows_synced: rows.length, session_id: sessionId, error: null });
+      } catch (err) {
+        results.push({ provider, record_type: recordType, rows_synced: 0, session_id: null, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  }
+
+  if (provider === "jobber") {
+    const accessToken = await getValidJobberAccessToken({ supabase, companyId });
+
+    const jobs: { recordType: "relationships" | "work" | "opportunities" | "revenue"; fetcher: () => Promise<RawImportRow[]> }[] = [
+      { recordType: "relationships", fetcher: () => fetchJobberClients(accessToken) },
+      { recordType: "work", fetcher: () => fetchJobberJobs(accessToken) },
+      { recordType: "opportunities", fetcher: () => fetchJobberQuotes(accessToken) },
+      { recordType: "revenue", fetcher: () => fetchJobberInvoices(accessToken) },
+    ];
+
+    for (const { recordType, fetcher } of jobs) {
+      try {
+        const rows = await fetcher();
+        const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+        const mapping = guessImportMapping(headers, recordType);
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "jobber" as ImportSourceType,
+          sourceName: "jobber", fileName: `jobber_${recordType}`, recordType, rows, mapping,
         });
         await commitImportSession({ supabase, companyId, importSessionId: sessionId });
         results.push({ provider, record_type: recordType, rows_synced: rows.length, session_id: sessionId, error: null });
