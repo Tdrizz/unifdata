@@ -235,7 +235,7 @@ export async function fetchJobberClients(accessToken: string): Promise<RawImport
   let cursor: string | null = null;
 
   while (true) {
-    const data = await jobberQuery<ClientsData>(accessToken, query, { cursor });
+    const data: ClientsData = await jobberQuery<ClientsData>(accessToken, query, { cursor });
     results.push(...data.clients.nodes);
     if (!data.clients.pageInfo.hasNextPage) break;
     cursor = data.clients.pageInfo.endCursor;
@@ -285,7 +285,7 @@ export async function fetchJobberJobs(accessToken: string): Promise<RawImportRow
   let cursor: string | null = null;
 
   while (true) {
-    const data = await jobberQuery<JobsData>(accessToken, query, { cursor });
+    const data: JobsData = await jobberQuery<JobsData>(accessToken, query, { cursor });
     results.push(...data.jobs.nodes);
     if (!data.jobs.pageInfo.hasNextPage) break;
     cursor = data.jobs.pageInfo.endCursor;
@@ -331,7 +331,7 @@ export async function fetchJobberQuotes(accessToken: string): Promise<RawImportR
   let cursor: string | null = null;
 
   while (true) {
-    const data = await jobberQuery<QuotesData>(accessToken, query, { cursor });
+    const data: QuotesData = await jobberQuery<QuotesData>(accessToken, query, { cursor });
     results.push(...data.quotes.nodes);
     if (!data.quotes.pageInfo.hasNextPage) break;
     cursor = data.quotes.pageInfo.endCursor;
@@ -375,7 +375,7 @@ export async function fetchJobberInvoices(accessToken: string): Promise<RawImpor
   let cursor: string | null = null;
 
   while (true) {
-    const data = await jobberQuery<InvoicesData>(accessToken, query, { cursor });
+    const data: InvoicesData = await jobberQuery<InvoicesData>(accessToken, query, { cursor });
     results.push(...data.invoices.nodes);
     if (!data.invoices.pageInfo.hasNextPage) break;
     cursor = data.invoices.pageInfo.endCursor;
