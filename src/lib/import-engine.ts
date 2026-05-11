@@ -12,8 +12,9 @@ export type ImportSourceType =
   | "csv"
   | "google_sheets"
   | "quickbooks"
-  | "stripe"
   | "square"
+  | "hubspot"
+  | "jobber"
   | "manual";
 
 export type RawImportRow = Record<string, unknown>;
