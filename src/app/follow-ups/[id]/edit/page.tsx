@@ -16,6 +16,7 @@ import { formatDateOnly, formatTimestampDate, parseDateOnly, getTodayDateOnly } 
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString, getDateInputValue } from "@/lib/utils";
 import { getActionTone } from "@/lib/status";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 
 type FollowUpRecord = {
   id: string;
@@ -407,23 +408,14 @@ export default async function EditFollowUpPage({
               </div>
             </SectionCard>
 
-            <details className="group overflow-hidden rounded-3xl border border-red-200 bg-white shadow-sm">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">Delete this record</p>
-                  <p className="mt-1 text-sm text-slate-500">Permanently removes this follow-up. Cannot be undone.</p>
-                </div>
-                <span className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 group-open:bg-red-100">Delete</span>
-              </summary>
-              <div className="border-t border-red-100 bg-red-50 p-5">
-                <p className="text-sm leading-6 text-slate-700">This will permanently delete this follow-up. Linked people will not be affected.</p>
-                <form action={deleteFollowUp} className="mt-4">
-                  <button type="submit" className="cursor-pointer rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700">
-                    Confirm delete
-                  </button>
-                </form>
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deleteFollowUp}
+                  description="This will permanently delete this follow-up. Linked people will not be affected."
+                />
               </div>
-            </details>
+            </SectionCard>
           </div>
         </section>
       </div>
