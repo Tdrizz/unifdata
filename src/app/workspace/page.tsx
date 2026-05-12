@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { RefreshButton } from "./RefreshButton";
-import { RevenueChart, computeMonthlyRevenue } from "./RevenueChart";
+import { RevenueLineChart, DataHealthRing, computeMonthlyRevenue } from "./RevenueChart";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -528,7 +528,7 @@ export default async function WorkspacePage() {
           }
         />
 
-        <section className="grid grid-cols-2 gap-4 xl:grid-cols-5">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatCard
             label="Priority items"
             value={priorityQueue.length}
@@ -556,20 +556,21 @@ export default async function WorkspacePage() {
             helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} need collection`}
             tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
           />
-
-          <StatCard
-            label="Data health"
-            value={`${dataHealthScore}%`}
-            helper={`${customersWithContact} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} have contact info`}
-            tone={dataHealthScore >= 90 ? "positive" : dataHealthScore >= 70 ? "warning" : "danger"}
-          />
         </section>
 
-        <SectionCard title="Revenue trend" description="Collected vs. pending revenue by month, last 6 months.">
-          <div className="p-5">
-            <RevenueChart months={monthlyRevenue} />
-          </div>
-        </SectionCard>
+        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_220px] items-stretch">
+          <SectionCard title="Revenue trend" description="Collected vs. pending — last 6 months.">
+            <div className="p-5">
+              <RevenueLineChart months={monthlyRevenue} />
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Data health" description={`${customersWithContact} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} have contact info.`}>
+            <div className="flex flex-1 items-center justify-center p-6">
+              <DataHealthRing score={dataHealthScore} />
+            </div>
+          </SectionCard>
+        </section>
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
           <SectionCard
