@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthFrame } from "@/components/AuthFrame";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -26,10 +25,7 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
 
@@ -43,18 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthFrame
-      title="Log in"
-      description="Access your company workspace and continue organizing the business."
-      footer={
-        <p className="text-center text-sm text-slate-300">
-          Need an account?{" "}
-          <a href="/signup" className="font-semibold text-white underline">
-            Create one
-          </a>
-        </p>
-      }
-    >
+    <>
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label className="text-sm font-medium text-slate-200">Email</label>
@@ -103,6 +88,27 @@ export default function LoginPage() {
           {message}
         </div>
       )}
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <AuthFrame
+      title="Log in"
+      description="Access your company workspace and continue organizing the business."
+      footer={
+        <p className="text-center text-sm text-slate-300">
+          Need an account?{" "}
+          <a href="/signup" className="font-semibold text-white underline">
+            Create one
+          </a>
+        </p>
+      }
+    >
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </AuthFrame>
   );
 }
