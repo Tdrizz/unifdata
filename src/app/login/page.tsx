@@ -1,29 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthFrame } from "@/components/AuthFrame";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) setMessage(error);
+  }, [searchParams]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
 
@@ -37,18 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthFrame
-      title="Log in"
-      description="Access your company workspace and continue organizing the business."
-      footer={
-        <p className="text-center text-sm text-slate-300">
-          Need an account?{" "}
-          <a href="/signup" className="font-semibold text-white underline">
-            Create one
-          </a>
-        </p>
-      }
-    >
+    <>
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label className="text-sm font-medium text-slate-200">Email</label>
@@ -56,6 +47,7 @@ export default function LoginPage() {
             className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
             type="email"
             placeholder="you@example.com"
+            autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -63,11 +55,20 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-slate-200">Password</label>
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-sm font-medium text-slate-200">Password</label>
+            <a
+              href="/forgot-password"
+              className="text-xs font-medium text-slate-400 hover:text-white"
+            >
+              Forgot password?
+            </a>
+          </div>
           <input
             className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
             type="password"
             placeholder="Your password"
+            autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -87,6 +88,27 @@ export default function LoginPage() {
           {message}
         </div>
       )}
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <AuthFrame
+      title="Log in"
+      description="Access your company workspace and continue organizing the business."
+      footer={
+        <p className="text-center text-sm text-slate-300">
+          Need an account?{" "}
+          <a href="/signup" className="font-semibold text-white underline">
+            Create one
+          </a>
+        </p>
+      }
+    >
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </AuthFrame>
   );
 }

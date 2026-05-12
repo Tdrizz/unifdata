@@ -16,6 +16,7 @@ import { formatDateOnly } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString, getOptionalNumber, formatCurrency } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { OPPORTUNITY_STATUSES } from "@/lib/constants";
 
 type OpportunityRecord = {
@@ -97,6 +98,19 @@ export default async function EditOpportunityPage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
+
+  async function deleteOpportunity() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("leads").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/leads");
+    revalidatePath("/crm");
+    revalidatePath("/workspace");
+    redirect("/leads");
+  }
 
   async function updateOpportunity(formData: FormData) {
     "use server";
@@ -377,6 +391,15 @@ export default async function EditOpportunityPage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deleteOpportunity}
+                  description="This will permanently delete this opportunity. Linked jobs and follow-ups will lose this connection but will not be deleted."
+                />
               </div>
             </SectionCard>
           </div>

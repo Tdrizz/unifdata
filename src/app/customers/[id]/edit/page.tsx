@@ -15,6 +15,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString } from "@/lib/utils";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 
 type PersonRecord = {
   id: string;
@@ -97,6 +98,18 @@ export default async function EditPersonPage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
+
+  async function deletePerson() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("customers").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/customers");
+    revalidatePath("/workspace");
+    redirect("/customers");
+  }
 
   async function updatePerson(formData: FormData) {
     "use server";
@@ -208,6 +221,7 @@ export default async function EditPersonPage({
                   <Input
                     name="name"
                     required
+                    autoComplete="name"
                     defaultValue={person.name || ""}
                     placeholder="John Smith, ABC Flooring, Ocean View Home…"
                   />
@@ -226,6 +240,8 @@ export default async function EditPersonPage({
                 <FormField label="Phone">
                   <Input
                     name="phone"
+                    type="tel"
+                    autoComplete="tel"
                     defaultValue={person.phone || ""}
                     placeholder="808-555-1234"
                   />
@@ -235,6 +251,7 @@ export default async function EditPersonPage({
                   <Input
                     name="email"
                     type="email"
+                    autoComplete="email"
                     defaultValue={person.email || ""}
                     placeholder="customer@example.com"
                   />
@@ -325,6 +342,15 @@ export default async function EditPersonPage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deletePerson}
+                  description="This will permanently delete this person. Linked jobs, opportunities, and follow-ups will lose this connection but will not be deleted."
+                />
               </div>
             </SectionCard>
           </div>
