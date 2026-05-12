@@ -142,6 +142,18 @@ export default async function EditWorkPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
+  async function deleteWork() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("jobs").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/jobs");
+    revalidatePath("/workspace");
+    redirect("/jobs");
+  }
+
   async function updateWork(formData: FormData) {
     "use server";
 
@@ -453,6 +465,24 @@ export default async function EditWorkPage({
                 ))}
               </div>
             </SectionCard>
+
+            <details className="group overflow-hidden rounded-3xl border border-red-200 bg-white shadow-sm">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">Delete this record</p>
+                  <p className="mt-1 text-sm text-slate-500">Permanently removes this work record. Cannot be undone.</p>
+                </div>
+                <span className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 group-open:bg-red-100">Delete</span>
+              </summary>
+              <div className="border-t border-red-100 bg-red-50 p-5">
+                <p className="text-sm leading-6 text-slate-700">This will permanently delete this work record. Linked people, opportunities, and follow-ups will lose this connection but will not be deleted.</p>
+                <form action={deleteWork} className="mt-4">
+                  <button type="submit" className="cursor-pointer rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+                    Confirm delete
+                  </button>
+                </form>
+              </div>
+            </details>
           </div>
         </section>
       </div>

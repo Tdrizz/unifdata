@@ -323,6 +323,8 @@ export default async function CustomersPage({
                 Phone
                 <input
                   name="phone"
+                  type="tel"
+                  autoComplete="tel"
                   placeholder="808-555-1234"
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                 />
