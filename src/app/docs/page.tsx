@@ -103,7 +103,14 @@ const pages = [
     path: "/imports",
     tag: "Tools",
     description:
-      "Import customer lists from CSV. Records are validated, created, and logged as an import batch so you can track what came in and when.",
+      "Import customer lists from CSV or connected integrations. Records are validated, created, and logged as an import batch so you can track what came in and when.",
+  },
+  {
+    name: "Integrations",
+    path: "/settings",
+    tag: "Tools",
+    description:
+      "Connect Jobber, QuickBooks, HubSpot, Square, and Google Sheets to pull records into the workspace. Manage connection status and re-sync from Settings.",
   },
   {
     name: "AI Advisor",
@@ -179,6 +186,44 @@ const csvColumns = [
   },
 ];
 
+const integrations = [
+  {
+    name: "Jobber",
+    description:
+      "Pull customers, jobs, and invoices from Jobber into FrontierOps. Keeps field service records in sync without manual re-entry.",
+    path: "/settings",
+    status: "Available",
+  },
+  {
+    name: "QuickBooks",
+    description:
+      "Sync revenue records and payment status from QuickBooks. Matches payments to open revenue records so unpaid work stays accurate.",
+    path: "/settings",
+    status: "Available",
+  },
+  {
+    name: "HubSpot",
+    description:
+      "Import contacts and deal data from HubSpot. Useful for businesses moving from a sales-focused CRM into an operations-focused workspace.",
+    path: "/settings",
+    status: "Available",
+  },
+  {
+    name: "Square",
+    description:
+      "Connect Square to pull payment records directly into the revenue layer. Reduces manual entry for businesses using Square at point of sale.",
+    path: "/settings",
+    status: "Available",
+  },
+  {
+    name: "Google Sheets",
+    description:
+      "Import data from a Google Sheet — customers, leads, or revenue records. A good bridge for businesses still running on spreadsheets.",
+    path: "/settings",
+    status: "Available",
+  },
+];
+
 const navItems = [
   ["Getting started", "#start"],
   ["Overview", "#overview"],
@@ -186,6 +231,7 @@ const navItems = [
   ["Product pages", "#pages"],
   ["Industry language", "#industries"],
   ["Connected workflow", "#sync"],
+  ["Integrations", "#integrations"],
   ["Imports", "#imports"],
   ["AI Advisor", "#ai"],
 ];
@@ -222,7 +268,7 @@ export default function DocsPage() {
               href="/signup"
               className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
             >
-              Start
+              Get started
             </Link>
           </div>
         </nav>
@@ -550,6 +596,77 @@ export default function DocsPage() {
                   unpaid work stays visible on the Today page until the money is
                   actually collected.
                 </p>
+              </div>
+            </section>
+
+            {/* INTEGRATIONS */}
+            <section
+              id="integrations"
+              className="rounded-4xl border border-slate-200 bg-white p-8 shadow-sm"
+            >
+              <h2 className="text-2xl font-semibold tracking-tight">
+                Integrations
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                FrontierOps connects to the tools local businesses already use.
+                Integrations pull records into the workspace so you are not
+                re-entering data from Jobber, QuickBooks, HubSpot, Square, or
+                Google Sheets. Connect and manage integrations from{" "}
+                <Link href="/settings" className="font-semibold text-slate-950 hover:underline">
+                  Settings
+                </Link>
+                .
+              </p>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                {integrations.map((integration) => (
+                  <div
+                    key={integration.name}
+                    className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-slate-950">
+                        {integration.name}
+                      </p>
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        {integration.status}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      {integration.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-950 p-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {[
+                    {
+                      step: "01",
+                      label: "Connect in Settings",
+                      detail: "Go to Settings and click Connect next to the integration you want to enable.",
+                    },
+                    {
+                      step: "02",
+                      label: "Authorize access",
+                      detail: "Complete the OAuth flow for the connected service. FrontierOps only reads the data it needs.",
+                    },
+                    {
+                      step: "03",
+                      label: "Records sync in",
+                      detail: "Customers, jobs, and revenue records are pulled into the workspace and linked to existing data where possible.",
+                    },
+                  ].map((item) => (
+                    <div key={item.step}>
+                      <p className="text-xs font-semibold tracking-widest text-slate-500">
+                        {item.step}
+                      </p>
+                      <p className="mt-3 font-semibold text-white">{item.label}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-400">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
 
