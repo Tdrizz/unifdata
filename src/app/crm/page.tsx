@@ -493,8 +493,8 @@ export default async function PipelinePage({
                     const issues = getOpportunityIssues(opportunity);
 
                     return (
-                      <article key={opportunity.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px_90px] md:items-start">
+                      <Link key={opportunity.id} href={`/leads/${opportunity.id}/edit`} className="block p-4 transition-colors hover:bg-slate-50">
+                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
                           <div>
                             <p className="font-semibold text-slate-950">
                               {opportunity.service_requested ||
@@ -567,16 +567,8 @@ export default async function PipelinePage({
                             </div>
                           </div>
 
-                          <div className="md:text-right">
-                            <Link
-                              href={`/leads/${opportunity.id}/edit`}
-                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open
-                            </Link>
-                          </div>
                         </div>
-                      </article>
+                      </Link>
                     );
                   })}
                 </div>
@@ -656,9 +648,10 @@ export default async function PipelinePage({
                   : null;
 
                 return (
-                  <article
+                  <Link
                     key={opportunity.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_130px_120px_90px] md:items-center"
+                    href={`/leads/${opportunity.id}/edit`}
+                    className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_130px_120px] md:items-center"
                   >
                     <div>
                       <p className="font-semibold text-slate-950">
@@ -679,16 +672,7 @@ export default async function PipelinePage({
                     <StatusBadge tone={getOpportunityTone(opportunity.status)}>
                       {opportunity.status || "Closed"}
                     </StatusBadge>
-
-                    <div className="md:text-right">
-                      <Link
-                        href={`/leads/${opportunity.id}/edit`}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Open
-                      </Link>
-                    </div>
-                  </article>
+                  </Link>
                 );
               })}
             </div>
