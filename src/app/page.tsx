@@ -96,17 +96,17 @@ const platformPoints = [
   {
     title: "Today’s priorities",
     description:
-      "See follow-ups, unpaid work, stale opportunities, and data issues before they turn into lost revenue.",
+      "See follow-ups, unpaid work, stale opportunities, and data gaps — before they cost you revenue.",
   },
   {
     title: "Industry-aware CRM",
     description:
-      "The workspace changes language and priorities based on the business type.",
+      "The workspace adapts its language and priorities to your business type — not the other way around.",
   },
   {
     title: "Data management",
     description:
-      "Clean up messy customer lists, missing fields, unlinked records, and scattered business data.",
+      "Fix missing fields, unlinked records, and scattered contact info so nothing falls through the cracks.",
   },
 ];
 
@@ -121,13 +121,13 @@ const workflowCards = [
     label: "2",
     title: "Organize the business",
     description:
-      "FrontierOps connects records into a cleaner operating system for the company.",
+      "FrontierOps connects records into one coherent view of your customers, work, and revenue.",
   },
   {
     label: "3",
-    title: "Act on what matters",
+    title: "Act on what's urgent",
     description:
-      "Owners see the next actions, money at risk, and records that need cleanup.",
+      "Owners see the next actions, money at risk, and records that need attention — every day.",
   },
 ];
 
@@ -169,7 +169,7 @@ export default function HomePage() {
               href="/signup"
               className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
             >
-              Start
+              Get started
             </Link>
           </div>
         </nav>
@@ -181,30 +181,31 @@ export default function HomePage() {
             </div>
 
             <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-              Turn scattered business data into a daily operating system.
+              Stop losing revenue to scattered data and missed follow-ups.
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              FrontierOps helps businesses organize their relationships,
-              opportunities, work, and revenue into one clean, industry-aware
-              workspace.
+              FrontierOps gives local businesses one clean, industry-aware
+              workspace for customers, jobs, open quotes, and revenue — so
+              nothing gets missed.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/preview"
+                href="/signup"
                 className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
-                View Product Preview
+                Get started
               </Link>
 
               <Link
-                href="/signup"
+                href="/preview"
                 className="rounded-2xl border border-white/15 px-5 py-3 text-center font-semibold text-white hover:bg-white/10"
               >
-                Create workspace
+                See how it works
               </Link>
             </div>
+
 
             <p className="mt-10 text-xs font-medium uppercase tracking-widest text-slate-500">
               Select an industry
@@ -267,7 +268,7 @@ export default function HomePage() {
               </div>
 
               <div className="mt-4 rounded-3xl border border-slate-200 bg-white p-5">
-                <p className="font-semibold">What FrontierOps sees</p>
+                <p className="font-semibold">What you&apos;d see today</p>
                 <div className="mt-4 space-y-3">
                   {sector.insights.map((item) => (
                     <div
@@ -284,6 +285,24 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="border-t border-white/10 bg-white/3 px-6 py-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {[
+              { label: "Industries supported", value: "5+" },
+              { label: "Integrations", value: "Jobber, QB, HubSpot" },
+              { label: "Setup time", value: "Under 10 min" },
+              { label: "Data import", value: "CSV & spreadsheet" },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-center">
+                <p className="text-lg font-semibold">{value}</p>
+                <p className="mt-1 text-xs text-slate-400">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="border-t border-white/10 bg-white/3 px-6 py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
@@ -291,13 +310,13 @@ export default function HomePage() {
               Why it matters
             </p>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">
-              Most businesses do not have bad businesses. They have messy data.
+              Most businesses don&apos;t have a revenue problem. They have a data problem.
             </h2>
             <p className="mt-4 text-base leading-8 text-slate-300">
-              Customer info sits in spreadsheets. Follow-ups sit in memory.
-              Revenue sits in an old notebook. Jobs sit in texts. FrontierOps
-              gives owners one clean place to organize the operating side of the
-              business.
+              Customer info sits in spreadsheets. Follow-ups live in memory.
+              Revenue is tracked in a notebook. Jobs come in through texts.
+              FrontierOps brings it all together so owners can see what needs
+              attention — and act on it.
             </p>
           </div>
 
@@ -333,24 +352,24 @@ export default function HomePage() {
           </div>
           <div className="mt-16 rounded-3xl border border-white/10 bg-white/6 p-10 text-center">
             <h2 className="text-3xl font-semibold tracking-tight">
-              Ready to turn your messy data into a clean workspace?
+              Your business data shouldn&apos;t live in five different places.
             </h2>
             <p className="mt-3 text-slate-300">
-              Create a company, choose the business sector, and start building
-              the operating system around what actually matters.
+              Set up your workspace in minutes. Choose your industry, bring in
+              your data, and see what needs attention today.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/signup"
                 className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Create workspace
+                Get started
               </Link>
               <Link
                 href="/preview"
                 className="rounded-2xl border border-white/15 px-6 py-3 font-semibold text-white hover:bg-white/10"
               >
-                View Product Preview
+                See how it works
               </Link>
             </div>
           </div>
