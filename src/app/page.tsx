@@ -169,7 +169,7 @@ export default function HomePage() {
               href="/signup"
               className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
             >
-              Get started free
+              Get started
             </Link>
           </div>
         </nav>
@@ -195,7 +195,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Start free
+                Get started
               </Link>
 
               <Link
@@ -363,7 +363,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Start free
+                Get started
               </Link>
               <Link
                 href="/preview"

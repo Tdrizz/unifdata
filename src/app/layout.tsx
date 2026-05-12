@@ -47,11 +47,6 @@ const organizationSchema = {
   applicationCategory: "BusinessApplication",
   description:
     "Industry-aware CRM and data management for local businesses. Organize customers, jobs, follow-ups, and revenue in one workspace.",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
   operatingSystem: "Web",
 };
 
