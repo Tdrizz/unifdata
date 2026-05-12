@@ -383,9 +383,10 @@ export default async function CustomersPage({
           ) : (
             <div className="divide-y divide-slate-100">
               {customers.map((customer) => (
-                <article
+                <Link
                   key={customer.id}
-                  className="grid gap-4 p-4 md:grid-cols-[1.25fr_0.8fr_0.7fr_90px] md:items-center"
+                  href={`/customers/${customer.id}/edit`}
+                  className="grid gap-4 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1.25fr_0.8fr_0.7fr] md:items-center"
                 >
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -435,15 +436,7 @@ export default async function CustomersPage({
                     </p>
                   </div>
 
-                  <div className="md:text-right">
-                    <Link
-                      href={`/customers/${customer.id}/edit`}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Open
-                    </Link>
-                  </div>
-                </article>
+                </Link>
               ))}
             </div>
           )}
