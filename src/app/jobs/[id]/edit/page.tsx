@@ -16,6 +16,7 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString, getOptionalNumber, getDateInputValue, formatCurrency } from "@/lib/utils";
 import { isCompleteWork, isUnpaid, getWorkTone } from "@/lib/status";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 
 type WorkRecord = {
   id: string;
@@ -141,6 +142,18 @@ export default async function EditWorkPage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
+
+  async function deleteWork() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("jobs").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/jobs");
+    revalidatePath("/workspace");
+    redirect("/jobs");
+  }
 
   async function updateWork(formData: FormData) {
     "use server";
@@ -451,6 +464,15 @@ export default async function EditWorkPage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deleteWork}
+                  description="This will permanently delete this work record. Linked people, opportunities, and follow-ups will lose this connection but will not be deleted."
+                />
               </div>
             </SectionCard>
           </div>

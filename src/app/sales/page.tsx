@@ -524,8 +524,8 @@ export default async function RevenuePage({
                     const issues = getRevenueIssues(record);
 
                     return (
-                      <article key={record.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px_90px] md:items-start">
+                      <Link key={record.id} href={`/sales/${record.id}/edit`} className="block p-4 transition-colors hover:bg-slate-50">
+                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
                           <div>
                             <p className="font-semibold text-slate-950">
                               {record.service_type || "Revenue record"}
@@ -587,16 +587,8 @@ export default async function RevenuePage({
                             </div>
                           </div>
 
-                          <div className="md:text-right">
-                            <Link
-                              href={`/sales/${record.id}/edit`}
-                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open
-                            </Link>
-                          </div>
                         </div>
-                      </article>
+                      </Link>
                     );
                   })}
                 </div>

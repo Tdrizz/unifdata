@@ -103,7 +103,7 @@ export default async function AiAssistantPage() {
               <div className="p-5">
                 <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <StatusBadge tone="neutral">Gemini brief</StatusBadge>
+                    <StatusBadge tone="neutral">Operating brief</StatusBadge>
                     <p className="text-sm font-medium text-slate-500">
                       {formatTimestampDate(latestReport.created_at)}
                     </p>

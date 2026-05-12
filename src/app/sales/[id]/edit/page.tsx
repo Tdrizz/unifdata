@@ -16,6 +16,7 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString, getOptionalNumber, getDateInputValue, formatCurrency } from "@/lib/utils";
 import { getRevenueTone, isUnpaid } from "@/lib/status";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 
 type RevenueRecord = {
   id: string;
@@ -134,6 +135,18 @@ export default async function EditRevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
+
+  async function deleteRevenue() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("sales").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/sales");
+    revalidatePath("/workspace");
+    redirect("/sales");
+  }
 
   async function updateRevenue(formData: FormData) {
     "use server";
@@ -358,6 +371,15 @@ export default async function EditRevenuePage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deleteRevenue}
+                  description="This will permanently delete this revenue record and affect your reporting totals. This cannot be undone."
+                />
               </div>
             </SectionCard>
           </div>

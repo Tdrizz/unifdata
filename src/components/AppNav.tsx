@@ -40,8 +40,8 @@ export function AppNav({
               }
               className={
                 active
-                  ? "shrink-0 rounded-full px-3 py-2 text-xs font-semibold shadow-sm"
-                  : "shrink-0 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600"
+                  ? "shrink-0 rounded-full px-4 py-3 text-xs font-semibold shadow-sm"
+                  : "shrink-0 rounded-full border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-600"
               }
             >
               {item.label}

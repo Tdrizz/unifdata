@@ -468,7 +468,7 @@ export default async function SettingsPage() {
                       </StatusBadge>
                       <Link
                         href={startHref}
-                        className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                       >
                         Reconnect
                       </Link>
@@ -476,7 +476,7 @@ export default async function SettingsPage() {
                   ) : (
                     <Link
                       href={startHref}
-                      className="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+                      className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
                     >
                       Connect {label}
                     </Link>

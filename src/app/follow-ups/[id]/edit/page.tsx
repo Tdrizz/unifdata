@@ -16,6 +16,7 @@ import { formatDateOnly, formatTimestampDate, parseDateOnly, getTodayDateOnly } 
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFormString, getDateInputValue } from "@/lib/utils";
 import { getActionTone } from "@/lib/status";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 
 type FollowUpRecord = {
   id: string;
@@ -163,6 +164,18 @@ export default async function EditFollowUpPage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
+
+  async function deleteFollowUp() {
+    "use server";
+    const supabase = await createClient();
+    const currentCompany = await getCurrentCompany();
+    if (!currentCompany) redirect("/onboarding");
+    const { company } = currentCompany;
+    await supabase.from("follow_ups").delete().eq("id", id).eq("company_id", company.id);
+    revalidatePath("/follow-ups");
+    revalidatePath("/workspace");
+    redirect("/follow-ups");
+  }
 
   async function updateFollowUp(formData: FormData) {
     "use server";
@@ -392,6 +405,15 @@ export default async function EditFollowUpPage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Danger zone" description="Permanent actions that cannot be undone.">
+              <div className="p-5">
+                <DeleteConfirm
+                  action={deleteFollowUp}
+                  description="This will permanently delete this follow-up. Linked people will not be affected."
+                />
               </div>
             </SectionCard>
           </div>
