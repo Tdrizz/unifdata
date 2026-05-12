@@ -585,31 +585,19 @@ export default async function WorkspacePage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {priorityQueue.map((item) => (
-                  <article
+                  <Link
                     key={item.id}
-                    className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_120px] md:items-center"
+                    href={item.href}
+                    className="block px-4 py-3 transition-colors hover:bg-slate-50"
                   >
-                    <div>
-                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-
-                      <p className="mt-1.5 font-semibold text-slate-950">
-                        {item.title}
-                      </p>
-
-                      <p className="mt-0.5 text-sm text-slate-500">
-                        {item.detail}
-                      </p>
-                    </div>
-
-                    <div className="md:text-right">
-                      <Link
-                        href={item.href}
-                        className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
-                      >
-                        Open
-                      </Link>
-                    </div>
-                  </article>
+                    <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
+                    <p className="mt-1.5 font-semibold text-slate-950">
+                      {item.title}
+                    </p>
+                    <p className="mt-0.5 text-sm text-slate-500">
+                      {item.detail}
+                    </p>
+                  </Link>
                 ))}
               </div>
             )}
@@ -627,31 +615,19 @@ export default async function WorkspacePage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {followUpSchedule.map((item) => (
-                  <article
+                  <Link
                     key={item.id}
-                    className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_90px] md:items-center"
+                    href={item.href}
+                    className="block px-4 py-3 transition-colors hover:bg-slate-50"
                   >
-                    <div>
-                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-
-                      <p className="mt-1.5 font-semibold text-slate-950">
-                        {item.title}
-                      </p>
-
-                      <p className="mt-0.5 text-sm text-slate-500">
-                        {item.detail}
-                      </p>
-                    </div>
-
-                    <div className="md:text-right">
-                      <Link
-                        href={item.href}
-                        className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
-                      >
-                        Open
-                      </Link>
-                    </div>
-                  </article>
+                    <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
+                    <p className="mt-1.5 font-semibold text-slate-950">
+                      {item.title}
+                    </p>
+                    <p className="mt-0.5 text-sm text-slate-500">
+                      {item.detail}
+                    </p>
+                  </Link>
                 ))}
               </div>
             )}
@@ -695,9 +671,10 @@ export default async function WorkspacePage() {
                       : null;
 
                     return (
-                      <article
+                      <Link
                         key={lead.id}
-                        className="grid gap-3 p-4 md:grid-cols-[1fr_110px_135px_90px] md:items-center"
+                        href={`/leads/${lead.id}/edit`}
+                        className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_110px_135px] md:items-center"
                       >
                         <div>
                           <p className="font-semibold text-slate-950">
@@ -733,16 +710,7 @@ export default async function WorkspacePage() {
                             </StatusBadge>
                           </div>
                         </div>
-
-                        <div className="md:text-right">
-                          <Link
-                            href={`/leads/${lead.id}/edit`}
-                            className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
-                          >
-                            Open
-                          </Link>
-                        </div>
-                      </article>
+                      </Link>
                     );
                   })}
                 </div>
@@ -767,9 +735,10 @@ export default async function WorkspacePage() {
                     : null;
 
                   return (
-                    <article
+                    <Link
                       key={work.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_110px_90px] md:items-center"
+                      href={`/jobs/${work.id}/edit`}
+                      className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_110px_auto] md:items-center"
                     >
                       <div>
                         <p className="font-semibold text-slate-950">
@@ -785,12 +754,10 @@ export default async function WorkspacePage() {
                         {formatCurrency(work.job_value)}
                       </p>
 
-                      <div className="md:text-right">
-                        <StatusBadge tone={getWorkTone(work.status)}>
-                          {work.status || "Scheduled"}
-                        </StatusBadge>
-                      </div>
-                    </article>
+                      <StatusBadge tone={getWorkTone(work.status)}>
+                        {work.status || "Scheduled"}
+                      </StatusBadge>
+                    </Link>
                   );
                 })}
               </div>
@@ -810,18 +777,19 @@ export default async function WorkspacePage() {
           ) : (
             <div className="divide-y divide-slate-100">
               {recentRecords.map((record) => (
-                <article
+                <Link
                   key={record.id}
-                  className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_auto_90px] md:items-center"
+                  href={record.href}
+                  className="grid gap-3 px-4 py-3 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_auto] md:items-center"
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                      <p className="font-semibold text-slate-950 truncate">
+                      <p className="truncate font-semibold text-slate-950">
                         {record.title}
                       </p>
                     </div>
-                    <p className="mt-0.5 text-sm text-slate-500 truncate">
+                    <p className="mt-0.5 truncate text-sm text-slate-500">
                       {record.detail}
                     </p>
                   </div>
@@ -829,16 +797,7 @@ export default async function WorkspacePage() {
                   <p className="hidden text-xs font-medium text-slate-400 md:block">
                     {formatTimestampDate(record.date)}
                   </p>
-
-                  <div className="md:text-right">
-                    <Link
-                      href={record.href}
-                      className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
-                    >
-                      Open
-                    </Link>
-                  </div>
-                </article>
+                </Link>
               ))}
             </div>
           )}

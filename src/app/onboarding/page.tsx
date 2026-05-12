@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { businessSectorOptions } from "@/lib/industry-profiles";
 import { createCompanyAction } from "./actions";
+import { ProductMark } from "@/components/ProductMark";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -26,14 +27,8 @@ export default async function OnboardingPage() {
     <main className="min-h-screen bg-[#090e1a] px-6 py-10 text-white">
       <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <section>
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-slate-950">
-              FO
-            </div>
-            <div>
-              <p className="font-semibold">FrontierOps</p>
-              <p className="text-xs text-slate-400">Workspace setup</p>
-            </div>
+          <Link href="/">
+            <ProductMark inverse />
           </Link>
 
           <div className="mt-12">
