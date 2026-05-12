@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { RefreshButton } from "./RefreshButton";
+import { RevenueChart, computeMonthlyRevenue } from "./RevenueChart";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -256,6 +257,16 @@ export default async function WorkspacePage() {
     0,
   );
 
+  const customersWithContact = customers.filter(
+    (c) => c.name && (c.phone || c.email),
+  ).length;
+  const dataHealthScore =
+    customers.length > 0
+      ? Math.round((customersWithContact / customers.length) * 100)
+      : 100;
+
+  const monthlyRevenue = computeMonthlyRevenue(revenueRecords);
+
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
     .map((action) => ({
@@ -481,7 +492,7 @@ export default async function WorkspacePage() {
     })),
   ]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6);
+    .slice(0, 4);
 
   return (
     <AppShell
@@ -517,7 +528,7 @@ export default async function WorkspacePage() {
           }
         />
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-5">
           <StatCard
             label="Priority items"
             value={priorityQueue.length}
@@ -545,7 +556,20 @@ export default async function WorkspacePage() {
             helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} need collection`}
             tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
           />
+
+          <StatCard
+            label="Data health"
+            value={`${dataHealthScore}%`}
+            helper={`${customersWithContact} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} have contact info`}
+            tone={dataHealthScore >= 90 ? "positive" : dataHealthScore >= 70 ? "warning" : "danger"}
+          />
         </section>
+
+        <SectionCard title="Revenue trend" description="Collected vs. pending revenue by month, last 6 months.">
+          <div className="p-5">
+            <RevenueChart months={monthlyRevenue} />
+          </div>
+        </SectionCard>
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
           <SectionCard
@@ -562,16 +586,16 @@ export default async function WorkspacePage() {
                 {priorityQueue.map((item) => (
                   <article
                     key={item.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px] md:items-center"
+                    className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_120px] md:items-center"
                   >
                     <div>
                       <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
 
-                      <p className="mt-2 font-semibold text-slate-950">
+                      <p className="mt-1.5 font-semibold text-slate-950">
                         {item.title}
                       </p>
 
-                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                      <p className="mt-0.5 text-sm text-slate-500">
                         {item.detail}
                       </p>
                     </div>
@@ -579,7 +603,7 @@ export default async function WorkspacePage() {
                     <div className="md:text-right">
                       <Link
                         href={item.href}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
                       >
                         Open
                       </Link>
@@ -604,16 +628,16 @@ export default async function WorkspacePage() {
                 {followUpSchedule.map((item) => (
                   <article
                     key={item.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                    className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_90px] md:items-center"
                   >
                     <div>
                       <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
 
-                      <p className="mt-2 font-semibold text-slate-950">
+                      <p className="mt-1.5 font-semibold text-slate-950">
                         {item.title}
                       </p>
 
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-0.5 text-sm text-slate-500">
                         {item.detail}
                       </p>
                     </div>
@@ -621,7 +645,7 @@ export default async function WorkspacePage() {
                     <div className="md:text-right">
                       <Link
                         href={item.href}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
                       >
                         Open
                       </Link>
@@ -657,7 +681,7 @@ export default async function WorkspacePage() {
 
                   <Link
                     href="/leads"
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
                   >
                     Manage
                   </Link>
@@ -712,7 +736,7 @@ export default async function WorkspacePage() {
                         <div className="md:text-right">
                           <Link
                             href={`/leads/${lead.id}/edit`}
-                            className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
                           >
                             Open
                           </Link>
@@ -774,42 +798,41 @@ export default async function WorkspacePage() {
         </section>
 
         <SectionCard
-          title="Recently added records"
-          description={`Newest records added across ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, ${profile.labels.jobPlural.toLowerCase()}, ${profile.labels.salePlural.toLowerCase()}, and follow-ups.`}
+          title="Recently added"
+          description="Last 4 records added across the workspace."
         >
           {recentRecords.length === 0 ? (
             <EmptyState
               title="No records yet"
-              description="Add records manually or import data to start building the workspace."
+              description="Import a customer list or add records manually to get started."
             />
           ) : (
             <div className="divide-y divide-slate-100">
               {recentRecords.map((record) => (
                 <article
                   key={record.id}
-                  className="grid gap-3 p-4 md:grid-cols-[120px_1fr_120px_90px] md:items-center"
+                  className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_auto_90px] md:items-center"
                 >
                   <div>
-                    <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                  </div>
-
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {record.title}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge tone="neutral">{record.type}</StatusBadge>
+                      <p className="font-semibold text-slate-950 truncate">
+                        {record.title}
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-sm text-slate-500 truncate">
                       {record.detail}
                     </p>
                   </div>
 
-                  <p className="text-sm font-medium text-slate-500 md:text-right">
+                  <p className="hidden text-xs font-medium text-slate-400 md:block">
                     {formatTimestampDate(record.date)}
                   </p>
 
                   <div className="md:text-right">
                     <Link
                       href={record.href}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="inline-flex cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
                     >
                       Open
                     </Link>
