@@ -25,6 +25,7 @@ type RevenueRecord = {
   sale_date: string | null;
   service_type: string | null;
   source: string | null;
+  customer_id: string | null;
   created_at: string;
 };
 
@@ -162,6 +163,7 @@ export default async function EditRevenuePage({
     const saleDate = getFormString(formData, "sale_date");
     const serviceType = getFormString(formData, "service_type");
     const source = getFormString(formData, "source");
+    const customerId = getFormString(formData, "customer_id");
 
     if (amount === null) {
       redirect(`/sales/${id}/edit?error=Revenue+amount+is+required.`);
@@ -175,6 +177,7 @@ export default async function EditRevenuePage({
         sale_date: saleDate || null,
         service_type: serviceType || null,
         source: source || null,
+        customer_id: customerId || null,
       })
       .eq("id", id)
       .eq("company_id", company.id);
@@ -188,17 +191,26 @@ export default async function EditRevenuePage({
     redirect("/sales");
   }
 
-  const { data, error } = await supabase
-    .from("sales")
-    .select("id, amount, payment_status, sale_date, service_type, source, created_at")
-    .eq("id", id)
-    .eq("company_id", company.id)
-    .maybeSingle();
+  const [{ data, error }, { data: customersData }] = await Promise.all([
+    supabase
+      .from("sales")
+      .select("id, amount, payment_status, sale_date, service_type, source, customer_id, created_at")
+      .eq("id", id)
+      .eq("company_id", company.id)
+      .maybeSingle(),
+    supabase
+      .from("customers")
+      .select("id, name")
+      .eq("company_id", company.id)
+      .order("name", { ascending: true })
+      .limit(500),
+  ]);
 
   if (error) throw new Error(error.message);
   if (!data) redirect("/sales");
 
   const record = data as RevenueRecord;
+  const customers = customersData ?? [];
   const issues = getRevenueIssues(record);
 
   return (
@@ -289,6 +301,19 @@ export default async function EditRevenuePage({
                 </FormField>
               </div>
 
+              {customers.length > 0 && (
+                <FormField label="Link to person">
+                  <Select name="customer_id" defaultValue={record.customer_id || ""}>
+                    <option value="">No person linked</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+              )}
+
               <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
                 <Link
                   href="/sales"
@@ -344,6 +369,16 @@ export default async function EditRevenuePage({
                   label="Source"
                   value={record.source || "No source saved"}
                   helper="Source helps show what generated this revenue."
+                />
+
+                <SummaryCard
+                  label="Linked person"
+                  value={
+                    record.customer_id
+                      ? (customers.find((c) => c.id === record.customer_id)?.name ?? "Unknown")
+                      : "No person linked"
+                  }
+                  helper="Linking a person connects this revenue to their profile."
                 />
               </div>
             </SectionCard>
