@@ -11,6 +11,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions, industryProfiles } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
+import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 
 const validBusinessSectors = new Set(Object.keys(industryProfiles));
 
@@ -357,6 +358,13 @@ export default async function SettingsPage() {
                   </button>
                 </form>
               </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Change password"
+              description="Set a new password for your account."
+            >
+              <ChangePasswordForm />
             </SectionCard>
 
             <SectionCard
