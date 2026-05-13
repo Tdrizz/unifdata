@@ -560,13 +560,31 @@ export function toImportDate(value: unknown) {
     return null;
   }
 
+  // Google Sheets exports date cells as serial numbers (days since Dec 30 1899)
+  // when the column format is set to "Number". Modern dates are roughly 40000–60000.
+  // Date.parse would misread e.g. "46162" as year 46162 CE, producing "+046162-01-01".
+  const num = Number(cleaned);
+  if (!Number.isNaN(num) && Number.isInteger(num) && num > 20000 && num < 100000) {
+    // 25569 = days from Dec 30 1899 to Jan 1 1970 (Unix epoch)
+    const d = new Date((num - 25569) * 86400 * 1000);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+
   const parsed = Date.parse(cleaned);
 
   if (Number.isNaN(parsed)) {
     return null;
   }
 
-  return new Date(parsed).toISOString().slice(0, 10);
+  const d = new Date(parsed);
+  // Reject implausible years that sneak through (e.g. bare 4-digit non-serial numbers)
+  if (d.getUTCFullYear() < 1900 || d.getUTCFullYear() > 2200) {
+    return null;
+  }
+
+  return d.toISOString().slice(0, 10);
 }
 
 function getMappedValue(
