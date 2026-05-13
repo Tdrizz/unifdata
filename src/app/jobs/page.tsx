@@ -239,15 +239,43 @@ export default async function WorkPage({
     redirect("/jobs");
   }
 
-  const [workResult, peopleResult, opportunitiesResult] = await Promise.all([
-    supabase
-      .from("jobs")
-      .select(
-        "id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
-      )
+  // When searching, pre-fetch matching customer IDs so name search hits the DB
+  let searchCustomerIds: string[] = [];
+  if (q) {
+    const { data: matchingCustomers } = await supabase
+      .from("customers")
+      .select("id")
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(250),
+      .ilike("name", `%${q}%`)
+      .limit(500);
+    searchCustomerIds = (matchingCustomers || []).map((c) => c.id);
+  }
+
+  const jobsFilter = q
+    ? [
+        `service_type.ilike.%${q}%`,
+        `status.ilike.%${q}%`,
+        ...(searchCustomerIds.length > 0
+          ? [`customer_id.in.(${searchCustomerIds.join(",")})`]
+          : []),
+      ].join(",")
+    : null;
+
+  const [workResult, peopleResult, opportunitiesResult] = await Promise.all([
+    jobsFilter
+      ? supabase
+          .from("jobs")
+          .select("id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at")
+          .eq("company_id", company.id)
+          .or(jobsFilter)
+          .order("created_at", { ascending: false })
+          .limit(1000)
+      : supabase
+          .from("jobs")
+          .select("id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(250),
 
     supabase
       .from("customers")
@@ -285,13 +313,7 @@ export default async function WorkPage({
     opportunities.map((opportunity) => [opportunity.id, opportunity]),
   );
 
-  const filteredWorkRecords = q
-    ? workRecords.filter(
-        (w) =>
-          w.service_type?.toLowerCase().includes(q) ||
-          (w.customer_id ? personById.get(w.customer_id)?.name?.toLowerCase().includes(q) : false),
-      )
-    : workRecords;
+  const filteredWorkRecords = workRecords;
 
   const activeWork = filteredWorkRecords.filter(
     (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
@@ -625,7 +647,7 @@ export default async function WorkPage({
             title={selectedStage ? `${selectedStage} work` : "Work queue"}
             description={
               q
-                ? `${filteredWorkRecords.length} of ${workRecords.length} ${profile.labels.jobPlural.toLowerCase()} match "${rawQ}"`
+                ? `${filteredWorkRecords.length} ${profile.labels.jobPlural.toLowerCase()} match "${rawQ}"`
                 : selectedStage
                   ? `Showing work records currently marked ${selectedStage}.`
                   : "The work that needs operational attention first."

@@ -314,14 +314,43 @@ export default async function FollowUpsPage({
     redirect("/follow-ups");
   }
 
+  // When searching, pre-fetch matching customer IDs so name search hits the DB
+  let searchCustomerIds: string[] = [];
+  if (q) {
+    const { data: matchingCustomers } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("company_id", company.id)
+      .ilike("name", `%${q}%`)
+      .limit(500);
+    searchCustomerIds = (matchingCustomers || []).map((c) => c.id);
+  }
+
+  const followUpsFilter = q
+    ? [
+        `message.ilike.%${q}%`,
+        ...(searchCustomerIds.length > 0
+          ? [`customer_id.in.(${searchCustomerIds.join(",")})`]
+          : []),
+      ].join(",")
+    : null;
+
   const [followUpsResult, opportunitiesResult, peopleResult] =
     await Promise.all([
-      supabase
-        .from("follow_ups")
-        .select("id, customer_id, message, due_date, status, created_at")
-        .eq("company_id", company.id)
-        .order("created_at", { ascending: false })
-        .limit(250),
+      followUpsFilter
+        ? supabase
+            .from("follow_ups")
+            .select("id, customer_id, message, due_date, status, created_at")
+            .eq("company_id", company.id)
+            .or(followUpsFilter)
+            .order("created_at", { ascending: false })
+            .limit(1000)
+        : supabase
+            .from("follow_ups")
+            .select("id, customer_id, message, due_date, status, created_at")
+            .eq("company_id", company.id)
+            .order("created_at", { ascending: false })
+            .limit(250),
 
       supabase
         .from("leads")
@@ -391,18 +420,19 @@ export default async function FollowUpsPage({
       href: `/leads/${opportunity.id}/edit`,
     }));
 
-  const allActions = [...manualItems, ...opportunityItems];
-
-  const actions = q
-    ? allActions.filter((action) => {
+  // manualItems already filtered by DB; filter opportunityItems in-memory
+  const filteredOpportunityItems = q
+    ? opportunityItems.filter((action) => {
         const person = action.customer_id ? personById.get(action.customer_id) : null;
         return (
           action.title.toLowerCase().includes(q) ||
-          (person?.name ?? "").toLowerCase().includes(q) ||
-          action.source_label.toLowerCase().includes(q)
+          (person?.name ?? "").toLowerCase().includes(q)
         );
       })
-    : allActions;
+    : opportunityItems;
+
+  const allActions = [...manualItems, ...filteredOpportunityItems];
+  const actions = allActions;
 
   const openActions = allActions.filter((action) => !isComplete(action.status));
   const overdueActions = allActions.filter((action) =>

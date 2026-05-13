@@ -197,15 +197,44 @@ export default async function OpportunitiesPage({
     redirect("/leads");
   }
 
-  const [opportunitiesResult, peopleResult] = await Promise.all([
-    supabase
-      .from("leads")
-      .select(
-        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
-      )
+  // When searching, pre-fetch matching customer IDs so name search hits the DB
+  let searchCustomerIds: string[] = [];
+  if (q) {
+    const { data: matchingCustomers } = await supabase
+      .from("customers")
+      .select("id")
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(250),
+      .ilike("name", `%${q}%`)
+      .limit(500);
+    searchCustomerIds = (matchingCustomers || []).map((c) => c.id);
+  }
+
+  const leadsFilter = q
+    ? [
+        `service_requested.ilike.%${q}%`,
+        `source.ilike.%${q}%`,
+        `status.ilike.%${q}%`,
+        ...(searchCustomerIds.length > 0
+          ? [`customer_id.in.(${searchCustomerIds.join(",")})`]
+          : []),
+      ].join(",")
+    : null;
+
+  const [opportunitiesResult, peopleResult] = await Promise.all([
+    leadsFilter
+      ? supabase
+          .from("leads")
+          .select("id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at")
+          .eq("company_id", company.id)
+          .or(leadsFilter)
+          .order("created_at", { ascending: false })
+          .limit(1000)
+      : supabase
+          .from("leads")
+          .select("id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(250),
 
     supabase
       .from("customers")
@@ -228,15 +257,7 @@ export default async function OpportunitiesPage({
 
   const personById = new Map(people.map((person) => [person.id, person]));
 
-  const filteredOpportunities = q
-    ? opportunities.filter(
-        (o) =>
-          o.service_requested?.toLowerCase().includes(q) ||
-          (o.customer_id ? personById.get(o.customer_id)?.name?.toLowerCase().includes(q) : false) ||
-          o.source?.toLowerCase().includes(q) ||
-          o.status?.toLowerCase().includes(q),
-      )
-    : opportunities;
+  const filteredOpportunities = opportunities;
 
   const openOpportunities = filteredOpportunities.filter(
     (opportunity) => !isWon(opportunity.status) && !isLost(opportunity.status),
@@ -553,7 +574,7 @@ export default async function OpportunitiesPage({
             title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
             description={
               q
-                ? `${openOpportunities.length} of ${opportunities.filter((o) => !isWon(o.status) && !isLost(o.status)).length} open ${profile.labels.leadPlural.toLowerCase()} match "${rawQ}"`
+                ? `${openOpportunities.length} open ${profile.labels.leadPlural.toLowerCase()} match "${rawQ}"`
                 : "Prioritized by follow-up need, missing details, and estimated value."
             }
           >
