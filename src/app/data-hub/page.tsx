@@ -16,8 +16,11 @@ import {
   isCancelledWork,
   isUnpaid,
   isOpenFollowUp,
+  computeHealthScore,
 } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { OrphanQuickLink } from "./OrphanQuickLink";
+import type { OrphanGroup } from "./OrphanQuickLink";
 
 type CustomerRecord = {
   id: string;
@@ -306,10 +309,30 @@ export default async function DataHubPage() {
     followUpsMissingPerson.length +
     followUpsMissingDueDate.length;
 
-  const healthScore =
-    totalRecords === 0
-      ? 100
-      : Math.max(0, Math.round(100 - (totalIssues / totalRecords) * 18));
+  // Weighted health score: critical issues penalize more than cosmetic ones
+  const criticalIssues =
+    opportunitiesMissingPerson.length +
+    workMissingPerson.length +
+    revenueMissingAmount.length;
+
+  const importantIssues =
+    opportunitiesMissingValue.length +
+    opportunitiesNeedFollowUp.length +
+    workMissingValue.length +
+    followUpsMissingDueDate.length;
+
+  const cosmeticIssues =
+    customersMissingContact.length +
+    customersMissingAddress.length +
+    customersMissingType.length +
+    opportunitiesMissingSource.length +
+    workMissingOpportunity.length +
+    workMissingStartDate.length +
+    revenueMissingSource.length +
+    revenueMissingDate.length +
+    followUpsMissingPerson.length;
+
+  const healthScore = computeHealthScore(criticalIssues, importantIssues, cosmeticIssues, totalRecords);
 
   const openPipelineValue = openOpportunities.reduce(
     (sum, opportunity) => sum + Number(opportunity.estimated_value || 0),
@@ -556,6 +579,58 @@ export default async function DataHubPage() {
     },
   ];
 
+  // Build orphan quick-link groups: jobs missing lead_id where we can suggest a lead
+  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const leadsByCustomer = new Map<string, typeof opportunities[number][]>();
+  for (const opp of opportunities) {
+    if (!opp.customer_id) continue;
+    if (!leadsByCustomer.has(opp.customer_id)) {
+      leadsByCustomer.set(opp.customer_id, []);
+    }
+    leadsByCustomer.get(opp.customer_id)!.push(opp);
+  }
+
+  const orphanJobsByCustomer = new Map<string, typeof workRecords[number][]>();
+  for (const work of workRecords) {
+    if (work.lead_id || !work.customer_id) continue;
+    if (!orphanJobsByCustomer.has(work.customer_id)) {
+      orphanJobsByCustomer.set(work.customer_id, []);
+    }
+    orphanJobsByCustomer.get(work.customer_id)!.push(work);
+  }
+
+  const orphanGroups: OrphanGroup[] = [];
+  for (const [customerId, jobs] of orphanJobsByCustomer) {
+    const customer = customerById.get(customerId);
+    const customerLeads = leadsByCustomer.get(customerId) ?? [];
+    if (!customer || customerLeads.length === 0) continue;
+
+    // Pick the best matching lead (by keyword overlap with job service_type)
+    let bestLead: typeof customerLeads[number] | null = null;
+    let bestScore = 0;
+    for (const lead of customerLeads) {
+      const leadText = (lead.service_requested ?? "").toLowerCase();
+      const matchCount = jobs.filter((j) => {
+        const jobWords = (j.service_type ?? "").toLowerCase().split(/\s+/);
+        return jobWords.some((w) => w.length > 2 && leadText.includes(w));
+      }).length;
+      const score = matchCount / jobs.length;
+      if (score > bestScore || bestLead === null) {
+        bestScore = score;
+        bestLead = lead;
+      }
+    }
+
+    orphanGroups.push({
+      customer_id: customerId,
+      customer_name: customer.name ?? "Unknown customer",
+      jobs: jobs.map((j) => ({ id: j.id, service_type: j.service_type })),
+      suggested_lead: bestLead
+        ? { id: bestLead.id, service_requested: bestLead.service_requested }
+        : null,
+    });
+  }
+
   const recentRecords: RecentRecord[] = [
     ...customers.map((customer) => ({
       id: `customer-${customer.id}`,
@@ -670,6 +745,8 @@ export default async function DataHubPage() {
             tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
           />
         </section>
+
+        <OrphanQuickLink groups={orphanGroups} />
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
           <SectionCard

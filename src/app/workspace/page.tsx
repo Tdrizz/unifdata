@@ -21,11 +21,11 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import {
   isClosedOpportunity,
-  isCompleteWork,
-  isCancelledWork,
   isUnpaid,
   isOpenFollowUp,
+  isRecentActiveWork,
   getWorkTone,
+  computeHealthScore,
 } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
@@ -200,8 +200,8 @@ export default async function WorkspacePage() {
       .from("follow_ups")
       .select("id, customer_id, message, due_date, status, created_at")
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(250),
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(500),
   ]);
 
   if (customersResult.error) {
@@ -235,8 +235,8 @@ export default async function WorkspacePage() {
   );
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const activeWork = workRecords.filter(
-    (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
+  const activeWork = workRecords.filter((work) =>
+    isRecentActiveWork(work.status, work.start_date),
   );
 
   const unpaidRevenue = revenueRecords.filter((record) =>
@@ -257,13 +257,25 @@ export default async function WorkspacePage() {
     0,
   );
 
-  const customersWithContact = customers.filter(
-    (c) => c.name && (c.phone || c.email),
-  ).length;
-  const dataHealthScore =
-    customers.length > 0
-      ? Math.round((customersWithContact / customers.length) * 100)
-      : 100;
+  const totalRecords = customers.length + leads.length + workRecords.length + revenueRecords.length + followUps.length;
+
+  const criticalIssues =
+    openLeads.filter((l) => !l.customer_id).length +
+    activeWork.filter((w) => !w.customer_id).length +
+    revenueRecords.filter((r) => r.amount === null || r.amount === undefined).length;
+
+  const importantIssues =
+    openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
+    openLeads.filter((l) => !l.next_follow_up_date || new Date(l.next_follow_up_date) <= new Date()).length +
+    activeWork.filter((w) => w.job_value === null || w.job_value === undefined).length;
+
+  const cosmeticIssues =
+    customers.filter((c) => !c.phone || !c.email).length +
+    customers.filter((c) => !c.address).length +
+    openLeads.filter((l) => !l.source).length;
+
+  const dataHealthScore = computeHealthScore(criticalIssues, importantIssues, cosmeticIssues, totalRecords);
+  const customersWithContact = customers.filter((c) => c.name && (c.phone || c.email)).length;
 
   const monthlyRevenue = computeMonthlyRevenue(revenueRecords);
 

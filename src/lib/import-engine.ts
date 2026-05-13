@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { normalizePhone, normalizeEmail, normalizeName } from "./normalize";
 
 export type ImportRecordType =
   | "relationships"
@@ -38,6 +39,18 @@ export type ImportFieldDefinition = {
   label: string;
   required?: boolean;
   type?: "text" | "number" | "date";
+};
+
+export type LinkageSuggestion = {
+  table: "jobs" | "sales";
+  record_id: string;
+  record_label: string;
+  field: "lead_id" | "job_id";
+  suggested_id: string;
+  suggested_label: string;
+  customer_name: string | null;
+  reason: string;
+  confidence: number;
 };
 
 export const importRecordTypeOptions: {
@@ -105,6 +118,7 @@ export const importFieldDefinitions: Record<
   work: [
     { key: "service_type", label: "Work name", required: true, type: "text" },
     { key: "customer_name", label: "Customer name", type: "text" },
+    { key: "lead_name", label: "Opportunity name", type: "text" },
     { key: "status", label: "Status", type: "text" },
     { key: "job_value", label: "Work value", type: "number" },
     { key: "start_date", label: "Start date", type: "date" },
@@ -306,6 +320,22 @@ const importFieldSynonyms: Record<string, string[]> = {
     "next touchpoint",
     "follow up",
     "follow-up",
+  ],
+
+  lead_name: [
+    "opportunity",
+    "opportunity name",
+    "lead",
+    "lead name",
+    "quote",
+    "estimate",
+    "estimate name",
+    "proposal",
+    "ref",
+    "reference",
+    "project ref",
+    "linked opportunity",
+    "related opportunity",
   ],
 
   service_type: [
@@ -621,6 +651,27 @@ export function normalizeImportRow({
     normalizedData[field.key] = rawValue || null;
   });
 
+  // Normalize contact fields for reliable duplicate detection and search
+  if (recordType === "relationships") {
+    if (normalizedData.phone) {
+      normalizedData.phone = normalizePhone(normalizedData.phone) ?? normalizedData.phone;
+    }
+    if (normalizedData.email) {
+      normalizedData.email = normalizeEmail(normalizedData.email) ?? normalizedData.email;
+    }
+    if (normalizedData.name) {
+      normalizedData.name = normalizeName(normalizedData.name) ?? normalizedData.name;
+    }
+  }
+
+  if (normalizedData.customer_name) {
+    normalizedData.customer_name = normalizeName(normalizedData.customer_name) ?? normalizedData.customer_name;
+  }
+
+  if (normalizedData.lead_name) {
+    normalizedData.lead_name = normalizeName(normalizedData.lead_name) ?? normalizedData.lead_name;
+  }
+
   if (recordType === "opportunities") {
     normalizedData.status = normalizedData.status || "New";
   }
@@ -632,14 +683,18 @@ export function normalizeImportRow({
 
   if (recordType === "revenue") {
     normalizedData.payment_status = normalizedData.payment_status || "Paid";
-    normalizedData.sale_date =
-      normalizedData.sale_date || new Date().toISOString().slice(0, 10);
+    if (!normalizedData.sale_date) {
+      normalizedData.sale_date = new Date().toISOString().slice(0, 10);
+      normalizedData._date_defaulted = true;
+    }
   }
 
   if (recordType === "actions") {
     normalizedData.status = normalizedData.status || "Open";
-    normalizedData.due_date =
-      normalizedData.due_date || new Date().toISOString().slice(0, 10);
+    if (!normalizedData.due_date) {
+      normalizedData.due_date = new Date().toISOString().slice(0, 10);
+      normalizedData._date_defaulted = true;
+    }
   }
 
   return {
@@ -657,8 +712,8 @@ async function findRelationshipDuplicate({
   companyId: string;
   normalizedData: Record<string, unknown>;
 }) {
-  const email = cleanImportValue(normalizedData.email);
-  const phone = cleanImportValue(normalizedData.phone);
+  const email = normalizeEmail(cleanImportValue(normalizedData.email)) ?? cleanImportValue(normalizedData.email);
+  const phone = normalizePhone(cleanImportValue(normalizedData.phone)) ?? cleanImportValue(normalizedData.phone);
   const name = cleanImportValue(normalizedData.name);
   const address = cleanImportValue(normalizedData.address);
 
@@ -941,6 +996,10 @@ export async function createImportSessionFromRows({
   try {
     const stagedRows = [];
 
+    // Within-session dedup sets for relationship imports
+    const sessionSeenEmails = new Set<string>();
+    const sessionSeenPhones = new Set<string>();
+
     for (let index = 0; index < rows.length; index += 1) {
       const rowNumber = index + 1;
       const rawData = rows[index];
@@ -953,8 +1012,26 @@ export async function createImportSessionFromRows({
 
       const externalHash = hashImportData(normalizedData);
 
-      const duplicate = validationErrors.length
-        ? null
+      // Within-session dedup for customer imports
+      let withinSessionDuplicate: { duplicateReason: string } | null = null;
+      if (recordType === "relationships" && !validationErrors.length) {
+        const rowEmail = normalizeEmail(cleanImportValue(normalizedData.email));
+        const rowPhone = normalizePhone(cleanImportValue(normalizedData.phone));
+
+        if (rowEmail && sessionSeenEmails.has(rowEmail)) {
+          withinSessionDuplicate = { duplicateReason: "Another row in this import has the same email address." };
+        } else if (rowPhone && sessionSeenPhones.has(rowPhone)) {
+          withinSessionDuplicate = { duplicateReason: "Another row in this import has the same phone number." };
+        } else {
+          if (rowEmail) sessionSeenEmails.add(rowEmail);
+          if (rowPhone) sessionSeenPhones.add(rowPhone);
+        }
+      }
+
+      const duplicate = (validationErrors.length || withinSessionDuplicate)
+        ? withinSessionDuplicate
+          ? { targetTable: getTargetTable(recordType), targetId: null, matchConfidence: 0.9, duplicateReason: withinSessionDuplicate.duplicateReason }
+          : null
         : await findSimpleDuplicate({
             supabase,
             companyId,
@@ -1066,11 +1143,13 @@ function buildInsertPayload({
   recordType,
   normalizedData,
   resolvedCustomerId,
+  resolvedLeadId,
 }: {
   companyId: string;
   recordType: ImportRecordType;
   normalizedData: Record<string, unknown>;
   resolvedCustomerId?: string | null;
+  resolvedLeadId?: string | null;
 }) {
   if (recordType === "relationships") {
     return {
@@ -1101,6 +1180,7 @@ function buildInsertPayload({
     return {
       company_id: companyId,
       customer_id: resolvedCustomerId || null,
+      lead_id: resolvedLeadId || null,
       service_type: normalizedData.service_type,
       status: normalizedData.status || "Scheduled",
       job_value: normalizedData.job_value || null,
@@ -1187,6 +1267,11 @@ export async function commitImportSession({
   let skippedRows = 0;
   let failedRows = 0;
 
+  type CreatedJobInfo = { id: string; customer_id: string | null; service_type: string | null; start_date: string | null };
+  type CreatedSaleInfo = { id: string; customer_id: string | null; service_type: string | null; sale_date: string | null; amount: number | null };
+  const createdJobs: CreatedJobInfo[] = [];
+  const createdSales: CreatedSaleInfo[] = [];
+
   const { data: syncRun, error: syncRunError } = await supabase
     .from("sync_runs")
     .insert({
@@ -1215,23 +1300,73 @@ export async function commitImportSession({
 
   async function resolveCustomerId(
     customerName: string,
-  ): Promise<string | null> {
+  ): Promise<{ id: string | null; unlinked: boolean }> {
     const key = customerName.trim().toLowerCase();
 
     if (customerNameCache.has(key)) {
-      return customerNameCache.get(key) ?? null;
+      const cached = customerNameCache.get(key) ?? null;
+      return { id: cached, unlinked: cached === null };
     }
 
-    const { data } = await supabase
+    // Try exact match first
+    const { data: exactMatch } = await supabase
       .from("customers")
       .select("id")
       .eq("company_id", companyId)
-      .ilike("name", customerName.trim())
+      .eq("name", customerName.trim())
       .limit(1)
       .maybeSingle();
 
-    const resolved = data?.id ?? null;
-    customerNameCache.set(key, resolved);
+    if (exactMatch) {
+      customerNameCache.set(key, exactMatch.id);
+      return { id: exactMatch.id, unlinked: false };
+    }
+
+    // Fuzzy fallback — check for single unambiguous match
+    const { data: fuzzyMatches } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("company_id", companyId)
+      .ilike("name", `%${customerName.trim()}%`)
+      .limit(2);
+
+    if (fuzzyMatches && fuzzyMatches.length === 1) {
+      customerNameCache.set(key, fuzzyMatches[0].id);
+      return { id: fuzzyMatches[0].id, unlinked: false };
+    }
+
+    // Zero matches or ambiguous multiple matches — mark as unlinked
+    customerNameCache.set(key, null);
+    return { id: null, unlinked: true };
+  }
+
+  const leadNameCache = new Map<string, string | null>();
+
+  async function resolveLeadId(
+    leadName: string,
+    customerId: string | null,
+  ): Promise<string | null> {
+    const key = `${leadName.trim().toLowerCase()}:${customerId ?? ""}`;
+
+    if (leadNameCache.has(key)) {
+      return leadNameCache.get(key) ?? null;
+    }
+
+    let query = supabase
+      .from("leads")
+      .select("id")
+      .eq("company_id", companyId)
+      .ilike("service_requested", `%${leadName.trim()}%`)
+      .limit(2);
+
+    if (customerId) {
+      query = query.eq("customer_id", customerId);
+    }
+
+    const { data } = await query;
+
+    const resolved = data && data.length === 1 ? data[0].id : null;
+    leadNameCache.set(key, resolved);
     return resolved;
   }
 
@@ -1259,15 +1394,31 @@ export async function commitImportSession({
       const customerNameRaw = cleanImportValue(
         row.normalized_data.customer_name,
       );
-      const resolvedCustomerId = customerNameRaw
+      const customerResolution = customerNameRaw
         ? await resolveCustomerId(customerNameRaw)
+        : { id: null, unlinked: false };
+      const resolvedCustomerId = customerResolution.id;
+      const customerUnlinked = customerResolution.unlinked;
+
+      const leadNameRaw = cleanImportValue(row.normalized_data.lead_name);
+      const resolvedLeadId = leadNameRaw
+        ? await resolveLeadId(leadNameRaw, resolvedCustomerId)
         : null;
+
+      // Attach linkage metadata to normalized_data for UI display
+      const normalizedDataWithMeta = {
+        ...row.normalized_data,
+        ...(customerUnlinked && customerNameRaw
+          ? { _customer_unlinked: true }
+          : {}),
+      };
 
       const payload = buildInsertPayload({
         companyId,
         recordType,
-        normalizedData: row.normalized_data,
+        normalizedData: normalizedDataWithMeta,
         resolvedCustomerId,
+        resolvedLeadId,
       });
 
       let internalId: string;
@@ -1305,6 +1456,25 @@ export async function commitImportSession({
 
         internalId = createdRecord.id;
         createdRows += 1;
+
+        if (recordType === "work") {
+          createdJobs.push({
+            id: internalId,
+            customer_id: resolvedCustomerId ?? null,
+            service_type: cleanImportValue(row.normalized_data.service_type) || null,
+            start_date: cleanImportValue(row.normalized_data.start_date) || null,
+          });
+        }
+
+        if (recordType === "revenue") {
+          createdSales.push({
+            id: internalId,
+            customer_id: resolvedCustomerId ?? null,
+            service_type: cleanImportValue(row.normalized_data.service_type) || null,
+            sale_date: cleanImportValue(row.normalized_data.sale_date) || null,
+            amount: (row.normalized_data.amount as number) ?? null,
+          });
+        }
       }
 
       const { error: rowUpdateError } = await supabase
@@ -1410,10 +1580,112 @@ export async function commitImportSession({
     throw new Error(finishSessionError.message);
   }
 
+  const linkageSuggestions: LinkageSuggestion[] = [];
+
+  // Suggest job → lead links for newly created jobs that have a customer but no lead
+  if (createdJobs.length > 0) {
+    for (const job of createdJobs) {
+      if (!job.customer_id || !job.service_type) continue;
+
+      const { data: candidateLeads } = await supabase
+        .from("leads")
+        .select("id, service_requested, status")
+        .eq("company_id", companyId)
+        .eq("customer_id", job.customer_id)
+        .not("status", "ilike", "%won%")
+        .not("status", "ilike", "%lost%")
+        .not("status", "ilike", "%cancel%")
+        .limit(3);
+
+      if (!candidateLeads || candidateLeads.length === 0) continue;
+
+      const jobWords = job.service_type.toLowerCase().split(/\s+/);
+      let bestLead: typeof candidateLeads[number] | null = null;
+      let bestScore = 0;
+
+      for (const lead of candidateLeads) {
+        const leadText = (lead.service_requested ?? "").toLowerCase();
+        const matches = jobWords.filter((w) => w.length > 2 && leadText.includes(w)).length;
+        const score = matches / Math.max(jobWords.length, 1);
+        if (score > bestScore) {
+          bestScore = score;
+          bestLead = lead;
+        }
+      }
+
+      if (bestLead && bestScore >= 0.4) {
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("name")
+          .eq("id", job.customer_id)
+          .single();
+
+        linkageSuggestions.push({
+          table: "jobs",
+          record_id: job.id,
+          record_label: job.service_type,
+          field: "lead_id",
+          suggested_id: bestLead.id,
+          suggested_label: bestLead.service_requested ?? "Opportunity",
+          customer_name: customer?.name ?? null,
+          reason: `Job and opportunity are for the same customer and share similar keywords.`,
+          confidence: Math.round(bestScore * 100) / 100,
+        });
+      }
+    }
+  }
+
+  // Suggest sale → job links for newly created sales with a customer
+  if (createdSales.length > 0) {
+    for (const sale of createdSales) {
+      if (!sale.customer_id) continue;
+
+      let query = supabase
+        .from("jobs")
+        .select("id, service_type, start_date")
+        .eq("company_id", companyId)
+        .eq("customer_id", sale.customer_id)
+        .limit(5);
+
+      if (sale.sale_date) {
+        // Look for jobs within ±60 days of the sale date
+        const saleTs = new Date(sale.sale_date).getTime();
+        const dayMs = 86400000;
+        const fromDate = new Date(saleTs - 60 * dayMs).toISOString().slice(0, 10);
+        const toDate = new Date(saleTs + 60 * dayMs).toISOString().slice(0, 10);
+        query = query.gte("start_date", fromDate).lte("start_date", toDate);
+      }
+
+      const { data: candidateJobs } = await query;
+
+      if (!candidateJobs || candidateJobs.length !== 1) continue;
+
+      const matchedJob = candidateJobs[0];
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("name")
+        .eq("id", sale.customer_id)
+        .single();
+
+      linkageSuggestions.push({
+        table: "sales",
+        record_id: sale.id,
+        record_label: sale.service_type ?? `$${sale.amount ?? ""}`,
+        field: "job_id",
+        suggested_id: matchedJob.id,
+        suggested_label: matchedJob.service_type ?? "Job",
+        customer_name: customer?.name ?? null,
+        reason: `Sale and job are for the same customer within a similar time period.`,
+        confidence: 0.7,
+      });
+    }
+  }
+
   return {
     createdRows,
     updatedRows,
     skippedRows,
     failedRows,
+    linkageSuggestions,
   };
 }

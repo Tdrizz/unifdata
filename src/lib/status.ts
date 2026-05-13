@@ -1,5 +1,27 @@
 type Tone = "success" | "warning" | "danger" | "neutral";
 
+// Health score tier weights for consistent scoring across workspace and data-hub
+export const HEALTH_WEIGHTS = {
+  critical: 3,   // Missing customer link on lead/job, missing amount on sale
+  important: 2,  // Missing estimated value, follow-up date, job value
+  cosmetic: 0.5, // Missing source, address, type, notes
+  multiplier: 12,
+} as const;
+
+export function computeHealthScore(
+  criticalCount: number,
+  importantCount: number,
+  cosmeticCount: number,
+  totalRecords: number,
+): number {
+  if (totalRecords === 0) return 100;
+  const weighted =
+    criticalCount * HEALTH_WEIGHTS.critical +
+    importantCount * HEALTH_WEIGHTS.important +
+    cosmeticCount * HEALTH_WEIGHTS.cosmetic;
+  return Math.max(0, Math.round(100 - (weighted / totalRecords) * HEALTH_WEIGHTS.multiplier));
+}
+
 function n(status: string | null | undefined) {
   return String(status || "").toLowerCase();
 }
@@ -21,6 +43,27 @@ export function isCompleteWork(status: string | null | undefined) {
 
 export function isCancelledWork(status: string | null | undefined) {
   return n(status).includes("cancel");
+}
+
+export function isRecentActiveWork(
+  status: string | null | undefined,
+  startDate: string | null | undefined,
+): boolean {
+  if (isCompleteWork(status) || isCancelledWork(status)) {
+    return false;
+  }
+
+  if (!startDate) {
+    return true;
+  }
+
+  const parsed = new Date(startDate);
+  if (Number.isNaN(parsed.getTime())) {
+    return true;
+  }
+
+  const cutoffMs = Date.now() - 180 * 24 * 60 * 60 * 1000;
+  return parsed.getTime() >= cutoffMs;
 }
 
 export function isUnpaid(status: string | null | undefined) {
