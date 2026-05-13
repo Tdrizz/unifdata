@@ -95,6 +95,7 @@ export const importFieldDefinitions: Record<
       required: true,
       type: "text",
     },
+    { key: "customer_name", label: "Customer name", type: "text" },
     { key: "status", label: "Status", type: "text" },
     { key: "estimated_value", label: "Estimated value", type: "number" },
     { key: "source", label: "Source", type: "text" },
@@ -103,6 +104,7 @@ export const importFieldDefinitions: Record<
   ],
   work: [
     { key: "service_type", label: "Work name", required: true, type: "text" },
+    { key: "customer_name", label: "Customer name", type: "text" },
     { key: "status", label: "Status", type: "text" },
     { key: "job_value", label: "Work value", type: "number" },
     { key: "start_date", label: "Start date", type: "date" },
@@ -112,6 +114,7 @@ export const importFieldDefinitions: Record<
   ],
   revenue: [
     { key: "amount", label: "Amount", required: true, type: "number" },
+    { key: "customer_name", label: "Customer name", type: "text" },
     { key: "payment_status", label: "Payment status", type: "text" },
     { key: "sale_date", label: "Revenue date", type: "date" },
     { key: "service_type", label: "Service / category", type: "text" },
@@ -119,68 +122,318 @@ export const importFieldDefinitions: Record<
   ],
   actions: [
     { key: "message", label: "Action", required: true, type: "text" },
-    { key: "due_date", label: "Due date", required: true, type: "date" },
+    { key: "customer_name", label: "Customer name", type: "text" },
+    { key: "due_date", label: "Due date", type: "date" },
     { key: "status", label: "Status", type: "text" },
   ],
 };
 
 const importFieldSynonyms: Record<string, string[]> = {
-  name: ["name", "customer", "client", "patient", "company", "account"],
-  phone: ["phone", "phone number", "mobile", "cell", "contact phone"],
-  email: ["email", "email address", "contact email"],
-  address: ["address", "service address", "mailing address", "location"],
-  customer_type: ["type", "customer type", "client type", "category"],
-  notes: ["notes", "note", "comments", "description"],
+  name: [
+    "name",
+    "full name",
+    "customer",
+    "customer name",
+    "client",
+    "client name",
+    "patient",
+    "patient name",
+    "company",
+    "company name",
+    "account",
+    "account name",
+    "contact",
+    "contact name",
+    "person",
+    "business",
+    "business name",
+    "first name",
+    "firstname",
+    "last name",
+    "lastname",
+  ],
+  phone: [
+    "phone",
+    "phone number",
+    "phonenumber",
+    "mobile",
+    "mobile number",
+    "cell",
+    "cell phone",
+    "telephone",
+    "tel",
+    "contact phone",
+    "work phone",
+    "home phone",
+    "primary phone",
+  ],
+  email: [
+    "email",
+    "email address",
+    "emailaddress",
+    "e-mail",
+    "mail",
+    "contact email",
+    "work email",
+    "primary email",
+  ],
+  address: [
+    "address",
+    "full address",
+    "service address",
+    "mailing address",
+    "street address",
+    "street",
+    "location",
+    "home address",
+    "billing address",
+    "shipping address",
+    "property address",
+    "site address",
+  ],
+  customer_type: [
+    "type",
+    "customer type",
+    "client type",
+    "account type",
+    "contact type",
+    "category",
+    "classification",
+    "segment",
+    "group",
+  ],
+  notes: [
+    "notes",
+    "note",
+    "comments",
+    "comment",
+    "description",
+    "details",
+    "memo",
+    "internal notes",
+    "additional info",
+    "remarks",
+  ],
+
+  customer_name: [
+    "customer",
+    "customer name",
+    "client",
+    "client name",
+    "contact",
+    "contact name",
+    "account",
+    "account name",
+    "person",
+    "patient",
+    "business",
+    "company",
+    "for",
+    "belongs to",
+    "linked to",
+  ],
 
   service_requested: [
     "opportunity",
+    "opportunity name",
     "lead",
+    "lead name",
     "quote",
     "estimate",
     "proposal",
     "deal",
+    "deal name",
     "inquiry",
     "service",
     "service requested",
+    "service type",
+    "job type",
     "treatment plan",
+    "title",
+    "name",
+    "project",
+    "project name",
+    "description",
+    "subject",
+    "request",
+    "what",
   ],
-  status: ["status", "stage", "pipeline stage"],
+  status: [
+    "status",
+    "stage",
+    "pipeline stage",
+    "state",
+    "current status",
+    "lead status",
+    "job status",
+    "phase",
+  ],
   estimated_value: [
     "estimated value",
+    "estimate value",
     "value",
     "amount",
     "estimate amount",
     "quote amount",
     "deal value",
+    "price",
+    "budget",
+    "quoted price",
+    "bid",
+    "bid amount",
+    "cost",
+    "potential value",
+    "opportunity value",
   ],
-  source: ["source", "lead source", "channel", "referral source"],
+  source: [
+    "source",
+    "lead source",
+    "channel",
+    "referral source",
+    "referral",
+    "how did you find us",
+    "marketing source",
+    "origin",
+    "where from",
+  ],
   next_follow_up_date: [
     "next follow up",
     "next follow-up",
     "follow up date",
     "follow-up date",
     "next action date",
+    "next contact date",
+    "next touchpoint",
+    "follow up",
+    "follow-up",
   ],
 
   service_type: [
     "work",
+    "work name",
     "job",
+    "job name",
     "project",
+    "project name",
     "appointment",
     "order",
     "service type",
+    "service",
+    "service name",
     "category",
+    "task",
+    "task name",
+    "title",
+    "description",
+    "type",
+    "what",
   ],
-  job_value: ["job value", "work value", "project value", "amount", "value"],
-  start_date: ["start date", "scheduled date", "appointment date"],
-  completed_date: ["completed date", "completion date", "finished date"],
-  paid_status: ["paid status", "payment status", "paid"],
+  job_value: [
+    "job value",
+    "work value",
+    "project value",
+    "amount",
+    "value",
+    "price",
+    "cost",
+    "total",
+    "invoice amount",
+    "job amount",
+    "contract value",
+    "contract amount",
+  ],
+  start_date: [
+    "start date",
+    "startdate",
+    "scheduled date",
+    "appointment date",
+    "service date",
+    "job date",
+    "date",
+    "begin date",
+    "start",
+    "scheduled",
+    "visit date",
+    "work date",
+  ],
+  completed_date: [
+    "completed date",
+    "completion date",
+    "finished date",
+    "end date",
+    "done date",
+    "closed date",
+    "completed",
+  ],
+  paid_status: [
+    "paid status",
+    "payment status",
+    "paid",
+    "payment",
+    "payment state",
+    "invoice status",
+    "billing status",
+  ],
 
-  amount: ["amount", "payment", "revenue", "invoice amount", "sale amount"],
-  payment_status: ["payment status", "paid status", "status"],
-  sale_date: ["date", "sale date", "payment date", "invoice date"],
-  due_date: ["due date", "follow up date", "follow-up date"],
-  message: ["message", "action", "task", "follow up", "follow-up", "reminder"],
+  amount: [
+    "amount",
+    "payment",
+    "payment amount",
+    "revenue",
+    "invoice amount",
+    "sale amount",
+    "total",
+    "total amount",
+    "price",
+    "charge",
+    "collected",
+    "received",
+  ],
+  payment_status: [
+    "payment status",
+    "paid status",
+    "status",
+    "billing status",
+    "invoice status",
+    "collection status",
+  ],
+  sale_date: [
+    "date",
+    "sale date",
+    "payment date",
+    "invoice date",
+    "paid date",
+    "transaction date",
+    "revenue date",
+    "received date",
+  ],
+  due_date: [
+    "due date",
+    "duedate",
+    "follow up date",
+    "follow-up date",
+    "deadline",
+    "target date",
+    "reminder date",
+    "scheduled date",
+    "date",
+  ],
+  message: [
+    "message",
+    "action",
+    "task",
+    "follow up",
+    "follow-up",
+    "reminder",
+    "note",
+    "description",
+    "what",
+    "todo",
+    "to do",
+    "next step",
+    "next action",
+    "subject",
+  ],
 };
 
 function normalizeImportHeader(value: string) {
@@ -385,6 +638,8 @@ export function normalizeImportRow({
 
   if (recordType === "actions") {
     normalizedData.status = normalizedData.status || "Open";
+    normalizedData.due_date =
+      normalizedData.due_date || new Date().toISOString().slice(0, 10);
   }
 
   return {
@@ -810,10 +1065,12 @@ function buildInsertPayload({
   companyId,
   recordType,
   normalizedData,
+  resolvedCustomerId,
 }: {
   companyId: string;
   recordType: ImportRecordType;
   normalizedData: Record<string, unknown>;
+  resolvedCustomerId?: string | null;
 }) {
   if (recordType === "relationships") {
     return {
@@ -830,6 +1087,7 @@ function buildInsertPayload({
   if (recordType === "opportunities") {
     return {
       company_id: companyId,
+      customer_id: resolvedCustomerId || null,
       service_requested: normalizedData.service_requested,
       status: normalizedData.status || "New",
       estimated_value: normalizedData.estimated_value || null,
@@ -842,6 +1100,7 @@ function buildInsertPayload({
   if (recordType === "work") {
     return {
       company_id: companyId,
+      customer_id: resolvedCustomerId || null,
       service_type: normalizedData.service_type,
       status: normalizedData.status || "Scheduled",
       job_value: normalizedData.job_value || null,
@@ -855,6 +1114,7 @@ function buildInsertPayload({
   if (recordType === "revenue") {
     return {
       company_id: companyId,
+      customer_id: resolvedCustomerId || null,
       amount: normalizedData.amount,
       payment_status: normalizedData.payment_status || "Paid",
       sale_date:
@@ -866,7 +1126,9 @@ function buildInsertPayload({
 
   return {
     company_id: companyId,
-    due_date: normalizedData.due_date,
+    customer_id: resolvedCustomerId || null,
+    due_date:
+      normalizedData.due_date || new Date().toISOString().slice(0, 10),
     status: normalizedData.status || "Open",
     message: normalizedData.message,
   };
@@ -949,6 +1211,30 @@ export async function commitImportSession({
 
   const stagedSessionRows = (rows || []) as StagedImportSessionRow[];
 
+  const customerNameCache = new Map<string, string | null>();
+
+  async function resolveCustomerId(
+    customerName: string,
+  ): Promise<string | null> {
+    const key = customerName.trim().toLowerCase();
+
+    if (customerNameCache.has(key)) {
+      return customerNameCache.get(key) ?? null;
+    }
+
+    const { data } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("company_id", companyId)
+      .ilike("name", customerName.trim())
+      .limit(1)
+      .maybeSingle();
+
+    const resolved = data?.id ?? null;
+    customerNameCache.set(key, resolved);
+    return resolved;
+  }
+
   for (const row of stagedSessionRows) {
     if (
       row.status !== "valid" ||
@@ -970,10 +1256,18 @@ export async function commitImportSession({
     }
 
     try {
+      const customerNameRaw = cleanImportValue(
+        row.normalized_data.customer_name,
+      );
+      const resolvedCustomerId = customerNameRaw
+        ? await resolveCustomerId(customerNameRaw)
+        : null;
+
       const payload = buildInsertPayload({
         companyId,
         recordType,
         normalizedData: row.normalized_data,
+        resolvedCustomerId,
       });
 
       let internalId: string;
