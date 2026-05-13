@@ -176,7 +176,7 @@ export default function HomePage() {
               href="/signup"
               className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
             >
-              Start free trial
+              Get started
             </Link>
           </div>
         </nav>
@@ -202,7 +202,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Start free trial
+                Get started
               </Link>
 
               <Link
@@ -370,7 +370,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
               >
-                Start free trial
+                Get started
               </Link>
               <Link
                 href="/preview"
@@ -390,101 +390,62 @@ export default function HomePage() {
               Pricing
             </p>
             <h2 className="mt-3 text-4xl font-semibold tracking-tight">
-              Simple pricing. 14-day free trial. No credit card required.
+              One price. Everything included.
             </h2>
             <p className="mt-3 text-slate-300">
-              Start on any plan and switch as you grow.
+              No tiers, no feature gating. Pay once to get set up, then a flat monthly rate.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                name: "Starter",
-                price: "$49",
-                note: "/month",
-                description: "For solo operators getting organized.",
-                features: ["Up to 500 customers", "Leads, jobs, sales tracking", "Follow-up scheduling", "CSV import", "Email support"],
-                cta: "Start free trial",
-                href: "/signup?plan=starter",
-                highlight: false,
-              },
-              {
-                name: "Growth",
-                price: "$99",
-                note: "/month",
-                description: "For growing businesses managing a real pipeline.",
-                features: ["Up to 5,000 customers", "Everything in Starter", "QuickBooks, Square, Jobber sync", "Custom branding", "Priority support"],
-                cta: "Start free trial",
-                href: "/signup?plan=growth",
-                highlight: true,
-              },
-              {
-                name: "Business",
-                price: "$149",
-                note: "/month",
-                description: "For established operations.",
-                features: ["Unlimited customers", "Everything in Growth", "HubSpot & Jobber two-way sync", "Up to 5 team members", "Onboarding call"],
-                cta: "Start free trial",
-                href: "/signup?plan=business",
-                highlight: false,
-              },
-            ].map((tier) => (
-              <div
-                key={tier.name}
-                className={`relative flex flex-col rounded-4xl border p-8 ${
-                  tier.highlight
-                    ? "border-white/30 bg-white/10 shadow-2xl"
-                    : "border-white/10 bg-white/5"
-                }`}
-              >
-                {tier.highlight && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-slate-950">
-                      Most popular
-                    </span>
+          <div className="mx-auto mt-10 max-w-2xl">
+            <div className="rounded-4xl border border-white/20 bg-white/8 p-10 shadow-2xl">
+              <div className="grid gap-8 sm:grid-cols-2">
+                <div className="text-center">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">One-time setup</p>
+                  <div className="mt-3 flex items-end justify-center gap-1">
+                    <span className="text-6xl font-semibold">$300</span>
                   </div>
-                )}
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">{tier.name}</p>
-                  <div className="mt-3 flex items-end gap-2">
-                    <span className="text-5xl font-semibold">{tier.price}</span>
-                    <span className="mb-1.5 text-slate-400">{tier.note}</span>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">{tier.description}</p>
+                  <p className="mt-2 text-sm text-slate-300">Onboarding & data setup — paid once</p>
                 </div>
-                <ul className="mt-8 flex-1 space-y-3">
-                  {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm">
-                      <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-slate-200">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8">
-                  <Link
-                    href={tier.href}
-                    className={`block rounded-2xl px-5 py-3 text-center font-semibold transition-colors ${
-                      tier.highlight
-                        ? "bg-white text-slate-950 hover:bg-slate-200"
-                        : "border border-white/20 text-white hover:bg-white/10"
-                    }`}
-                  >
-                    {tier.cta}
-                  </Link>
+                <div className="text-center sm:border-l sm:border-white/10 sm:pl-8">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Then monthly</p>
+                  <div className="mt-3 flex items-end justify-center gap-1">
+                    <span className="text-6xl font-semibold">$100</span>
+                    <span className="mb-1.5 text-slate-400">/mo</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">Cancel any time — no contracts</p>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            All prices in USD · Annual billing available (2 months free) ·{" "}
-            <Link href="/pricing" className="text-slate-400 underline hover:text-white">
-              Full pricing details →
-            </Link>
-          </p>
+              <div className="my-8 h-px bg-white/10" />
+
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {["CRM for customers, leads, jobs & sales", "Daily priority queue & follow-ups", "Data health scoring & cleanup tools", "CSV import + QuickBooks, Jobber sync", "Custom branding & colors", "Secure, isolated workspace"].map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-sm">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-200">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className="flex-1 rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
+                >
+                  Get started
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="flex-1 rounded-2xl border border-white/20 px-5 py-3 text-center font-semibold text-white hover:bg-white/10"
+                >
+                  See full pricing details →
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

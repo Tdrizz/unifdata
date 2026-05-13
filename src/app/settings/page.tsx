@@ -421,8 +421,8 @@ export default async function SettingsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-500">Current plan</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-950">Growth — $99 / month</p>
-                  <p className="mt-1 text-sm text-slate-500">14-day free trial active · Renews June 13, 2026</p>
+                  <p className="mt-1 text-xl font-semibold text-slate-950">FrontierOps — $100 / month</p>
+                  <p className="mt-1 text-sm text-slate-500">Setup fee paid · Renews June 13, 2026</p>
                 </div>
                 <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                   Trial
