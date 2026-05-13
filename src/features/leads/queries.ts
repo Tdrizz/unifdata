@@ -56,12 +56,13 @@ export async function getCustomersForLeadSelect(
   supabase: SupabaseClient,
   companyId: string,
 ) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("customers")
     .select("id, name, email, phone")
     .eq("company_id", companyId)
     .order("name", { ascending: true })
     .limit(500);
 
+  if (error) throw new Error(error.message);
   return (data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
 }
