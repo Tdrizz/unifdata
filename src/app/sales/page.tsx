@@ -493,6 +493,12 @@ export default async function RevenuePage({
           </details>
         </SectionCard>
 
+        {revenueRecords.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.salePlural.toLowerCase()} — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
+
         <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}...`} />
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">

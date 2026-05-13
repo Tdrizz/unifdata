@@ -36,6 +36,16 @@ export function isClosedOpportunity(status: string | null | undefined) {
   );
 }
 
+export function isWon(status: string | null | undefined) {
+  const s = n(status);
+  return s.includes("won") || s.includes("accepted");
+}
+
+export function isLost(status: string | null | undefined) {
+  const s = n(status);
+  return s.includes("lost") || s.includes("cancel") || s.includes("declined");
+}
+
 export function isCompleteWork(status: string | null | undefined) {
   const s = n(status);
   return s.includes("complete") || s.includes("done") || s.includes("finished");

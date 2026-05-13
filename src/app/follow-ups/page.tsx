@@ -11,9 +11,15 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DismissError } from "@/components/ui/DismissError";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { parseDateOnly, formatDateOnly, getTodayDateOnly } from "@/lib/date-format";
+import {
+  parseDateOnly,
+  formatDateOnly,
+  isOverdue as isDateOverdue,
+  isDueToday as isDateDueToday,
+  isUpcoming as isDateUpcoming,
+} from "@/lib/date-format";
 import { getFormString } from "@/lib/utils";
-import { isClosedOpportunity, getGenericTone } from "@/lib/status";
+import { isClosedOpportunity, isOpenFollowUp, getGenericTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type ManualFollowUpRecord = {
@@ -56,30 +62,19 @@ type FollowUpItem = {
 };
 
 function isComplete(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("closed")
-  );
+  return !isOpenFollowUp(status);
 }
 
 function isOverdue(date: string | null, status: string | null) {
-  const target = parseDateOnly(date);
-  if (!target || isComplete(status)) return false;
-  return target < getTodayDateOnly();
+  return !isComplete(status) && isDateOverdue(date);
 }
 
 function isDueToday(date: string | null, status: string | null) {
-  const target = parseDateOnly(date);
-  if (!target || isComplete(status)) return false;
-  return target.getTime() === getTodayDateOnly().getTime();
+  return !isComplete(status) && isDateDueToday(date);
 }
 
 function isUpcoming(date: string | null, status: string | null) {
-  const target = parseDateOnly(date);
-  if (!target || isComplete(status)) return false;
-  return target > getTodayDateOnly();
+  return !isComplete(status) && isDateUpcoming(date);
 }
 
 function getDueTone(action: FollowUpItem) {
@@ -713,6 +708,12 @@ export default async function FollowUpsPage({
             </form>
           </details>
         </SectionCard>
+
+        {allActions.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent follow-ups — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
 
         <div className="mb-1">
           <SearchInput placeholder="Search follow-ups..." />

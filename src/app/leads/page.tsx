@@ -540,6 +540,12 @@ export default async function OpportunitiesPage({
           </details>
         </SectionCard>
 
+        {opportunities.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.leadPlural.toLowerCase()} — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
+
         <SearchInput placeholder={`Search ${profile.labels.leadPlural.toLowerCase()}...`} />
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">

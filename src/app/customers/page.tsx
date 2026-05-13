@@ -390,6 +390,12 @@ export default async function CustomersPage({
           </form>
         </details>
 
+        {customers.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.customerPlural.toLowerCase()} — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <SearchInput placeholder={`Search ${profile.labels.customerPlural.toLowerCase()}...`} />

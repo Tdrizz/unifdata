@@ -716,6 +716,12 @@ export default async function DataHubPage() {
           }
         />
 
+        {totalRecords >= 500 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 500 most recent records per module — health scores may not reflect your full dataset.
+          </div>
+        )}
+
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Data health"
