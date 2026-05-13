@@ -11,8 +11,6 @@ import { createCustomerAction } from "../actions";
 type Props = {
   customers: CustomerRow[];
   count: number;
-  page: number;
-  q?: string;
   profile: IndustryProfile;
   errorParam?: string;
 };
@@ -43,7 +41,7 @@ function getCustomerType(customer: CustomerRow) {
   return customer.customer_type || "No type set";
 }
 
-export function CustomersList({ customers, count, page, q, profile, errorParam }: Props) {
+export function CustomersList({ customers, count, profile, errorParam }: Props) {
   const missingEmail = customers.filter((c) => !c.email);
   const missingPhone = customers.filter((c) => !c.phone);
   const missingAddress = customers.filter((c) => !c.address);

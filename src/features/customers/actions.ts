@@ -65,12 +65,13 @@ export async function deleteCustomerAction(id: string) {
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  await supabase
+  const { error } = await supabase
     .from("customers")
     .delete()
     .eq("id", id)
     .eq("company_id", company.id);
 
+  if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/customers");
   revalidatePath("/workspace");
   redirect("/customers");

@@ -48,7 +48,7 @@ export default async function CustomersPage({
           description={`Manage ${profile.labels.customerSingular.toLowerCase()} records and quickly see which contact fields are missing.`}
           actions={actions}
         />
-        <CustomersList customers={customers} count={count} page={page} q={params.q} profile={profile} errorParam={params.error} />
+        <CustomersList customers={customers} count={count} profile={profile} errorParam={params.error} />
       </div>
     </AppShell>
   );
