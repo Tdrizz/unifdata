@@ -1,19 +1,25 @@
 import React from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { BrowserChrome, RealSidebar } from "./Dashboard";
 
-const customers = [
-  { name: "Sarah Johnson", company: "Johnson Remodels", value: "$8,400", tag: "Quote", tagColor: "#f59e0b" },
-  { name: "Mike Rivera", company: "Rivera Properties", value: "$3,200", tag: "Overdue", tagColor: "#ef4444" },
-  { name: "Lisa Chen", company: "Chen Dental Group", value: "$15,000", tag: "Won", tagColor: "#22c55e" },
-  { name: "Tom Bradley", company: "Bradley Auto", value: "$5,800", tag: "New Lead", tagColor: "#3b82f6" },
-  { name: "Maria Santos", company: "Santos Retail", value: "$2,100", tag: "In Progress", tagColor: "#8b5cf6" },
+const C = {
+  bg: "#f5f7fb", surface: "#ffffff", border: "#e2e8f0", ink: "#0f172a",
+  muted: "#64748b", subtle: "#94a3b8", accent: "#2563eb",
+  emerald: "#10b981", amber: "#f59e0b", red: "#ef4444",
+};
+
+const opps = [
+  { name: "Johnson Bathroom Remodel", person: "Sarah Johnson", value: "$8,400", stage: "Quoted", followUp: "Overdue", stageColor: C.amber, followColor: C.red, source: "Referral" },
+  { name: "Rivera Kitchen Renovation", person: "Mike Rivera", value: "$14,200", stage: "In progress", followUp: "Due today", stageColor: C.accent, followColor: C.amber, source: "Website" },
+  { name: "Chen Office Plumbing", person: "Lisa Chen", value: "$3,800", stage: "New", followUp: "Not set", stageColor: C.emerald, followColor: C.subtle, source: "Cold call" },
+  { name: "Bradley Garage Upgrade", person: "Tom Bradley", value: "$5,100", stage: "Quoted", followUp: "Tomorrow", stageColor: C.amber, followColor: C.muted, source: "Repeat" },
 ];
 
-const pipeline = [
-  { stage: "New Leads", count: 4, value: "$14,200", color: "#3b82f6", pct: 35 },
-  { stage: "Quoted", count: 6, value: "$28,500", color: "#8b5cf6", pct: 60 },
-  { stage: "In Work", count: 3, value: "$11,800", color: "#f59e0b", pct: 28 },
-  { stage: "Collecting", count: 4, value: "$12,500", color: "#22c55e", pct: 30 },
+const stages = [
+  { label: "New", count: 3, value: "$11,200", color: C.emerald, pct: 30 },
+  { label: "Quoted", count: 5, value: "$24,400", color: C.amber, pct: 55 },
+  { label: "In progress", count: 3, value: "$18,600", color: C.accent, pct: 42 },
+  { label: "Closed won", count: 7, value: "$52,100", color: "#8b5cf6", pct: 80 },
 ];
 
 export const CRMView: React.FC = () => {
@@ -27,63 +33,92 @@ export const CRMView: React.FC = () => {
     <AbsoluteFill style={{ background: "#0a0f1e" }}>
       <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 80px", gap: 40 }}>
         <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)`, textAlign: "center" }}>
-          <p style={{ fontSize: 16, color: "#8b5cf6", fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>CRM & Pipeline</p>
-          <h2 style={{ fontSize: 48, fontWeight: 800, color: "#f1f5f9", margin: 0, fontFamily: "system-ui, sans-serif" }}>Every relationship, every deal</h2>
+          <p style={{ fontSize: 16, color: "#8b5cf6", fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>Pipeline</p>
+          <h2 style={{ fontSize: 48, fontWeight: 800, color: "#f1f5f9", margin: 0, fontFamily: "system-ui, sans-serif" }}>Every opportunity, tracked</h2>
         </div>
-        <div style={{ opacity: browserSpring, transform: `scale(${0.85 + browserSpring * 0.15}) translateY(${(1 - browserSpring) * 30}px)`, width: "100%", borderRadius: 16, overflow: "hidden", border: "1px solid #1e293b", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
-          <div style={{ background: "#111827", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #1e293b" }}>
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ef4444" }} />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#f59e0b" }} />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#22c55e" }} />
-            <div style={{ flex: 1, background: "#1e293b", borderRadius: 6, padding: "4px 12px", marginLeft: 8 }}>
-              <span style={{ fontSize: 12, color: "#475569", fontFamily: "monospace" }}>frontierops.vercel.app/crm</span>
-            </div>
-          </div>
-          <div style={{ background: "#0f172a", display: "flex", gap: 0, padding: 24 }}>
-            <div style={{ flex: 1, marginRight: 24 }}>
-              <h4 style={{ fontSize: 14, fontWeight: 600, color: "#94a3b8", margin: "0 0 14px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>Pipeline Overview</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {pipeline.map((stage, i) => {
-                  const stageSpring = spring({ frame, fps, config: { damping: 14, stiffness: 80 }, delay: 25 + i * 10 });
-                  return (
-                    <div key={stage.stage} style={{ opacity: stageSpring, transform: `translateX(${(1 - stageSpring) * -16}px)` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                        <span style={{ fontSize: 13, color: "#94a3b8", fontFamily: "system-ui, sans-serif" }}>{stage.stage}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: stage.color, fontFamily: "system-ui, sans-serif" }}>{stage.value}</span>
-                      </div>
-                      <div style={{ height: 6, background: "#1e293b", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${stage.pct}%`, background: stage.color, borderRadius: 3, opacity: 0.8 }} />
-                      </div>
-                      <span style={{ fontSize: 11, color: "#475569", fontFamily: "system-ui, sans-serif" }}>{stage.count} records</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={{ flex: 2 }}>
-              <h4 style={{ fontSize: 14, fontWeight: 600, color: "#94a3b8", margin: "0 0 14px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>Recent Relationships</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {customers.map((c, i) => {
-                  const rowSpring = spring({ frame, fps, config: { damping: 14, stiffness: 80 }, delay: 30 + i * 8 });
-                  return (
-                    <div key={c.name} style={{ opacity: rowSpring, transform: `translateX(${(1 - rowSpring) * 20}px)`, display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#111827", borderRadius: 8, border: "1px solid #1e293b" }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#1e3a5f", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#3b82f6", fontFamily: "system-ui, sans-serif", flexShrink: 0 }}>
-                        {c.name.split(" ").map((n: string) => n[0]).join("")}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", margin: 0, fontFamily: "system-ui, sans-serif" }}>{c.name}</p>
-                        <p style={{ fontSize: 11, color: "#475569", margin: 0, fontFamily: "system-ui, sans-serif" }}>{c.company}</p>
-                      </div>
-                      <span style={{ fontSize: 11, background: `${c.tagColor}22`, color: c.tagColor, padding: "2px 8px", borderRadius: 4, fontFamily: "system-ui, sans-serif", fontWeight: 600 }}>{c.tag}</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8", fontFamily: "system-ui, sans-serif" }}>{c.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+        <div style={{ opacity: browserSpring, transform: `scale(${0.88 + browserSpring * 0.12}) translateY(${(1 - browserSpring) * 24}px)`, width: "100%", borderRadius: 14, overflow: "hidden", border: "1px solid #334155", boxShadow: "0 32px 64px rgba(0,0,0,0.7)" }}>
+          <BrowserChrome url="frontierops.business/pipeline" />
+          <div style={{ background: C.bg, display: "flex", minHeight: 400 }}>
+            <RealSidebar active="pipeline" />
+            <div style={{ flex: 1, padding: "24px 28px" }}><PipelineContent frame={frame} fps={fps} /></div>
           </div>
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
+  );
+};
+
+const Badge: React.FC<{ label: string; color: string }> = ({ label, color }) => (
+  <span style={{ display: "inline-block", fontSize: 10, fontWeight: 600, color, background: `${color}14`, border: `1px solid ${color}30`, borderRadius: 100, padding: "2px 7px", fontFamily: "system-ui, sans-serif", width: "fit-content" }}>{label}</span>
+);
+
+const PipelineContent: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const statsSpring = spring({ frame, fps, config: { damping: 14, stiffness: 80 }, delay: 20 });
+  const listOpacity = interpolate(frame, [50, 75], [0, 1], { extrapolateRight: "clamp" });
+  const statCards = [
+    { label: "Open pipeline", value: "$48,200", helper: "11 opportunities", accent: C.accent },
+    { label: "Follow-up needed", value: "4", helper: "Including 2 overdue", accent: C.red },
+    { label: "Won this month", value: "$18,400", helper: "5 closed", accent: C.emerald },
+    { label: "Missing estimates", value: "2", helper: "No value set", accent: C.amber },
+  ];
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: C.ink, margin: "0 0 2px", fontFamily: "system-ui, sans-serif" }}>Pipeline</h2>
+          <p style={{ fontSize: 13, color: C.muted, margin: 0, fontFamily: "system-ui, sans-serif" }}>Open leads and opportunities</p>
+        </div>
+        <div style={{ background: C.accent, borderRadius: 10, padding: "7px 14px" }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", fontFamily: "system-ui, sans-serif" }}>+ New lead</span>
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 18 }}>
+        {statCards.map((s) => (
+          <div key={s.label} style={{ opacity: statsSpring, transform: `translateY(${(1 - statsSpring) * 8}px)`, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "12px 14px", position: "relative", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: s.accent, borderRadius: "18px 0 0 18px" }} />
+            <p style={{ fontSize: 10, color: C.muted, margin: "0 0 3px", fontFamily: "system-ui, sans-serif", fontWeight: 500, paddingLeft: 3 }}>{s.label}</p>
+            <p style={{ fontSize: 22, fontWeight: 600, color: C.ink, margin: "0 0 1px", fontFamily: "system-ui, sans-serif", paddingLeft: 3 }}>{s.value}</p>
+            <p style={{ fontSize: 10, color: C.subtle, margin: 0, fontFamily: "system-ui, sans-serif", paddingLeft: 3 }}>{s.helper}</p>
+          </div>
+        ))}
+      </div>
+      <div style={{ opacity: listOpacity, display: "grid", gridTemplateColumns: "1fr 200px", gap: 14 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ borderBottom: "1px solid #f1f5f9", padding: "11px 16px" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: 0, fontFamily: "system-ui, sans-serif" }}>Open opportunities</p>
+          </div>
+          {opps.map((opp, i) => (
+            <div key={opp.name} style={{ padding: "11px 16px", borderBottom: i < opps.length - 1 ? "1px solid #f8fafc" : "none", display: "grid", gridTemplateColumns: "1fr 110px 120px", gap: 8, alignItems: "start" }}>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: "0 0 1px", fontFamily: "system-ui, sans-serif" }}>{opp.name}</p>
+                <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "system-ui, sans-serif" }}>{opp.person} · {opp.source}</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 10, color: C.subtle, margin: "0 0 2px", fontFamily: "system-ui, sans-serif" }}>Value</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.ink, margin: 0, fontFamily: "system-ui, sans-serif" }}>{opp.value}</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <Badge label={opp.stage} color={opp.stageColor} />
+                <Badge label={opp.followUp} color={opp.followColor} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {stages.map((s) => (
+            <div key={s.label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "11px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: s.color, fontFamily: "system-ui, sans-serif" }}>{s.label}</span>
+                <span style={{ fontSize: 11, color: C.muted, fontFamily: "system-ui, sans-serif" }}>{s.count}</span>
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: C.ink, margin: 0, fontFamily: "system-ui, sans-serif" }}>{s.value}</p>
+              <div style={{ height: 3, background: C.border, borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${s.pct}%`, background: s.color, borderRadius: 2 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };

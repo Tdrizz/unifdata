@@ -1,11 +1,18 @@
 import React from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { BrowserChrome, RealSidebar } from "./Dashboard";
+
+const C = {
+  bg: "#f5f7fb", surface: "#ffffff", border: "#e2e8f0", ink: "#0f172a",
+  muted: "#64748b", subtle: "#94a3b8", accent: "#2563eb", accentSoft: "#eff6ff",
+  emerald: "#10b981", amber: "#f59e0b", red: "#ef4444",
+};
 
 const chatMessages = [
-  { role: "user", text: "Which customers haven't paid yet?" },
-  { role: "ai", text: "You have 4 unpaid revenue records totaling $12,500. The largest is Rivera Properties ($4,800) from a completed kitchen job on Apr 28. Johnson Remodels owes $3,200 — their invoice is 12 days past due." },
+  { role: "user", text: "Which customers haven’t paid yet?" },
+  { role: "ai", text: "4 unpaid records totaling $12,500. Rivera Properties ($4,800) is the largest — completed Apr 28, still open. Johnson Remodels ($3,200) is 12 days past due." },
   { role: "user", text: "Who should I follow up with today?" },
-  { role: "ai", text: "3 follow-ups are overdue: Mike Rivera (callback from last week), Chen Dental (quote sent 10 days ago — no response), and Bradley Auto (service estimate pending approval)." },
+  { role: "ai", text: "3 overdue: Mike Rivera (callback due last week), Chen Dental (quote sent 10 days ago, no response), Bradley Auto (estimate pending approval)." },
 ];
 
 export const AIFeatures: React.FC = () => {
@@ -19,52 +26,14 @@ export const AIFeatures: React.FC = () => {
     <AbsoluteFill style={{ background: "#0a0f1e" }}>
       <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 80px", gap: 40 }}>
         <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)`, textAlign: "center" }}>
-          <p style={{ fontSize: 16, color: "#8b5cf6", fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>AI-powered</p>
+          <p style={{ fontSize: 16, color: "#8b5cf6", fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>AI advisor</p>
           <h2 style={{ fontSize: 48, fontWeight: 800, color: "#f1f5f9", margin: 0, fontFamily: "system-ui, sans-serif" }}>AI that knows your business</h2>
         </div>
-        <div style={{ opacity: browserSpring, transform: `scale(${0.85 + browserSpring * 0.15}) translateY(${(1 - browserSpring) * 30}px)`, width: "100%", borderRadius: 16, overflow: "hidden", border: "1px solid #1e293b", boxShadow: "0 40px 80px rgba(0,0,0,0.6)" }}>
-          <div style={{ background: "#111827", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #1e293b" }}>
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ef4444" }} />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#f59e0b" }} />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#22c55e" }} />
-            <div style={{ flex: 1, background: "#1e293b", borderRadius: 6, padding: "4px 12px", marginLeft: 8 }}>
-              <span style={{ fontSize: 12, color: "#475569", fontFamily: "monospace" }}>frontierops.vercel.app/ai-assistant</span>
-            </div>
-          </div>
-          <div style={{ background: "#0f172a", display: "flex", minHeight: 360 }}>
-            <div style={{ width: 320, borderRight: "1px solid #1e293b", padding: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 16 }}>✨</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#a78bfa", fontFamily: "system-ui, sans-serif" }}>Operating Brief</span>
-              </div>
-              <BriefContent frame={frame} />
-            </div>
-            <div style={{ flex: 1, padding: 20, display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 16 }}>💬</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#94a3b8", fontFamily: "system-ui, sans-serif" }}>Ask about your workspace</span>
-              </div>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-                {chatMessages.map((msg, i) => {
-                  const msgSpring = spring({ frame, fps, config: { damping: 14, stiffness: 70 }, delay: 30 + i * 16 });
-                  return (
-                    <div key={i} style={{ opacity: msgSpring, transform: `translateY(${(1 - msgSpring) * 10}px)`, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-                      <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: msg.role === "user" ? "#1d4ed8" : "#1e293b", border: msg.role === "ai" ? "1px solid #334155" : "none" }}>
-                        <p style={{ fontSize: 13, color: "#e2e8f0", margin: 0, fontFamily: "system-ui, sans-serif", lineHeight: 1.5 }}>{msg.text}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                <div style={{ flex: 1, background: "#111827", border: "1px solid #334155", borderRadius: 8, padding: "10px 14px" }}>
-                  <span style={{ fontSize: 13, color: "#475569", fontFamily: "system-ui, sans-serif" }}>Ask a question about your business...</span>
-                </div>
-                <div style={{ width: 40, height: 40, background: "#7c3aed", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 16 }}>↑</span>
-                </div>
-              </div>
-            </div>
+        <div style={{ opacity: browserSpring, transform: `scale(${0.88 + browserSpring * 0.12}) translateY(${(1 - browserSpring) * 24}px)`, width: "100%", borderRadius: 14, overflow: "hidden", border: "1px solid #334155", boxShadow: "0 32px 64px rgba(0,0,0,0.7)" }}>
+          <BrowserChrome url="frontierops.business/ai-assistant" />
+          <div style={{ background: C.bg, display: "flex", minHeight: 400 }}>
+            <RealSidebar active="ai" />
+            <div style={{ flex: 1, display: "flex" }}><AIContent frame={frame} fps={fps} /></div>
           </div>
         </div>
       </AbsoluteFill>
@@ -72,27 +41,65 @@ export const AIFeatures: React.FC = () => {
   );
 };
 
-const BriefContent: React.FC<{ frame: number }> = ({ frame }) => {
-  const opacity = interpolate(frame, [25, 55], [0, 1], { extrapolateRight: "clamp" });
-  const highlights = [
-    { icon: "📊", text: "Pipeline healthy — $48K active" },
-    { icon: "⚠️", text: "$12.5K unpaid, 4 records" },
-    { icon: "🔔", text: "3 overdue follow-ups" },
-    { icon: "🎯", text: "Johnson quote needs attention" },
-  ];
+const AIContent: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
+  const briefOpacity = interpolate(frame, [20, 45], [0, 1], { extrapolateRight: "clamp" });
   return (
-    <div style={{ opacity }}>
-      <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px", fontFamily: "system-ui, sans-serif", lineHeight: 1.6 }}>Generated by Gemini · Updated just now</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {highlights.map((h, i) => {
-          const itemOpacity = interpolate(frame, [30 + i * 8, 50 + i * 8], [0, 1], { extrapolateRight: "clamp" });
-          return (
-            <div key={i} style={{ opacity: itemOpacity, display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <span style={{ fontSize: 14 }}>{h.icon}</span>
-              <span style={{ fontSize: 13, color: "#94a3b8", fontFamily: "system-ui, sans-serif", lineHeight: 1.5 }}>{h.text}</span>
-            </div>
-          );
-        })}
+    <div style={{ flex: 1, display: "flex" }}>
+      <div style={{ width: 280, borderRight: `1px solid ${C.border}`, padding: "20px 18px", background: C.surface }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+          <span style={{ fontSize: 16 }}>✨</span>
+          <p style={{ fontSize: 14, fontWeight: 600, color: C.ink, margin: 0, fontFamily: "system-ui, sans-serif" }}>Operating Brief</p>
+        </div>
+        <div style={{ opacity: briefOpacity }}>
+          <p style={{ fontSize: 11, color: C.subtle, margin: "0 0 12px", fontFamily: "system-ui, sans-serif" }}>Generated by Gemini · just now</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {[
+              { icon: "📊", title: "Pipeline healthy", desc: "$48K across 11 open opportunities." },
+              { icon: "⚠️", title: "$12.5K unpaid", desc: "4 records, 1 over 10 days old." },
+              { icon: "🔔", title: "3 overdue follow-ups", desc: "Rivera, Chen, Bradley need action." },
+              { icon: "🎯", title: "Largest quote", desc: "Johnson Remodel $8,400 — follow up." },
+            ].map((h, i) => {
+              const itemOp = interpolate(frame, [28 + i * 8, 48 + i * 8], [0, 1], { extrapolateRight: "clamp" });
+              return (
+                <div key={i} style={{ opacity: itemOp, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 13, marginTop: 1 }}>{h.icon}</span>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: C.ink, margin: "0 0 1px", fontFamily: "system-ui, sans-serif" }}>{h.title}</p>
+                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "system-ui, sans-serif", lineHeight: 1.4 }}>{h.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 14, padding: "8px 12px", background: C.accentSoft, borderRadius: 10, border: "1px solid #bfdbfe" }}>
+            <p style={{ fontSize: 11, color: C.accent, fontWeight: 600, margin: "0 0 2px", fontFamily: "system-ui, sans-serif" }}>Recommended</p>
+            <p style={{ fontSize: 11, color: "#1e40af", margin: 0, fontFamily: "system-ui, sans-serif", lineHeight: 1.5 }}>Call Mike Rivera today. Follow up on Johnson quote before week end.</p>
+          </div>
+        </div>
+      </div>
+      <div style={{ flex: 1, padding: "20px 20px", display: "flex", flexDirection: "column", background: C.bg }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: C.muted, margin: "0 0 16px", fontFamily: "system-ui, sans-serif" }}>Ask about your workspace</p>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+          {chatMessages.map((msg, i) => {
+            const msgSpring = spring({ frame, fps, config: { damping: 14, stiffness: 70 }, delay: 28 + i * 15 });
+            return (
+              <div key={i} style={{ opacity: msgSpring, transform: `translateY(${(1 - msgSpring) * 8}px)`, display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "78%", padding: "10px 13px", borderRadius: msg.role === "user" ? "14px 14px 3px 14px" : "14px 14px 14px 3px", background: msg.role === "user" ? C.accent : C.surface, border: msg.role === "ai" ? `1px solid ${C.border}` : "none", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  {msg.role === "ai" && <p style={{ fontSize: 10, fontWeight: 600, color: "#8b5cf6", margin: "0 0 4px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "0.05em" }}>AI Advisor</p>}
+                  <p style={{ fontSize: 12, color: msg.role === "user" ? "#fff" : C.ink, margin: 0, fontFamily: "system-ui, sans-serif", lineHeight: 1.5 }}>{msg.text}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+          <div style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "10px 14px" }}>
+            <span style={{ fontSize: 12, color: C.subtle, fontFamily: "system-ui, sans-serif" }}>Ask a question about your business...</span>
+          </div>
+          <div style={{ width: 38, height: 38, background: C.accent, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 14, color: "#fff" }}>↑</span>
+          </div>
+        </div>
       </div>
     </div>
   );
