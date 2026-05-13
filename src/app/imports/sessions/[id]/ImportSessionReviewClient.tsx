@@ -609,7 +609,7 @@ export function ImportSessionReviewClient({
                   </div>
                 </div>
 
-                {row.normalized_data._customer_unlinked && (
+                {!!row.normalized_data._customer_unlinked && (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">
                       Customer not matched
@@ -623,7 +623,7 @@ export function ImportSessionReviewClient({
                   </div>
                 )}
 
-                {row.normalized_data._date_defaulted && (
+                {!!row.normalized_data._date_defaulted && (
                   <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-700">
                       Date defaulted to today
