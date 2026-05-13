@@ -11,11 +11,11 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { formatCurrency, getDateInputValue } from "@/lib/utils";
 import { isCompleteWork, isUnpaid, getWorkTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { JobRow, CustomerRow, LeadRow } from "../types";
+import type { JobListRow, CustomerRow, LeadRow } from "../types";
 import { updateJobAction, deleteJobAction } from "../actions";
 
 type Props = {
-  job: JobRow;
+  job: JobListRow;
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile: IndustryProfile;
@@ -26,7 +26,7 @@ function isCancelled(status: string | null) {
   return String(status || "").toLowerCase().includes("cancel");
 }
 
-function getWorkNextStep(work: JobRow) {
+function getWorkNextStep(work: JobListRow) {
   if (!work.customer_id)
     return "Link this work to the person or business it belongs to.";
   if (!work.lead_id)
@@ -44,7 +44,7 @@ function getWorkNextStep(work: JobRow) {
   return "Keep this work updated as it moves toward completion.";
 }
 
-function getWorkIssues(work: JobRow) {
+function getWorkIssues(work: JobListRow) {
   const issues: {
     label: string;
     tone: "success" | "warning" | "danger" | "neutral";

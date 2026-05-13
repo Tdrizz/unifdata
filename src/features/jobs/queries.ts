@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { JobRow, CustomerRow, LeadRow } from "./types";
+import type { JobListRow, CustomerRow, LeadRow } from "./types";
 
 type JobsPageOpts = { q?: string; page?: number; pageSize?: number };
 
@@ -31,14 +31,14 @@ export async function getJobsPageData(
 
   if (error) throw new Error(error.message);
 
-  return { jobs: (data ?? []) as JobRow[], count: count ?? 0 };
+  return { jobs: (data ?? []) as JobListRow[], count: count ?? 0 };
 }
 
 export async function getJobById(
   supabase: SupabaseClient,
   companyId: string,
   id: string,
-): Promise<JobRow | null> {
+): Promise<JobListRow | null> {
   const { data, error } = await supabase
     .from("jobs")
     .select(
@@ -49,7 +49,7 @@ export async function getJobById(
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return data as JobRow | null;
+  return data as JobListRow | null;
 }
 
 export async function getCustomersForJobSelect(

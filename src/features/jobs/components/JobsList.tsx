@@ -9,11 +9,11 @@ import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { JobRow, CustomerRow, LeadRow } from "../types";
+import type { JobListRow, CustomerRow, LeadRow } from "../types";
 import { createJobAction } from "../actions";
 
 type Props = {
-  jobs: JobRow[];
+  jobs: JobListRow[];
   count: number;
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
@@ -48,7 +48,7 @@ function getStageExplanation(status: string | null) {
   return { meaning: "Work using a custom or imported stage." };
 }
 
-function getWorkNextStep(work: JobRow) {
+function getWorkNextStep(work: JobListRow) {
   if (!work.customer_id) {
     return "Link this work to the person or business it belongs to.";
   }
@@ -80,7 +80,7 @@ function getWorkNextStep(work: JobRow) {
   return "Keep this work updated as it moves toward completion.";
 }
 
-function getWorkIssues(work: JobRow) {
+function getWorkIssues(work: JobListRow) {
   const issues: { label: string; tone: "success" | "warning" | "danger" | "neutral" }[] = [];
 
   if (!work.customer_id) {

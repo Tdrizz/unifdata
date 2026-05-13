@@ -18,7 +18,7 @@ export default async function WorkPage({
   const params = await searchParams;
   const selectedStage = params.stage ? decodeURIComponent(params.stage) : "";
   const errorParam = params.error ? decodeURIComponent(params.error) : "";
-  const page = Number(params.page ?? 1);
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
   const supabase = await createClient();
   const {
