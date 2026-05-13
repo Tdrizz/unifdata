@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -251,13 +252,15 @@ function getSortDateTime(action: FollowUpItem) {
 export default async function FollowUpsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; due?: string; source?: string; error?: string }>;
+  searchParams: Promise<{ status?: string; due?: string; source?: string; error?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedDue = params.due ? decodeURIComponent(params.due) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
   const errorParam = params.error ? decodeURIComponent(params.error) : "";
+  const rawQ = params.q ? decodeURIComponent(params.q).trim() : "";
+  const q = rawQ.toLowerCase();
 
   const supabase = await createClient();
 
@@ -393,23 +396,34 @@ export default async function FollowUpsPage({
       href: `/leads/${opportunity.id}/edit`,
     }));
 
-  const actions = [...manualItems, ...opportunityItems];
+  const allActions = [...manualItems, ...opportunityItems];
 
-  const openActions = actions.filter((action) => !isComplete(action.status));
-const overdueActions = actions.filter((action) =>
+  const actions = q
+    ? allActions.filter((action) => {
+        const person = action.customer_id ? personById.get(action.customer_id) : null;
+        return (
+          action.title.toLowerCase().includes(q) ||
+          (person?.name ?? "").toLowerCase().includes(q) ||
+          action.source_label.toLowerCase().includes(q)
+        );
+      })
+    : allActions;
+
+  const openActions = allActions.filter((action) => !isComplete(action.status));
+  const overdueActions = allActions.filter((action) =>
     isOverdue(action.due_date, action.status),
   );
-  const dueTodayActions = actions.filter((action) =>
+  const dueTodayActions = allActions.filter((action) =>
     isDueToday(action.due_date, action.status),
   );
-  const upcomingActions = actions.filter((action) =>
+  const upcomingActions = allActions.filter((action) =>
     isUpcoming(action.due_date, action.status),
   );
-  const missingDueDate = actions.filter(
+  const missingDueDate = allActions.filter(
     (action) => !action.due_date && !isComplete(action.status),
   );
-  const missingStatus = actions.filter((action) => !action.status);
-  const missingPerson = actions.filter((action) => !action.customer_id);
+  const missingStatus = allActions.filter((action) => !action.status);
+  const missingPerson = allActions.filter((action) => !action.customer_id);
 
   const cleanupGroups = [
     {
@@ -700,27 +714,35 @@ const overdueActions = actions.filter((action) =>
           </details>
         </SectionCard>
 
+        <div className="mb-1">
+          <SearchInput placeholder="Search follow-ups..." />
+        </div>
+
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
             title={
-              selectedDue
-                ? `${selectedDue} follow-ups`
-                : selectedSource
-                  ? `${selectedSource} follow-ups`
-                  : "Follow-up queue"
+              q
+                ? `Results for "${rawQ}"`
+                : selectedDue
+                  ? `${selectedDue} follow-ups`
+                  : selectedSource
+                    ? `${selectedSource} follow-ups`
+                    : "Follow-up queue"
             }
             description={
-              selectedDue
-                ? "Showing follow-ups filtered by timing."
-                : selectedSource
-                  ? "Showing follow-ups filtered by source."
-                  : "Sorted by overdue, due today, then the nearest upcoming date."
+              q
+                ? `${visibleActions.length} of ${allActions.length} follow-ups match`
+                : selectedDue
+                  ? "Showing follow-ups filtered by timing."
+                  : selectedSource
+                    ? "Showing follow-ups filtered by source."
+                    : "Sorted by overdue, due today, then the nearest upcoming date."
             }
           >
             {visibleActions.length === 0 ? (
               <EmptyState
-                title="No follow-ups found"
-                description="Add a manual follow-up or set a next follow-up date on an opportunity."
+                title={q ? `No follow-ups match "${rawQ}"` : "No follow-ups found"}
+                description={q ? "Try a different search term." : "Add a manual follow-up or set a next follow-up date on an opportunity."}
               />
             ) : (
               <>

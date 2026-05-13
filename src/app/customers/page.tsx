@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DismissError } from "@/components/ui/DismissError";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { formatTimestampDate } from "@/lib/date-format";
@@ -76,9 +77,10 @@ function getCustomerType(customer: CustomerRecord) {
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; q?: string; sort?: string }>;
 }) {
-  const { error: errorParam } = await searchParams;
+  const { error: errorParam, q: rawQ, sort = "newest" } = await searchParams;
+  const q = rawQ ? decodeURIComponent(rawQ).toLowerCase() : "";
   const supabase = await createClient();
 
   const {
@@ -153,12 +155,29 @@ export default async function CustomersPage({
 
   const customers = (data || []) as CustomerRecord[];
 
+  // Stats always reflect all records, not the filtered subset
   const missingEmail = customers.filter((customer) => !customer.email);
   const missingPhone = customers.filter((customer) => !customer.phone);
   const missingAddress = customers.filter((customer) => !customer.address);
   const recordsNeedingCleanup = customers.filter(
     (customer) => !customer.email || !customer.phone || !customer.address,
   ).length;
+
+  const filteredCustomers = q
+    ? customers.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(q) ||
+          c.phone?.toLowerCase().includes(q) ||
+          c.email?.toLowerCase().includes(q) ||
+          c.address?.toLowerCase().includes(q),
+      )
+    : customers;
+
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+    if (sort === "name") return (a.name || "").localeCompare(b.name || "");
+    if (sort === "name_desc") return (b.name || "").localeCompare(a.name || "");
+    return 0; // "newest" keeps DB order (created_at DESC)
+  });
 
   return (
     <AppShell
@@ -282,11 +301,11 @@ export default async function CustomersPage({
               </p>
             </div>
 
-            <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:hidden">
-              Open
+            <span className="rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white group-open:hidden">
+              + Add {profile.labels.customerSingular.toLowerCase()}
             </span>
 
-            <span className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:inline-flex">
+            <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 group-open:inline-flex">
               Close
             </span>
           </summary>
@@ -371,18 +390,57 @@ export default async function CustomersPage({
           </form>
         </details>
 
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <SearchInput placeholder={`Search ${profile.labels.customerPlural.toLowerCase()}...`} />
+          </div>
+          <div className="flex gap-1.5 shrink-0">
+            {(["newest", "name", "name_desc"] as const).map((s) => {
+              const labels = { newest: "Newest", name: "A → Z", name_desc: "Z → A" };
+              const active = sort === s || (s === "newest" && !sort);
+              const qPart = q ? `&q=${encodeURIComponent(q)}` : "";
+              return (
+                <Link
+                  key={s}
+                  href={s === "newest" ? `/customers${q ? `?q=${encodeURIComponent(q)}` : ""}` : `/customers?sort=${s}${qPart}`}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${active ? "border-slate-950 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
+                >
+                  {labels[s]}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
         <SectionCard
           title="Directory"
-          description={`Open a record to edit contact details, address, type, or notes.`}
+          description={
+            q
+              ? `Showing ${sortedCustomers.length} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} matching "${rawQ}"`
+              : `Open a record to edit contact details, address, type, or notes.`
+          }
         >
           {customers.length === 0 ? (
             <EmptyState
               title={`No ${profile.labels.customerPlural.toLowerCase()} yet`}
               description={`Add a ${profile.labels.customerSingular.toLowerCase()} manually or import from CSV or Google Sheets.`}
+              action={
+                <Link
+                  href="/imports"
+                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  Import from CSV
+                </Link>
+              }
+            />
+          ) : sortedCustomers.length === 0 ? (
+            <EmptyState
+              title={`No results for "${rawQ}"`}
+              description="Try a different name, phone number, email, or address."
             />
           ) : (
             <div className="divide-y divide-slate-100">
-              {customers.map((customer) => (
+              {sortedCustomers.map((customer) => (
                 <Link
                   key={customer.id}
                   href={`/customers/${customer.id}/edit`}

@@ -14,6 +14,7 @@ import { formatDateOnly, getTodayString } from "@/lib/date-format";
 import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
 import { isUnpaid, getRevenueTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type RevenueRecord = {
   id: string;
@@ -105,12 +106,14 @@ function getRevenueIssues(record: RevenueRecord) {
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string; error?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; error?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
   const errorParam = params.error ? decodeURIComponent(params.error) : "";
+  const rawQ = params.q ?? "";
+  const q = rawQ ? decodeURIComponent(rawQ).toLowerCase() : "";
 
   const supabase = await createClient();
 
@@ -186,23 +189,32 @@ export default async function RevenuePage({
 
   const revenueRecords = (data || []) as RevenueRecord[];
 
-  const paidRevenue = revenueRecords.filter((record) =>
+  const filteredRevenueRecords = q
+    ? revenueRecords.filter(
+        (r) =>
+          r.service_type?.toLowerCase().includes(q) ||
+          r.source?.toLowerCase().includes(q) ||
+          r.payment_status?.toLowerCase().includes(q),
+      )
+    : revenueRecords;
+
+  const paidRevenue = filteredRevenueRecords.filter((record) =>
     isPaid(record.payment_status),
   );
 
-  const unpaidRevenue = revenueRecords.filter((record) =>
+  const unpaidRevenue = filteredRevenueRecords.filter((record) =>
     isUnpaid(record.payment_status),
   );
 
-  const missingSource = revenueRecords.filter((record) => !record.source);
+  const missingSource = filteredRevenueRecords.filter((record) => !record.source);
 
-  const missingAmount = revenueRecords.filter(
+  const missingAmount = filteredRevenueRecords.filter(
     (record) => record.amount === null || record.amount === undefined,
   );
 
-  const missingDate = revenueRecords.filter((record) => !record.sale_date);
+  const missingDate = filteredRevenueRecords.filter((record) => !record.sale_date);
 
-  const totalRevenue = revenueRecords.reduce(
+  const totalRevenue = filteredRevenueRecords.reduce(
     (sum, record) => sum + Number(record.amount || 0),
     0,
   );
@@ -244,7 +256,9 @@ export default async function RevenuePage({
     },
   ].filter((item) => item.count > 0);
 
-  const prioritizedRevenue = [...revenueRecords]
+  const REVENUE_LIMIT = 25;
+
+  const prioritizedRevenue = [...filteredRevenueRecords]
     .sort((a, b) => {
       const aUnpaid = isUnpaid(a.payment_status);
       const bUnpaid = isUnpaid(b.payment_status);
@@ -261,8 +275,7 @@ export default async function RevenuePage({
       }
 
       return Number(b.amount || 0) - Number(a.amount || 0);
-    })
-    .slice(0, 25);
+    });
 
   const visibleRevenue = prioritizedRevenue.filter((record) => {
     if (
@@ -480,27 +493,40 @@ export default async function RevenuePage({
           </details>
         </SectionCard>
 
+        <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}...`} />
+
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
             title={
-              selectedStatus
-                ? `${selectedStatus} revenue`
-                : selectedSource
-                  ? `${selectedSource} revenue`
-                  : "Revenue queue"
+              q
+                ? `Search results`
+                : selectedStatus
+                  ? `${selectedStatus} revenue`
+                  : selectedSource
+                    ? `${selectedSource} revenue`
+                    : "Revenue queue"
             }
             description={
-              selectedStatus
-                ? `Showing revenue records marked ${selectedStatus}.`
-                : selectedSource
-                  ? `Showing revenue records from ${selectedSource}.`
-                  : "Revenue records prioritized by payment needs, missing source, and amount."
+              q
+                ? `${filteredRevenueRecords.length} of ${revenueRecords.length} records match "${rawQ}"`
+                : selectedStatus
+                  ? `Showing revenue records marked ${selectedStatus}.`
+                  : selectedSource
+                    ? `Showing revenue records from ${selectedSource}.`
+                    : "Revenue records prioritized by payment needs, missing source, and amount."
             }
           >
             {visibleRevenue.length === 0 ? (
               <EmptyState
-                title="No revenue records found"
-                description="Add revenue manually or import revenue from CSV or Google Sheets."
+                title={q ? `No results for "${rawQ}"` : "No revenue records found"}
+                description={q ? "Try a different search term." : "Add revenue manually or import revenue from CSV or Google Sheets."}
+                action={
+                  !q ? (
+                    <Link href="/imports" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                      Import revenue
+                    </Link>
+                  ) : undefined
+                }
               />
             ) : (
               <>
@@ -520,7 +546,7 @@ export default async function RevenuePage({
                 )}
 
                 <div className="divide-y divide-slate-100">
-                  {visibleRevenue.map((record) => {
+                  {visibleRevenue.slice(0, REVENUE_LIMIT).map((record) => {
                     const issues = getRevenueIssues(record);
 
                     return (
@@ -591,6 +617,13 @@ export default async function RevenuePage({
                       </Link>
                     );
                   })}
+                  {visibleRevenue.length > REVENUE_LIMIT && (
+                    <div className="border-t border-slate-100 p-4">
+                      <Link href="/sales" className="text-sm font-semibold text-slate-600 hover:text-slate-950">
+                        See all {visibleRevenue.length} {profile.labels.salePlural.toLowerCase()} →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </>
             )}

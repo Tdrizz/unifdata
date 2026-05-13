@@ -103,6 +103,7 @@ export function OrphanQuickLink({ groups }: { groups: OrphanGroup[] }) {
             <p className="mt-0.5 text-xs text-blue-600">
               {group.jobs.length} job{group.jobs.length !== 1 ? "s" : ""} → {group.suggested_lead!.service_requested ?? "Opportunity"}
             </p>
+            <p className="text-xs text-blue-500 mt-0.5">These jobs and opportunities share the same customer — linking them connects your data automatically.</p>
           </div>
         ))}
 
