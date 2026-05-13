@@ -14,6 +14,9 @@ import type { SaleRow } from "../types";
 
 type Props = {
   sales: SaleRow[];
+  count: number;
+  page: number;
+  q?: string;
   profile: IndustryProfile;
   selectedStatus: string;
   selectedSource: string;
@@ -67,7 +70,7 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SalesList({ sales, profile, selectedStatus, selectedSource, errorParam }: Props) {
+export function SalesList({ sales, count, page, q, profile, selectedStatus, selectedSource, errorParam }: Props) {
   const paidRevenue = sales.filter((r) => isPaid(r.payment_status));
   const unpaidRevenue = sales.filter((r) => isUnpaid(r.payment_status));
   const missingSource = sales.filter((r) => !r.source);

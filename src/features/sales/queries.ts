@@ -1,19 +1,28 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SaleRow, CustomerRow, JobRow } from "./types";
 
+type SalesPageOpts = { q?: string; page?: number; pageSize?: number };
+
 export async function getSalesPageData(
   supabase: SupabaseClient,
   companyId: string,
-): Promise<{ sales: SaleRow[] }> {
-  const { data, error } = await supabase
-    .from("sales")
-    .select("id, amount, payment_status, sale_date, service_type, source, created_at")
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false })
-    .limit(250);
+  opts: SalesPageOpts = {},
+): Promise<{ sales: SaleRow[]; count: number }> {
+  const { q, page = 1, pageSize = 50 } = opts;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
+  let query = supabase
+    .from("sales")
+    .select("id, amount, payment_status, sale_date, service_type, source, created_at", { count: "exact" })
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+
+  if (q) query = query.or(`service_type.ilike.%${q}%,source.ilike.%${q}%,payment_status.ilike.%${q}%`);
+
+  const { data, error, count } = await query.range(from, to);
   if (error) throw new Error(error.message);
-  return { sales: (data ?? []) as SaleRow[] };
+  return { sales: (data ?? []) as SaleRow[], count: count ?? 0 };
 }
 
 export async function getSaleById(

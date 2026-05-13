@@ -9,12 +9,13 @@ import { SalesList } from "@/features/sales/components/SalesList";
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string; error?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; q?: string; page?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
   const errorParam = params.error ? decodeURIComponent(params.error) : "";
+  const page = Number(params.page ?? 1);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,7 +26,7 @@ export default async function RevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const { sales } = await getSalesPageData(supabase, company.id);
+  const { sales, count } = await getSalesPageData(supabase, company.id, { q: params.q, page });
 
   return (
     <AppShell
@@ -37,6 +38,9 @@ export default async function RevenuePage({
     >
       <SalesList
         sales={sales}
+        count={count}
+        page={page}
+        q={params.q}
         profile={profile}
         selectedStatus={selectedStatus}
         selectedSource={selectedSource}
