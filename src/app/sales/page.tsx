@@ -174,29 +174,22 @@ export default async function RevenuePage({
     redirect("/sales");
   }
 
-  const { data, error } = await supabase
+  const salesBase = supabase
     .from("sales")
-    .select(
-      "id, amount, payment_status, sale_date, service_type, source, created_at",
-    )
+    .select("id, amount, payment_status, sale_date, service_type, source, created_at")
     .eq("company_id", company.id)
-    .order("created_at", { ascending: false })
-    .limit(250);
+    .order("created_at", { ascending: false });
+
+  const { data, error } = await (q
+    ? salesBase.or(`service_type.ilike.%${q}%,source.ilike.%${q}%,payment_status.ilike.%${q}%`).limit(1000)
+    : salesBase.limit(250));
 
   if (error) {
     throw new Error(error.message);
   }
 
   const revenueRecords = (data || []) as RevenueRecord[];
-
-  const filteredRevenueRecords = q
-    ? revenueRecords.filter(
-        (r) =>
-          r.service_type?.toLowerCase().includes(q) ||
-          r.source?.toLowerCase().includes(q) ||
-          r.payment_status?.toLowerCase().includes(q),
-      )
-    : revenueRecords;
+  const filteredRevenueRecords = revenueRecords;
 
   const paidRevenue = filteredRevenueRecords.filter((record) =>
     isPaid(record.payment_status),
@@ -493,6 +486,12 @@ export default async function RevenuePage({
           </details>
         </SectionCard>
 
+        {revenueRecords.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.salePlural.toLowerCase()} — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
+
         <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}...`} />
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
@@ -508,7 +507,7 @@ export default async function RevenuePage({
             }
             description={
               q
-                ? `${filteredRevenueRecords.length} of ${revenueRecords.length} records match "${rawQ}"`
+                ? `${filteredRevenueRecords.length} records match "${rawQ}"`
                 : selectedStatus
                   ? `Showing revenue records marked ${selectedStatus}.`
                   : selectedSource

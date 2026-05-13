@@ -413,6 +413,47 @@ export default async function SettingsPage() {
         </section>
 
         <SectionCard
+          title="Plan & billing"
+          description="Your current subscription and usage."
+        >
+          <div className="space-y-4 p-5">
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Current plan</p>
+                  <p className="mt-1 text-xl font-semibold text-slate-950">FrontierOps — $100 / month</p>
+                  <p className="mt-1 text-sm text-slate-500">Setup fee paid · Renews June 13, 2026</p>
+                </div>
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Trial
+                </span>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/pricing"
+                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                  View all plans
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Upgrade plan
+                </Link>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400">
+              To update billing info or cancel, contact{" "}
+              <a href="mailto:billing@frontierops.com" className="underline hover:text-slate-700">
+                billing@frontierops.com
+              </a>
+              .
+            </p>
+          </div>
+        </SectionCard>
+
+        <SectionCard
           title="Data integrations"
           description="Connect your business tools. Once connected, FrontierOps syncs their data automatically every day — no CSV exports needed."
         >

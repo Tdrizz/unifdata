@@ -142,12 +142,15 @@ export default async function CustomersPage({
     redirect("/customers");
   }
 
-  const { data, error } = await supabase
+  const baseQuery = supabase
     .from("customers")
     .select("id, name, phone, email, address, customer_type, notes, created_at")
     .eq("company_id", company.id)
-    .order("created_at", { ascending: false })
-    .limit(250);
+    .order("created_at", { ascending: false });
+
+  const { data, error } = await (q
+    ? baseQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%,address.ilike.%${q}%`).limit(1000)
+    : baseQuery.limit(250));
 
   if (error) {
     throw new Error(error.message);
@@ -155,7 +158,6 @@ export default async function CustomersPage({
 
   const customers = (data || []) as CustomerRecord[];
 
-  // Stats always reflect all records, not the filtered subset
   const missingEmail = customers.filter((customer) => !customer.email);
   const missingPhone = customers.filter((customer) => !customer.phone);
   const missingAddress = customers.filter((customer) => !customer.address);
@@ -163,17 +165,7 @@ export default async function CustomersPage({
     (customer) => !customer.email || !customer.phone || !customer.address,
   ).length;
 
-  const filteredCustomers = q
-    ? customers.filter(
-        (c) =>
-          c.name?.toLowerCase().includes(q) ||
-          c.phone?.toLowerCase().includes(q) ||
-          c.email?.toLowerCase().includes(q) ||
-          c.address?.toLowerCase().includes(q),
-      )
-    : customers;
-
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+  const sortedCustomers = [...customers].sort((a, b) => {
     if (sort === "name") return (a.name || "").localeCompare(b.name || "");
     if (sort === "name_desc") return (b.name || "").localeCompare(a.name || "");
     return 0; // "newest" keeps DB order (created_at DESC)
@@ -390,6 +382,12 @@ export default async function CustomersPage({
           </form>
         </details>
 
+        {customers.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.customerPlural.toLowerCase()} — older records may not appear. Use search to find specific entries.
+          </div>
+        )}
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex-1">
             <SearchInput placeholder={`Search ${profile.labels.customerPlural.toLowerCase()}...`} />
@@ -416,7 +414,7 @@ export default async function CustomersPage({
           title="Directory"
           description={
             q
-              ? `Showing ${sortedCustomers.length} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} matching "${rawQ}"`
+              ? `${sortedCustomers.length} ${profile.labels.customerPlural.toLowerCase()} match "${rawQ}"`
               : `Open a record to edit contact details, address, type, or notes.`
           }
         >

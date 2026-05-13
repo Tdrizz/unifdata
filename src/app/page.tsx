@@ -152,6 +152,13 @@ export default function HomePage() {
             </Link>
 
             <Link
+              href="/pricing"
+              className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
+            >
+              Pricing
+            </Link>
+
+            <Link
               href="/docs"
               className="hidden rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white sm:block"
             >
@@ -371,6 +378,72 @@ export default function HomePage() {
               >
                 See how it works
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-white/10 px-6 py-20" id="pricing">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Pricing
+            </p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight">
+              One price. Everything included.
+            </h2>
+            <p className="mt-3 text-slate-300">
+              No tiers, no feature gating. Pay once to get set up, then a flat monthly rate.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-2xl">
+            <div className="rounded-4xl border border-white/20 bg-white/8 p-10 shadow-2xl">
+              <div className="grid gap-8 sm:grid-cols-2">
+                <div className="text-center">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">One-time setup</p>
+                  <div className="mt-3 flex items-end justify-center gap-1">
+                    <span className="text-6xl font-semibold">$300</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">Onboarding & data setup — paid once</p>
+                </div>
+                <div className="text-center sm:border-l sm:border-white/10 sm:pl-8">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Then monthly</p>
+                  <div className="mt-3 flex items-end justify-center gap-1">
+                    <span className="text-6xl font-semibold">$100</span>
+                    <span className="mb-1.5 text-slate-400">/mo</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">Cancel any time — no contracts</p>
+                </div>
+              </div>
+
+              <div className="my-8 h-px bg-white/10" />
+
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {["CRM for customers, leads, jobs & sales", "Daily priority queue & follow-ups", "Data health scoring & cleanup tools", "CSV import + QuickBooks, Jobber sync", "Custom branding & colors", "Secure, isolated workspace"].map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-sm">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-slate-200">{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/signup"
+                  className="flex-1 rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
+                >
+                  Get started
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="flex-1 rounded-2xl border border-white/20 px-5 py-3 text-center font-semibold text-white hover:bg-white/10"
+                >
+                  See full pricing details →
+                </Link>
+              </div>
             </div>
           </div>
         </div>

@@ -17,6 +17,8 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import {
   isClosedOpportunity,
+  isWon,
+  isLost,
   getOpportunityTone,
 } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
@@ -40,24 +42,6 @@ type PersonRecord = {
   phone: string | null;
 };
 
-function isWon(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  return normalized.includes("won") || normalized.includes("accepted");
-}
-
-function isLost(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  return (
-    normalized.includes("lost") ||
-    normalized.includes("cancel") ||
-    normalized.includes("declined")
-  );
-}
-
-function isClosed(status: string | null) {
-  return isClosedOpportunity(status);
-}
 
 function getFollowUpLabel(date: string | null) {
   if (!date) {
@@ -141,14 +125,14 @@ function getOpportunityNextStep(opportunity: OpportunityRecord) {
     return "Add an estimated value so the pipeline can be prioritized.";
   }
 
-  if (!opportunity.next_follow_up_date && !isClosed(opportunity.status)) {
+  if (!opportunity.next_follow_up_date && !isClosedOpportunity(opportunity.status)) {
     return "Add a next follow-up date so this does not get forgotten.";
   }
 
   if (
     opportunity.next_follow_up_date &&
     isTodayOrPast(opportunity.next_follow_up_date) &&
-    !isClosed(opportunity.status)
+    !isClosedOpportunity(opportunity.status)
   ) {
     return "This opportunity needs follow-up attention.";
   }
@@ -194,7 +178,7 @@ function getOpportunityIssues(opportunity: OpportunityRecord) {
     });
   }
 
-  if (!opportunity.next_follow_up_date && !isClosed(opportunity.status)) {
+  if (!opportunity.next_follow_up_date && !isClosedOpportunity(opportunity.status)) {
     issues.push({
       label: "Add follow-up",
       tone: "warning",
@@ -204,7 +188,7 @@ function getOpportunityIssues(opportunity: OpportunityRecord) {
   if (
     opportunity.next_follow_up_date &&
     isTodayOrPast(opportunity.next_follow_up_date) &&
-    !isClosed(opportunity.status)
+    !isClosedOpportunity(opportunity.status)
   ) {
     issues.push({
       label: "Follow-up due",
@@ -281,7 +265,7 @@ export default async function PipelinePage({
   const personById = new Map(people.map((person) => [person.id, person]));
 
   const openOpportunities = opportunities.filter(
-    (opportunity) => !isClosed(opportunity.status),
+    (opportunity) => !isClosedOpportunity(opportunity.status),
   );
 
   const wonOpportunities = opportunities.filter((opportunity) =>
@@ -328,7 +312,7 @@ export default async function PipelinePage({
       current.value += Number(opportunity.estimated_value || 0);
 
       if (
-        !isClosed(status) &&
+        !isClosedOpportunity(status) &&
         (!opportunity.next_follow_up_date ||
           isTodayOrPast(opportunity.next_follow_up_date))
       ) {
@@ -418,6 +402,12 @@ export default async function PipelinePage({
             </div>
           }
         />
+
+        {opportunities.length >= 250 && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Showing the 250 most recent {profile.labels.leadPlural.toLowerCase()} — older records may not appear. Use search or filters to find specific entries.
+          </div>
+        )}
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
@@ -605,7 +595,7 @@ export default async function PipelinePage({
                         {getStageDescription(group.status)}
                       </p>
 
-                      {!isClosed(group.status) && group.followUpNeeded > 0 && (
+                      {!isClosedOpportunity(group.status) && group.followUpNeeded > 0 && (
                         <span className="mt-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                           {group.followUpNeeded} need follow-up
                         </span>
