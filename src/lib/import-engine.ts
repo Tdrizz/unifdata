@@ -560,13 +560,31 @@ export function toImportDate(value: unknown) {
     return null;
   }
 
+  // Google Sheets exports date cells as serial numbers (days since Dec 30 1899)
+  // when the column format is set to "Number". Modern dates are roughly 40000–60000.
+  // Date.parse would misread e.g. "46162" as year 46162 CE, producing "+046162-01-01".
+  const num = Number(cleaned);
+  if (!Number.isNaN(num) && Number.isInteger(num) && num > 20000 && num < 100000) {
+    // 25569 = days from Dec 30 1899 to Jan 1 1970 (Unix epoch)
+    const d = new Date((num - 25569) * 86400 * 1000);
+    if (!Number.isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+  }
+
   const parsed = Date.parse(cleaned);
 
   if (Number.isNaN(parsed)) {
     return null;
   }
 
-  return new Date(parsed).toISOString().slice(0, 10);
+  const d = new Date(parsed);
+  // Reject implausible years that sneak through (e.g. bare 4-digit non-serial numbers)
+  if (d.getUTCFullYear() < 1900 || d.getUTCFullYear() > 2200) {
+    return null;
+  }
+
+  return d.toISOString().slice(0, 10);
 }
 
 function getMappedValue(
@@ -1151,6 +1169,17 @@ function buildInsertPayload({
   resolvedCustomerId?: string | null;
   resolvedLeadId?: string | null;
 }) {
+  // Re-validate dates at insert time so corrupted values (e.g. Sheets serials stored
+  // in old sessions) don't reach Postgres as bad timestamptz strings.
+  function safeDate(value: unknown): string | null {
+    const reparsed = toImportDate(value);
+    return reparsed || null;
+  }
+
+  function safeDateOrToday(value: unknown): string {
+    return safeDate(value) ?? new Date().toISOString().slice(0, 10);
+  }
+
   if (recordType === "relationships") {
     return {
       company_id: companyId,
@@ -1171,7 +1200,7 @@ function buildInsertPayload({
       status: normalizedData.status || "New",
       estimated_value: normalizedData.estimated_value || null,
       source: normalizedData.source || null,
-      next_follow_up_date: normalizedData.next_follow_up_date || null,
+      next_follow_up_date: safeDate(normalizedData.next_follow_up_date),
       notes: normalizedData.notes || null,
     };
   }
@@ -1184,8 +1213,8 @@ function buildInsertPayload({
       service_type: normalizedData.service_type,
       status: normalizedData.status || "Scheduled",
       job_value: normalizedData.job_value || null,
-      start_date: normalizedData.start_date || null,
-      completed_date: normalizedData.completed_date || null,
+      start_date: safeDate(normalizedData.start_date),
+      completed_date: safeDate(normalizedData.completed_date),
       paid_status: normalizedData.paid_status || "Unpaid",
       notes: normalizedData.notes || null,
     };
@@ -1197,8 +1226,7 @@ function buildInsertPayload({
       customer_id: resolvedCustomerId || null,
       amount: normalizedData.amount,
       payment_status: normalizedData.payment_status || "Paid",
-      sale_date:
-        normalizedData.sale_date || new Date().toISOString().slice(0, 10),
+      sale_date: safeDateOrToday(normalizedData.sale_date),
       service_type: normalizedData.service_type || null,
       source: normalizedData.source || null,
     };
@@ -1207,8 +1235,7 @@ function buildInsertPayload({
   return {
     company_id: companyId,
     customer_id: resolvedCustomerId || null,
-    due_date:
-      normalizedData.due_date || new Date().toISOString().slice(0, 10),
+    due_date: safeDateOrToday(normalizedData.due_date),
     status: normalizedData.status || "Open",
     message: normalizedData.message,
   };
