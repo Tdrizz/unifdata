@@ -176,6 +176,25 @@ export default async function EditPersonPage({
   const person = data as PersonRecord;
   const issues = getPersonIssues(person);
 
+  const [{ count: leadsCount }, { count: jobsCount }, { count: followUpsCount }] =
+    await Promise.all([
+      supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", id)
+        .eq("company_id", company.id),
+      supabase
+        .from("jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", id)
+        .eq("company_id", company.id),
+      supabase
+        .from("follow_ups")
+        .select("id", { count: "exact", head: true })
+        .eq("customer_id", id)
+        .eq("company_id", company.id),
+    ]);
+
   return (
     <AppShell
       companyName={company.name}
@@ -316,6 +335,19 @@ export default async function EditPersonPage({
                   label="Address"
                   value={person.address || "No address saved"}
                 />
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-medium text-slate-500">Linked records</p>
+                  <p className="mt-1 text-sm text-slate-700">
+                    {[
+                      leadsCount ? `${leadsCount} ${leadsCount === 1 ? profile.labels.leadSingular.toLowerCase() : profile.labels.leadPlural.toLowerCase()}` : null,
+                      jobsCount ? `${jobsCount} ${jobsCount === 1 ? profile.labels.jobSingular.toLowerCase() : profile.labels.jobPlural.toLowerCase()}` : null,
+                      followUpsCount ? `${followUpsCount} follow-up${followUpsCount !== 1 ? "s" : ""}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "No linked records yet"}
+                  </p>
+                </div>
               </div>
             </SectionCard>
 

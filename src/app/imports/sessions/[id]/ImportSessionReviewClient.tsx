@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { LinkageSuggestion } from "@/lib/import-engine";
 
 type ImportRow = {
   id: string;
@@ -193,6 +194,9 @@ export function ImportSessionReviewClient({
   const [cancelling, setCancelling] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [rowDraft, setRowDraft] = useState<Record<string, string>>({});
+  const [linkageSuggestions, setLinkageSuggestions] = useState<LinkageSuggestion[]>([]);
+  const [applyingLinks, setApplyingLinks] = useState(false);
+  const [skippedSuggestions, setSkippedSuggestions] = useState<Set<string>>(new Set());
 
   const canCommit =
     session.status !== "committed" &&
@@ -311,11 +315,15 @@ export function ImportSessionReviewClient({
         return;
       }
 
-      setMessage(
-        `Import committed. Created ${data.createdRows} records. Updated ${
-          data.updatedRows || 0
-        }. Skipped ${data.skippedRows}. Failed ${data.failedRows}.`,
-      );
+      const parts = [`Created ${data.createdRows} records.`];
+      if (data.updatedRows) parts.push(`Updated ${data.updatedRows}.`);
+      if (data.skippedRows) parts.push(`Skipped ${data.skippedRows}.`);
+      if (data.failedRows) parts.push(`Failed ${data.failedRows}.`);
+      setMessage(`Import committed. ${parts.join(" ")}`);
+
+      if (Array.isArray(data.linkageSuggestions) && data.linkageSuggestions.length > 0) {
+        setLinkageSuggestions(data.linkageSuggestions);
+      }
 
       router.refresh();
     } catch {
@@ -358,6 +366,45 @@ export function ImportSessionReviewClient({
       setMessage("Something went wrong while cancelling the import.");
     } finally {
       setCancelling(false);
+    }
+  }
+
+  const activeSuggestions = linkageSuggestions.filter(
+    (s) => !skippedSuggestions.has(s.record_id),
+  );
+
+  async function applyAllLinkSuggestions() {
+    setApplyingLinks(true);
+    setMessage("");
+
+    try {
+      const suggestions = activeSuggestions.map((s) => ({
+        table: s.table,
+        record_id: s.record_id,
+        field: s.field,
+        value: s.suggested_id,
+      }));
+
+      const response = await fetch("/api/link-suggestions/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suggestions }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || "Failed to apply links.");
+        return;
+      }
+
+      setMessage(`Linked ${data.appliedCount} records.`);
+      setLinkageSuggestions([]);
+      router.refresh();
+    } catch {
+      setMessage("Something went wrong while applying links.");
+    } finally {
+      setApplyingLinks(false);
     }
   }
 
@@ -562,6 +609,31 @@ export function ImportSessionReviewClient({
                   </div>
                 </div>
 
+                {!!row.normalized_data._customer_unlinked && (
+                  <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <p className="text-xs font-semibold text-amber-800">
+                      Customer not matched
+                    </p>
+                    <p className="mt-1 text-sm text-amber-700">
+                      No customer named &ldquo;{String(row.normalized_data.customer_name ?? "")}&rdquo; was found. This record will import without a customer link.
+                    </p>
+                    <p className="mt-1.5 text-xs text-amber-600">
+                      Edit the row to fix the name, or import anyway and link the customer later.
+                    </p>
+                  </div>
+                )}
+
+                {!!row.normalized_data._date_defaulted && (
+                  <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                    <p className="text-xs font-semibold text-amber-700">
+                      Date defaulted to today
+                    </p>
+                    <p className="mt-1 text-xs text-amber-600">
+                      No date was found in this row. If this is a historical record, edit the row to set the correct date.
+                    </p>
+                  </div>
+                )}
+
                 {row.duplicate_reason && (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">
@@ -624,6 +696,67 @@ export function ImportSessionReviewClient({
           })}
         </div>
       </div>
+
+      {activeSuggestions.length > 0 && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-blue-900">
+                Link related records
+              </p>
+              <p className="mt-1 text-sm text-blue-700">
+                We found {activeSuggestions.length} record{activeSuggestions.length !== 1 ? "s" : ""} that can be automatically linked based on matching customers and similar data.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={applyingLinks}
+              onClick={applyAllLinkSuggestions}
+              className="shrink-0 rounded-xl bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
+            >
+              {applyingLinks ? "Linking..." : `Apply all ${activeSuggestions.length}`}
+            </button>
+          </div>
+
+          <div className="mt-4 divide-y divide-blue-100">
+            {activeSuggestions.map((suggestion) => (
+              <div key={suggestion.record_id} className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-blue-950">
+                    {suggestion.record_label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-blue-600">
+                    {suggestion.table === "jobs" ? "Job" : "Sale"} → {suggestion.suggested_label}
+                    {suggestion.customer_name ? ` · ${suggestion.customer_name}` : ""}
+                  </p>
+                  <p className="mt-0.5 text-xs text-blue-500">{suggestion.reason}</p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${suggestion.confidence >= 0.7 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+                    {Math.round(suggestion.confidence * 100)}% match
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSkippedSuggestions((prev) => {
+                        const next = new Set(prev);
+                        next.add(suggestion.record_id);
+                        return next;
+                      })
+                    }
+                    className="text-xs text-blue-400 hover:text-blue-600"
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
         {session.status !== "committed" && session.status !== "cancelled" && (

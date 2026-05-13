@@ -21,11 +21,11 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import {
   isClosedOpportunity,
-  isCompleteWork,
-  isCancelledWork,
   isUnpaid,
   isOpenFollowUp,
+  isRecentActiveWork,
   getWorkTone,
+  computeHealthScore,
 } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
@@ -200,8 +200,8 @@ export default async function WorkspacePage() {
       .from("follow_ups")
       .select("id, customer_id, message, due_date, status, created_at")
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(250),
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(500),
   ]);
 
   if (customersResult.error) {
@@ -235,8 +235,8 @@ export default async function WorkspacePage() {
   );
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const activeWork = workRecords.filter(
-    (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
+  const activeWork = workRecords.filter((work) =>
+    isRecentActiveWork(work.status, work.start_date),
   );
 
   const unpaidRevenue = revenueRecords.filter((record) =>
@@ -257,13 +257,25 @@ export default async function WorkspacePage() {
     0,
   );
 
-  const customersWithContact = customers.filter(
-    (c) => c.name && (c.phone || c.email),
-  ).length;
-  const dataHealthScore =
-    customers.length > 0
-      ? Math.round((customersWithContact / customers.length) * 100)
-      : 100;
+  const totalRecords = customers.length + leads.length + workRecords.length + revenueRecords.length + followUps.length;
+
+  const criticalIssues =
+    openLeads.filter((l) => !l.customer_id).length +
+    activeWork.filter((w) => !w.customer_id).length +
+    revenueRecords.filter((r) => r.amount === null || r.amount === undefined).length;
+
+  const importantIssues =
+    openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
+    openLeads.filter((l) => !l.next_follow_up_date || new Date(l.next_follow_up_date) <= new Date()).length +
+    activeWork.filter((w) => w.job_value === null || w.job_value === undefined).length;
+
+  const cosmeticIssues =
+    customers.filter((c) => !c.phone || !c.email).length +
+    customers.filter((c) => !c.address).length +
+    openLeads.filter((l) => !l.source).length;
+
+  const dataHealthScore = computeHealthScore(criticalIssues, importantIssues, cosmeticIssues, totalRecords);
+  const customersWithContact = customers.filter((c) => c.name && (c.phone || c.email)).length;
 
   const monthlyRevenue = computeMonthlyRevenue(revenueRecords);
 
@@ -317,75 +329,32 @@ export default async function WorkspacePage() {
     priority: 1,
   }));
 
-  const cleanupItems: QueueItem[] = [
-    ...customers
-      .filter((customer) => !customer.phone || !customer.email)
-      .slice(0, 3)
-      .map((customer) => ({
-        id: `customer-contact-${customer.id}`,
-        label: "Add contact",
-        title: customer.name || `${profile.labels.customerSingular} needs contact`,
-        detail: "Phone or email is missing.",
-        href: `/customers/${customer.id}/edit`,
-        tone: "neutral" as const,
-        priority: 5,
-      })),
+  const dataIssueCount =
+    customers.filter((c) => !c.phone || !c.email).length +
+    customers.filter((c) => !c.address).length +
+    openLeads.filter((l) => !l.customer_id).length +
+    openLeads.filter((l) => !l.source).length +
+    openLeads.filter(
+      (l) => l.estimated_value === null || l.estimated_value === undefined,
+    ).length +
+    workRecords.filter(
+      (w) => w.job_value === null || w.job_value === undefined,
+    ).length;
 
-    ...customers
-      .filter((customer) => !customer.address)
-      .slice(0, 3)
-      .map((customer) => ({
-        id: `customer-address-${customer.id}`,
-        label: "Add address",
-        title: customer.name || `${profile.labels.customerSingular} needs address`,
-        detail: "No address saved.",
-        href: `/customers/${customer.id}/edit`,
-        tone: "neutral" as const,
-        priority: 5,
-      })),
-
-    ...openLeads
-      .filter((lead) => !lead.source)
-      .slice(0, 3)
-      .map((lead) => ({
-        id: `lead-source-${lead.id}`,
-        label: "Add source",
-        title: lead.service_requested || `${profile.labels.leadSingular} needs source`,
-        detail: "Source helps show what marketing is working.",
-        href: `/leads/${lead.id}/edit`,
-        tone: "neutral" as const,
-        priority: 5,
-      })),
-
-    ...openLeads
-      .filter(
-        (lead) =>
-          lead.estimated_value === null || lead.estimated_value === undefined,
-      )
-      .slice(0, 3)
-      .map((lead) => ({
-        id: `lead-value-${lead.id}`,
-        label: "Add estimate",
-        title: lead.service_requested || `${profile.labels.leadSingular} needs estimate`,
-        detail: "Estimated value helps prioritize the pipeline.",
-        href: `/leads/${lead.id}/edit`,
-        tone: "neutral" as const,
-        priority: 5,
-      })),
-
-    ...workRecords
-      .filter((work) => work.job_value === null || work.job_value === undefined)
-      .slice(0, 3)
-      .map((work) => ({
-        id: `work-value-${work.id}`,
-        label: `Add ${profile.labels.jobSingular.toLowerCase()} value`,
-        title: work.service_type || `${profile.labels.jobSingular} needs value`,
-        detail: "Value keeps operational reporting accurate.",
-        href: `/jobs/${work.id}/edit`,
-        tone: "neutral" as const,
-        priority: 5,
-      })),
-  ];
+  const cleanupItems: QueueItem[] =
+    dataIssueCount > 0
+      ? [
+          {
+            id: "data-cleanup-summary",
+            label: "Data cleanup",
+            title: `${dataIssueCount} records need attention`,
+            detail: "Missing contact info, values, or links. Review in Data Hub.",
+            href: "/data-hub",
+            tone: "neutral" as const,
+            priority: 5,
+          },
+        ]
+      : [];
 
   const priorityQueue = [
     ...manualFollowUpItems,
@@ -546,7 +515,7 @@ export default async function WorkspacePage() {
           <StatCard
             label={profile.priorityNames.activeWork}
             value={activeWork.length}
-            helper={`${formatCurrency(activeWorkValue)} active value`}
+            helper={`${formatCurrency(activeWorkValue)} not yet complete`}
             tone={activeWork.length > 0 ? "warning" : "default"}
           />
 
