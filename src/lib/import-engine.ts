@@ -1169,6 +1169,17 @@ function buildInsertPayload({
   resolvedCustomerId?: string | null;
   resolvedLeadId?: string | null;
 }) {
+  // Re-validate dates at insert time so corrupted values (e.g. Sheets serials stored
+  // in old sessions) don't reach Postgres as bad timestamptz strings.
+  function safeDate(value: unknown): string | null {
+    const reparsed = toImportDate(value);
+    return reparsed || null;
+  }
+
+  function safeDateOrToday(value: unknown): string {
+    return safeDate(value) ?? new Date().toISOString().slice(0, 10);
+  }
+
   if (recordType === "relationships") {
     return {
       company_id: companyId,
@@ -1189,7 +1200,7 @@ function buildInsertPayload({
       status: normalizedData.status || "New",
       estimated_value: normalizedData.estimated_value || null,
       source: normalizedData.source || null,
-      next_follow_up_date: normalizedData.next_follow_up_date || null,
+      next_follow_up_date: safeDate(normalizedData.next_follow_up_date),
       notes: normalizedData.notes || null,
     };
   }
@@ -1202,8 +1213,8 @@ function buildInsertPayload({
       service_type: normalizedData.service_type,
       status: normalizedData.status || "Scheduled",
       job_value: normalizedData.job_value || null,
-      start_date: normalizedData.start_date || null,
-      completed_date: normalizedData.completed_date || null,
+      start_date: safeDate(normalizedData.start_date),
+      completed_date: safeDate(normalizedData.completed_date),
       paid_status: normalizedData.paid_status || "Unpaid",
       notes: normalizedData.notes || null,
     };
@@ -1215,8 +1226,7 @@ function buildInsertPayload({
       customer_id: resolvedCustomerId || null,
       amount: normalizedData.amount,
       payment_status: normalizedData.payment_status || "Paid",
-      sale_date:
-        normalizedData.sale_date || new Date().toISOString().slice(0, 10),
+      sale_date: safeDateOrToday(normalizedData.sale_date),
       service_type: normalizedData.service_type || null,
       source: normalizedData.source || null,
     };
@@ -1225,8 +1235,7 @@ function buildInsertPayload({
   return {
     company_id: companyId,
     customer_id: resolvedCustomerId || null,
-    due_date:
-      normalizedData.due_date || new Date().toISOString().slice(0, 10),
+    due_date: safeDateOrToday(normalizedData.due_date),
     status: normalizedData.status || "Open",
     message: normalizedData.message,
   };
