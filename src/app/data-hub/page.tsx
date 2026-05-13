@@ -720,7 +720,7 @@ export default async function DataHubPage() {
           <StatCard
             label="Data health"
             value={`${healthScore}%`}
-            helper={`${totalIssues} cleanup issues across ${totalRecords} records`}
+            helper={`${totalIssues} issues — weighted by severity, critical gaps count 3×`}
             tone={getHealthTone(healthScore)}
           />
 
@@ -745,6 +745,10 @@ export default async function DataHubPage() {
             tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
           />
         </section>
+
+        <p className="text-xs text-slate-500 px-1">
+          Score weights critical gaps (missing customer links, missing amounts) 3× higher than cosmetic gaps (missing source or type). 100% = no open issues.
+        </p>
 
         <OrphanQuickLink groups={orphanGroups} />
 
@@ -852,8 +856,8 @@ export default async function DataHubPage() {
         >
           {cleanCleanupItems.length === 0 ? (
             <EmptyState
-              title="No clean checks yet"
-              description="Once issue groups reach zero, they will appear here."
+              title="No areas fully clean yet"
+              description="Clean areas appear here once all records in that category have no issues."
             />
           ) : (
             <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">

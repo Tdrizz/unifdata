@@ -12,7 +12,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import {
   formatDateOnly,
-  formatTimestampDate,
   parseDateOnly,
   isTodayOrPast,
   isOverdue,
@@ -369,7 +368,7 @@ export default async function WorkspacePage() {
 
       return getSortDate(a.due_date, "") - getSortDate(b.due_date, "");
     })
-    .slice(0, 8);
+    .slice(0, 12);
 
   const followUpSchedule = [...manualFollowUpItems, ...opportunityFollowUpItems]
     .sort((a, b) => {
@@ -413,55 +412,6 @@ export default async function WorkspacePage() {
       return Number(b.job_value || 0) - Number(a.job_value || 0);
     })
     .slice(0, 5);
-
-  const recentRecords = [
-    ...customers.map((customer) => ({
-      id: `customer-${customer.id}`,
-      type: profile.labels.customerSingular,
-      title: customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`,
-      detail: customer.email || customer.phone || "Incomplete contact saved",
-      date: customer.created_at,
-      href: `/customers/${customer.id}/edit`,
-    })),
-
-    ...leads.map((lead) => ({
-      id: `lead-${lead.id}`,
-      type: profile.labels.leadSingular,
-      title: lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`,
-      detail: lead.source || lead.status || "No source saved",
-      date: lead.created_at,
-      href: `/leads/${lead.id}/edit`,
-    })),
-
-    ...workRecords.map((work) => ({
-      id: `work-${work.id}`,
-      type: profile.labels.jobSingular,
-      title: work.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`,
-      detail: work.status || "No stage saved",
-      date: work.created_at,
-      href: `/jobs/${work.id}/edit`,
-    })),
-
-    ...revenueRecords.map((record) => ({
-      id: `revenue-${record.id}`,
-      type: profile.labels.saleSingular,
-      title: formatCurrency(record.amount),
-      detail: record.service_type || record.payment_status || `${profile.labels.saleSingular} record`,
-      date: record.created_at,
-      href: `/sales/${record.id}/edit`,
-    })),
-
-    ...followUps.map((action) => ({
-      id: `follow-up-${action.id}`,
-      type: "Follow-up",
-      title: action.message || "Follow up",
-      detail: action.status || "Open",
-      date: action.created_at,
-      href: `/follow-ups/${action.id}/edit`,
-    })),
-  ]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 4);
 
   return (
     <AppShell
@@ -552,29 +502,47 @@ export default async function WorkspacePage() {
                 description="No open follow-ups, unpaid revenue, or important cleanup issues were found."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
-                {priorityQueue.map((item) => (
+              <>
+                <div className="divide-y divide-slate-100">
+                  {priorityQueue.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className="block px-4 py-3 transition-colors hover:bg-slate-50"
+                    >
+                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
+                      <p className="mt-1.5 font-semibold text-slate-950">
+                        {item.title}
+                      </p>
+                      <p className="mt-0.5 text-sm text-slate-500">
+                        {item.detail}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+                <div className="border-t border-slate-100 p-4">
                   <Link
-                    key={item.id}
-                    href={item.href}
-                    className="block px-4 py-3 transition-colors hover:bg-slate-50"
+                    href="/data-hub"
+                    className="text-sm font-semibold text-slate-600 hover:text-slate-950"
                   >
-                    <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-                    <p className="mt-1.5 font-semibold text-slate-950">
-                      {item.title}
-                    </p>
-                    <p className="mt-0.5 text-sm text-slate-500">
-                      {item.detail}
-                    </p>
+                    See full cleanup report in Data Hub →
                   </Link>
-                ))}
-              </div>
+                </div>
+              </>
             )}
           </SectionCard>
 
           <SectionCard
             title="Follow-up schedule"
             description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates, sorted by due date.`}
+            actions={
+              <Link
+                href="/follow-ups"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-950"
+              >
+                Manage all →
+              </Link>
+            }
           >
             {followUpSchedule.length === 0 ? (
               <EmptyState
@@ -607,6 +575,14 @@ export default async function WorkspacePage() {
           <SectionCard
             title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
             description={`${profile.labels.leadPlural} sorted by follow-up need and estimated value.`}
+            actions={
+              <Link
+                href="/leads"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-950"
+              >
+                See all {openLeads.length} →
+              </Link>
+            }
           >
             {prioritizedOpportunities.length === 0 ? (
               <EmptyState
@@ -690,6 +666,14 @@ export default async function WorkspacePage() {
           <SectionCard
             title={`Active ${profile.labels.jobPlural.toLowerCase()}`}
             description={`${profile.labels.jobPlural} that are scheduled, active, or not yet complete.`}
+            actions={
+              <Link
+                href="/jobs"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-950"
+              >
+                See all {activeWork.length} →
+              </Link>
+            }
           >
             {prioritizedWork.length === 0 ? (
               <EmptyState
@@ -734,43 +718,6 @@ export default async function WorkspacePage() {
           </SectionCard>
         </section>
 
-        <SectionCard
-          title="Recently added"
-          description="Last 4 records added across the workspace."
-        >
-          {recentRecords.length === 0 ? (
-            <EmptyState
-              title="No records yet"
-              description="Import a customer list or add records manually to get started."
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {recentRecords.map((record) => (
-                <Link
-                  key={record.id}
-                  href={record.href}
-                  className="grid gap-3 px-4 py-3 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_auto] md:items-center"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                      <p className="truncate font-semibold text-slate-950">
-                        {record.title}
-                      </p>
-                    </div>
-                    <p className="mt-0.5 truncate text-sm text-slate-500">
-                      {record.detail}
-                    </p>
-                  </div>
-
-                  <p className="hidden text-xs font-medium text-slate-400 md:block">
-                    {formatTimestampDate(record.date)}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </SectionCard>
       </div>
     </AppShell>
   );

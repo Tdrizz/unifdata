@@ -14,6 +14,7 @@ import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
 import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type WorkRecord = {
   id: string;
@@ -165,11 +166,13 @@ function getWorkIssues(work: WorkRecord) {
 export default async function WorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ stage?: string; error?: string }>;
+  searchParams: Promise<{ stage?: string; error?: string; q?: string }>;
 }) {
   const params = await searchParams;
   const selectedStage = params.stage ? decodeURIComponent(params.stage) : "";
   const errorParam = params.error ? decodeURIComponent(params.error) : "";
+  const rawQ = params.q ?? "";
+  const q = rawQ ? decodeURIComponent(rawQ).toLowerCase() : "";
 
   const supabase = await createClient();
 
@@ -282,19 +285,27 @@ export default async function WorkPage({
     opportunities.map((opportunity) => [opportunity.id, opportunity]),
   );
 
-  const activeWork = workRecords.filter(
+  const filteredWorkRecords = q
+    ? workRecords.filter(
+        (w) =>
+          w.service_type?.toLowerCase().includes(q) ||
+          (w.customer_id ? personById.get(w.customer_id)?.name?.toLowerCase().includes(q) : false),
+      )
+    : workRecords;
+
+  const activeWork = filteredWorkRecords.filter(
     (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
   );
 
-  const completedWork = workRecords.filter((work) => isCompleteWork(work.status));
+  const completedWork = filteredWorkRecords.filter((work) => isCompleteWork(work.status));
 
-  const unpaidWork = workRecords.filter((work) => isUnpaid(work.paid_status));
+  const unpaidWork = filteredWorkRecords.filter((work) => isUnpaid(work.paid_status));
 
-  const missingValue = workRecords.filter(
+  const missingValue = filteredWorkRecords.filter(
     (work) => work.job_value === null || work.job_value === undefined,
   );
 
-  const missingPerson = workRecords.filter((work) => !work.customer_id);
+  const missingPerson = filteredWorkRecords.filter((work) => !work.customer_id);
 
   const missingOpportunity = workRecords.filter((work) => !work.lead_id);
 
@@ -340,7 +351,9 @@ export default async function WorkPage({
     },
   ].filter((item) => item.count > 0);
 
-  const prioritizedWork = [...workRecords]
+  const WORK_LIMIT = 25;
+
+  const prioritizedWork = [...filteredWorkRecords]
     .sort((a, b) => {
       const aActive = !isCompleteWork(a.status) && !isCancelledWork(a.status);
       const bActive = !isCompleteWork(b.status) && !isCancelledWork(b.status);
@@ -357,14 +370,15 @@ export default async function WorkPage({
       }
 
       return Number(b.job_value || 0) - Number(a.job_value || 0);
-    })
-    .slice(0, 25);
+    });
 
   const visibleWork = selectedStage
     ? prioritizedWork.filter(
         (work) => (work.status || "Scheduled") === selectedStage,
       )
     : prioritizedWork;
+
+  const displayedWork = visibleWork.slice(0, WORK_LIMIT);
 
   const stageGroups = Array.from(
     workRecords.reduce((map, work) => {
@@ -598,22 +612,35 @@ export default async function WorkPage({
           </details>
         </SectionCard>
 
+        <SearchInput placeholder={`Search ${profile.labels.jobPlural.toLowerCase()}...`} />
+
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
             title={selectedStage ? `${selectedStage} work` : "Work queue"}
             description={
-              selectedStage
-                ? `Showing work records currently marked ${selectedStage}.`
-                : "The work that needs operational attention first."
+              q
+                ? `${filteredWorkRecords.length} of ${workRecords.length} ${profile.labels.jobPlural.toLowerCase()} match "${rawQ}"`
+                : selectedStage
+                  ? `Showing work records currently marked ${selectedStage}.`
+                  : "The work that needs operational attention first."
             }
           >
             {visibleWork.length === 0 ? (
               <EmptyState
-                title={selectedStage ? "No work in this stage" : "No work yet"}
+                title={q ? `No results for "${rawQ}"` : selectedStage ? "No work in this stage" : "No work yet"}
                 description={
-                  selectedStage
-                    ? "No records match this selected work stage."
-                    : "Add work manually or import work records from CSV or Google Sheets."
+                  q
+                    ? "Try a different search term."
+                    : selectedStage
+                      ? "No records match this selected work stage."
+                      : "Add work manually or import work records from CSV or Google Sheets."
+                }
+                action={
+                  !q && !selectedStage ? (
+                    <Link href="/imports" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                      Import work records
+                    </Link>
+                  ) : undefined
                 }
               />
             ) : (
@@ -634,7 +661,7 @@ export default async function WorkPage({
                 )}
 
                 <div className="divide-y divide-slate-100">
-                  {visibleWork.map((work) => {
+                  {displayedWork.map((work) => {
                     const person = work.customer_id
                       ? personById.get(work.customer_id)
                       : null;
@@ -717,6 +744,13 @@ export default async function WorkPage({
                       </Link>
                     );
                   })}
+                  {visibleWork.length > WORK_LIMIT && (
+                    <div className="border-t border-slate-100 p-4">
+                      <Link href="/jobs" className="text-sm font-semibold text-slate-600 hover:text-slate-950">
+                        See all {visibleWork.length} {profile.labels.jobPlural.toLowerCase()} →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </>
             )}

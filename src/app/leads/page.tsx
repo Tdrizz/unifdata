@@ -14,6 +14,7 @@ import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
 import { formatCurrency, getFormString, getOptionalNumber } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type OpportunityRecord = {
   id: string;
@@ -128,9 +129,10 @@ function getOpportunityIssues(opportunity: OpportunityRecord) {
 export default async function OpportunitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; q?: string }>;
 }) {
-  const { error: errorParam } = await searchParams;
+  const { error: errorParam, q: rawQ } = await searchParams;
+  const q = rawQ ? decodeURIComponent(rawQ).toLowerCase() : "";
   const supabase = await createClient();
 
   const {
@@ -226,15 +228,25 @@ export default async function OpportunitiesPage({
 
   const personById = new Map(people.map((person) => [person.id, person]));
 
-  const openOpportunities = opportunities.filter(
+  const filteredOpportunities = q
+    ? opportunities.filter(
+        (o) =>
+          o.service_requested?.toLowerCase().includes(q) ||
+          (o.customer_id ? personById.get(o.customer_id)?.name?.toLowerCase().includes(q) : false) ||
+          o.source?.toLowerCase().includes(q) ||
+          o.status?.toLowerCase().includes(q),
+      )
+    : opportunities;
+
+  const openOpportunities = filteredOpportunities.filter(
     (opportunity) => !isWon(opportunity.status) && !isLost(opportunity.status),
   );
 
-  const wonOpportunities = opportunities.filter((opportunity) =>
+  const wonOpportunities = filteredOpportunities.filter((opportunity) =>
     isWon(opportunity.status),
   );
 
-  const lostOpportunities = opportunities.filter((opportunity) =>
+  const lostOpportunities = filteredOpportunities.filter((opportunity) =>
     isLost(opportunity.status),
   );
 
@@ -292,6 +304,9 @@ export default async function OpportunitiesPage({
     },
   ].filter((item) => item.count > 0);
 
+  const OPEN_LIMIT = 20;
+  const CLOSED_LIMIT = 8;
+
   const prioritizedOpenOpportunities = [...openOpportunities]
     .sort((a, b) => {
       const aNeedsFollowUp =
@@ -304,15 +319,14 @@ export default async function OpportunitiesPage({
       }
 
       return Number(b.estimated_value || 0) - Number(a.estimated_value || 0);
-    })
-    .slice(0, 20);
+    });
 
-  const recentlyClosed = [...wonOpportunities, ...lostOpportunities]
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )
-    .slice(0, 8);
+  const displayedOpenOpportunities = prioritizedOpenOpportunities.slice(0, OPEN_LIMIT);
+
+  const allClosed = [...wonOpportunities, ...lostOpportunities].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+  const recentlyClosed = allClosed.slice(0, CLOSED_LIMIT);
 
   const sourceGroups = Array.from(
     openOpportunities.reduce((map, opportunity) => {
@@ -526,19 +540,32 @@ export default async function OpportunitiesPage({
           </details>
         </SectionCard>
 
+        <SearchInput placeholder={`Search ${profile.labels.leadPlural.toLowerCase()}...`} />
+
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
           <SectionCard
             title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
-            description="Prioritized by follow-up need, missing details, and estimated value."
+            description={
+              q
+                ? `${openOpportunities.length} of ${opportunities.filter((o) => !isWon(o.status) && !isLost(o.status)).length} open ${profile.labels.leadPlural.toLowerCase()} match "${rawQ}"`
+                : "Prioritized by follow-up need, missing details, and estimated value."
+            }
           >
-            {prioritizedOpenOpportunities.length === 0 ? (
+            {displayedOpenOpportunities.length === 0 ? (
               <EmptyState
-                title={`No open ${profile.labels.leadPlural.toLowerCase()}`}
-                description={`Add or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
+                title={q ? `No results for "${rawQ}"` : `No open ${profile.labels.leadPlural.toLowerCase()}`}
+                description={q ? "Try a different search term." : `Add or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
+                action={
+                  !q ? (
+                    <Link href="/imports" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                      Import opportunities
+                    </Link>
+                  ) : undefined
+                }
               />
             ) : (
               <div className="divide-y divide-slate-100">
-                {prioritizedOpenOpportunities.map((opportunity) => {
+                {displayedOpenOpportunities.map((opportunity) => {
                   const person = opportunity.customer_id
                     ? personById.get(opportunity.customer_id)
                     : null;
@@ -621,6 +648,13 @@ export default async function OpportunitiesPage({
                     </Link>
                   );
                 })}
+                {openOpportunities.length > OPEN_LIMIT && !q && (
+                  <div className="border-t border-slate-100 p-4">
+                    <Link href="/leads" className="text-sm font-semibold text-slate-600 hover:text-slate-950">
+                      See all {openOpportunities.length} open {profile.labels.leadPlural.toLowerCase()} →
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </SectionCard>
@@ -732,6 +766,13 @@ export default async function OpportunitiesPage({
                   </StatusBadge>
                 </Link>
               ))}
+              {allClosed.length > CLOSED_LIMIT && (
+                <div className="border-t border-slate-100 p-4">
+                  <Link href="/crm" className="text-sm font-semibold text-slate-600 hover:text-slate-950">
+                    See all {allClosed.length} closed {profile.labels.leadPlural.toLowerCase()} →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </SectionCard>
