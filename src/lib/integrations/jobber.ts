@@ -1,5 +1,147 @@
+import { registerSyncer } from "./registry";
+import { registerRefresher } from "./token";
+import { createImportSessionFromRows } from "@/lib/import-engine";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/db";
+import type { IntegrationSyncer, SyncResult } from "./types";
 import type { RawImportRow } from "@/lib/import-engine";
+
+const JOBBER_GQL = "https://api.getjobber.com/api/graphql";
+
+async function jobberQuery(accessToken: string, query: string): Promise<Record<string, unknown>> {
+  const response = await fetch(JOBBER_GQL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "X-JOBBER-GRAPHQL-VERSION": "2024-01-08",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!response.ok) throw new Error(`Jobber API error: ${response.status}`);
+
+  const json = (await response.json()) as { data?: Record<string, unknown>; errors?: unknown[] };
+  if (json.errors?.length) throw new Error(`Jobber GraphQL errors: ${JSON.stringify(json.errors)}`);
+
+  return json.data ?? {};
+}
+
+const JobberSyncer: IntegrationSyncer = {
+  provider: "jobber",
+
+  async sync(supabase, companyId, integration) {
+    const accessToken = integration.access_token!;
+    const result: SyncResult = { customersCreated: 0, customersUpdated: 0, recordsStaged: 0, sessionIds: [] };
+
+    // Clients → relationships
+    const clientData = await jobberQuery(accessToken, `{
+      clients(first: 100) {
+        nodes { name emails { address } phones { number } billingAddress { street city province postalCode } }
+      }
+    }`);
+
+    const clients = ((clientData.clients as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
+    if (clients.length > 0) {
+      const rows = clients.map((c) => ({
+        name: String(c.name ?? ""),
+        email: String(((c.emails as Record<string, unknown>[])?.[0]?.address) ?? ""),
+        phone: String(((c.phones as Record<string, unknown>[])?.[0]?.number) ?? ""),
+        address: (() => {
+          const addr = c.billingAddress as Record<string, string> | undefined;
+          if (!addr) return "";
+          return [addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(", ");
+        })(),
+      }));
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Clients",
+        fileName: null, recordType: "relationships", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Jobs → work
+    const jobData = await jobberQuery(accessToken, `{
+      jobs(first: 100) {
+        nodes { title jobStatus total startAt completedAt invoiceStatus }
+      }
+    }`);
+
+    const jobs = ((jobData.jobs as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
+    if (jobs.length > 0) {
+      const rows = jobs.map((j) => ({
+        service_type: String(j.title ?? "Job"),
+        status: String(j.jobStatus ?? "").toLowerCase(),
+        job_value: String(j.total ?? "0"),
+        start_date: j.startAt ? String(j.startAt).split("T")[0] : "",
+        completed_date: j.completedAt ? String(j.completedAt).split("T")[0] : "",
+        paid_status: j.invoiceStatus === "PAID" ? "paid" : "unpaid",
+      }));
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Jobs",
+        fileName: null, recordType: "work", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Invoices → revenue
+    const invoiceData = await jobberQuery(accessToken, `{
+      invoices(first: 100) {
+        nodes { invoiceNum total invoiceStatus issuedDate }
+      }
+    }`);
+
+    const invoices = ((invoiceData.invoices as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
+    if (invoices.length > 0) {
+      const rows = invoices.map((inv) => ({
+        amount: String(inv.total ?? "0"),
+        payment_status: inv.invoiceStatus === "PAID" ? "paid" : "unpaid",
+        sale_date: inv.issuedDate ? String(inv.issuedDate).split("T")[0] : "",
+        service_type: `Invoice #${inv.invoiceNum ?? ""}`,
+        source: "jobber",
+      }));
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Invoices",
+        fileName: null, recordType: "revenue", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    return result;
+  },
+};
+
+registerSyncer(JobberSyncer);
+
+registerRefresher("jobber", async (integration) => {
+  const response = await fetch("https://api.getjobber.com/api/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: process.env.JOBBER_CLIENT_ID!,
+      client_secret: process.env.JOBBER_CLIENT_SECRET!,
+      refresh_token: integration.refresh_token!,
+    }),
+  });
+
+  const data = (await response.json()) as { access_token?: string; expires_in?: number };
+  if (!data.access_token) throw new Error("Jobber token refresh failed");
+
+  return {
+    accessToken: data.access_token,
+    expiresAt: data.expires_in
+      ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+      : null,
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Legacy helpers — preserved for existing API routes that import these directly
+// ---------------------------------------------------------------------------
 
 type JobberIntegration = {
   id: string;
@@ -76,7 +218,6 @@ type JobberInvoice = {
   issuedDate?: string | null;
   dueDate?: string | null;
   total?: number | null;
-  depositAmount?: number | null;
   client?: { name: string } | null;
   subject?: string | null;
 };
@@ -87,7 +228,7 @@ export async function getJobberIntegration({
   supabase,
   companyId,
 }: {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient<Database>;
   companyId: string;
 }): Promise<JobberIntegration | null> {
   const { data, error } = await supabase
@@ -111,7 +252,7 @@ async function refreshJobberAccessToken({
   supabase,
   integration,
 }: {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient<Database>;
   integration: JobberIntegration;
 }): Promise<string> {
   if (!integration.refresh_token) {
@@ -163,7 +304,7 @@ export async function getValidJobberAccessToken({
   supabase,
   companyId,
 }: {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient<Database>;
   companyId: string;
 }): Promise<string> {
   const integration = await getJobberIntegration({ supabase, companyId });
@@ -183,7 +324,7 @@ export async function getValidJobberAccessToken({
   return integration.access_token;
 }
 
-async function jobberQuery<T>(
+async function jobberQueryTyped<T>(
   accessToken: string,
   query: string,
   variables: Record<string, unknown> = {},
@@ -235,7 +376,7 @@ export async function fetchJobberClients(accessToken: string): Promise<RawImport
   let cursor: string | null = null;
 
   while (true) {
-    const data: ClientsData = await jobberQuery<ClientsData>(accessToken, query, { cursor });
+    const data: ClientsData = await jobberQueryTyped<ClientsData>(accessToken, query, { cursor });
     results.push(...data.clients.nodes);
     if (!data.clients.pageInfo.hasNextPage) break;
     cursor = data.clients.pageInfo.endCursor;
@@ -285,7 +426,7 @@ export async function fetchJobberJobs(accessToken: string): Promise<RawImportRow
   let cursor: string | null = null;
 
   while (true) {
-    const data: JobsData = await jobberQuery<JobsData>(accessToken, query, { cursor });
+    const data: JobsData = await jobberQueryTyped<JobsData>(accessToken, query, { cursor });
     results.push(...data.jobs.nodes);
     if (!data.jobs.pageInfo.hasNextPage) break;
     cursor = data.jobs.pageInfo.endCursor;
@@ -331,7 +472,7 @@ export async function fetchJobberQuotes(accessToken: string): Promise<RawImportR
   let cursor: string | null = null;
 
   while (true) {
-    const data: QuotesData = await jobberQuery<QuotesData>(accessToken, query, { cursor });
+    const data: QuotesData = await jobberQueryTyped<QuotesData>(accessToken, query, { cursor });
     results.push(...data.quotes.nodes);
     if (!data.quotes.pageInfo.hasNextPage) break;
     cursor = data.quotes.pageInfo.endCursor;
@@ -375,7 +516,7 @@ export async function fetchJobberInvoices(accessToken: string): Promise<RawImpor
   let cursor: string | null = null;
 
   while (true) {
-    const data: InvoicesData = await jobberQuery<InvoicesData>(accessToken, query, { cursor });
+    const data: InvoicesData = await jobberQueryTyped<InvoicesData>(accessToken, query, { cursor });
     results.push(...data.invoices.nodes);
     if (!data.invoices.pageInfo.hasNextPage) break;
     cursor = data.invoices.pageInfo.endCursor;

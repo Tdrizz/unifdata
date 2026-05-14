@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as XLSX from "xlsx";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import {
@@ -117,19 +118,55 @@ export async function POST(request: Request) {
 
     if (!uploadedFile || typeof uploadedFile === "string") {
       return NextResponse.json(
-        { error: "Upload a CSV file." },
+        { error: "Upload a CSV or Excel file." },
         { status: 400 },
       );
     }
 
     const file = uploadedFile as File;
-    const text = await file.text();
 
-    const { headers, rows } = parseCsv(text);
+    const isXlsx =
+      file.name.endsWith(".xlsx") ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    let headers: string[];
+    let rows: RawImportRow[];
+
+    if (isXlsx) {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+        sheet,
+        { defval: "" },
+      );
+      headers =
+        jsonData.length > 0
+          ? Object.keys(jsonData[0] as Record<string, unknown>)
+          : [];
+      rows = jsonData.map((row) =>
+        Object.fromEntries(
+          Object.entries(row as Record<string, unknown>).map(([k, v]) => [
+            k,
+            String(v),
+          ]),
+        ),
+      );
+    } else {
+      const text = await file.text();
+      const parsed = parseCsv(text);
+      headers = parsed.headers;
+      rows = parsed.rows;
+    }
 
     if (!headers.length || !rows.length) {
       return NextResponse.json(
-        { error: "CSV must include a header row and at least one data row." },
+        {
+          error:
+            "File must include a header row and at least one data row.",
+        },
         { status: 400 },
       );
     }
@@ -138,6 +175,13 @@ export async function POST(request: Request) {
 
     if (typeof mappingValue === "string" && mappingValue.trim()) {
       mapping = JSON.parse(mappingValue) as ImportMapping;
+    }
+
+    const requestUrl = new URL(request.url);
+    const analyzeOnly = requestUrl.searchParams.get("analyze") === "1";
+
+    if (analyzeOnly) {
+      return NextResponse.json({ ok: true, headers, mapping });
     }
 
     const supabase = await createClient();
