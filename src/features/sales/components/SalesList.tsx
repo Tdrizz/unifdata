@@ -5,12 +5,16 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DismissError } from "@/components/ui/DismissError";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatDateOnly, getTodayString } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { isUnpaid, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { createSaleAction } from "../actions";
 import type { SaleRow } from "../types";
+
+const PAGE_SIZE = 50;
 
 type Props = {
   sales: SaleRow[];
@@ -211,6 +215,10 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
         </details>
       </SectionCard>
 
+      <div>
+        <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}…`} />
+      </div>
+
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
         <SectionCard
           title={selectedStatus ? `${selectedStatus} revenue` : selectedSource ? `${selectedSource} revenue` : "Revenue queue"}
@@ -334,6 +342,8 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
           </div>
         )}
       </SectionCard>
+
+      <Pagination count={count} pageSize={PAGE_SIZE} />
     </div>
   );
 }

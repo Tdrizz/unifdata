@@ -5,12 +5,16 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DismissError } from "@/components/ui/DismissError";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow, CustomerRow } from "../types";
 import { createLeadAction } from "../actions";
+
+const PAGE_SIZE = 50;
 
 type Props = {
   leads: LeadRow[];
@@ -75,7 +79,7 @@ function getOpportunityIssues(opportunity: LeadRow) {
   return issues;
 }
 
-export function LeadsList({ leads, count: _count, customers, profile, errorParam }: Props) {
+export function LeadsList({ leads, count, customers, profile, errorParam }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openOpportunities = leads.filter(
@@ -335,6 +339,10 @@ export function LeadsList({ leads, count: _count, customers, profile, errorParam
         </details>
       </SectionCard>
 
+      <div>
+        <SearchInput placeholder={`Search ${profile.labels.leadPlural.toLowerCase()}…`} />
+      </div>
+
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
         <SectionCard
           title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
@@ -519,6 +527,8 @@ export function LeadsList({ leads, count: _count, customers, profile, errorParam
           </div>
         )}
       </SectionCard>
+
+      <Pagination count={count} pageSize={PAGE_SIZE} />
     </div>
   );
 }

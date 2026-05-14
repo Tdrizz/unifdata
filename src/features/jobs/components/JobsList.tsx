@@ -5,12 +5,16 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DismissError } from "@/components/ui/DismissError";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
 import { createJobAction } from "../actions";
+
+const PAGE_SIZE = 50;
 
 type Props = {
   jobs: JobListRow[];
@@ -110,7 +114,7 @@ function getWorkIssues(work: JobListRow) {
   return issues;
 }
 
-export function JobsList({ jobs, count: _count, customers, leads, profile, selectedStage, errorParam }: Props) {
+export function JobsList({ jobs, count, customers, leads, profile, selectedStage, errorParam }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const leadById = new Map(leads.map((l) => [l.id, l]));
 
@@ -375,6 +379,10 @@ export function JobsList({ jobs, count: _count, customers, leads, profile, selec
         </details>
       </SectionCard>
 
+      <div>
+        <SearchInput placeholder={`Search ${profile.labels.jobPlural.toLowerCase()}…`} />
+      </div>
+
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
         <SectionCard
           title={selectedStage ? `${selectedStage} work` : "Work queue"}
@@ -551,6 +559,8 @@ export function JobsList({ jobs, count: _count, customers, leads, profile, selec
           </div>
         )}
       </SectionCard>
+
+      <Pagination count={count} pageSize={PAGE_SIZE} />
     </div>
   );
 }

@@ -3,10 +3,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { DismissError } from "@/components/ui/DismissError";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { Pagination } from "@/components/ui/Pagination";
 import { formatTimestampDate } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CustomerRow } from "../types";
 import { createCustomerAction } from "../actions";
+
+const PAGE_SIZE = 50;
 
 type Props = {
   customers: CustomerRow[];
@@ -228,6 +232,9 @@ export function CustomersList({ customers, count, profile, errorParam }: Props) 
         title="Directory"
         description="Open a record to edit contact details, address, type, or notes."
       >
+        <div className="p-4 pb-0">
+          <SearchInput placeholder="Search customers…" />
+        </div>
         {customers.length === 0 ? (
           <EmptyState
             title={`No ${profile.labels.customerPlural.toLowerCase()} yet`}
@@ -287,6 +294,7 @@ export function CustomersList({ customers, count, profile, errorParam }: Props) 
             ))}
           </div>
         )}
+        <Pagination count={count} pageSize={PAGE_SIZE} />
       </SectionCard>
     </div>
   );
