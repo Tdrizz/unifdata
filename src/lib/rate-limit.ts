@@ -9,6 +9,7 @@ export function rateLimit(
   const timestamps = (requests.get(key) ?? []).filter(
     (t) => now - t < windowMs,
   );
+  if (timestamps.length === 0) requests.delete(key);
   if (timestamps.length >= limit) return false;
   timestamps.push(now);
   requests.set(key, timestamps);
