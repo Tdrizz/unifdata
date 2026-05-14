@@ -26,10 +26,6 @@ export async function getFollowUpPageData(
       .limit(250),
   ]);
 
-  if (followUpsResult.error) throw new Error(followUpsResult.error.message);
-  if (opportunitiesResult.error) throw new Error(opportunitiesResult.error.message);
-  if (peopleResult.error) throw new Error(peopleResult.error.message);
-
   return {
     followUps: (followUpsResult.data ?? []) as FollowUpRow[],
     opportunities: (opportunitiesResult.data ?? []) as LeadRow[],

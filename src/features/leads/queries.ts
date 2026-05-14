@@ -29,8 +29,6 @@ export async function getLeadsPageData(
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) throw new Error(error.message);
-
   return { leads: (data ?? []) as LeadRow[], count: count ?? 0 };
 }
 
@@ -48,7 +46,7 @@ export async function getLeadById(
     .eq("company_id", companyId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) return null;
   return data as LeadRow | null;
 }
 
@@ -63,6 +61,5 @@ export async function getCustomersForLeadSelect(
     .order("name", { ascending: true })
     .limit(500);
 
-  if (error) throw new Error(error.message);
   return (data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
 }

@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
 
-// Import all syncers so they self-register.
-// These files don't exist yet — they'll be created in Tasks 13-17.
+// Import all syncers so they self-register via registerSyncer().
 import "@/lib/integrations/quickbooks";
-// import "@/lib/integrations/hubspot";
-// import "@/lib/integrations/jobber";
-// import "@/lib/integrations/square";
-// import "@/lib/integrations/stripe";
+import "@/lib/integrations/hubspot";
+import "@/lib/integrations/jobber";
+import "@/lib/integrations/square";
+import "@/lib/integrations/stripe";
 
 export async function POST(
   _request: Request,
@@ -64,6 +64,11 @@ export async function POST(
       .single();
 
     const result = await syncer.sync(supabase, companyId, freshIntegration!);
+    revalidatePath("/workspace");
+    revalidatePath("/customers");
+    revalidatePath("/imports");
+    revalidatePath("/jobs");
+    revalidatePath("/sales");
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sync failed";

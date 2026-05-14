@@ -32,11 +32,8 @@ export async function getCRMPageData(
       .limit(500),
   ]);
 
-  if (leadsResult.error) throw new Error(leadsResult.error.message);
-  if (customersResult.error) throw new Error(customersResult.error.message);
-
   return {
-    leads: leadsResult.data as CRMLead[],
-    customers: customersResult.data as CRMCustomer[],
+    leads: (leadsResult.data ?? []) as CRMLead[],
+    customers: (customersResult.data ?? []) as CRMCustomer[],
   };
 }

@@ -27,8 +27,6 @@ export async function getCustomersPageData(
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) throw new Error(error.message);
-
   return { customers: (data ?? []) as CustomerRow[], count: count ?? 0 };
 }
 
@@ -44,7 +42,7 @@ export async function getCustomerById(
     .eq("company_id", companyId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) return null;
   return data as CustomerRow | null;
 }
 

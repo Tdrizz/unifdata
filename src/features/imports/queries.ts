@@ -130,17 +130,11 @@ export async function getImportsPageData(
       .order("created_at", { ascending: false }),
   ]);
 
-  if (customersResult.error) throw new Error(customersResult.error.message);
-  if (syncConnectionsResult.error) throw new Error(syncConnectionsResult.error.message);
-  if (syncRunsResult.error) throw new Error(syncRunsResult.error.message);
-  if (importSessionsResult.error) throw new Error(importSessionsResult.error.message);
-  if (integrationsResult.error) throw new Error(integrationsResult.error.message);
-
   return {
-    customers: customersResult.data as ImportsCustomer[],
-    syncConnections: syncConnectionsResult.data as ImportsSyncConnection[],
-    syncRuns: syncRunsResult.data as ImportsSyncRun[],
-    importSessions: importSessionsResult.data as ImportsImportSession[],
-    integrations: integrationsResult.data as ImportsIntegration[],
+    customers: (customersResult.data ?? []) as ImportsCustomer[],
+    syncConnections: (syncConnectionsResult.data ?? []) as ImportsSyncConnection[],
+    syncRuns: (syncRunsResult.data ?? []) as ImportsSyncRun[],
+    importSessions: (importSessionsResult.data ?? []) as ImportsImportSession[],
+    integrations: (integrationsResult.data ?? []) as ImportsIntegration[],
   };
 }
