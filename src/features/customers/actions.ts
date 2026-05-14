@@ -78,6 +78,25 @@ export async function updateCustomerAction(
   redirect("/customers?toast=Customer+updated");
 }
 
+export async function bulkDeleteCustomers(ids: string[]): Promise<ActionState> {
+  if (ids.length === 0) return null;
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return { error: "Unauthorized" };
+  const { company } = currentCompany;
+
+  const { error } = await supabase
+    .from("customers")
+    .delete()
+    .in("id", ids)
+    .eq("company_id", company.id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/customers");
+  revalidatePath("/workspace");
+  return null;
+}
+
 export async function deleteCustomerAction(id: string) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
