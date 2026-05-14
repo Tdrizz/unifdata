@@ -9,6 +9,7 @@ import {
   type ImportRecordType,
   type RawImportRow,
 } from "@/lib/import-engine";
+import { rateLimit } from "@/lib/rate-limit";
 
 const validRecordTypes: ImportRecordType[] = [
   "relationships",
@@ -100,6 +101,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "No company found for the current user." },
         { status: 401 },
+      );
+    }
+
+    if (!rateLimit(`import:${companyId}`, 20)) {
+      return NextResponse.json(
+        { error: "Too many requests. Try again in a moment." },
+        { status: 429 },
       );
     }
 

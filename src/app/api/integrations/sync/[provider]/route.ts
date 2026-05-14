@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Import all syncers so they self-register via registerSyncer().
 import "@/lib/integrations/quickbooks";
@@ -30,6 +31,13 @@ export async function POST(
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!rateLimit(`sync:${companyId}`)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in a moment." },
+      { status: 429 },
+    );
   }
 
   const syncer = getSyncer(provider);
