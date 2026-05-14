@@ -1,3 +1,6 @@
+import { registerSyncer } from "./registry";
+import { createImportSessionFromRows } from "@/lib/import-engine";
+import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
 
@@ -228,3 +231,77 @@ export async function exchangeStripeCode(code: string): Promise<StripeTokenRespo
 
   return (await response.json()) as StripeTokenResponse;
 }
+
+// ── IntegrationSyncer implementation ──────────────────────────────────────────
+
+const STRIPE_BASE = "https://api.stripe.com/v1";
+
+async function stripeGet(secretKey: string, path: string): Promise<Record<string, unknown>> {
+  const response = await fetch(`${STRIPE_BASE}${path}`, {
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+    },
+  });
+
+  if (!response.ok) throw new Error(`Stripe API error (${response.status}): ${path}`);
+
+  return response.json() as Promise<Record<string, unknown>>;
+}
+
+const StripeSyncer: IntegrationSyncer = {
+  provider: "stripe",
+
+  async sync(supabase, companyId, integration) {
+    // Stripe uses a secret key stored as access_token — no OAuth refresh
+    const secretKey = integration.access_token!;
+    const result: SyncResult = { customersCreated: 0, customersUpdated: 0, recordsStaged: 0, sessionIds: [] };
+
+    // Customers → relationships
+    const customerData = await stripeGet(secretKey, "/customers?limit=100");
+    const customers = (customerData.data ?? []) as Record<string, unknown>[];
+    if (customers.length > 0) {
+      const rows = customers.map((c) => ({
+        name: String(c.name ?? c.email ?? "Stripe customer"),
+        email: String(c.email ?? ""),
+        phone: String(c.phone ?? ""),
+        address: (() => {
+          const addr = c.address as Record<string, string> | undefined;
+          if (!addr) return "";
+          return [addr.line1, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ");
+        })(),
+      }));
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "stripe", sourceName: "Stripe Customers",
+        fileName: null, recordType: "relationships", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Charges → revenue
+    const chargeData = await stripeGet(secretKey, "/charges?limit=100");
+    const charges = (chargeData.data ?? []) as Record<string, unknown>[];
+    if (charges.length > 0) {
+      const rows = charges.map((ch) => ({
+        amount: String(Number(ch.amount ?? 0) / 100),
+        payment_status: ch.paid ? "paid" : "unpaid",
+        sale_date: ch.created
+          ? new Date(Number(ch.created) * 1000).toISOString().split("T")[0]
+          : "",
+        service_type: String(ch.description ?? "Stripe charge"),
+        source: "stripe",
+      }));
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "stripe", sourceName: "Stripe Charges",
+        fileName: null, recordType: "revenue", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    return result;
+  },
+};
+
+registerSyncer(StripeSyncer);
+// No registerRefresher for Stripe — it uses a long-lived secret key
