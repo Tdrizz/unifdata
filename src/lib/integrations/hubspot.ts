@@ -1,5 +1,128 @@
+import { registerSyncer } from "./registry";
+import { registerRefresher } from "./token";
+import { createImportSessionFromRows } from "@/lib/import-engine";
+import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
+
+const HUBSPOT_BASE = "https://api.hubapi.com";
+
+async function hsGet(accessToken: string, path: string): Promise<Record<string, unknown>[]> {
+  const url = `${HUBSPOT_BASE}${path}`;
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+  });
+
+  if (!response.ok) throw new Error(`HubSpot API error (${response.status}): ${path}`);
+
+  const data = (await response.json()) as { results?: Record<string, unknown>[] };
+  return data.results ?? [];
+}
+
+const HubSpotSyncer: IntegrationSyncer = {
+  provider: "hubspot",
+
+  async sync(supabase, companyId, integration) {
+    const accessToken = integration.access_token!;
+    const result: SyncResult = { customersCreated: 0, customersUpdated: 0, recordsStaged: 0, sessionIds: [] };
+
+    // Contacts → relationships
+    const contacts = await hsGet(
+      accessToken,
+      "/crm/v3/objects/contacts?limit=100&properties=firstname,lastname,email,phone,company",
+    );
+    if (contacts.length > 0) {
+      const rows = contacts.map((c) => {
+        const props = (c.properties ?? {}) as Record<string, string>;
+        const name = [props.firstname, props.lastname].filter(Boolean).join(" ") || props.company || "Unknown";
+        return { name, email: props.email ?? "", phone: props.phone ?? "", customer_type: "contact" };
+      });
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Contacts",
+        fileName: null, recordType: "relationships", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Deals → opportunities
+    const deals = await hsGet(
+      accessToken,
+      "/crm/v3/objects/deals?limit=100&properties=dealname,amount,dealstage,lead_source,closedate",
+    );
+    if (deals.length > 0) {
+      const rows = deals.map((d) => {
+        const props = (d.properties ?? {}) as Record<string, string>;
+        return {
+          service_requested: props.dealname ?? "Deal",
+          estimated_value: props.amount ?? "0",
+          status: props.dealstage ?? "new",
+          source: props.lead_source ?? "hubspot",
+          next_follow_up_date: props.closedate ?? "",
+        };
+      });
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Deals",
+        fileName: null, recordType: "opportunities", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Notes → actions (follow-ups)
+    const notes = await hsGet(
+      accessToken,
+      "/crm/v3/objects/notes?limit=100&properties=hs_note_body,hs_timestamp",
+    );
+    if (notes.length > 0) {
+      const rows = notes.map((n) => {
+        const props = (n.properties ?? {}) as Record<string, string>;
+        return {
+          message: props.hs_note_body ?? "HubSpot note",
+          due_date: props.hs_timestamp ? props.hs_timestamp.split("T")[0] : "",
+          status: "pending",
+        };
+      });
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Notes",
+        fileName: null, recordType: "actions", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    return result;
+  },
+};
+
+registerSyncer(HubSpotSyncer);
+
+registerRefresher("hubspot", async (integration) => {
+  const response = await fetch("https://api.hubapi.com/oauth/v1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: process.env.HUBSPOT_CLIENT_ID!,
+      client_secret: process.env.HUBSPOT_CLIENT_SECRET!,
+      refresh_token: integration.refresh_token!,
+    }),
+  });
+
+  const data = (await response.json()) as { access_token?: string; expires_in?: number };
+  if (!data.access_token) throw new Error("HubSpot token refresh failed");
+
+  return {
+    accessToken: data.access_token,
+    expiresAt: data.expires_in
+      ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+      : null,
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Legacy helpers — used by existing sync routes
+// ---------------------------------------------------------------------------
 
 type HubSpotIntegration = {
   id: string;
