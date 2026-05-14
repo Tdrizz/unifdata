@@ -16,7 +16,7 @@ function ToastHandlerInner() {
     if (!toastMsg && !errorMsg) return;
 
     if (toastMsg) toast.success(decodeURIComponent(toastMsg));
-    if (errorMsg) toast.error(decodeURIComponent(errorMsg));
+    else if (errorMsg) toast.error(decodeURIComponent(errorMsg));
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete("toast");
@@ -30,7 +30,7 @@ function ToastHandlerInner() {
 
 export function ToastHandler() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <ToastHandlerInner />
     </Suspense>
   );
