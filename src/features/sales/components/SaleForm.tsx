@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SummaryCard } from "@/components/ui/SummaryCard";
@@ -5,12 +8,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
-import { DismissError } from "@/components/ui/DismissError";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getDateInputValue, formatCurrency } from "@/lib/utils";
 import { getRevenueTone, isUnpaid } from "@/lib/status";
-import { updateSaleAction, deleteSaleAction } from "../actions";
+import { updateSaleAction, deleteSaleAction, type ActionState } from "../actions";
 import type { SaleRow, CustomerRow } from "../types";
 
 type Props = {
@@ -65,10 +67,15 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SaleForm({ sale, customers, errorParam }: Props) {
-  const updateAction = updateSaleAction.bind(null, sale.id);
+export function SaleForm({ sale, customers }: Props) {
+  const boundUpdateAction = updateSaleAction.bind(null, sale.id);
   const deleteAction = deleteSaleAction.bind(null, sale.id);
   const issues = getRevenueIssues(sale);
+
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    boundUpdateAction,
+    null,
+  );
 
   return (
     <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
@@ -76,12 +83,19 @@ export function SaleForm({ sale, customers, errorParam }: Props) {
         title="Revenue details"
         description="These fields control how this record appears in Home, Revenue, and reporting."
       >
-        <form action={updateAction} className="space-y-5 p-5">
-          {errorParam && <DismissError message={errorParam} />}
+        <form action={formAction} className="space-y-5 p-5">
+          {state?.error && (
+            <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {state.error}
+            </p>
+          )}
 
           <div className="grid gap-4 md:grid-cols-3">
             <FormField label="Amount">
               <Input name="amount" type="number" step="0.01" min="0" required defaultValue={sale.amount ?? ""} placeholder="2500" />
+              {state?.fieldErrors?.amount && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.amount}</p>
+              )}
             </FormField>
             <FormField label="Payment status">
               <Select name="payment_status" defaultValue={sale.payment_status || "Paid"}>

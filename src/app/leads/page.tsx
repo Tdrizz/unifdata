@@ -9,7 +9,7 @@ import { LeadsList } from "@/features/leads/components/LeadsList";
 export default async function OpportunitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -45,7 +45,6 @@ export default async function OpportunitiesPage({
         count={count}
         customers={customers}
         profile={profile}
-        errorParam={params.error}
       />
     </AppShell>
   );

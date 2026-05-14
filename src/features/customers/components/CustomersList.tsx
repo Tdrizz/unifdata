@@ -2,13 +2,12 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { DismissError } from "@/components/ui/DismissError";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatTimestampDate } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CustomerRow } from "../types";
-import { createCustomerAction } from "../actions";
+import { CustomerCreateForm } from "./CustomerCreateForm";
 
 const PAGE_SIZE = 50;
 
@@ -128,105 +127,7 @@ export function CustomersList({ customers, count, profile, errorParam }: Props) 
         </div>
       </section>
 
-      <details className="group rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-          <div>
-            <p className="text-sm font-semibold text-slate-950">
-              Add {profile.labels.customerSingular.toLowerCase()} or business
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Add a record manually without leaving the {profile.labels.customerPlural} page.
-            </p>
-          </div>
-
-          <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:hidden">
-            Open
-          </span>
-
-          <span className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:inline-flex">
-            Close
-          </span>
-        </summary>
-
-        <form
-          action={createCustomerAction}
-          className="space-y-4 border-t border-slate-100 p-5"
-        >
-          {errorParam && <DismissError message={errorParam} />}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium text-slate-700">
-              Name
-              <input
-                name="name"
-                required
-                placeholder="John Smith, ABC Flooring, Ocean View Home..."
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Type
-              <input
-                name="customer_type"
-                placeholder="Customer, lead, residential, commercial..."
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium text-slate-700">
-              Phone
-              <input
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="808-555-1234"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </label>
-
-            <label className="text-sm font-medium text-slate-700">
-              Email
-              <input
-                name="email"
-                type="email"
-                placeholder="customer@example.com"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </label>
-          </div>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Address
-            <input
-              name="address"
-              placeholder="Service address, city, or area"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-            />
-          </label>
-
-          <label className="block text-sm font-medium text-slate-700">
-            Notes
-            <textarea
-              name="notes"
-              rows={3}
-              placeholder="Preferences, project details, or follow-up context..."
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-            />
-          </label>
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Add {profile.labels.customerSingular.toLowerCase()}
-            </button>
-          </div>
-        </form>
-      </details>
+      <CustomerCreateForm profile={profile} />
 
       <SectionCard
         title="Directory"

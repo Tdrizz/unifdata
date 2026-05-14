@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SummaryCard } from "@/components/ui/SummaryCard";
@@ -5,14 +8,13 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
-import { DismissError } from "@/components/ui/DismissError";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { formatCurrency, getDateInputValue } from "@/lib/utils";
 import { isCompleteWork, isUnpaid, getWorkTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
-import { updateJobAction, deleteJobAction } from "../actions";
+import { updateJobAction, deleteJobAction, type ActionState } from "../actions";
 
 type Props = {
   job: JobListRow;
@@ -96,8 +98,8 @@ function getWorkIssues(work: JobListRow) {
   return issues;
 }
 
-export function JobForm({ job, customers, leads, profile: _profile, errorParam }: Props) {
-  const updateAction = updateJobAction.bind(null, job.id);
+export function JobForm({ job, customers, leads, profile: _profile }: Props) {
+  const boundUpdateAction = updateJobAction.bind(null, job.id);
   const deleteAction = deleteJobAction.bind(null, job.id);
 
   const linkedCustomer = job.customer_id
@@ -108,6 +110,11 @@ export function JobForm({ job, customers, leads, profile: _profile, errorParam }
     : null;
   const issues = getWorkIssues(job);
 
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    boundUpdateAction,
+    null,
+  );
+
   return (
     <div className="space-y-5">
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
@@ -115,8 +122,12 @@ export function JobForm({ job, customers, leads, profile: _profile, errorParam }
           title="Work details"
           description="These fields control how this work appears in Home, Work, and reporting."
         >
-          <form action={updateAction} className="space-y-5 p-5">
-            {errorParam && <DismissError message={errorParam} />}
+          <form action={formAction} className="space-y-5 p-5">
+            {state?.error && (
+              <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {state.error}
+              </p>
+            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
@@ -149,6 +160,9 @@ export function JobForm({ job, customers, leads, profile: _profile, errorParam }
                 defaultValue={job.service_type || ""}
                 placeholder="Flooring install, website build, service visit…"
               />
+              {state?.fieldErrors?.service_type && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_type}</p>
+              )}
             </FormField>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -161,6 +175,9 @@ export function JobForm({ job, customers, leads, profile: _profile, errorParam }
                   defaultValue={job.job_value ?? ""}
                   placeholder="2500"
                 />
+                {state?.fieldErrors?.job_value && (
+                  <p className="mt-1 text-sm text-red-600">{state.fieldErrors.job_value}</p>
+                )}
               </FormField>
 
               <FormField label="Work stage">

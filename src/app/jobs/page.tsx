@@ -13,11 +13,10 @@ import { JobsList } from "@/features/jobs/components/JobsList";
 export default async function WorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; stage?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; stage?: string }>;
 }) {
   const params = await searchParams;
   const selectedStage = params.stage ? decodeURIComponent(params.stage) : "";
-  const errorParam = params.error ? decodeURIComponent(params.error) : "";
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
   const supabase = await createClient();
@@ -53,7 +52,6 @@ export default async function WorkPage({
         leads={leads}
         profile={profile}
         selectedStage={selectedStage}
-        errorParam={errorParam}
       />
     </AppShell>
   );

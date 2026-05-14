@@ -9,12 +9,11 @@ import { SalesList } from "@/features/sales/components/SalesList";
 export default async function RevenuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string; q?: string; page?: string; error?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; q?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus = params.status ? decodeURIComponent(params.status) : "";
   const selectedSource = params.source ? decodeURIComponent(params.source) : "";
-  const errorParam = params.error ? decodeURIComponent(params.error) : "";
   const page = Number(params.page ?? 1);
 
   const supabase = await createClient();
@@ -44,7 +43,6 @@ export default async function RevenuePage({
         profile={profile}
         selectedStatus={selectedStatus}
         selectedSource={selectedSource}
-        errorParam={errorParam}
       />
     </AppShell>
   );

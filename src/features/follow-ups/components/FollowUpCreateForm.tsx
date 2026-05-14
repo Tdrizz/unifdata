@@ -1,6 +1,8 @@
+"use client";
+
+import { useActionState } from "react";
 import type { CustomerRow } from "../types";
-import { createFollowUpAction } from "../actions";
-import { DismissError } from "@/components/ui/DismissError";
+import { createFollowUpAction, type ActionState } from "../actions";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 type Props = {
@@ -8,7 +10,9 @@ type Props = {
   errorParam?: string;
 };
 
-export function FollowUpCreateForm({ people, errorParam }: Props) {
+export function FollowUpCreateForm({ people }: Props) {
+  const [state, formAction] = useActionState<ActionState, FormData>(createFollowUpAction, null);
+
   return (
     <SectionCard
       title="Add manual follow-up"
@@ -34,10 +38,14 @@ export function FollowUpCreateForm({ people, errorParam }: Props) {
         </summary>
 
         <form
-          action={createFollowUpAction}
+          action={formAction}
           className="border-t border-slate-100 p-5"
         >
-          {errorParam && <DismissError message={errorParam} />}
+          {state?.error && (
+            <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              {state.error}
+            </p>
+          )}
 
           <label className="block text-sm font-medium text-slate-700">
             Link to person or business
@@ -65,6 +73,9 @@ export function FollowUpCreateForm({ people, errorParam }: Props) {
               placeholder="Call customer, send quote, check payment, schedule job..."
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
             />
+            {state?.fieldErrors?.message && (
+              <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
+            )}
           </label>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">

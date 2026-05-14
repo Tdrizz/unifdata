@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SummaryCard } from "@/components/ui/SummaryCard";
@@ -5,12 +8,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Textarea } from "@/components/ui/Input";
-import { DismissError } from "@/components/ui/DismissError";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatTimestampDate } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CustomerRow } from "../types";
-import { updateCustomerAction, deleteCustomerAction } from "../actions";
+import { updateCustomerAction, deleteCustomerAction, type ActionState } from "../actions";
 
 type Props = {
   customer: CustomerRow;
@@ -69,11 +71,15 @@ export function CustomerForm({
   jobsCount,
   followUpsCount,
   profile,
-  errorParam,
 }: Props) {
   const issues = getPersonIssues(customer);
-  const updateAction = updateCustomerAction.bind(null, customer.id);
+  const boundUpdateAction = updateCustomerAction.bind(null, customer.id);
   const deleteAction = deleteCustomerAction.bind(null, customer.id);
+
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    boundUpdateAction,
+    null,
+  );
 
   return (
     <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
@@ -81,8 +87,12 @@ export function CustomerForm({
         title="Person details"
         description="These fields help connect people to opportunities, work, revenue, and follow-ups."
       >
-        <form action={updateAction} className="space-y-5 p-5">
-          {errorParam && <DismissError message={errorParam} />}
+        <form action={formAction} className="space-y-5 p-5">
+          {state?.error && (
+            <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              {state.error}
+            </p>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="Name">
@@ -93,6 +103,9 @@ export function CustomerForm({
                 defaultValue={customer.name || ""}
                 placeholder="John Smith, ABC Flooring, Ocean View Home…"
               />
+              {state?.fieldErrors?.name && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
+              )}
             </FormField>
 
             <FormField label="Type">
@@ -123,6 +136,9 @@ export function CustomerForm({
                 defaultValue={customer.email || ""}
                 placeholder="customer@example.com"
               />
+              {state?.fieldErrors?.email && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.email}</p>
+              )}
             </FormField>
           </div>
 

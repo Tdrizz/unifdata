@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 
-export async function createJobAction(formData: FormData) {
+export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
+
+export async function createJobAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -22,7 +27,11 @@ export async function createJobAction(formData: FormData) {
   const paidStatus = getFormString(formData, "paid_status") || "Unpaid";
 
   if (!serviceType) {
-    redirect("/jobs?error=Work+name+is+required.");
+    return { fieldErrors: { service_type: "Work name is required." } };
+  }
+
+  if (jobValue !== null && jobValue < 0) {
+    return { fieldErrors: { job_value: "Must be a positive number." } };
   }
 
   const { error } = await supabase.from("jobs").insert({
@@ -37,14 +46,18 @@ export async function createJobAction(formData: FormData) {
     paid_status: paidStatus,
   });
 
-  if (error) redirect(`/jobs?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
   redirect("/jobs?toast=Job+created");
 }
 
-export async function updateJobAction(id: string, formData: FormData) {
+export async function updateJobAction(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -60,7 +73,11 @@ export async function updateJobAction(id: string, formData: FormData) {
   const paidStatus = getFormString(formData, "paid_status") || "Unpaid";
 
   if (!serviceType) {
-    redirect(`/jobs/${id}/edit?error=Work+name+is+required.`);
+    return { fieldErrors: { service_type: "Work name is required." } };
+  }
+
+  if (jobValue !== null && jobValue < 0) {
+    return { fieldErrors: { job_value: "Must be a positive number." } };
   }
 
   const { error } = await supabase
@@ -78,7 +95,7 @@ export async function updateJobAction(id: string, formData: FormData) {
     .eq("id", id)
     .eq("company_id", company.id);
 
-  if (error) redirect(`/jobs/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");

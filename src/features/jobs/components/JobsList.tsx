@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { DismissError } from "@/components/ui/DismissError";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Pagination } from "@/components/ui/Pagination";
 import { formatDateOnly } from "@/lib/date-format";
@@ -12,7 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
-import { createJobAction } from "../actions";
+import { JobCreateForm } from "./JobCreateForm";
 
 const PAGE_SIZE = 50;
 
@@ -23,7 +22,6 @@ type Props = {
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile: IndustryProfile;
   selectedStage: string;
-  errorParam: string;
 };
 
 function getStageExplanation(status: string | null) {
@@ -114,7 +112,7 @@ function getWorkIssues(work: JobListRow) {
   return issues;
 }
 
-export function JobsList({ jobs, count, customers, leads, profile, selectedStage, errorParam }: Props) {
+export function JobsList({ jobs, count, customers, leads, profile, selectedStage }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const leadById = new Map(leads.map((l) => [l.id, l]));
 
@@ -238,146 +236,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
         />
       </section>
 
-      <SectionCard
-        title="Add work"
-        description="Create work manually and optionally link it to a person or opportunity."
-      >
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-            <div>
-              <p className="font-semibold text-slate-950">Quick add</p>
-              <p className="mt-1 text-sm text-slate-500">
-                Add a job, project, appointment, service visit, or order.
-              </p>
-            </div>
-            <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
-              Add work
-            </span>
-            <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
-              Close
-            </span>
-          </summary>
-
-          <form action={createJobAction} className="border-t border-slate-100 p-5">
-            {errorParam && <DismissError message={errorParam} />}
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
-                Link to person or business
-                <select
-                  name="customer_id"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No linked person yet</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name || customer.email || customer.phone || "Unnamed person"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="text-sm font-medium text-slate-700">
-                Link to opportunity
-                <select
-                  name="lead_id"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="">No linked opportunity yet</option>
-                  {leads.map((lead) => (
-                    <option key={lead.id} value={lead.id}>
-                      {lead.service_requested || formatCurrency(lead.estimated_value)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-              <label className="text-sm font-medium text-slate-700">
-                Work name
-                <input
-                  name="service_type"
-                  required
-                  placeholder="Flooring install, website build, service visit..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </label>
-
-              <label className="text-sm font-medium text-slate-700">
-                Work value
-                <input
-                  name="job_value"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="2500"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </label>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
-                Work stage
-                <select
-                  name="status"
-                  defaultValue="Scheduled"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Active">Active</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </label>
-
-              <label className="text-sm font-medium text-slate-700">
-                Payment status
-                <select
-                  name="paid_status"
-                  defaultValue="Unpaid"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option value="Unpaid">Unpaid</option>
-                  <option value="Partial">Partial</option>
-                  <option value="Paid">Paid</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
-                Start date
-                <input
-                  name="start_date"
-                  type="date"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </label>
-
-              <label className="text-sm font-medium text-slate-700">
-                Completed date
-                <input
-                  name="completed_date"
-                  type="date"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button
-                type="submit"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-              >
-                Create work
-              </button>
-            </div>
-          </form>
-        </details>
-      </SectionCard>
+      <JobCreateForm customers={customers} leads={leads} />
 
       <div>
         <SearchInput placeholder={`Search ${profile.labels.jobPlural.toLowerCase()}…`} />

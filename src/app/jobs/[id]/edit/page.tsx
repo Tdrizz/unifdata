@@ -10,13 +10,10 @@ import { JobForm } from "@/features/jobs/components/JobForm";
 
 export default async function EditWorkPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +57,7 @@ export default async function EditWorkPage({
             </div>
           }
         />
-        <JobForm job={job} customers={customers} leads={leads} profile={profile} errorParam={errorParam} />
+        <JobForm job={job} customers={customers} leads={leads} profile={profile} />
       </div>
     </AppShell>
   );

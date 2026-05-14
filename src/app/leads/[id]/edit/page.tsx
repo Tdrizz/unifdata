@@ -8,13 +8,10 @@ import { LeadForm } from "@/features/leads/components/LeadForm";
 
 export default async function EditOpportunityPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
 
@@ -49,7 +46,6 @@ export default async function EditOpportunityPage({
         lead={lead}
         customers={customers}
         profile={profile}
-        errorParam={errorParam}
       />
     </AppShell>
   );

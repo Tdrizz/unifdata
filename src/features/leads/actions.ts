@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 
-export async function createLeadAction(formData: FormData) {
+export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
+
+export async function createLeadAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -21,7 +26,11 @@ export async function createLeadAction(formData: FormData) {
   const notes = getFormString(formData, "notes");
 
   if (!serviceRequested) {
-    redirect("/leads?error=Opportunity+name+is+required.");
+    return { fieldErrors: { service_requested: "Opportunity name is required." } };
+  }
+
+  if (estimatedValue !== null && estimatedValue < 0) {
+    return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
   const { error } = await supabase.from("leads").insert({
@@ -35,7 +44,7 @@ export async function createLeadAction(formData: FormData) {
     notes: notes || null,
   });
 
-  if (error) redirect(`/leads?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
   revalidatePath("/leads");
   revalidatePath("/crm");
@@ -43,7 +52,11 @@ export async function createLeadAction(formData: FormData) {
   redirect("/leads?toast=Opportunity+created");
 }
 
-export async function updateLeadAction(id: string, formData: FormData) {
+export async function updateLeadAction(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -58,7 +71,11 @@ export async function updateLeadAction(id: string, formData: FormData) {
   const notes = getFormString(formData, "notes");
 
   if (!serviceRequested) {
-    redirect(`/leads/${id}/edit?error=Opportunity+name+is+required.`);
+    return { fieldErrors: { service_requested: "Opportunity name is required." } };
+  }
+
+  if (estimatedValue !== null && estimatedValue < 0) {
+    return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
   const { error } = await supabase
@@ -75,7 +92,7 @@ export async function updateLeadAction(id: string, formData: FormData) {
     .eq("id", id)
     .eq("company_id", company.id);
 
-  if (error) redirect(`/leads/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
 
   revalidatePath("/leads");
   revalidatePath("/crm");

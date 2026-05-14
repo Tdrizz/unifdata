@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SummaryCard } from "@/components/ui/SummaryCard";
@@ -5,7 +8,6 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Textarea, Select } from "@/components/ui/Input";
-import { DismissError } from "@/components/ui/DismissError";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { formatDateOnly } from "@/lib/date-format";
@@ -14,7 +16,7 @@ import { getOpportunityTone } from "@/lib/status";
 import { OPPORTUNITY_STATUSES } from "@/lib/constants";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow, CustomerRow } from "../types";
-import { updateLeadAction, deleteLeadAction } from "../actions";
+import { updateLeadAction, deleteLeadAction, type ActionState } from "../actions";
 
 type Props = {
   lead: LeadRow;
@@ -47,14 +49,19 @@ function getOpportunityIssues(lead: LeadRow) {
   return issues;
 }
 
-export function LeadForm({ lead, customers, profile, errorParam }: Props) {
+export function LeadForm({ lead, customers, profile }: Props) {
   const issues = getOpportunityIssues(lead);
   const linkedCustomer = lead.customer_id
     ? customers.find((c) => c.id === lead.customer_id)
     : null;
 
-  const updateAction = updateLeadAction.bind(null, lead.id);
+  const boundUpdateAction = updateLeadAction.bind(null, lead.id);
   const deleteAction = deleteLeadAction.bind(null, lead.id);
+
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    boundUpdateAction,
+    null,
+  );
 
   return (
     <div className="space-y-5">
@@ -88,8 +95,12 @@ export function LeadForm({ lead, customers, profile, errorParam }: Props) {
           title="Opportunity details"
           description="These fields control how this record appears in Pipeline, Follow-Ups, and Home."
         >
-          <form action={updateAction} className="space-y-5 p-5">
-            {errorParam && <DismissError message={errorParam} />}
+          <form action={formAction} className="space-y-5 p-5">
+            {state?.error && (
+              <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {state.error}
+              </p>
+            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
@@ -124,6 +135,9 @@ export function LeadForm({ lead, customers, profile, errorParam }: Props) {
                 defaultValue={lead.service_requested || ""}
                 placeholder="Website redesign, flooring quote, monthly service plan…"
               />
+              {state?.fieldErrors?.service_requested && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_requested}</p>
+              )}
             </FormField>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -136,6 +150,9 @@ export function LeadForm({ lead, customers, profile, errorParam }: Props) {
                   defaultValue={lead.estimated_value ?? ""}
                   placeholder="2500"
                 />
+                {state?.fieldErrors?.estimated_value && (
+                  <p className="mt-1 text-sm text-red-600">{state.fieldErrors.estimated_value}</p>
+                )}
               </FormField>
 
               <FormField label="Source">

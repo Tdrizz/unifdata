@@ -140,6 +140,13 @@ export async function POST(request: Request) {
       mapping = JSON.parse(mappingValue) as ImportMapping;
     }
 
+    const requestUrl = new URL(request.url);
+    const analyzeOnly = requestUrl.searchParams.get("analyze") === "1";
+
+    if (analyzeOnly) {
+      return NextResponse.json({ ok: true, headers, mapping });
+    }
+
     const supabase = await createClient();
 
     const result = await createImportSessionFromRows({

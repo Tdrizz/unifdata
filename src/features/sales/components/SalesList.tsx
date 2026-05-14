@@ -4,15 +4,14 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { DismissError } from "@/components/ui/DismissError";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Pagination } from "@/components/ui/Pagination";
-import { formatDateOnly, getTodayString } from "@/lib/date-format";
+import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { isUnpaid, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { createSaleAction } from "../actions";
 import type { SaleRow } from "../types";
+import { SaleCreateForm } from "./SaleCreateForm";
 
 const PAGE_SIZE = 50;
 
@@ -24,7 +23,6 @@ type Props = {
   profile: IndustryProfile;
   selectedStatus: string;
   selectedSource: string;
-  errorParam: string;
 };
 
 function isPaid(status: string | null) {
@@ -74,7 +72,7 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SalesList({ sales, count, page, q, profile, selectedStatus, selectedSource, errorParam }: Props) {
+export function SalesList({ sales, count, page, q, profile, selectedStatus, selectedSource }: Props) {
   const paidRevenue = sales.filter((r) => isPaid(r.payment_status));
   const unpaidRevenue = sales.filter((r) => isUnpaid(r.payment_status));
   const missingSource = sales.filter((r) => !r.source);
@@ -161,59 +159,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
         <StatCard label="Cleanup issues" value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)} helper="Missing source, amount, or date" tone={cleanupGroups.length > 0 ? "warning" : "positive"} />
       </section>
 
-      <SectionCard title="Add revenue" description="Create a payment or revenue record manually.">
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-            <div>
-              <p className="font-semibold text-slate-950">Quick add</p>
-              <p className="mt-1 text-sm text-slate-500">Add collected revenue, unpaid invoices, deposits, or partial payments.</p>
-            </div>
-            <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">Add revenue</span>
-            <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">Close</span>
-          </summary>
-
-          <form action={createSaleAction} className="border-t border-slate-100 p-5">
-            {errorParam && <DismissError message={errorParam} />}
-
-            <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1fr]">
-              <label className="text-sm font-medium text-slate-700">
-                Amount
-                <input name="amount" type="number" step="0.01" min="0" required placeholder="2500" className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300" />
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Payment status
-                <select name="payment_status" defaultValue="Paid" className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300">
-                  <option value="Paid">Paid</option>
-                  <option value="Unpaid">Unpaid</option>
-                  <option value="Partial">Partial</option>
-                  <option value="Pending">Pending</option>
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Revenue date
-                <input name="sale_date" type="date" defaultValue={getTodayString()} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300" />
-              </label>
-            </div>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
-                Service or category
-                <input name="service_type" placeholder="Flooring install, website build, monthly service..." className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300" />
-              </label>
-              <label className="text-sm font-medium text-slate-700">
-                Source
-                <input name="source" placeholder="Referral, Google, Website, Facebook..." className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300" />
-              </label>
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button type="submit" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
-                Create revenue
-              </button>
-            </div>
-          </form>
-        </details>
-      </SectionCard>
+      <SaleCreateForm profile={profile} />
 
       <div>
         <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}…`} />

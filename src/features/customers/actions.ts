@@ -6,46 +6,65 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 
-export async function createCustomerAction(formData: FormData) {
+export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
+
+export async function createCustomerAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
   const name = getFormString(formData, "name");
-  if (!name) redirect("/customers?error=Name+is+required.");
+  if (!name) return { fieldErrors: { name: "Name is required." } };
+
+  const email = getFormString(formData, "email");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { fieldErrors: { email: "Enter a valid email address." } };
+  }
 
   const { error } = await supabase.from("customers").insert({
     company_id: company.id,
     name,
     phone: getFormString(formData, "phone") || null,
-    email: getFormString(formData, "email") || null,
+    email: email || null,
     address: getFormString(formData, "address") || null,
     customer_type: getFormString(formData, "customer_type") || null,
     notes: getFormString(formData, "notes") || null,
   });
 
-  if (error) redirect(`/customers?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
   revalidatePath("/customers");
   revalidatePath("/workspace");
   redirect("/customers?toast=Customer+created");
 }
 
-export async function updateCustomerAction(id: string, formData: FormData) {
+export async function updateCustomerAction(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
   const name = getFormString(formData, "name");
-  if (!name) redirect(`/customers/${id}/edit?error=Name+is+required.`);
+  if (!name) return { fieldErrors: { name: "Name is required." } };
+
+  const email = getFormString(formData, "email");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { fieldErrors: { email: "Enter a valid email address." } };
+  }
 
   const { error } = await supabase
     .from("customers")
     .update({
       name,
       phone: getFormString(formData, "phone") || null,
-      email: getFormString(formData, "email") || null,
+      email: email || null,
       address: getFormString(formData, "address") || null,
       customer_type: getFormString(formData, "customer_type") || null,
       notes: getFormString(formData, "notes") || null,
@@ -53,7 +72,7 @@ export async function updateCustomerAction(id: string, formData: FormData) {
     .eq("id", id)
     .eq("company_id", company.id);
 
-  if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
   revalidatePath("/customers");
   revalidatePath("/workspace");
   redirect("/customers?toast=Customer+updated");

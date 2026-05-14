@@ -1,3 +1,6 @@
+"use client";
+
+import { useActionState } from "react";
 import Link from "next/link";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SummaryCard } from "@/components/ui/SummaryCard";
@@ -5,13 +8,12 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
-import { DismissError } from "@/components/ui/DismissError";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate, parseDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { getActionTone } from "@/lib/status";
 import { getDateInputValue } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { updateFollowUpAction, deleteFollowUpAction } from "../actions";
+import { updateFollowUpAction, deleteFollowUpAction, type ActionState } from "../actions";
 import type { FollowUpRow, CustomerRow } from "../types";
 
 type Props = {
@@ -94,14 +96,19 @@ function getActionIssues(action: FollowUpRow) {
   return issues;
 }
 
-export function FollowUpForm({ followUp, people, profile, errorParam }: Props) {
-  const updateAction = updateFollowUpAction.bind(null, followUp.id);
+export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
+  const boundUpdateAction = updateFollowUpAction.bind(null, followUp.id);
   const deleteAction = deleteFollowUpAction.bind(null, followUp.id);
 
   const linkedPerson = followUp.customer_id
     ? people.find((p) => p.id === followUp.customer_id)
     : null;
   const issues = getActionIssues(followUp);
+
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    boundUpdateAction,
+    null,
+  );
 
   return (
     <div className="space-y-5">
@@ -110,8 +117,12 @@ export function FollowUpForm({ followUp, people, profile, errorParam }: Props) {
           title="Follow-up details"
           description="These fields control how this record appears in Home and the Follow-Up priority queue."
         >
-          <form action={updateAction} className="space-y-5 p-5">
-            {errorParam && <DismissError message={errorParam} />}
+          <form action={formAction} className="space-y-5 p-5">
+            {state?.error && (
+              <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {state.error}
+              </p>
+            )}
 
             <FormField label="Link to person or business">
               <Select name="customer_id" defaultValue={followUp.customer_id || ""}>
@@ -131,6 +142,9 @@ export function FollowUpForm({ followUp, people, profile, errorParam }: Props) {
                 defaultValue={followUp.message || ""}
                 placeholder="Call customer, send quote, check payment, schedule job..."
               />
+              {state?.fieldErrors?.message && (
+                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
+              )}
             </FormField>
 
             <div className="grid gap-4 md:grid-cols-2">

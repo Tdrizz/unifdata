@@ -7,7 +7,12 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { getTodayString } from "@/lib/date-format";
 
-export async function createSaleAction(formData: FormData) {
+export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
+
+export async function createSaleAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -20,7 +25,11 @@ export async function createSaleAction(formData: FormData) {
   const source = getFormString(formData, "source");
 
   if (amount === null) {
-    redirect("/sales?error=Revenue+amount+is+required.");
+    return { fieldErrors: { amount: "Revenue amount is required." } };
+  }
+
+  if (amount < 0) {
+    return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
   const { error } = await supabase.from("sales").insert({
@@ -32,13 +41,17 @@ export async function createSaleAction(formData: FormData) {
     source: source || null,
   });
 
-  if (error) redirect(`/sales?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
   revalidatePath("/sales");
   revalidatePath("/workspace");
   redirect("/sales?toast=Sale+recorded");
 }
 
-export async function updateSaleAction(id: string, formData: FormData) {
+export async function updateSaleAction(
+  id: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -52,7 +65,11 @@ export async function updateSaleAction(id: string, formData: FormData) {
   const customerId = getFormString(formData, "customer_id");
 
   if (amount === null) {
-    redirect(`/sales/${id}/edit?error=Revenue+amount+is+required.`);
+    return { fieldErrors: { amount: "Revenue amount is required." } };
+  }
+
+  if (amount < 0) {
+    return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
   const { error } = await supabase
@@ -68,7 +85,7 @@ export async function updateSaleAction(id: string, formData: FormData) {
     .eq("id", id)
     .eq("company_id", company.id);
 
-  if (error) redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  if (error) return { error: error.message };
   revalidatePath("/sales");
   revalidatePath("/workspace");
   redirect("/sales?toast=Sale+updated");

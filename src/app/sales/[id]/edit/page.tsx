@@ -11,13 +11,10 @@ import { SaleForm } from "@/features/sales/components/SaleForm";
 
 export default async function EditRevenuePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +57,7 @@ export default async function EditRevenuePage({
             </div>
           }
         />
-        <SaleForm sale={sale} customers={customers} errorParam={errorParam} />
+        <SaleForm sale={sale} customers={customers} />
       </div>
     </AppShell>
   );
