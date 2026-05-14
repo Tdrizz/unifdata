@@ -9,13 +9,10 @@ import { FollowUpForm } from "@/features/follow-ups/components/FollowUpForm";
 
 export default async function EditFollowUpPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorParam } = await searchParams;
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +40,7 @@ export default async function EditFollowUpPage({
       businessSector={company.business_sector}
     >
       <PageHeader eyebrow={profile.labels.followUpPlural} title="Edit follow-up" />
-      <FollowUpForm followUp={followUp} people={people} profile={profile} errorParam={errorParam} />
+      <FollowUpForm followUp={followUp} people={people} profile={profile} />
     </AppShell>
   );
 }

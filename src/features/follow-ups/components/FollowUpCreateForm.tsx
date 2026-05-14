@@ -7,7 +7,6 @@ import { SectionCard } from "@/components/ui/SectionCard";
 
 type Props = {
   people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
-  errorParam?: string;
 };
 
 export function FollowUpCreateForm({ people }: Props) {

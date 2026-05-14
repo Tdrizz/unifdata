@@ -75,7 +75,7 @@ export function CsvImportSessionFlow() {
     setMessage("");
 
     if (!file) {
-      setMessage("Choose a CSV file first.");
+      setMessage("Choose a CSV or Excel file first.");
       return;
     }
 
@@ -94,7 +94,7 @@ export function CsvImportSessionFlow() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.error || "Failed to analyze CSV.");
+        setMessage(data.error || "Failed to analyze file.");
         return;
       }
 
@@ -182,16 +182,27 @@ export function CsvImportSessionFlow() {
             <p className="mt-2 text-sm leading-6 text-slate-600">
               {selectedType?.description}
             </p>
+
+            <p className="mt-2 text-xs text-slate-500">
+              Not sure about column names?{" "}
+              <a
+                href={`/templates/${recordType}-template.csv`}
+                download
+                className="font-semibold text-slate-700 underline underline-offset-2 hover:text-slate-900"
+              >
+                Download template
+              </a>
+            </p>
           </div>
 
           <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
             <label className="text-sm font-medium text-slate-700">
-              CSV file
+              CSV or Excel file
             </label>
 
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(event) => {
                 setFile(event.target.files?.[0] || null);
                 setMessage("");
@@ -215,7 +226,7 @@ export function CsvImportSessionFlow() {
             {analyzing && (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             )}
-            {analyzing ? "Analyzing CSV..." : "Analyze CSV"}
+            {analyzing ? "Analyzing file..." : "Analyze file"}
           </button>
         </>
       )}

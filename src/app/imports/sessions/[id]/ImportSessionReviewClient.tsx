@@ -197,6 +197,7 @@ export function ImportSessionReviewClient({
   const [linkageSuggestions, setLinkageSuggestions] = useState<LinkageSuggestion[]>([]);
   const [applyingLinks, setApplyingLinks] = useState(false);
   const [skippedSuggestions, setSkippedSuggestions] = useState<Set<string>>(new Set());
+  const [bulkWorking, setBulkWorking] = useState(false);
 
   const canCommit =
     session.status !== "committed" &&
@@ -369,6 +370,38 @@ export function ImportSessionReviewClient({
     }
   }
 
+  async function bulkAction(
+    action: "skip" | "update_existing",
+    filter: "duplicates" | "errors",
+  ) {
+    setMessage("");
+    setBulkWorking(true);
+
+    try {
+      const response = await fetch(
+        `/api/import-sessions/${session.id}/rows/bulk`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, filter }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || "Failed to apply bulk action.");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setMessage("Something went wrong while applying the bulk action.");
+    } finally {
+      setBulkWorking(false);
+    }
+  }
+
   const activeSuggestions = linkageSuggestions.filter(
     (s) => !skippedSuggestions.has(s.record_id),
   );
@@ -471,6 +504,24 @@ export function ImportSessionReviewClient({
           be fixed in the source file and uploaded again.
         </div>
       )}
+
+      {session.status !== "committed" &&
+        session.status !== "cancelled" &&
+        Number(session.duplicate_rows || 0) >= 3 && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-sm font-semibold text-amber-800">
+              {session.duplicate_rows} duplicate rows detected
+            </p>
+            <button
+              type="button"
+              disabled={bulkWorking}
+              onClick={() => bulkAction("skip", "duplicates")}
+              className="shrink-0 rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+            >
+              {bulkWorking ? "Skipping..." : "Skip all duplicates"}
+            </button>
+          </div>
+        )}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200">
         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
@@ -689,6 +740,20 @@ export function ImportSessionReviewClient({
                     <p className="mt-1 text-sm font-semibold text-red-800">
                       {row.validation_errors.join(" ")}
                     </p>
+                    {session.status !== "committed" &&
+                      session.status !== "cancelled" &&
+                      row.status === "error" && (
+                        <div className="mt-3">
+                          <button
+                            type="button"
+                            disabled={isWorking}
+                            onClick={() => updateRowAction(row.id, "skip")}
+                            className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
+                          >
+                            Skip this row
+                          </button>
+                        </div>
+                      )}
                   </div>
                 )}
               </article>

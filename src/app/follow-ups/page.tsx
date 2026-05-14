@@ -12,7 +12,7 @@ import { FollowUpCreateForm } from "@/features/follow-ups/components/FollowUpCre
 export default async function FollowUpsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; due?: string; source?: string; error?: string }>;
+  searchParams: Promise<{ status?: string; due?: string; source?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -48,7 +48,6 @@ export default async function FollowUpsPage({
         />
         <FollowUpCreateForm
           people={data.people}
-          errorParam={params.error ? decodeURIComponent(params.error) : undefined}
         />
         <FollowUpList
           followUps={data.followUps}
