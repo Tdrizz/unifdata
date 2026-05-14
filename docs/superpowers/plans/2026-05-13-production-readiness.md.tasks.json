@@ -1,0 +1,136 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-13-production-readiness.md",
+  "tasks": [
+    {
+      "id": 12,
+      "subject": "Task 0: Install sonner and xlsx dependencies",
+      "status": "pending",
+      "description": "**Goal:** Add Sonner (toast) and xlsx (Excel parsing) to the project.\n\n**Files:**\n- Modify: `package.json` (via npm install)\n\n**Acceptance Criteria:**\n- [ ] `sonner` appears in `package.json` dependencies\n- [ ] `xlsx` appears in `package.json` dependencies\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"package.json\", \"package-lock.json\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"sonner in package.json\", \"xlsx in package.json\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 13,
+      "subject": "Task 1: Toast system — Toaster, ToastHandler, all server actions",
+      "status": "pending",
+      "blockedBy": [12],
+      "description": "**Goal:** Add Sonner to the root layout and update all server actions to redirect with `?toast=` params so every action gives the user visible feedback.\n\n**Files:**\n- Modify: `src/app/layout.tsx`\n- Create: `src/components/ui/ToastHandler.tsx`\n- Modify: `src/features/customers/actions.ts`\n- Modify: `src/features/leads/actions.ts`\n- Modify: `src/features/jobs/actions.ts`\n- Modify: `src/features/sales/actions.ts`\n- Modify: `src/features/follow-ups/actions.ts`\n- Modify: `src/features/settings/actions.ts`\n\n**Acceptance Criteria:**\n- [ ] Creating/updating/deleting any record shows a success toast\n- [ ] Errors show a red toast\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/app/layout.tsx\", \"src/components/ui/ToastHandler.tsx\", \"src/features/customers/actions.ts\", \"src/features/leads/actions.ts\", \"src/features/jobs/actions.ts\", \"src/features/sales/actions.ts\", \"src/features/follow-ups/actions.ts\", \"src/features/settings/actions.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"ToastHandler.tsx exists with Suspense wrapper\", \"All 6 feature action files redirect with ?toast= on success\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 14,
+      "subject": "Task 2: Fix DeleteConfirm loading state",
+      "status": "pending",
+      "description": "**Goal:** Prevent double-delete by disabling the delete button and showing a spinner from the moment it is clicked.\n\n**Files:**\n- Modify: `src/components/ui/DeleteConfirm.tsx`\n\n**Acceptance Criteria:**\n- [ ] Delete button disabled immediately on first click\n- [ ] Spinner shows during pending delete\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/components/ui/DeleteConfirm.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"DeleteConfirm uses useTransition\", \"Confirm button has disabled={isPending}\", \"Spinner shown when isPending\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 15,
+      "subject": "Task 3: Add loading.tsx to all route segments",
+      "status": "pending",
+      "description": "**Goal:** Every page shows a skeleton while server data loads.\n\n**Files:**\n- Create: `src/app/workspace/loading.tsx`, `src/app/customers/loading.tsx`, `src/app/leads/loading.tsx`, `src/app/jobs/loading.tsx`, `src/app/sales/loading.tsx`, `src/app/follow-ups/loading.tsx`, `src/app/crm/loading.tsx`, `src/app/imports/loading.tsx`, `src/app/ai-assistant/loading.tsx`, `src/app/settings/loading.tsx`, `src/app/data-hub/loading.tsx`\n\n**Acceptance Criteria:**\n- [ ] All 11 route segments have a `loading.tsx`\n- [ ] Each exports a default function with animated skeleton\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/app/workspace/loading.tsx\", \"src/app/customers/loading.tsx\", \"src/app/leads/loading.tsx\", \"src/app/jobs/loading.tsx\", \"src/app/sales/loading.tsx\", \"src/app/follow-ups/loading.tsx\", \"src/app/crm/loading.tsx\", \"src/app/imports/loading.tsx\", \"src/app/ai-assistant/loading.tsx\", \"src/app/settings/loading.tsx\", \"src/app/data-hub/loading.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"11 loading.tsx files exist\", \"Each exports a default function\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 16,
+      "subject": "Task 4: SearchInput and Pagination shared components",
+      "status": "pending",
+      "description": "**Goal:** Create SearchInput (updates ?q= URL param) and Pagination (renders page buttons for ?page=).\n\n**Files:**\n- Create: `src/components/ui/SearchInput.tsx`\n- Create: `src/components/ui/Pagination.tsx`\n\n**Acceptance Criteria:**\n- [ ] SearchInput debounces 300ms and updates ?q= param, resets ?page= to 1\n- [ ] Pagination renders page buttons with disabled states\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/components/ui/SearchInput.tsx\", \"src/components/ui/Pagination.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"SearchInput debounces 300ms and updates ?q= param\", \"Pagination renders page buttons and handles disabled states\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 17,
+      "subject": "Task 5: Wire search and pagination into all four list views",
+      "status": "pending",
+      "blockedBy": [16],
+      "description": "**Goal:** Add SearchInput and Pagination to CustomersList, LeadsList, JobsList, SalesList.\n\n**Files:**\n- Modify: `src/features/customers/components/CustomersList.tsx`\n- Modify: `src/features/leads/components/LeadsList.tsx`\n- Modify: `src/features/jobs/components/JobsList.tsx`\n- Modify: `src/features/sales/components/SalesList.tsx`\n- Modify: `src/app/leads/page.tsx`, `src/app/jobs/page.tsx`, `src/app/sales/page.tsx`\n\n**Acceptance Criteria:**\n- [ ] SearchInput present in all four list components\n- [ ] Pagination present in all four list components\n- [ ] List pages pass q and page searchParams to queries\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/customers/components/CustomersList.tsx\", \"src/features/leads/components/LeadsList.tsx\", \"src/features/jobs/components/JobsList.tsx\", \"src/features/sales/components/SalesList.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"SearchInput present in all four list components\", \"Pagination present in all four list components\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 18,
+      "subject": "Task 6: Auth redirect for logged-in users on /login and /signup",
+      "status": "pending",
+      "description": "**Goal:** /login and /signup redirect to /workspace if already authenticated.\n\n**Files:**\n- Modify: `src/app/login/page.tsx`\n- Create: `src/app/login/LoginForm.tsx`\n\n**Acceptance Criteria:**\n- [ ] Visiting /login while authenticated redirects to /workspace\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/app/login/page.tsx\", \"src/app/login/LoginForm.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"login/page.tsx is a Server Component that calls supabase.auth.getUser()\", \"Authenticated users redirected to /workspace\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 19,
+      "subject": "Task 7: Mobile bottom tab bar",
+      "status": "pending",
+      "description": "**Goal:** Replace horizontal-scroll chip nav with fixed bottom tab bar on mobile.\n\n**Files:**\n- Create: `src/components/MobileTabBar.tsx`\n- Modify: `src/components/AppShell.tsx`\n\n**Acceptance Criteria:**\n- [ ] Mobile shows fixed bottom bar with 5 primary tabs\n- [ ] Active tab highlighted with accent color\n- [ ] Old AppNav mobile removed from header\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/components/MobileTabBar.tsx\", \"src/components/AppShell.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"MobileTabBar.tsx exists with 5 primary tabs\", \"AppShell renders MobileTabBar on mobile\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 20,
+      "subject": "Task 8: Empty state onboarding + password change security",
+      "status": "pending",
+      "description": "**Goal:** Welcome card for new workspaces; current-password verification for password change.\n\n**Files:**\n- Modify: `src/features/workspace/components/WorkspaceView.tsx`\n- Modify: `src/features/settings/components/SettingsView.tsx`\n- Modify: `src/features/settings/actions.ts`\n\n**Acceptance Criteria:**\n- [ ] Workspace with 0 customers shows welcome card with CTAs\n- [ ] Password change requires and verifies current password\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/workspace/components/WorkspaceView.tsx\", \"src/features/settings/components/SettingsView.tsx\", \"src/features/settings/actions.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"WorkspaceView shows welcome card when customers.length === 0\", \"Password action verifies current password via signInWithPassword\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 21,
+      "subject": "Task 9: Inline form validation with useActionState",
+      "status": "pending",
+      "description": "**Goal:** Required field errors show inline without page redirect.\n\n**Files:**\n- Modify: customers, leads, jobs, sales, follow-ups actions.ts and form components\n\n**Acceptance Criteria:**\n- [ ] Missing required fields show inline errors without redirect\n- [ ] Negative monetary values rejected inline\n- [ ] Invalid email format caught inline\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/customers/actions.ts\", \"src/features/customers/components/CustomerForm.tsx\", \"src/features/leads/actions.ts\", \"src/features/leads/components/LeadForm.tsx\", \"src/features/jobs/actions.ts\", \"src/features/jobs/components/JobForm.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"Actions return fieldErrors instead of redirecting on validation failure\", \"Form components use useActionState\", \"Inline error messages appear next to invalid fields\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 22,
+      "subject": "Task 10: Import — column mapping confirmation step",
+      "status": "pending",
+      "description": "**Goal:** Show column mapping table after CSV upload before creating the import session.\n\n**Files:**\n- Modify: `src/app/imports/CsvImportSessionFlow.tsx`\n- Modify: `src/app/api/import-sessions/csv/route.ts`\n\n**Acceptance Criteria:**\n- [ ] Clicking Analyze shows mapping table, not immediate session navigation\n- [ ] Each column has dropdown to reassign FrontierOps field\n- [ ] Confirmed mapping sent on final submit\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/app/imports/CsvImportSessionFlow.tsx\", \"src/app/api/import-sessions/csv/route.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"CSV upload shows mapping table before creating session\", \"Each detected column has dropdown to reassign target field\", \"Confirmed mapping sent on final submit\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 23,
+      "subject": "Task 11: Import — xlsx support, CSV templates, bulk actions, error guidance",
+      "status": "pending",
+      "description": "**Goal:** Accept .xlsx, downloadable templates, bulk duplicate skip, specific error guidance.\n\n**Files:**\n- Modify: `src/app/api/import-sessions/csv/route.ts`\n- Create: `public/templates/` (5 CSV files)\n- Modify: `src/app/imports/CsvImportSessionFlow.tsx`\n- Create: `src/app/api/import-sessions/[id]/rows/bulk/route.ts`\n- Modify: `src/app/imports/sessions/[id]/ImportSessionReviewClient.tsx`\n\n**Acceptance Criteria:**\n- [ ] .xlsx files parse correctly\n- [ ] 5 template CSVs exist in public/templates/\n- [ ] Skip all duplicates button resolves all duplicates in one request\n- [ ] Error rows show specific validation_errors text and skip button\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/app/api/import-sessions/csv/route.ts\", \"src/app/api/import-sessions/[id]/rows/bulk/route.ts\", \"src/app/imports/CsvImportSessionFlow.tsx\", \"src/app/imports/sessions/[id]/ImportSessionReviewClient.tsx\", \"public/templates/\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"xlsx files parse correctly\", \"5 template CSVs exist in public/templates/\", \"Bulk skip endpoint exists\", \"Skip all duplicates button shows when 3+ duplicate rows\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 24,
+      "subject": "Task 12: Integration sync framework — registry, token refresh, sync route",
+      "status": "pending",
+      "blockedBy": [12],
+      "description": "**Goal:** Shared integration sync infrastructure: registry, token refresh, shared API route.\n\n**Files:**\n- Create: `src/lib/integrations/types.ts`\n- Create: `src/lib/integrations/token.ts`\n- Create: `src/lib/integrations/registry.ts`\n- Create: `src/app/api/integrations/sync/[provider]/route.ts`\n\n**Acceptance Criteria:**\n- [ ] IntegrationSyncer interface defined\n- [ ] refreshIntegrationToken checks expiry and updates DB\n- [ ] POST /api/integrations/sync/[provider] returns 404 for unknown providers\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/types.ts\", \"src/lib/integrations/token.ts\", \"src/lib/integrations/registry.ts\", \"src/app/api/integrations/sync/[provider]/route.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"IntegrationSyncer interface defined\", \"refreshIntegrationToken checks expiry and updates DB\", \"POST /api/integrations/sync/[provider] exists\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 25,
+      "subject": "Task 13: QuickBooks sync",
+      "status": "pending",
+      "blockedBy": [24],
+      "description": "**Goal:** QuickBooks syncer — customers, invoices, estimates staged as import sessions.\n\n**Files:**\n- Create: `src/lib/integrations/quickbooks.ts`\n\n**Acceptance Criteria:**\n- [ ] QuickBooksSyncer implements IntegrationSyncer\n- [ ] Fetches from QBO REST API using realmId from integration.metadata\n- [ ] registerSyncer and registerRefresher called at module level\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/quickbooks.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"QuickBooksSyncer implements IntegrationSyncer\", \"registerSyncer and registerRefresher called at module level\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 26,
+      "subject": "Task 14: HubSpot sync",
+      "status": "pending",
+      "blockedBy": [24],
+      "description": "**Goal:** HubSpot syncer — contacts, deals, notes staged as import sessions.\n\n**Files:**\n- Create: `src/lib/integrations/hubspot.ts`\n\n**Acceptance Criteria:**\n- [ ] HubSpotSyncer implements IntegrationSyncer\n- [ ] Fetches contacts, deals, notes from HubSpot API v3\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/hubspot.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"HubSpotSyncer implements IntegrationSyncer\", \"Fetches contacts deals notes from HubSpot API v3\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 27,
+      "subject": "Task 15: Jobber sync",
+      "status": "pending",
+      "blockedBy": [24],
+      "description": "**Goal:** Jobber GraphQL syncer — clients, jobs, invoices staged as import sessions.\n\n**Files:**\n- Create: `src/lib/integrations/jobber.ts`\n\n**Acceptance Criteria:**\n- [ ] JobberSyncer implements IntegrationSyncer via GraphQL\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/jobber.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"JobberSyncer implements IntegrationSyncer via GraphQL\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 28,
+      "subject": "Task 16: Square sync",
+      "status": "pending",
+      "blockedBy": [24],
+      "description": "**Goal:** Square syncer — customers and payments staged as import sessions.\n\n**Files:**\n- Create: `src/lib/integrations/square.ts`\n\n**Acceptance Criteria:**\n- [ ] SquareSyncer implements IntegrationSyncer\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/square.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"SquareSyncer implements IntegrationSyncer\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 29,
+      "subject": "Task 17: Stripe sync",
+      "status": "pending",
+      "blockedBy": [24],
+      "description": "**Goal:** Stripe syncer — customers and charges staged as import sessions using secret key.\n\n**Files:**\n- Create: `src/lib/integrations/stripe.ts`\n\n**Acceptance Criteria:**\n- [ ] StripeSyncer implements IntegrationSyncer using access_token as Stripe secret key\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/lib/integrations/stripe.ts\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"StripeSyncer implements IntegrationSyncer using access_token as Stripe key\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 30,
+      "subject": "Task 18: Integration sync UI — Sync Now button and status",
+      "status": "pending",
+      "blockedBy": [25, 26, 27, 28, 29],
+      "description": "**Goal:** Sync Now button for each connected integration on Imports and Settings pages.\n\n**Files:**\n- Create: `src/components/ui/SyncNowButton.tsx`\n- Modify: `src/features/imports/components/ImportsView.tsx`\n- Modify: `src/features/settings/components/SettingsView.tsx`\n\n**Acceptance Criteria:**\n- [ ] SyncNowButton calls POST /api/integrations/sync/[provider]\n- [ ] Success and error toasts appear\n- [ ] Spinner shown during sync\n- [ ] `npm run build` exits 0\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/components/ui/SyncNowButton.tsx\", \"src/features/imports/components/ImportsView.tsx\", \"src/features/settings/components/SettingsView.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"SyncNowButton calls POST /api/integrations/sync/[provider]\", \"Success and error toasts appear\", \"Spinner shown during sync\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 31,
+      "subject": "Task 19: Final build verification",
+      "status": "pending",
+      "blockedBy": [30],
+      "description": "**Goal:** Confirm the complete implementation compiles cleanly with zero TypeScript errors.\n\n**Acceptance Criteria:**\n- [ ] `npm run build` exits 0\n- [ ] `npx tsc --noEmit` exits 0\n\n**Verify:** `npm run build && npx tsc --noEmit` → both exit 0\n\n```json:metadata\n{\"files\": [], \"verifyCommand\": \"npm run build && npx tsc --noEmit\", \"acceptanceCriteria\": [\"npm run build exits 0\", \"npx tsc --noEmit exits 0\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-13T10:00:00Z"
+}
