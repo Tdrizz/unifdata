@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export function ChangePasswordForm() {
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,25 +26,68 @@ export function ChangePasswordForm() {
       return;
     }
 
+    if (!currentPassword) {
+      setError("Current password is required.");
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+      setError("Could not verify your session. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      setError("Current password is incorrect.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
     setLoading(false);
 
-    if (error) {
-      setError(error.message);
+    if (updateError) {
+      setError(updateError.message);
       return;
     }
 
     setSuccess(true);
+    setCurrentPassword("");
     setPassword("");
     setConfirm("");
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-5">
+      <div>
+        <label className="block text-sm font-medium text-slate-700">
+          Current password
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Enter your current password"
+            autoComplete="current-password"
+            required
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+          />
+        </label>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-slate-700">
           New password

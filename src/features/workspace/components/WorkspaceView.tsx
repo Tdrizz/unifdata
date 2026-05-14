@@ -275,6 +275,29 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
+      {customers.length === 0 && (
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-lg font-black text-slate-950">Welcome to FrontierOps</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+            Start by adding your first customer. You can also import a CSV file if you have existing data.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <a
+              href="/customers"
+              className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Add your first customer
+            </a>
+            <a
+              href="/imports"
+              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Import from CSV
+            </a>
+          </div>
+        </div>
+      )}
+
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard
           label="Priority items"
