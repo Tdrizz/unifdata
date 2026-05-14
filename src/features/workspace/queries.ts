@@ -20,6 +20,11 @@ export async function getWorkspaceData(
   supabase: SupabaseClient<Database>,
   companyId: string,
 ): Promise<WorkspaceData> {
+  // Calculate 6 months ago for sales filter
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const sixMonthsAgoStr = sixMonthsAgo.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
   const [
     customersResult,
     leadsResult,
@@ -58,6 +63,7 @@ export async function getWorkspaceData(
         "id, amount, payment_status, sale_date, service_type, source, created_at",
       )
       .eq("company_id", companyId)
+      .gte("sale_date", sixMonthsAgoStr)
       .order("created_at", { ascending: false })
       .limit(500),
 
@@ -65,6 +71,7 @@ export async function getWorkspaceData(
       .from("follow_ups")
       .select("id, customer_id, message, due_date, status, created_at")
       .eq("company_id", companyId)
+      .not("status", "in", '("completed","done","closed")')
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(500),
   ]);
