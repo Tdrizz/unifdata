@@ -73,6 +73,14 @@ export function CustomersList({ customers, count, profile, errorParam }: Props) 
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <a
+              href="/api/export/csv?table=customers"
+              download
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export CSV
+            </a>
+
             <StatusBadge tone="neutral">{count} total</StatusBadge>
 
             <StatusBadge tone={missingEmail.length > 0 ? "warning" : "success"}>

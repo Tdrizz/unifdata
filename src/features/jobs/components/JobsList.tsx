@@ -193,6 +193,14 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
         description={`Use this page to see what ${profile.labels.jobPlural.toLowerCase()} are planned, active, complete, cancelled, or still need payment.`}
         actions={
           <div className="flex flex-wrap gap-2">
+            <a
+              href="/api/export/csv?table=jobs"
+              download
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export CSV
+            </a>
+
             <Link
               href="/leads"
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"

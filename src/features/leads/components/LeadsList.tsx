@@ -169,6 +169,14 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
         description={`Create, review, and clean up ${profile.labels.leadPlural.toLowerCase()} before they become ${profile.labels.jobPlural.toLowerCase()} and ${profile.labels.salePlural.toLowerCase()}.`}
         actions={
           <div className="flex flex-wrap gap-2">
+            <a
+              href="/api/export/csv?table=leads"
+              download
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export CSV
+            </a>
+
             <Link
               href="/crm"
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
