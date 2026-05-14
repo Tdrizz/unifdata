@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 export function DeleteConfirm({
   action,
@@ -10,6 +10,7 @@ export function DeleteConfirm({
   description?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   if (!confirming) {
     return (
@@ -35,14 +36,21 @@ export function DeleteConfirm({
         >
           Cancel
         </button>
-        <form action={action}>
-          <button
-            type="submit"
-            className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
-          >
-            Yes, delete
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => {
+            startTransition(async () => {
+              await action();
+            });
+          }}
+          disabled={isPending}
+          className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isPending && (
+            <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          )}
+          {isPending ? "Deleting..." : "Yes, delete"}
+        </button>
       </div>
     </div>
   );
