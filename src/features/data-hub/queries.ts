@@ -69,17 +69,11 @@ export async function getDataHubPageData(
       .limit(500),
   ]);
 
-  if (customersResult.error) throw new Error(customersResult.error.message);
-  if (opportunitiesResult.error) throw new Error(opportunitiesResult.error.message);
-  if (workResult.error) throw new Error(workResult.error.message);
-  if (revenueResult.error) throw new Error(revenueResult.error.message);
-  if (followUpsResult.error) throw new Error(followUpsResult.error.message);
-
   return {
-    customers: customersResult.data as DataHubCustomer[],
-    opportunities: opportunitiesResult.data as DataHubLead[],
-    workRecords: workResult.data as DataHubJob[],
-    revenueRecords: revenueResult.data as DataHubSale[],
-    followUps: followUpsResult.data as DataHubFollowUp[],
+    customers: (customersResult.data ?? []) as DataHubCustomer[],
+    opportunities: (opportunitiesResult.data ?? []) as DataHubLead[],
+    workRecords: (workResult.data ?? []) as DataHubJob[],
+    revenueRecords: (revenueResult.data ?? []) as DataHubSale[],
+    followUps: (followUpsResult.data ?? []) as DataHubFollowUp[],
   };
 }

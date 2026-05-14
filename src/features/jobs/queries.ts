@@ -29,8 +29,6 @@ export async function getJobsPageData(
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) throw new Error(error.message);
-
   return { jobs: (data ?? []) as JobListRow[], count: count ?? 0 };
 }
 
@@ -48,7 +46,7 @@ export async function getJobById(
     .eq("company_id", companyId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) return null;
   return data as JobListRow | null;
 }
 
@@ -63,7 +61,6 @@ export async function getCustomersForJobSelect(
     .order("name", { ascending: true })
     .limit(500);
 
-  if (error) throw new Error(error.message);
   return (data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
 }
 
@@ -78,7 +75,6 @@ export async function getLeadsForJobSelect(
     .order("created_at", { ascending: false })
     .limit(500);
 
-  if (error) throw new Error(error.message);
   return (data ?? []) as Pick<
     LeadRow,
     "id" | "service_requested" | "status" | "estimated_value"

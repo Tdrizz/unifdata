@@ -12,7 +12,5 @@ export async function getSettingsIntegrations(
     .order("created_at", { ascending: false })
     .limit(10);
 
-  if (error) throw new Error(error.message);
-
   return (data ?? []) as SettingsIntegration[];
 }

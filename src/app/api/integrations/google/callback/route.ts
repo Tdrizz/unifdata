@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     ?.split(";")
     .map((cookie) => cookie.trim())
     .find((cookie) => cookie.startsWith("frontierops_google_oauth_state="))
-    ?.split("=")[1];
+    ?.slice("frontierops_google_oauth_state=".length);
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.redirect(

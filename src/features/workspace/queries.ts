@@ -69,17 +69,11 @@ export async function getWorkspaceData(
       .limit(500),
   ]);
 
-  if (customersResult.error) throw new Error(customersResult.error.message);
-  if (leadsResult.error) throw new Error(leadsResult.error.message);
-  if (jobsResult.error) throw new Error(jobsResult.error.message);
-  if (salesResult.error) throw new Error(salesResult.error.message);
-  if (followUpsResult.error) throw new Error(followUpsResult.error.message);
-
   return {
-    customers: customersResult.data as WorkspaceCustomer[],
-    leads: leadsResult.data as WorkspaceLead[],
-    jobs: jobsResult.data as WorkspaceJob[],
-    sales: salesResult.data as WorkspaceSale[],
-    followUps: followUpsResult.data as WorkspaceFollowUp[],
+    customers: (customersResult.data ?? []) as WorkspaceCustomer[],
+    leads: (leadsResult.data ?? []) as WorkspaceLead[],
+    jobs: (jobsResult.data ?? []) as WorkspaceJob[],
+    sales: (salesResult.data ?? []) as WorkspaceSale[],
+    followUps: (followUpsResult.data ?? []) as WorkspaceFollowUp[],
   };
 }

@@ -20,8 +20,7 @@ export async function getSalesPageData(
 
   if (q) query = query.or(`service_type.ilike.%${q}%,source.ilike.%${q}%,payment_status.ilike.%${q}%`);
 
-  const { data, error, count } = await query.range(from, to);
-  if (error) throw new Error(error.message);
+  const { data, count } = await query.range(from, to);
   return { sales: (data ?? []) as SaleRow[], count: count ?? 0 };
 }
 
@@ -37,7 +36,7 @@ export async function getSaleById(
     .eq("company_id", companyId)
     .maybeSingle();
 
-  if (error) throw new Error(error.message);
+  if (error) return null;
   return data as SaleRow | null;
 }
 

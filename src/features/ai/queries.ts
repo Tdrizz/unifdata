@@ -12,7 +12,5 @@ export async function getAiReports(
     .order("created_at", { ascending: false })
     .limit(6);
 
-  if (error) throw new Error(error.message);
-
   return (data ?? []) as AiReport[];
 }
