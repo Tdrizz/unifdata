@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
@@ -96,6 +97,7 @@ export function SettingsView({
   const squareIntegration = integrations.find((i) => i.provider === "square");
   const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
   const jobberIntegration = integrations.find((i) => i.provider === "jobber");
+  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
 
   return (
     <div className="space-y-5">
@@ -304,7 +306,14 @@ export function SettingsView({
               integration: jobberIntegration,
               startHref: "/api/integrations/jobber/start",
             },
-          ].map(({ label, description, integration, startHref }) => (
+            {
+              provider: "stripe",
+              label: "Stripe",
+              description: "Syncs customers and charges.",
+              integration: stripeIntegration,
+              startHref: "/api/integrations/stripe/start",
+            },
+          ].map(({ provider, label, description, integration, startHref }) => (
             <div
               key={label}
               className="flex flex-wrap items-center justify-between gap-4 p-4"
@@ -328,6 +337,9 @@ export function SettingsView({
                     <StatusBadge tone={getStatusTone(integration.status)}>
                       {getStatusLabel(integration.status)}
                     </StatusBadge>
+                    {integration.status === "active" && (
+                      <SyncNowButton provider={provider} label={label} />
+                    )}
                     <Link
                       href={startHref}
                       className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"

@@ -4,6 +4,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -63,9 +64,16 @@ function getSourceLabel(sourceType: string | null) {
     square: "Square",
     hubspot: "HubSpot",
     jobber: "Jobber",
+    stripe: "Stripe",
   };
 
   return labels[sourceType || ""] || sourceType || "Source";
+}
+
+function getStatusLabel(status: string | null) {
+  const text = String(status || "").replace(/_/g, " ").trim();
+  if (!text) return "Not connected";
+  return text.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 function isReviewStatus(status: string | null) {
@@ -249,6 +257,38 @@ export function ImportsView({
               </div>
             )}
           </div>
+
+          {integrations
+            .filter((i) =>
+              ["quickbooks", "hubspot", "jobber", "square", "stripe"].includes(
+                i.provider ?? "",
+              ),
+            )
+            .map((integration) => (
+              <div
+                key={integration.id}
+                className="rounded-3xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">
+                      {getSourceLabel(integration.provider)}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Sync your connected account data into FrontierOps for
+                      review.
+                    </p>
+                  </div>
+                  <StatusBadge tone={getStatusTone(integration.status)}>
+                    {getStatusLabel(integration.status)}
+                  </StatusBadge>
+                </div>
+                <SyncNowButton
+                  provider={integration.provider!}
+                  label={getSourceLabel(integration.provider)}
+                />
+              </div>
+            ))}
         </div>
       </SectionCard>
 
