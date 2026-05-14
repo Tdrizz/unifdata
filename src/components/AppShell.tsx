@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { AppNav } from "@/components/AppNav";
 import { LogoutButton } from "@/components/LogoutButton";
+import { MobileTabBar } from "@/components/MobileTabBar";
 import { ProductMark } from "@/components/ProductMark";
 
 type ThemeStyle = CSSProperties & {
@@ -75,18 +76,17 @@ export function AppShell({
               <LogoutButton />
             </div>
 
-            <div className="mt-3">
-              <AppNav mobile businessSector={businessSector} />
-            </div>
           </header>
 
-          <main className="flex-1">
+          <main className="flex-1 pb-16 md:pb-0">
             <div className="mx-auto w-full max-w-360 px-4 py-6 md:px-8 md:py-8">
               {children}
             </div>
           </main>
         </div>
       </div>
+
+      <MobileTabBar businessSector={businessSector} accentColor={accentColor} />
     </div>
   );
 }
