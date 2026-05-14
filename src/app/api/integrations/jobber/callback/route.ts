@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     ?.split(";")
     .map((c) => c.trim())
     .find((c) => c.startsWith("frontierops_jobber_oauth_state="))
-    ?.split("=")[1];
+    ?.slice("frontierops_jobber_oauth_state=".length);
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.redirect(
