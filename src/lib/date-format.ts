@@ -61,3 +61,9 @@ export function isDueToday(date: string | null | undefined) {
   if (!value) return false;
   return value.getTime() === getTodayDateOnly().getTime();
 }
+
+export function isUpcoming(date: string | null | undefined) {
+  const value = parseDateOnly(date);
+  if (!value) return false;
+  return value > getTodayDateOnly();
+}
