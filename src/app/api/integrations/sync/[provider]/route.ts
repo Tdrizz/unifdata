@@ -6,7 +6,7 @@ import { refreshIntegrationToken } from "@/lib/integrations/token";
 
 // Import all syncers so they self-register.
 // These files don't exist yet — they'll be created in Tasks 13-17.
-// import "@/lib/integrations/quickbooks";
+import "@/lib/integrations/quickbooks";
 // import "@/lib/integrations/hubspot";
 // import "@/lib/integrations/jobber";
 // import "@/lib/integrations/square";

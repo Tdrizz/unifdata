@@ -1,14 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RawImportRow } from "@/lib/import-engine";
+import { registerSyncer } from "./registry";
+import { registerRefresher } from "./token";
+import { createImportSessionFromRows, type RawImportRow } from "@/lib/import-engine";
+import type { IntegrationSyncer, SyncResult } from "./types";
 
-type QBIntegration = {
-  id: string;
-  access_token: string | null;
-  refresh_token: string | null;
-  token_expires_at: string | null;
-  provider_account_name: string | null;
-  metadata: Record<string, unknown> | null;
-};
+// ── QuickBooks API helpers ─────────────────────────────────────────────────────
 
 type QBTokenResponse = {
   access_token?: string;
@@ -21,7 +17,7 @@ type QBTokenResponse = {
 };
 
 type QBQueryResponse<T> = {
-  QueryResponse?: T;
+  QueryResponse?: Record<string, T[]>;
   Fault?: { Error?: { Message?: string }[] };
 };
 
@@ -48,7 +44,6 @@ type QBInvoice = {
   TxnDate?: string;
   DueDate?: string;
   CustomerRef?: { name?: string; value?: string };
-  Line?: unknown[];
   DocNumber?: string;
 };
 
@@ -60,9 +55,263 @@ type QBEstimate = {
   CustomerRef?: { name?: string; value?: string };
   CustomerMemo?: { value?: string };
   DocNumber?: string;
+  TxnStatus?: string;
 };
 
-export async function getQBIntegration({
+function getQBBaseUrl(): string {
+  return process.env.QUICKBOOKS_SANDBOX === "true"
+    ? "https://sandbox-quickbooks.api.intuit.com"
+    : "https://quickbooks.api.intuit.com";
+}
+
+async function qbQuery<T>(
+  accessToken: string,
+  realmId: string,
+  query: string,
+): Promise<T[]> {
+  const url = `${getQBBaseUrl()}/v3/company/${realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
+  });
+
+  const data = (await response.json()) as QBQueryResponse<T>;
+
+  if (!response.ok || data.Fault) {
+    const msg = data.Fault?.Error?.[0]?.Message ?? "QuickBooks API error.";
+    throw new Error(msg);
+  }
+
+  const key = Object.keys(data.QueryResponse ?? {})[0];
+  return (data.QueryResponse?.[key] ?? []) as T[];
+}
+
+// ── IntegrationSyncer implementation ──────────────────────────────────────────
+
+const QuickBooksSyncer: IntegrationSyncer = {
+  provider: "quickbooks",
+
+  async sync(supabase, companyId, integration) {
+    const accessToken = integration.access_token!;
+    const metadata = integration.metadata as Record<string, unknown> | null;
+    const realmId = metadata?.realm_id as string | undefined;
+
+    if (!realmId) {
+      throw new Error(
+        "QuickBooks realm ID not found in integration metadata.",
+      );
+    }
+
+    const result: SyncResult = {
+      customersCreated: 0,
+      customersUpdated: 0,
+      recordsStaged: 0,
+      sessionIds: [],
+    };
+
+    // ── Customers → relationships ────────────────────────────────────────────
+    const customers = await qbQuery<QBCustomer>(
+      accessToken,
+      realmId,
+      "SELECT * FROM Customer WHERE Active = true MAXRESULTS 1000",
+    );
+
+    if (customers.length > 0) {
+      const rows = customers.map((c) => ({
+        name:
+          c.DisplayName ||
+          `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim(),
+        email: c.PrimaryEmailAddr?.Address ?? "",
+        phone: c.PrimaryPhone?.FreeFormNumber ?? "",
+        address: [
+          c.BillAddr?.Line1,
+          c.BillAddr?.City,
+          c.BillAddr?.CountrySubDivisionCode,
+          c.BillAddr?.PostalCode,
+        ]
+          .filter(Boolean)
+          .join(", "),
+        customer_type: c.CompanyName ? "business" : "individual",
+      }));
+
+      const mapping = {
+        name: "name",
+        email: "email",
+        phone: "phone",
+        address: "address",
+        customer_type: "customer_type",
+      };
+
+      const { sessionId } = await createImportSessionFromRows({
+        supabase,
+        companyId,
+        recordType: "relationships",
+        sourceType: "quickbooks",
+        sourceName: "quickbooks-customers",
+        rows,
+        mapping,
+      });
+
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // ── Invoices → revenue ───────────────────────────────────────────────────
+    const invoices = await qbQuery<QBInvoice>(
+      accessToken,
+      realmId,
+      "SELECT * FROM Invoice MAXRESULTS 1000",
+    );
+
+    if (invoices.length > 0) {
+      const rows = invoices.map((inv) => ({
+        amount: String(inv.TotalAmt ?? 0),
+        payment_status: (inv.Balance ?? 0) === 0 ? "Paid" : "Unpaid",
+        sale_date: inv.TxnDate ?? "",
+        service_type: `Invoice ${inv.DocNumber ?? inv.Id}`,
+        customer_name: inv.CustomerRef?.name ?? "",
+        source: "quickbooks",
+      }));
+
+      const mapping = {
+        amount: "amount",
+        payment_status: "payment_status",
+        sale_date: "sale_date",
+        service_type: "service_type",
+        customer_name: "customer_name",
+        source: "source",
+      };
+
+      const { sessionId } = await createImportSessionFromRows({
+        supabase,
+        companyId,
+        recordType: "revenue",
+        sourceType: "quickbooks",
+        sourceName: "quickbooks-invoices",
+        rows,
+        mapping,
+      });
+
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // ── Estimates → opportunities ────────────────────────────────────────────
+    const estimates = await qbQuery<QBEstimate>(
+      accessToken,
+      realmId,
+      "SELECT * FROM Estimate MAXRESULTS 1000",
+    );
+
+    if (estimates.length > 0) {
+      const rows = estimates.map((est) => ({
+        service_requested:
+          est.CustomerMemo?.value ??
+          `Estimate ${est.DocNumber ?? est.Id}`,
+        estimated_value: String(est.TotalAmt ?? 0),
+        status: est.TxnStatus?.toLowerCase() ?? "new",
+        customer_name: est.CustomerRef?.name ?? "",
+        next_follow_up_date: est.ExpirationDate ?? "",
+        source: "quickbooks",
+      }));
+
+      const mapping = {
+        service_requested: "service_requested",
+        estimated_value: "estimated_value",
+        status: "status",
+        customer_name: "customer_name",
+        next_follow_up_date: "next_follow_up_date",
+        source: "source",
+      };
+
+      const { sessionId } = await createImportSessionFromRows({
+        supabase,
+        companyId,
+        recordType: "opportunities",
+        sourceType: "quickbooks",
+        sourceName: "quickbooks-estimates",
+        rows,
+        mapping,
+      });
+
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    return result;
+  },
+};
+
+registerSyncer(QuickBooksSyncer);
+
+// ── QuickBooks OAuth2 token refresh ───────────────────────────────────────────
+
+registerRefresher("quickbooks", async (integration) => {
+  if (!integration.refresh_token) {
+    throw new Error(
+      "QuickBooks account is missing a refresh token. Reconnect QuickBooks.",
+    );
+  }
+
+  const clientId = process.env.QUICKBOOKS_CLIENT_ID;
+  const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing QuickBooks OAuth environment variables.");
+  }
+
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+    "base64",
+  );
+
+  const response = await fetch(
+    "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${credentials}`,
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: integration.refresh_token,
+      }),
+    },
+  );
+
+  const data = (await response.json()) as QBTokenResponse;
+
+  if (!response.ok || !data.access_token) {
+    throw new Error(
+      data.error_description ??
+        data.error ??
+        "Failed to refresh QuickBooks token.",
+    );
+  }
+
+  return {
+    accessToken: data.access_token,
+    expiresAt: data.expires_in
+      ? new Date(Date.now() + data.expires_in * 1000).toISOString()
+      : null,
+  };
+});
+
+// ── Legacy-compatible exports (used by cron and older sync routes) ─────────────
+
+type QBIntegration = {
+  id: string;
+  access_token: string | null;
+  refresh_token: string | null;
+  token_expires_at: string | null;
+  provider_account_name: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+async function getQBIntegrationRecord({
   supabase,
   companyId,
 }: {
@@ -86,7 +335,7 @@ export async function getQBIntegration({
   return data as QBIntegration | null;
 }
 
-async function refreshQBAccessToken({
+async function refreshQBAccessTokenLegacy({
   supabase,
   integration,
 }: {
@@ -118,7 +367,7 @@ async function refreshQBAccessToken({
   const data = (await response.json()) as QBTokenResponse;
 
   if (!response.ok || !data.access_token) {
-    throw new Error(data.error_description || data.error || "Failed to refresh QuickBooks token.");
+    throw new Error(data.error_description ?? data.error ?? "Failed to refresh QuickBooks token.");
   }
 
   const expiresAt = data.expires_in
@@ -148,7 +397,7 @@ export async function getValidQBAccessToken({
   supabase: SupabaseClient;
   companyId: string;
 }): Promise<string> {
-  const integration = await getQBIntegration({ supabase, companyId });
+  const integration = await getQBIntegrationRecord({ supabase, companyId });
 
   if (!integration) throw new Error("QuickBooks is not connected.");
 
@@ -159,44 +408,25 @@ export async function getValidQBAccessToken({
   const expiresSoon = !expiresAt || expiresAt < Date.now() + 60 * 1000;
 
   if (!integration.access_token || expiresSoon) {
-    return refreshQBAccessToken({ supabase, integration });
+    return refreshQBAccessTokenLegacy({ supabase, integration });
   }
 
   return integration.access_token;
 }
 
-function getQBRealmId(integration: QBIntegration): string {
-  const meta = integration.metadata || {};
-  return String(meta.realm_id || "");
-}
+export async function getQBRealmIdFromIntegration({
+  supabase,
+  companyId,
+}: {
+  supabase: SupabaseClient;
+  companyId: string;
+}): Promise<string> {
+  const integration = await getQBIntegrationRecord({ supabase, companyId });
 
-async function qbQuery<T>(
-  accessToken: string,
-  realmId: string,
-  query: string,
-): Promise<T[]> {
-  const baseUrl = process.env.QUICKBOOKS_SANDBOX === "true"
-    ? "https://sandbox-quickbooks.api.intuit.com"
-    : "https://quickbooks.api.intuit.com";
+  if (!integration) throw new Error("QuickBooks is not connected.");
 
-  const url = `${baseUrl}/v3/company/${realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`;
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      Accept: "application/json",
-    },
-  });
-
-  const data = (await response.json()) as QBQueryResponse<Record<string, T[]>>;
-
-  if (!response.ok || data.Fault) {
-    const msg = data.Fault?.Error?.[0]?.Message || "QuickBooks API error.";
-    throw new Error(msg);
-  }
-
-  const key = Object.keys(data.QueryResponse || {})[0];
-  return (data.QueryResponse?.[key] || []) as T[];
+  const meta = integration.metadata ?? {};
+  return String(meta.realm_id ?? "");
 }
 
 export async function fetchQBCustomers(
@@ -211,9 +441,11 @@ export async function fetchQBCustomers(
 
   return customers.map((c) => ({
     external_id: c.Id,
-    name: c.DisplayName || `${c.GivenName || ""} ${c.FamilyName || ""}`.trim(),
-    email: c.PrimaryEmailAddr?.Address || "",
-    phone: c.PrimaryPhone?.FreeFormNumber || "",
+    name:
+      c.DisplayName ||
+      `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim(),
+    email: c.PrimaryEmailAddr?.Address ?? "",
+    phone: c.PrimaryPhone?.FreeFormNumber ?? "",
     address: [
       c.BillAddr?.Line1,
       c.BillAddr?.City,
@@ -238,10 +470,11 @@ export async function fetchQBInvoices(
 
   return invoices.map((inv) => ({
     external_id: inv.Id,
-    amount: String(inv.TotalAmt || 0),
-    payment_status: (inv.Balance || 0) === 0 ? "Paid" : "Unpaid",
-    sale_date: inv.TxnDate || "",
-    service_type: `Invoice ${inv.DocNumber || inv.Id}`,
+    amount: String(inv.TotalAmt ?? 0),
+    payment_status: (inv.Balance ?? 0) === 0 ? "Paid" : "Unpaid",
+    sale_date: inv.TxnDate ?? "",
+    service_type: `Invoice ${inv.DocNumber ?? inv.Id}`,
+    customer_name: inv.CustomerRef?.name ?? "",
     source: "quickbooks",
   }));
 }
@@ -258,24 +491,12 @@ export async function fetchQBEstimates(
 
   return estimates.map((est) => ({
     external_id: est.Id,
-    service_requested: est.CustomerMemo?.value || `Estimate ${est.DocNumber || est.Id}`,
-    estimated_value: String(est.TotalAmt || 0),
-    status: "New",
-    next_follow_up_date: est.ExpirationDate || "",
+    service_requested:
+      est.CustomerMemo?.value ?? `Estimate ${est.DocNumber ?? est.Id}`,
+    estimated_value: String(est.TotalAmt ?? 0),
+    status: est.TxnStatus?.toLowerCase() ?? "new",
+    customer_name: est.CustomerRef?.name ?? "",
+    next_follow_up_date: est.ExpirationDate ?? "",
     source: "quickbooks",
   }));
-}
-
-export async function getQBRealmIdFromIntegration({
-  supabase,
-  companyId,
-}: {
-  supabase: SupabaseClient;
-  companyId: string;
-}): Promise<string> {
-  const integration = await getQBIntegration({ supabase, companyId });
-
-  if (!integration) throw new Error("QuickBooks is not connected.");
-
-  return getQBRealmId(integration);
 }
