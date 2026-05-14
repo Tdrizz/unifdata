@@ -1,5 +1,107 @@
+import { registerSyncer } from "./registry";
+import { registerRefresher } from "./token";
+import { createImportSessionFromRows } from "@/lib/import-engine";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
+import type { IntegrationSyncer, SyncResult } from "./types";
+
+const SQUARE_BASE = "https://connect.squareup.com/v2";
+
+async function squareGet(accessToken: string, path: string): Promise<Record<string, unknown>> {
+  const response = await fetch(`${SQUARE_BASE}${path}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Square-Version": "2024-01-18",
+    },
+  });
+
+  if (!response.ok) throw new Error(`Square API error (${response.status}): ${path}`);
+
+  return response.json() as Promise<Record<string, unknown>>;
+}
+
+const SquareSyncer: IntegrationSyncer = {
+  provider: "square",
+
+  async sync(supabase, companyId, integration) {
+    const accessToken = integration.access_token!;
+    const result: SyncResult = { customersCreated: 0, customersUpdated: 0, recordsStaged: 0, sessionIds: [] };
+
+    // Customers → relationships
+    const customerData = await squareGet(accessToken, "/customers?limit=100");
+    const customers = (customerData.customers ?? []) as Record<string, unknown>[];
+    if (customers.length > 0) {
+      const rows = customers.map((c) => {
+        const addr = c.address as Record<string, string> | undefined;
+        return {
+          name: [c.given_name, c.family_name].filter(Boolean).join(" ") || String(c.company_name ?? "Customer"),
+          email: String(c.email_address ?? ""),
+          phone: String(c.phone_number ?? ""),
+          address: addr ? [addr.address_line_1, addr.locality, addr.administrative_district_level_1, addr.postal_code].filter(Boolean).join(", ") : "",
+        };
+      });
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "square", sourceName: "Square Customers",
+        fileName: null, recordType: "relationships", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    // Payments → revenue
+    const paymentData = await squareGet(accessToken, "/payments?limit=100");
+    const payments = (paymentData.payments ?? []) as Record<string, unknown>[];
+    if (payments.length > 0) {
+      const rows = payments.map((p) => {
+        const money = p.amount_money as Record<string, number> | undefined;
+        const amountCents = money?.amount ?? 0;
+        const createdAt = String(p.created_at ?? "");
+        return {
+          amount: String(amountCents / 100),
+          payment_status: p.status === "COMPLETED" ? "paid" : "unpaid",
+          sale_date: createdAt ? createdAt.split("T")[0] : "",
+          service_type: "Square payment",
+          source: "square",
+        };
+      });
+      const { sessionId } = await createImportSessionFromRows({
+        supabase, companyId, sourceType: "square", sourceName: "Square Payments",
+        fileName: null, recordType: "revenue", rows, mapping: {},
+      });
+      result.sessionIds.push(sessionId);
+      result.recordsStaged += rows.length;
+    }
+
+    return result;
+  },
+};
+
+registerSyncer(SquareSyncer);
+
+registerRefresher("square", async (integration) => {
+  const response = await fetch("https://connect.squareup.com/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Square-Version": "2024-01-18" },
+    body: JSON.stringify({
+      client_id: process.env.SQUARE_CLIENT_ID,
+      client_secret: process.env.SQUARE_CLIENT_SECRET,
+      grant_type: "refresh_token",
+      refresh_token: integration.refresh_token,
+    }),
+  });
+
+  const data = (await response.json()) as { access_token?: string; expires_at?: string };
+  if (!data.access_token) throw new Error("Square token refresh failed");
+
+  return { accessToken: data.access_token, expiresAt: data.expires_at ?? null };
+});
+
+// ---------------------------------------------------------------------------
+// Legacy utility exports — used by existing API routes and callback handlers.
+// These remain to preserve the existing API surface while the codebase migrates
+// to the IntegrationSyncer pattern above.
+// ---------------------------------------------------------------------------
 
 type SquareIntegration = {
   id: string;
@@ -149,14 +251,14 @@ export async function getValidSquareAccessToken({
   return integration.access_token;
 }
 
-const SQUARE_BASE = "https://connect.squareup.com";
+const SQUARE_LEGACY_BASE = "https://connect.squareup.com";
 
 export async function fetchSquareCustomers(accessToken: string): Promise<RawImportRow[]> {
   const results: SquareCustomer[] = [];
   let cursor: string | undefined;
 
   while (true) {
-    const url = new URL(`${SQUARE_BASE}/v2/customers`);
+    const url = new URL(`${SQUARE_LEGACY_BASE}/v2/customers`);
     url.searchParams.set("limit", "100");
     if (cursor) url.searchParams.set("cursor", cursor);
 
@@ -201,7 +303,7 @@ export async function fetchSquarePayments(accessToken: string): Promise<RawImpor
   let cursor: string | undefined;
 
   while (true) {
-    const url = new URL(`${SQUARE_BASE}/v2/payments`);
+    const url = new URL(`${SQUARE_LEGACY_BASE}/v2/payments`);
     url.searchParams.set("limit", "100");
     if (cursor) url.searchParams.set("cursor", cursor);
 
