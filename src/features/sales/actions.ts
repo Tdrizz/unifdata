@@ -35,7 +35,7 @@ export async function createSaleAction(formData: FormData) {
   if (error) redirect(`/sales?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/sales");
   revalidatePath("/workspace");
-  redirect("/sales");
+  redirect("/sales?toast=Sale+recorded");
 }
 
 export async function updateSaleAction(id: string, formData: FormData) {
@@ -71,7 +71,7 @@ export async function updateSaleAction(id: string, formData: FormData) {
   if (error) redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/sales");
   revalidatePath("/workspace");
-  redirect("/sales");
+  redirect("/sales?toast=Sale+updated");
 }
 
 export async function deleteSaleAction(id: string) {
@@ -88,5 +88,5 @@ export async function deleteSaleAction(id: string) {
 
   revalidatePath("/sales");
   revalidatePath("/workspace");
-  redirect("/sales");
+  redirect("/sales?toast=Sale+deleted");
 }

@@ -108,7 +108,7 @@ export async function updateWorkspaceAction(formData: FormData) {
   revalidatePath("/workspace");
   revalidatePath("/", "layout");
 
-  redirect("/settings");
+  redirect("/settings?toast=Settings+saved");
 }
 
 export async function signOutAction() {

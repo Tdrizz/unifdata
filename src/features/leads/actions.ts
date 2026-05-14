@@ -40,7 +40,7 @@ export async function createLeadAction(formData: FormData) {
   revalidatePath("/leads");
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads");
+  redirect("/leads?toast=Opportunity+created");
 }
 
 export async function updateLeadAction(id: string, formData: FormData) {
@@ -80,7 +80,7 @@ export async function updateLeadAction(id: string, formData: FormData) {
   revalidatePath("/leads");
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads");
+  redirect("/leads?toast=Opportunity+updated");
 }
 
 export async function deleteLeadAction(id: string) {
@@ -100,5 +100,5 @@ export async function deleteLeadAction(id: string) {
   revalidatePath("/leads");
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads");
+  redirect("/leads?toast=Opportunity+deleted");
 }

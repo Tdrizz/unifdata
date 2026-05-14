@@ -28,7 +28,7 @@ export async function createCustomerAction(formData: FormData) {
   if (error) redirect(`/customers?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/customers");
   revalidatePath("/workspace");
-  redirect("/customers");
+  redirect("/customers?toast=Customer+created");
 }
 
 export async function updateCustomerAction(id: string, formData: FormData) {
@@ -56,7 +56,7 @@ export async function updateCustomerAction(id: string, formData: FormData) {
   if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/customers");
   revalidatePath("/workspace");
-  redirect("/customers");
+  redirect("/customers?toast=Customer+updated");
 }
 
 export async function deleteCustomerAction(id: string) {
@@ -74,5 +74,5 @@ export async function deleteCustomerAction(id: string) {
   if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/customers");
   revalidatePath("/workspace");
-  redirect("/customers");
+  redirect("/customers?toast=Customer+deleted");
 }

@@ -26,7 +26,7 @@ export async function createFollowUpAction(formData: FormData) {
   if (error) redirect(`/follow-ups?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
-  redirect("/follow-ups");
+  redirect("/follow-ups?toast=Follow-up+created");
 }
 
 export async function updateFollowUpAction(id: string, formData: FormData) {
@@ -49,7 +49,7 @@ export async function updateFollowUpAction(id: string, formData: FormData) {
   if (error) redirect(`/follow-ups/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
-  redirect("/follow-ups");
+  redirect("/follow-ups?toast=Follow-up+updated");
 }
 
 export async function deleteFollowUpAction(id: string) {
@@ -67,5 +67,5 @@ export async function deleteFollowUpAction(id: string) {
   if (error) redirect(`/follow-ups/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
-  redirect("/follow-ups");
+  redirect("/follow-ups?toast=Follow-up+deleted");
 }

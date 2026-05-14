@@ -41,7 +41,7 @@ export async function createJobAction(formData: FormData) {
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
-  redirect("/jobs");
+  redirect("/jobs?toast=Job+created");
 }
 
 export async function updateJobAction(id: string, formData: FormData) {
@@ -82,7 +82,7 @@ export async function updateJobAction(id: string, formData: FormData) {
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
-  redirect("/jobs");
+  redirect("/jobs?toast=Job+updated");
 }
 
 export async function deleteJobAction(id: string) {
@@ -101,5 +101,5 @@ export async function deleteJobAction(id: string) {
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
-  redirect("/jobs");
+  redirect("/jobs?toast=Job+deleted");
 }
