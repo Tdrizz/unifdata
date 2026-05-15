@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { RefreshButton } from "@/app/workspace/RefreshButton";
-import { RevenueLineChart, DataHealthRing, computeMonthlyRevenue } from "@/app/workspace/RevenueChart";
+import { RevenueLineChart, computeMonthlyRevenue } from "@/app/workspace/RevenueChart";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -250,6 +250,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
 
+  const leadPlural = profile.labels.leadPlural;
+  const jobPlural = profile.labels.jobPlural;
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -298,243 +301,191 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         </div>
       )}
 
-      <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      {/* KPI strip */}
+      <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
-          label="Priority items"
-          value={priorityQueue.length}
-          helper="Follow-ups, payments, and cleanup"
-          tone={priorityQueue.length > 0 ? "warning" : "positive"}
+          label={`Open ${leadPlural}`}
+          value={openLeads.length}
+          helper={formatCurrency(openPipelineValue)}
+          tone={openLeads.length > 0 ? "positive" : "default"}
         />
         <StatCard
-          label={profile.priorityNames.pipeline}
-          value={formatCurrency(openPipelineValue)}
-          helper={`${openLeads.length} open ${profile.labels.leadPlural.toLowerCase()}`}
-          tone={openPipelineValue > 0 ? "positive" : "default"}
-        />
-        <StatCard
-          label={profile.priorityNames.activeWork}
+          label={`${jobPlural} active`}
           value={activeWork.length}
-          helper={`${formatCurrency(activeWorkValue)} not yet complete`}
+          helper={`${formatCurrency(activeWorkValue)} in progress`}
           tone={activeWork.length > 0 ? "warning" : "default"}
         />
         <StatCard
-          label={`${profile.labels.saleSingular} needed`}
+          label="Unpaid revenue"
           value={formatCurrency(unpaidRevenueValue)}
-          helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} need collection`}
-          tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
+          helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} outstanding`}
+          tone={unpaidRevenueValue > 0 ? "danger" : "positive"}
+        />
+        <StatCard
+          label="Follow-ups due"
+          value={followUpSchedule.length}
+          helper="Manual and opportunity follow-ups"
+          tone={followUpSchedule.length > 0 ? "warning" : "positive"}
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_220px] items-stretch">
-        <SectionCard title="Revenue trend" description="Collected vs. pending — last 6 months.">
-          <div className="p-5">
-            <RevenueLineChart months={monthlyRevenue} />
-          </div>
-        </SectionCard>
-        <SectionCard
-          title="Data health"
-          description={`${customersWithContact} of ${customers.length} ${profile.labels.customerPlural.toLowerCase()} have contact info.`}
-        >
-          <div className="flex flex-1 items-center justify-center p-6">
-            <DataHealthRing score={dataHealthScore} />
-          </div>
-        </SectionCard>
-      </section>
-
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
-        <SectionCard
-          title="Priority queue"
-          description="What needs attention first across follow-ups, payments, and cleanup."
-        >
-          {priorityQueue.length === 0 ? (
-            <EmptyState
-              title="Nothing needs attention"
-              description="No open follow-ups, unpaid revenue, or important cleanup issues were found."
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {priorityQueue.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="block px-4 py-3 transition-colors hover:bg-slate-50"
-                >
-                  <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-                  <p className="mt-1.5 font-semibold text-slate-950">{item.title}</p>
-                  <p className="mt-0.5 text-sm text-slate-500">{item.detail}</p>
-                </Link>
-              ))}
+      {/* Two-column body */}
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.6fr_1fr] items-start">
+        {/* Left column */}
+        <div className="space-y-5">
+          {/* Revenue chart */}
+          <SectionCard title="Revenue trend" description="Collected vs. pending — last 6 months.">
+            <div className="p-5">
+              <RevenueLineChart months={monthlyRevenue} />
             </div>
-          )}
-        </SectionCard>
+          </SectionCard>
 
-        <SectionCard
-          title="Follow-up schedule"
-          description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates, sorted by due date.`}
-        >
-          {followUpSchedule.length === 0 ? (
-            <EmptyState
-              title="No follow-ups scheduled"
-              description={`Add a manual follow-up or set a next follow-up date on a ${profile.labels.leadSingular.toLowerCase()}.`}
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {followUpSchedule.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="block px-4 py-3 transition-colors hover:bg-slate-50"
-                >
-                  <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-                  <p className="mt-1.5 font-semibold text-slate-950">{item.title}</p>
-                  <p className="mt-0.5 text-sm text-slate-500">{item.detail}</p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-      </section>
-
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
-        <SectionCard
-          title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
-          description={`${profile.labels.leadPlural} sorted by follow-up need and estimated value.`}
-        >
-          {prioritizedOpportunities.length === 0 ? (
-            <EmptyState
-              title={`No open ${profile.labels.leadPlural.toLowerCase()}`}
-              description={`Create or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
-            />
-          ) : (
-            <div>
-              <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    {opportunitiesNeedingFollowUp.length} {profile.labels.leadPlural.toLowerCase()} need follow-up
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">Missing, due, or overdue follow-up dates.</p>
-                </div>
-                <Link
-                  href="/leads"
-                  className="cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:border-slate-300"
-                >
-                  Manage
-                </Link>
-              </div>
+          {/* Action queue */}
+          <SectionCard
+            title="Action queue"
+            description="What needs attention first across follow-ups, payments, and cleanup."
+          >
+            {priorityQueue.length === 0 ? (
+              <EmptyState
+                title="Nothing needs attention"
+                description="No open follow-ups, unpaid revenue, or important cleanup issues were found."
+              />
+            ) : (
               <div className="divide-y divide-slate-100">
-                {prioritizedOpportunities.map((lead) => {
-                  const customer = lead.customer_id ? customerById.get(lead.customer_id) : null;
-                  return (
-                    <Link
-                      key={lead.id}
-                      href={`/leads/${lead.id}/edit`}
-                      className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_110px_135px] md:items-center"
-                    >
-                      <div>
-                        <p className="font-semibold text-slate-950">
-                          {lead.service_requested || "Untitled opportunity"}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {customer?.name || lead.source || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500">Value</p>
-                        <p className="mt-1 text-sm font-semibold text-slate-700">
-                          {formatCurrency(lead.estimated_value)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500">Next step</p>
-                        <div className="mt-1">
-                          <StatusBadge tone={getFollowUpTone(lead.next_follow_up_date)}>
-                            {lead.next_follow_up_date
-                              ? getFollowUpLabel(lead.next_follow_up_date)
-                              : "Add follow-up"}
-                          </StatusBadge>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title={`Active ${profile.labels.jobPlural.toLowerCase()}`}
-          description={`${profile.labels.jobPlural} that are scheduled, active, or not yet complete.`}
-        >
-          {prioritizedWork.length === 0 ? (
-            <EmptyState
-              title={`No active ${profile.labels.jobPlural.toLowerCase()}`}
-              description={`Create or import ${profile.labels.jobPlural.toLowerCase()} to track delivery.`}
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {prioritizedWork.map((work) => {
-                const customer = work.customer_id ? customerById.get(work.customer_id) : null;
-                return (
+                {priorityQueue.map((item) => (
                   <Link
-                    key={work.id}
-                    href={`/jobs/${work.id}/edit`}
-                    className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_110px_auto] md:items-center"
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-start gap-4 p-4 hover:bg-slate-50 transition-colors"
                   >
+                    <div className="w-[68px] shrink-0">
+                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
+                    </div>
                     <div>
-                      <p className="font-semibold text-slate-950">
-                        {work.service_type || "Untitled work"}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {customer?.name || `Starts ${formatDateOnly(work.start_date)}`}
+                      <p className="text-sm font-semibold text-slate-950">{item.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        {/* Right column */}
+        <div className="space-y-5">
+          {/* AI Brief hero card */}
+          <div
+            className="relative overflow-hidden rounded-[22px] p-[22px] text-white"
+            style={{ background: "linear-gradient(160deg, #1D2D3E 0%, #2b3d52 100%)" }}
+          >
+            {/* olive radial glow decoration */}
+            <div
+              className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full opacity-20"
+              style={{ background: "radial-gradient(circle, #7A8C2A 0%, transparent 70%)" }}
+            />
+            {/* header */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#7A8C2A]">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
+                </svg>
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">UnifData AI</p>
+            </div>
+            <p className="text-[17px] font-semibold leading-snug">{profile.headline}</p>
+            <p className="mt-2 text-[13px] leading-6 text-white/70">{profile.dailyFocus}</p>
+            <div className="mt-4 flex gap-2">
+              <Link
+                href="/follow-ups"
+                className="flex-1 rounded-xl bg-white/14 px-3 py-2.5 text-center text-xs font-semibold"
+              >
+                Review follow-ups
+              </Link>
+              <Link
+                href="/ai-assistant"
+                className="flex-1 rounded-xl bg-white/14 px-3 py-2.5 text-center text-xs font-semibold"
+              >
+                Open chat
+              </Link>
+            </div>
+          </div>
+
+          {/* Follow-ups SectionCard */}
+          <SectionCard
+            title="Follow-up schedule"
+            description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates, sorted by due date.`}
+          >
+            {followUpSchedule.length === 0 ? (
+              <EmptyState
+                title="No follow-ups scheduled"
+                description={`Add a manual follow-up or set a next follow-up date on a ${profile.labels.leadSingular.toLowerCase()}.`}
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {followUpSchedule.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="h-5 w-5 rounded-full border-2 border-slate-200 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-950">{item.title}</p>
+                      <p
+                        className={`text-xs mt-0.5 ${
+                          item.tone === "danger"
+                            ? "text-red-500"
+                            : item.tone === "warning"
+                            ? "text-amber-500"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        {item.detail}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700">
-                      {formatCurrency(work.job_value)}
-                    </p>
-                    <StatusBadge tone={getWorkTone(work.status)}>
-                      {work.status || "Scheduled"}
-                    </StatusBadge>
+                    <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
                   </Link>
-                );
-              })}
-            </div>
-          )}
-        </SectionCard>
-      </section>
+                ))}
+              </div>
+            )}
+          </SectionCard>
 
-      <SectionCard
-        title="Recently added"
-        description="Last 4 records added across the workspace."
-      >
-        {recentRecords.length === 0 ? (
-          <EmptyState
-            title="No records yet"
-            description="Import a customer list or add records manually to get started."
-          />
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {recentRecords.map((record) => (
-              <Link
-                key={record.id}
-                href={record.href}
-                className="grid gap-3 px-4 py-3 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_auto] md:items-center"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                    <p className="truncate font-semibold text-slate-950">{record.title}</p>
-                  </div>
-                  <p className="mt-0.5 truncate text-sm text-slate-500">{record.detail}</p>
-                </div>
-                <p className="hidden text-xs font-medium text-slate-400 md:block">
-                  {formatTimestampDate(record.date)}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+          {/* Recent records SectionCard */}
+          <SectionCard
+            title="Recently added"
+            description="Last 4 records added across the workspace."
+          >
+            {recentRecords.length === 0 ? (
+              <EmptyState
+                title="No records yet"
+                description="Import a customer list or add records manually to get started."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {recentRecords.map((record) => (
+                  <Link
+                    key={record.id}
+                    href={record.href}
+                    className="grid gap-3 px-4 py-3 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_auto] md:items-center"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge tone="neutral">{record.type}</StatusBadge>
+                        <p className="truncate font-semibold text-slate-950">{record.title}</p>
+                      </div>
+                      <p className="mt-0.5 truncate text-sm text-slate-500">{record.detail}</p>
+                    </div>
+                    <p className="hidden text-xs font-medium text-slate-400 md:block">
+                      {formatTimestampDate(record.date)}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      </div>
     </div>
   );
 }

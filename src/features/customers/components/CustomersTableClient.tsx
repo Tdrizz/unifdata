@@ -8,32 +8,6 @@ import { bulkDeleteCustomers } from "../actions";
 import type { CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
-function getPrimaryContact(customer: CustomerRow) {
-  if (customer.email && customer.phone) {
-    return `${customer.email} · ${customer.phone}`;
-  }
-  if (customer.email) return customer.email;
-  if (customer.phone) return customer.phone;
-  return "No contact saved";
-}
-
-function getContactIssue(customer: { phone: string | null; email: string | null }) {
-  const missingPhone = !customer.phone;
-  const missingEmail = !customer.email;
-  if (missingPhone && missingEmail) return "Missing phone and email";
-  if (missingPhone) return "Missing phone";
-  if (missingEmail) return "Missing email";
-  return "Contact complete";
-}
-
-function getContactTone(customer: { phone: string | null; email: string | null }) {
-  return customer.phone && customer.email ? "success" : "warning";
-}
-
-function getCustomerType(customer: CustomerRow) {
-  return customer.customer_type || "No type set";
-}
-
 type Props = {
   customers: CustomerRow[];
   profile: IndustryProfile;
@@ -69,7 +43,7 @@ export function CustomersTableClient({ customers, profile }: Props) {
     <div>
       {/* Bulk action toolbar */}
       {selected.size > 0 && (
-        <div className="mx-4 mb-2 flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+        <div className="mx-4 mb-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
           <input
             type="checkbox"
             checked={allSelected}
@@ -102,11 +76,31 @@ export function CustomersTableClient({ customers, profile }: Props) {
         </div>
       )}
 
-      <div className="divide-y divide-slate-100">
-        {customers.map((customer) => (
-          <div key={customer.id} className="relative flex items-start hover:bg-slate-50 transition-colors">
-            {/* Checkbox — sits outside the Link so clicks don't navigate */}
-            <div className="flex shrink-0 items-center px-4 py-5">
+      {/* Table wrapper */}
+      <div className="overflow-x-auto">
+        {/* Table header */}
+        <div
+          className="grid border-b border-slate-100 bg-slate-50 px-5 py-3"
+          style={{ gridTemplateColumns: "40px 2.2fr 1.3fr 1.2fr 0.9fr 0.9fr 0.6fr" }}
+        >
+          <div /> {/* checkbox column */}
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">Client</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">Contact</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">City</p>
+          <p className="text-right text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">Type</p>
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-500">Added</p>
+          <div /> {/* action column */}
+        </div>
+
+        {/* Table body */}
+        <div className="divide-y divide-slate-100">
+          {customers.map((customer) => (
+            <div
+              key={customer.id}
+              className="relative grid items-center px-5 py-3.5 hover:bg-slate-50 transition-colors"
+              style={{ gridTemplateColumns: "40px 2.2fr 1.3fr 1.2fr 0.9fr 0.9fr 0.6fr" }}
+            >
+              {/* Checkbox */}
               <input
                 type="checkbox"
                 checked={selected.has(customer.id)}
@@ -114,61 +108,65 @@ export function CustomersTableClient({ customers, profile }: Props) {
                 className="rounded"
                 aria-label={`Select ${customer.name || "customer"}`}
               />
-            </div>
 
-            {/* Row content — full clickable link */}
-            <Link
-              href={`/customers/${customer.id}/edit`}
-              className="grid flex-1 gap-4 py-4 pr-4 md:grid-cols-[1.25fr_0.8fr_0.7fr] md:items-center"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[33%] bg-[#1D2D3E] text-[13px] font-bold text-white">
-                    {(customer.name || "?")[0].toUpperCase()}
-                  </span>
-                  <p className="font-semibold text-slate-950">
+              {/* Client cell — name + avatar + badges */}
+              <Link href={`/customers/${customer.id}/edit`} className="flex items-center gap-3 min-w-0">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[33%] bg-[#1D2D3E] text-[13px] font-bold text-white">
+                  {(customer.name || "?")[0].toUpperCase()}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-semibold text-slate-950 truncate">
                     {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
                   </p>
-
-                  <StatusBadge tone={getContactTone(customer) as "success" | "warning"}>
-                    {getContactIssue(customer)}
-                  </StatusBadge>
-                </div>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  {getPrimaryContact(customer)}
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {!customer.address && (
-                    <StatusBadge tone="neutral">Missing address</StatusBadge>
-                  )}
-                  {!customer.customer_type && (
-                    <StatusBadge tone="neutral">Missing type</StatusBadge>
+                  {(!customer.email || !customer.phone) && (
+                    <StatusBadge tone="warning">
+                      {!customer.email && !customer.phone
+                        ? "Missing email & phone"
+                        : !customer.email
+                          ? "Missing email"
+                          : "Missing phone"}
+                    </StatusBadge>
                   )}
                 </div>
-              </div>
+              </Link>
 
-              <div>
-                <p className="text-xs font-medium text-slate-500">Address</p>
-                <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-700">
-                  {customer.address || "No address saved"}
-                </p>
-              </div>
+              {/* Contact cell */}
+              <Link href={`/customers/${customer.id}/edit`} className="min-w-0">
+                <p className="text-[12.5px] text-slate-700 truncate">{customer.email || "—"}</p>
+                <p className="text-[11px] font-mono text-slate-400">{customer.phone || "—"}</p>
+              </Link>
 
-              <div>
-                <p className="text-xs font-medium text-slate-500">Type</p>
-                <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {getCustomerType(customer)}
+              {/* City cell — extract from address */}
+              <Link href={`/customers/${customer.id}/edit`}>
+                <p className="text-[12.5px] text-slate-700">
+                  {customer.address
+                    ? customer.address.split(",").slice(-2, -1)[0]?.trim() || "—"
+                    : "—"}
                 </p>
+              </Link>
 
-                <p className="mt-2 text-xs text-slate-500">
-                  Added {formatTimestampDate(customer.created_at)}
-                </p>
+              {/* Type cell */}
+              <Link href={`/customers/${customer.id}/edit`} className="text-right">
+                <p className="text-[12.5px] text-slate-700">{customer.customer_type || "—"}</p>
+              </Link>
+
+              {/* Added date cell */}
+              <Link href={`/customers/${customer.id}/edit`}>
+                <p className="text-[12px] text-slate-400">{formatTimestampDate(customer.created_at)}</p>
+              </Link>
+
+              {/* Open/action cell */}
+              <div className="flex justify-end">
+                <Link
+                  href={`/customers/${customer.id}/edit`}
+                  className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Open
+                </Link>
               </div>
-            </Link>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
