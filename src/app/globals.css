@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f7fb;
-  --foreground: #0f172a;
+  --background: #f3f5f0;
+  --foreground: #1D2D3E;
 
-  --fo-bg: #f5f7fb;
+  --fo-bg: #f3f5f0;
   --fo-surface: #ffffff;
-  --fo-surface-soft: #f8fafc;
+  --fo-surface-soft: #f8faf5;
   --fo-border: #e2e8f0;
   --fo-muted: #64748b;
-  --fo-ink: #0f172a;
-  --fo-primary: #0f172a;
-  --fo-accent: #2563eb;
-  --fo-accent-soft: #eff6ff;
+  --fo-ink: #1D2D3E;
+  --fo-primary: #1D2D3E;
+  --fo-accent: #7A8C2A;
+  --fo-accent-soft: #f2f5e7;
 }
 
 * {
@@ -28,10 +28,10 @@ body {
   background:
     radial-gradient(
       circle at 20% 0%,
-      rgba(37, 99, 235, 0.08),
+      rgba(122, 140, 42, 0.07),
       transparent 34rem
     ),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    linear-gradient(180deg, #f8faf5 0%, #eef1e8 100%);
   color: var(--fo-ink);
   font-feature-settings:
     "rlig" 1,
@@ -39,7 +39,7 @@ body {
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.18);
+  background: rgba(122, 140, 42, 0.2);
 }
 
 input,
