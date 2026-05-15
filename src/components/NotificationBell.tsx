@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useId, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { markNotificationsRead } from "@/lib/notifications";
 
@@ -19,6 +19,7 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ companyId, initialNotifications }: NotificationBellProps) {
+  const instanceId = useId();
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -28,7 +29,7 @@ export function NotificationBell({ companyId, initialNotifications }: Notificati
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel(`notifications:${companyId}`)
+      .channel(`notifications:${companyId}:${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `company_id=eq.${companyId}` },
