@@ -1,46 +1,119 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-navy: #1D2D3E;
-  --color-brand-olive: #7A8C2A;
-  --color-brand-olive-soft: #a3b85a;
+  /* ── Colors: surfaces ─────────────────────────────────────────────── */
+  --color-ud-page:         rgb(247 246 243);
+  --color-ud-surface:      rgb(255 255 255);
+  --color-ud-surface-soft: rgb(250 249 246);
+  --color-ud-surface-sunk: rgb(241 239 233);
+
+  /* ── Colors: ink hierarchy ────────────────────────────────────────── */
+  --color-ud-ink:   rgb(23 22 20);
+  --color-ud-text:  rgb(44 42 38);
+  --color-ud-muted: rgb(107 103 96);
+  --color-ud-faint: rgb(160 155 145);
+
+  /* ── Colors: brand ────────────────────────────────────────────────── */
+  --color-ud-accent:  rgb(92 111 26);
+  --color-ud-navy:    rgb(29 45 62);
+
+  /* ── Colors: semantic ─────────────────────────────────────────────── */
+  --color-ud-success:    rgb(63 124 63);
+  --color-ud-success-bg: rgb(238 245 236);
+  --color-ud-warning:    rgb(146 87 27);
+  --color-ud-warning-bg: rgb(250 240 227);
+  --color-ud-danger:     rgb(168 50 50);
+  --color-ud-danger-bg:  rgb(251 237 237);
+  --color-ud-info:       rgb(44 82 130);
+  --color-ud-info-bg:    rgb(235 242 249);
+
+  /* ── Keep v1 brand names for backward compat ──────────────────────── */
+  --color-brand-navy:       rgb(29 45 62);
+  --color-brand-olive:      rgb(92 111 26);
+  --color-brand-olive-soft: rgb(163 184 90);
+
+  /* ── Shadows ──────────────────────────────────────────────────────── */
+  --shadow-ud:        0 1px 0 rgba(23,22,20,0.04), 0 1px 2px rgba(23,22,20,0.03);
+  --shadow-ud-raised: 0 2px 4px rgba(23,22,20,0.04), 0 8px 24px rgba(23,22,20,0.06);
+  --shadow-ud-pop:    0 24px 64px rgba(23,22,20,0.18), 0 4px 12px rgba(23,22,20,0.08);
+
+  /* v1 shadow aliases */
   --shadow-fo-card: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-fo-hero: 0 14px 30px rgba(15, 23, 42, 0.18);
-  --radius-4xl: 1.75rem;
+
+  /* ── Border radius ────────────────────────────────────────────────── */
+  --radius-ud:    12px;
+  --radius-ud-lg: 14px;
+  --radius-ud-sm: 9px;
+  --radius-4xl:   1.75rem;
+
+  /* ── Font families ────────────────────────────────────────────────── */
+  --font-sans:  var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono:  var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+
+  /* ── Letter spacing ───────────────────────────────────────────────── */
+  --letter-spacing-eyebrow: 0.16em;
 }
 
 :root {
-  --background: #f5f7fb;
-  --foreground: #0f172a;
+  /* ── v2 CSS vars (raw — used directly in var()) ───────────────────── */
+  --ud-page:         #f7f6f3;
+  --ud-surface:      #ffffff;
+  --ud-surface-soft: #faf9f6;
+  --ud-surface-sunk: #f1efe9;
 
-  /* Surface */
-  --fo-bg: #eef2f7;
-  --fo-surface: #ffffff;
-  --fo-surface-soft: #f8fafc;
-  --fo-surface-muted: #f1f5f9;
-  --fo-border: #e2e8f0;
-  --fo-border-soft: #eef2f7;
+  --ud-ink:        #171614;
+  --ud-text:       #2c2a26;
+  --ud-text-muted: #6b6760;
+  --ud-text-faint: #a09b91;
 
-  /* Text */
-  --fo-ink: #0f172a;
-  --fo-text: #1e293b;
-  --fo-muted: #64748b;
-  --fo-faint: #94a3b8;
+  --ud-border:      rgba(23, 22, 20, 0.08);
+  --ud-border-soft: rgba(23, 22, 20, 0.05);
+  --ud-border-hard: rgba(23, 22, 20, 0.14);
 
-  /* Brand */
-  --fo-primary: #1D2D3E;
-  --fo-accent: #7A8C2A;
-  --fo-accent-soft: rgba(122, 140, 42, 0.12);
+  --ud-accent:      #5C6F1A;
+  --ud-accent-soft: rgba(92, 111, 26, 0.10);
+  --ud-accent-tint: rgba(92, 111, 26, 0.06);
+  --ud-navy:        #1D2D3E;
 
-  /* Status */
-  --fo-success: #15803d;
-  --fo-success-bg: #dcfce7;
-  --fo-warning: #a16207;
-  --fo-warning-bg: #fef3c7;
-  --fo-danger: #b91c1c;
-  --fo-danger-bg: #fee2e2;
-  --fo-info: #1d4ed8;
-  --fo-info-bg: #dbeafe;
+  --ud-success:    #3f7c3f;
+  --ud-success-bg: #eef5ec;
+  --ud-warning:    #92571b;
+  --ud-warning-bg: #faf0e3;
+  --ud-danger:     #a83232;
+  --ud-danger-bg:  #fbeded;
+  --ud-info:       #2c5282;
+  --ud-info-bg:    #ebf2f9;
+
+  --ud-shadow:        0 1px 0 rgba(23,22,20,0.04), 0 1px 2px rgba(23,22,20,0.03);
+  --ud-shadow-raised: 0 2px 4px rgba(23,22,20,0.04), 0 8px 24px rgba(23,22,20,0.06);
+  --ud-shadow-pop:    0 24px 64px rgba(23,22,20,0.18), 0 4px 12px rgba(23,22,20,0.08);
+
+  /* ── v1 aliases — existing pages keep working ─────────────────────── */
+  --background:       var(--ud-page);
+  --foreground:       var(--ud-ink);
+  --fo-bg:            var(--ud-page);
+  --fo-surface:       var(--ud-surface);
+  --fo-surface-soft:  var(--ud-surface-soft);
+  --fo-surface-muted: var(--ud-surface-sunk);
+  --fo-border:        var(--ud-border);
+  --fo-border-soft:   var(--ud-border-soft);
+  --fo-ink:           var(--ud-ink);
+  --fo-text:          var(--ud-text);
+  --fo-muted:         var(--ud-text-muted);
+  --fo-faint:         var(--ud-text-faint);
+  --fo-primary:       var(--ud-navy);
+  --fo-accent:        var(--ud-accent);
+  --fo-accent-soft:   var(--ud-accent-soft);
+  --fo-success:       var(--ud-success);
+  --fo-success-bg:    var(--ud-success-bg);
+  --fo-warning:       var(--ud-warning);
+  --fo-warning-bg:    var(--ud-warning-bg);
+  --fo-danger:        var(--ud-danger);
+  --fo-danger-bg:     var(--ud-danger-bg);
+  --fo-info:          var(--ud-info);
+  --fo-info-bg:       var(--ud-info-bg);
 }
 
 * {
@@ -53,17 +126,13 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(29, 45, 62, 0.08), transparent 22rem),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  color: var(--fo-ink);
-  font-feature-settings:
-    "rlig" 1,
-    "calt" 1;
+  background: var(--ud-page);
+  color: var(--ud-text);
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 ::selection {
-  background: rgba(122, 140, 42, 0.2);
+  background: var(--ud-accent-soft);
 }
 
 input,
@@ -99,15 +168,37 @@ table {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--ud-surface-sunk);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--ud-text-faint);
   border-radius: 999px;
-  border: 2px solid #f1f5f9;
+  border: 2px solid var(--ud-surface-sunk);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--ud-text-muted);
+}
+
+/* ── Utilities for rgba-based tokens ──────────────────────────────────── */
+@layer utilities {
+  /* Tabular numbers — used everywhere money and counts appear */
+  .udv2-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1, 'ss01' 1;
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+  }
+
+  /* Border tokens (rgba — can't be Tailwind @theme colors) */
+  .border-ud      { border-color: var(--ud-border); }
+  .border-ud-soft { border-color: var(--ud-border-soft); }
+  .border-ud-hard { border-color: var(--ud-border-hard); }
+
+  /* Background tints */
+  .bg-ud-accent-soft { background-color: var(--ud-accent-soft); }
+  .bg-ud-accent-tint { background-color: var(--ud-accent-tint); }
+
+  /* Eyebrow label */
+  .tracking-eyebrow { letter-spacing: 0.16em; }
 }
