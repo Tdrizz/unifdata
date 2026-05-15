@@ -9,6 +9,8 @@ import { formatCurrency } from "@/lib/utils";
 import { getSaleById, getCustomersForSaleSelect } from "@/features/sales/queries";
 import { SaleForm } from "@/features/sales/components/SaleForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditRevenuePage({
   params,
 }: {

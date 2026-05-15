@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getDataHubPageData } from "@/features/data-hub/queries";
 import { DataHubView } from "@/features/data-hub/components/DataHubView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DataHubPage() {
   const supabase = await createClient();
 

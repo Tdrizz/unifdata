@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { AuthFrame } from "@/components/AuthFrame";
 import { createClient } from "@/lib/supabase/client";
 
+export const dynamic = 'force-dynamic';
+
 export default function ResetPasswordPage() {
   const router = useRouter();
   const supabase = createClient();

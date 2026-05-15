@@ -5,6 +5,8 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { findDuplicateCustomers } from "@/features/customers/queries";
 import { DuplicatesPage } from "@/features/customers/components/DuplicatesPage";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CustomerDuplicatesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

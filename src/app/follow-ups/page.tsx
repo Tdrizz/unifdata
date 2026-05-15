@@ -9,6 +9,8 @@ import { getFollowUpPageData } from "@/features/follow-ups/queries";
 import { FollowUpViewToggle } from "@/features/follow-ups/components/FollowUpViewToggle";
 import { FollowUpCreateForm } from "@/features/follow-ups/components/FollowUpCreateForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function FollowUpsPage({
   searchParams,
 }: {

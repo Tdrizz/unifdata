@@ -6,6 +6,8 @@ import { getSettingsIntegrations, getTeamMembers } from "@/features/settings/que
 import { getCurrentUserRole } from "@/lib/current-company";
 import { SettingsView } from "@/features/settings/components/SettingsView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function SettingsPage() {
   const supabase = await createClient();
 

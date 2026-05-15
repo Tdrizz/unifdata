@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getLeadsPageData, getCustomersForLeadSelect } from "@/features/leads/queries";
 import { LeadsList } from "@/features/leads/components/LeadsList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function OpportunitiesPage({
   searchParams,
 }: {

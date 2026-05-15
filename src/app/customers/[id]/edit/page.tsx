@@ -8,6 +8,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCustomerById, getCustomerLinkedCounts } from "@/features/customers/queries";
 import { CustomerForm } from "@/features/customers/components/CustomerForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditCustomerPage({
   params,
   searchParams,

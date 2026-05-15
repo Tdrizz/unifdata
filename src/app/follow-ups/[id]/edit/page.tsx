@@ -7,6 +7,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFollowUpById, getCustomersForSelect } from "@/features/follow-ups/queries";
 import { FollowUpForm } from "@/features/follow-ups/components/FollowUpForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditFollowUpPage({
   params,
 }: {

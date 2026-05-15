@@ -12,6 +12,8 @@ import {
   type ImportRow,
 } from "./ImportSessionReviewClient";
 
+export const dynamic = 'force-dynamic';
+
 function getStatusTone(status: string | null) {
   if (status === "completed" || status === "active" || status === "committed") {
     return "success" as const;

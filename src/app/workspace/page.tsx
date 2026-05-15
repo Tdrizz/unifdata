@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WorkspacePage() {
   const supabase = await createClient();
   const {

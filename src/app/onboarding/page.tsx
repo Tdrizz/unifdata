@@ -5,6 +5,8 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { ProductMark } from "@/components/ProductMark";
 import { OnboardingForm } from "./OnboardingForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function OnboardingPage() {
   await requireSubscription();
 

@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getImportsPageData } from "@/features/imports/queries";
 import { ImportsView } from "@/features/imports/components/ImportsView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ImportsPage() {
   const supabase = await createClient();
 

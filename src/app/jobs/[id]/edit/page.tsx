@@ -8,6 +8,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getJobById, getCustomersForJobSelect, getLeadsForJobSelect } from "@/features/jobs/queries";
 import { JobForm } from "@/features/jobs/components/JobForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditWorkPage({
   params,
 }: {

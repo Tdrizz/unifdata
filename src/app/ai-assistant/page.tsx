@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getAiReports } from "@/features/ai/queries";
 import { AiView } from "@/features/ai/components/AiView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AiAssistantPage() {
   const supabase = await createClient();
 

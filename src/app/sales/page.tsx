@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getSalesPageData } from "@/features/sales/queries";
 import { SalesList } from "@/features/sales/components/SalesList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function RevenuePage({
   searchParams,
 }: {

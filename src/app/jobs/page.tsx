@@ -10,6 +10,8 @@ import {
 } from "@/features/jobs/queries";
 import { JobsList } from "@/features/jobs/components/JobsList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WorkPage({
   searchParams,
 }: {

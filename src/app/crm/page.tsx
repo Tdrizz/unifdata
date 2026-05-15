@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCRMPageData } from "@/features/crm/queries";
 import { CRMView } from "@/features/crm/components/CRMView";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PipelinePage({
   searchParams,
 }: {

@@ -8,6 +8,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCustomersPageData } from "@/features/customers/queries";
 import { CustomersList } from "@/features/customers/components/CustomersList";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CustomersPage({
   searchParams,
 }: {

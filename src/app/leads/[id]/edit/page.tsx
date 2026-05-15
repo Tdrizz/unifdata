@@ -6,6 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getLeadById, getCustomersForLeadSelect } from "@/features/leads/queries";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditOpportunityPage({
   params,
 }: {
