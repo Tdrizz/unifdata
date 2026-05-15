@@ -31,8 +31,8 @@ export default async function DataHubPage() {
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#0f172a"}
-      accentColor={company.accent_color || "#2563eb"}
+      brandColor={company.brand_color || "#1D2D3E"}
+      accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
       <DataHubView {...data} profile={profile} />

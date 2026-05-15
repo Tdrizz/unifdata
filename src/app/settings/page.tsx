@@ -33,8 +33,8 @@ export default async function SettingsPage() {
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#0f172a"}
-      accentColor={company.accent_color || "#2563eb"}
+      brandColor={company.brand_color || "#1D2D3E"}
+      accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
       <SettingsView
@@ -42,8 +42,8 @@ export default async function SettingsPage() {
           id: company.id,
           name: company.name,
           business_sector: company.business_sector,
-          brand_color: company.brand_color || "#0f172a",
-          accent_color: company.accent_color || "#2563eb",
+          brand_color: company.brand_color || "#1D2D3E",
+          accent_color: company.accent_color || "#7A8C2A",
         }}
         user={{ email: user.email || "" }}
         integrations={integrations}

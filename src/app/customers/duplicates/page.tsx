@@ -20,8 +20,8 @@ export default async function CustomerDuplicatesPage() {
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#0f172a"}
-      accentColor={company.accent_color || "#2563eb"}
+      brandColor={company.brand_color || "#1D2D3E"}
+      accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">

@@ -218,7 +218,7 @@ export function DataHealthRing({ score }: { score: number }) {
           textAnchor="middle"
           fontSize={18}
           fontWeight="600"
-          fill="#0f172a"
+          fill="#1D2D3E"
         >
           {score}%
         </text>

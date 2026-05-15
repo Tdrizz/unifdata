@@ -109,7 +109,7 @@ const MORE_ITEMS = [
 
 export function MobileTabBar({
   businessSector,
-  accentColor = "#2563eb",
+  accentColor = "#7A8C2A",
 }: {
   businessSector?: string | null;
   accentColor?: string;

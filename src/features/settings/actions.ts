@@ -56,12 +56,12 @@ export async function updateWorkspaceAction(formData: FormData) {
 
   const brandColor = normalizeHexColor(
     getFormString(formData, "brand_color"),
-    "#0f172a",
+    "#1D2D3E",
   );
 
   const accentColor = normalizeHexColor(
     getFormString(formData, "accent_color"),
-    "#2563eb",
+    "#7A8C2A",
   );
 
   if (!name) {

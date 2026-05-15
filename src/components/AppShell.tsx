@@ -17,8 +17,8 @@ export async function AppShell({
   children,
   companyName,
   userEmail,
-  brandColor = "#0f172a",
-  accentColor = "#2563eb",
+  brandColor = "#1D2D3E",
+  accentColor = "#7A8C2A",
   businessSector,
 }: {
   children: ReactNode;
