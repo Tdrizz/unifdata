@@ -547,20 +547,19 @@ export function DataHubView({
     <div className="space-y-5">
       <PageHeader
         eyebrow="Data Hub"
-        title={`Check data quality across your ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, and ${profile.labels.jobPlural.toLowerCase()}`}
-        description="See what data is clean, what needs cleanup, and where imported or manual records need attention."
+        title="Record quality"
+        description="UnifData scans your workspace and surfaces records that need attention before they become problems."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/imports"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Import data
             </Link>
-
             <Link
               href="/workspace"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Home
             </Link>

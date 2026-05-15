@@ -20,6 +20,19 @@ import type { CRMPageData } from "../queries";
 
 type Lead = CRMPageData["leads"][number];
 
+const stageColorDot: Record<string, string> = {
+  "New": "bg-slate-400",
+  "Contacted": "bg-blue-500",
+  "Estimate Sent": "bg-[#7A8C2A]",
+  "Follow Up": "bg-amber-500",
+  "Won": "bg-emerald-500",
+  "Lost": "bg-slate-300",
+};
+
+function getStageDot(status: string) {
+  return stageColorDot[status] ?? "bg-slate-400";
+}
+
 function isWon(status: string | null) {
   const normalized = String(status || "").toLowerCase();
   return normalized.includes("won") || normalized.includes("accepted");
@@ -50,18 +63,6 @@ function getFollowUpTone(date: string | null) {
   if (isOverdue(date)) return "danger" as const;
   if (isDueToday(date)) return "warning" as const;
   return "neutral" as const;
-}
-
-function getStageDescription(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-  if (normalized.includes("new")) return "New opportunity that needs first review or contact.";
-  if (normalized.includes("contact")) return "Contact has started and the opportunity needs next steps.";
-  if (normalized.includes("estimate")) return "Estimate has been sent and needs follow-up.";
-  if (normalized.includes("follow")) return "Opportunity is waiting on a follow-up or response.";
-  if (normalized.includes("won")) return "Opportunity was won and can move toward work or revenue.";
-  if (normalized.includes("lost") || normalized.includes("cancel") || normalized.includes("declined"))
-    return "Opportunity is no longer moving forward.";
-  return "Opportunity using a custom or imported status.";
 }
 
 function getOpportunityNextStep(opportunity: Lead) {
@@ -224,150 +225,175 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
-        <SectionCard
-          title={selectedStatus ? `${selectedStatus} opportunities` : "Pipeline queue"}
-          description={
-            selectedStatus
-              ? `Showing opportunities currently marked ${selectedStatus}.`
-              : "Open opportunities sorted by follow-up need and estimated value."
-          }
-        >
-          {visibleOpportunities.length === 0 ? (
-            <EmptyState
-              title="No opportunities found"
-              description="Create or import opportunities to start building the pipeline."
-            />
-          ) : (
-            <>
-              {selectedStatus && (
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-700">
-                    Filtered by stage: {selectedStatus}
-                  </p>
-                  <Link
-                    href="/crm"
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Clear filter
-                  </Link>
-                </div>
-              )}
-              <div className="divide-y divide-slate-100">
-                {visibleOpportunities.map((opportunity) => {
-                  const person = opportunity.customer_id
-                    ? personById.get(opportunity.customer_id)
-                    : null;
-                  const issues = getOpportunityIssues(opportunity);
-                  return (
-                    <Link
-                      key={opportunity.id}
-                      href={`/leads/${opportunity.id}/edit`}
-                      className="block p-4 transition-colors hover:bg-slate-50"
-                    >
-                      <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {opportunity.service_requested || "Untitled opportunity"}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {person?.name || opportunity.source || "No person or source saved"}
-                          </p>
-                          <p className="mt-3 text-sm leading-6 text-slate-600">
-                            {getOpportunityNextStep(opportunity)}
-                          </p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {issues.slice(0, 3).map((issue) => (
-                              <StatusBadge key={issue.label} tone={issue.tone}>
-                                {issue.label}
-                              </StatusBadge>
-                            ))}
-                          </div>
+      <SectionCard
+        title="Pipeline stages"
+        description="Drag cards or click to edit."
+      >
+        {/* Kanban board */}
+        <div className="overflow-x-auto">
+          <div className="flex gap-3.5 pb-2" style={{ minWidth: "max-content" }}>
+            {stageGroups.map((group) => {
+              const groupLeads = leads.filter((o) => (o.status || "New") === group.status);
+              return (
+                <div key={group.status} className="w-[260px] shrink-0">
+                  {/* Column header */}
+                  <div className="mb-2 rounded-[20px] border border-slate-200 bg-white overflow-hidden">
+                    <div className="border-b border-slate-100 bg-slate-50 px-3.5 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${getStageDot(group.status)}`} />
+                          <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-700">{group.status}</p>
                         </div>
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">Value</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
-                            {formatCurrency(opportunity.estimated_value)}
-                          </p>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
+                        <p className="text-[11px] font-semibold text-slate-400">{group.count}</p>
+                      </div>
+                      <p className="mt-0.5 font-mono text-[11.5px] font-semibold text-slate-400">
+                        {formatCurrency(group.value)}
+                      </p>
+                    </div>
 
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
-                            {opportunity.source || "Not set"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">Follow-up</p>
-                          <div className="mt-1">
-                            <StatusBadge tone={getFollowUpTone(opportunity.next_follow_up_date)}>
-                              {getFollowUpLabel(opportunity.next_follow_up_date)}
+                    {/* Cards */}
+                    <div className="space-y-2 p-2.5">
+                      {groupLeads.slice(0, 5).map((opp) => {
+                        const person = opp.customer_id ? personById.get(opp.customer_id) : null;
+                        const estimatedValue = Number(opp.estimated_value || 0);
+                        const needsFollowUp = !opp.next_follow_up_date || isTodayOrPast(opp.next_follow_up_date);
+                        const priorityLabel = estimatedValue > 5000 ? "HIGH" : estimatedValue > 1000 ? "MED" : "LOW";
+                        const priorityColor = estimatedValue > 5000 ? "text-red-500" : estimatedValue > 1000 ? "text-amber-500" : "text-slate-400";
+                        return (
+                          <Link
+                            key={opp.id}
+                            href={`/leads/${opp.id}/edit`}
+                            className="block rounded-xl border border-slate-100 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-slate-200 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <p className={`text-[10px] font-bold uppercase tracking-[0.08em] ${priorityColor}`}>{priorityLabel}</p>
+                              <p className="font-mono text-[11.5px] font-semibold text-[#7A8C2A]">
+                                {estimatedValue > 0 ? formatCurrency(opp.estimated_value) : "—"}
+                              </p>
+                            </div>
+                            <p className="mt-1 text-[12.5px] font-semibold text-slate-950 leading-snug">
+                              {opp.service_requested || "Untitled"}
+                            </p>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <p className="text-[11px] font-medium text-slate-500">
+                                {person?.name || opp.source || "No contact"}
+                              </p>
+                              {needsFollowUp && !isClosed(opp.status) && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
+                      {groupLeads.length > 5 && (
+                        <p className="px-1 text-center text-[11px] font-medium text-slate-400">
+                          +{groupLeads.length - 5} more
+                        </p>
+                      )}
+                      {groupLeads.length === 0 && (
+                        <p className="py-3 text-center text-[11px] font-medium text-slate-300">Empty</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title={selectedStatus ? `${selectedStatus} opportunities` : "Pipeline queue"}
+        description={
+          selectedStatus
+            ? `Showing opportunities currently marked ${selectedStatus}.`
+            : "Open opportunities sorted by follow-up need and estimated value."
+        }
+      >
+        {visibleOpportunities.length === 0 ? (
+          <EmptyState
+            title="No opportunities found"
+            description="Create or import opportunities to start building the pipeline."
+          />
+        ) : (
+          <>
+            {selectedStatus && (
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                <p className="text-sm font-semibold text-slate-700">
+                  Filtered by stage: {selectedStatus}
+                </p>
+                <Link
+                  href="/crm"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Clear filter
+                </Link>
+              </div>
+            )}
+            <div className="divide-y divide-slate-100">
+              {visibleOpportunities.map((opportunity) => {
+                const person = opportunity.customer_id
+                  ? personById.get(opportunity.customer_id)
+                  : null;
+                const issues = getOpportunityIssues(opportunity);
+                return (
+                  <Link
+                    key={opportunity.id}
+                    href={`/leads/${opportunity.id}/edit`}
+                    className="block p-4 transition-colors hover:bg-slate-50"
+                  >
+                    <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
+                      <div>
+                        <p className="font-semibold text-slate-950">
+                          {opportunity.service_requested || "Untitled opportunity"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {person?.name || opportunity.source || "No person or source saved"}
+                        </p>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">
+                          {getOpportunityNextStep(opportunity)}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {issues.slice(0, 3).map((issue) => (
+                            <StatusBadge key={issue.label} tone={issue.tone}>
+                              {issue.label}
                             </StatusBadge>
-                          </div>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Stage</p>
-                          <div className="mt-1">
-                            <StatusBadge tone={getOpportunityTone(opportunity.status)}>
-                              {opportunity.status || "New"}
-                            </StatusBadge>
-                          </div>
+                          ))}
                         </div>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </SectionCard>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">Value</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {formatCurrency(opportunity.estimated_value)}
+                        </p>
+                        <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
 
-        <SectionCard
-          title="Pipeline stages"
-          description="Use stages to filter the opportunity queue."
-        >
-          {stageGroups.length === 0 ? (
-            <EmptyState
-              title="No stages yet"
-              description="Stages will appear after opportunities are added."
-            />
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {stageGroups.map((group) => (
-                <article
-                  key={group.status}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
-                >
-                  <div>
-                    <StatusBadge tone={getOpportunityTone(group.status)}>
-                      {group.status}
-                    </StatusBadge>
-                    <p className="mt-2 font-semibold text-slate-950">
-                      {group.count} opportunities
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                      {getStageDescription(group.status)}
-                    </p>
-                    {!isClosed(group.status) && group.followUpNeeded > 0 && (
-                      <span className="mt-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        {group.followUpNeeded} need follow-up
-                      </span>
-                    )}
-                  </div>
-                  <div className="md:text-right">
-                    <Link
-                      href={
-                        selectedStatus === group.status
-                          ? "/crm"
-                          : `/crm?status=${encodeURIComponent(group.status)}`
-                      }
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      {selectedStatus === group.status ? "Clear" : "Review"}
-                    </Link>
-                  </div>
-                </article>
-              ))}
+                        <p className="mt-1 text-sm font-semibold text-slate-700">
+                          {opportunity.source || "Not set"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500">Follow-up</p>
+                        <div className="mt-1">
+                          <StatusBadge tone={getFollowUpTone(opportunity.next_follow_up_date)}>
+                            {getFollowUpLabel(opportunity.next_follow_up_date)}
+                          </StatusBadge>
+                        </div>
+                        <p className="mt-3 text-xs font-medium text-slate-500">Stage</p>
+                        <div className="mt-1">
+                          <StatusBadge tone={getOpportunityTone(opportunity.status)}>
+                            {opportunity.status || "New"}
+                          </StatusBadge>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-          )}
-        </SectionCard>
-      </section>
+          </>
+        )}
+      </SectionCard>
 
       <SectionCard
         title="Recently closed"

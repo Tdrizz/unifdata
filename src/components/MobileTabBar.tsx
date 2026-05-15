@@ -167,7 +167,7 @@ export function MobileTabBar({
 
       {/* Tab bar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-slate-200 bg-white md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-slate-200 bg-white/85 backdrop-blur-xl backdrop-saturate-[160%] md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {PRIMARY_TABS.map((tab) => {

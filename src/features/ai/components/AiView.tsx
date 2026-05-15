@@ -23,22 +23,15 @@ export function AiView({ reports, profile }: AiViewProps) {
     <div className="space-y-5">
       <PageHeader
         eyebrow="AI Assistant"
-        title="Generate an operating brief"
-        description="Gemini reviews the workspace and turns your business data into a short, practical brief."
+        title="Ask UnifData about your workspace"
+        description={`Trained on your live ${profile.labels.customerPlural.toLowerCase()}, opportunities, jobs, revenue, and follow-ups — talks in your industry's vocabulary.`}
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
               href="/workspace"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
-            >
-              Home
-            </Link>
-
-            <Link
-              href="/imports"
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
-              Import data
+              Home
             </Link>
           </div>
         }
