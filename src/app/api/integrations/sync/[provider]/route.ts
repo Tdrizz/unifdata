@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
+import { rateLimit } from "@/lib/rate-limit";
+import { insertNotification } from "@/lib/notifications";
 
 // Import all syncers so they self-register via registerSyncer().
 import "@/lib/integrations/quickbooks";
@@ -30,6 +32,13 @@ export async function POST(
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!rateLimit(`sync:${companyId}`)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in a moment." },
+      { status: 429 },
+    );
   }
 
   const syncer = getSyncer(provider);
@@ -64,6 +73,13 @@ export async function POST(
       .single();
 
     const result = await syncer.sync(supabase, companyId, freshIntegration!);
+    await insertNotification(
+      supabase,
+      companyId,
+      "sync_complete",
+      `${provider} sync complete`,
+      `${result.recordsStaged ?? 0} records staged`,
+    );
     revalidatePath("/workspace");
     revalidatePath("/customers");
     revalidatePath("/imports");

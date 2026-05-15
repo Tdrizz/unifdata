@@ -119,6 +119,7 @@ export async function getImportsPageData(
         "failed",
         "committed",
         "cancelled",
+        "reverted",
       ])
       .order("created_at", { ascending: false })
       .limit(20),

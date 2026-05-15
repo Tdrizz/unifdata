@@ -8,6 +8,7 @@ import { getTodayString } from "@/lib/date-format";
 import { compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { GEMINI_MODEL } from "@/lib/constants";
+import { rateLimit } from "@/lib/rate-limit";
 
 type ChatMessage = {
   role: "user" | "model";
@@ -61,6 +62,14 @@ export async function POST(request: Request) {
   }
 
   const { company } = currentCompany;
+
+  if (!rateLimit(`ai:${company.id}`, 5)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in a moment." },
+      { status: 429 },
+    );
+  }
+
   const supabase = await createClient();
   const profile = getIndustryProfile(company.business_sector);
   const today = getTodayString();

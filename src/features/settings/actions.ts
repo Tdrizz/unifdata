@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentCompany } from "@/lib/current-company";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getCurrentCompany, getCurrentCompanyId, getCurrentUserRole } from "@/lib/current-company";
 import { industryProfiles } from "@/lib/industry-profiles";
 
 const validBusinessSectors = new Set(Object.keys(industryProfiles));
@@ -152,4 +153,44 @@ export async function changePasswordAction(formData: FormData) {
   }
 
   redirect("/settings?toast=Password+updated");
+}
+
+export async function inviteMember(email: string, role: "owner" | "member" = "member") {
+  const companyId = await getCurrentCompanyId();
+  if (!companyId) throw new Error("Unauthorized");
+
+  const currentRole = await getCurrentUserRole();
+  if (currentRole !== "owner") throw new Error("Only owners can invite members");
+
+  const supabase = createServiceClient();
+
+  const { error } = await (supabase.auth.admin as any).inviteUserByEmail(email, {
+    data: { company_id: companyId, invited_role: role },
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/invite/accept`,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/settings");
+  return { ok: true as const };
+}
+
+export async function removeMember(targetUserId: string) {
+  const companyId = await getCurrentCompanyId();
+  if (!companyId) throw new Error("Unauthorized");
+
+  const role = await getCurrentUserRole();
+  if (role !== "owner") throw new Error("Only owners can remove members");
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.id === targetUserId) throw new Error("Cannot remove yourself");
+
+  await supabase
+    .from("company_members")
+    .delete()
+    .eq("user_id", targetUserId)
+    .eq("company_id", companyId);
+
+  revalidatePath("/settings");
 }

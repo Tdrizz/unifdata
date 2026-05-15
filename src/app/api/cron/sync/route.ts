@@ -1,163 +1,156 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import {
-  createImportSessionFromRows,
-  commitImportSession,
-  guessImportMapping,
-  type ImportSourceType,
-  type RawImportRow,
-} from "@/lib/import-engine";
-import { getValidQBAccessToken, getQBRealmIdFromIntegration, fetchQBCustomers, fetchQBInvoices, fetchQBEstimates } from "@/lib/integrations/quickbooks";
-import { getValidSquareAccessToken, fetchSquareCustomers, fetchSquarePayments } from "@/lib/integrations/square";
-import { getValidHubSpotAccessToken, fetchHubSpotContacts, fetchHubSpotDeals } from "@/lib/integrations/hubspot";
-import { getValidJobberAccessToken, fetchJobberClients, fetchJobberJobs, fetchJobberQuotes, fetchJobberInvoices } from "@/lib/integrations/jobber";
+import { createServiceClient } from "@/lib/supabase/service";
+import { getSyncer } from "@/lib/integrations/registry";
+import { refreshIntegrationToken } from "@/lib/integrations/token";
 
-type SyncJob = {
-  recordType: "relationships" | "revenue" | "opportunities" | "work";
-  fetcher: () => Promise<RawImportRow[]>;
-  sourceType: ImportSourceType;
-  sourceName: string;
-};
-
-async function getJobsForCompanyProvider(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  companyId: string,
-  provider: string,
-): Promise<SyncJob[]> {
-  if (provider === "quickbooks") {
-    const accessToken = await getValidQBAccessToken({ supabase, companyId });
-    const realmId = await getQBRealmIdFromIntegration({ supabase, companyId });
-    return [
-      { recordType: "relationships", fetcher: () => fetchQBCustomers(accessToken, realmId), sourceType: "quickbooks", sourceName: realmId },
-      { recordType: "revenue", fetcher: () => fetchQBInvoices(accessToken, realmId), sourceType: "quickbooks", sourceName: realmId },
-      { recordType: "opportunities", fetcher: () => fetchQBEstimates(accessToken, realmId), sourceType: "quickbooks", sourceName: realmId },
-    ];
-  }
-
-  if (provider === "square") {
-    const accessToken = await getValidSquareAccessToken({ supabase, companyId });
-    return [
-      { recordType: "relationships", fetcher: () => fetchSquareCustomers(accessToken), sourceType: "square", sourceName: "square" },
-      { recordType: "revenue", fetcher: () => fetchSquarePayments(accessToken), sourceType: "square", sourceName: "square" },
-    ];
-  }
-
-  if (provider === "hubspot") {
-    const accessToken = await getValidHubSpotAccessToken({ supabase, companyId });
-    return [
-      { recordType: "relationships", fetcher: () => fetchHubSpotContacts(accessToken), sourceType: "hubspot", sourceName: "hubspot" },
-      { recordType: "opportunities", fetcher: () => fetchHubSpotDeals(accessToken), sourceType: "hubspot", sourceName: "hubspot" },
-    ];
-  }
-
-  if (provider === "jobber") {
-    const accessToken = await getValidJobberAccessToken({ supabase, companyId });
-    return [
-      { recordType: "relationships", fetcher: () => fetchJobberClients(accessToken), sourceType: "jobber", sourceName: "jobber" },
-      { recordType: "work", fetcher: () => fetchJobberJobs(accessToken), sourceType: "jobber", sourceName: "jobber" },
-      { recordType: "opportunities", fetcher: () => fetchJobberQuotes(accessToken), sourceType: "jobber", sourceName: "jobber" },
-      { recordType: "revenue", fetcher: () => fetchJobberInvoices(accessToken), sourceType: "jobber", sourceName: "jobber" },
-    ];
-  }
-
-  return [];
-}
+// Import all syncers so they self-register via registerSyncer().
+import "@/lib/integrations/quickbooks";
+import "@/lib/integrations/hubspot";
+import "@/lib/integrations/jobber";
+import "@/lib/integrations/square";
+import "@/lib/integrations/stripe";
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret) {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-    }
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured" },
+      { status: 500 },
+    );
+  }
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
-  // Fetch all active daily sync connections across all companies
-  const { data: connections, error } = await supabase
-    .from("sync_connections")
-    .select("company_id, source_type")
-    .eq("status", "active")
-    .eq("sync_frequency", "daily")
-    .in("source_type", ["quickbooks", "square", "hubspot", "jobber"]);
+  // Fetch all active integrations across all companies
+  const { data: integrations, error } = await supabase
+    .from("integrations")
+    .select("*")
+    .eq("status", "active");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Deduplicate to one sync per company+provider
-  const seen = new Set<string>();
-  const uniquePairs: { companyId: string; provider: string }[] = [];
-
-  for (const conn of connections || []) {
-    const key = `${conn.company_id}:${conn.source_type}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniquePairs.push({ companyId: conn.company_id, provider: conn.source_type });
-    }
-  }
-
-  const allResults: {
+  const results: {
     companyId: string;
     provider: string;
-    record_type: string;
-    rows_synced: number;
+    status: "ok" | "error" | "skipped";
+    recordsSeen: number;
     error: string | null;
   }[] = [];
 
-  for (const { companyId, provider } of uniquePairs) {
-    let jobs: SyncJob[] = [];
-
-    try {
-      jobs = await getJobsForCompanyProvider(supabase, companyId, provider);
-    } catch (err) {
-      allResults.push({
-        companyId,
-        provider,
-        record_type: "all",
-        rows_synced: 0,
-        error: err instanceof Error ? err.message : String(err),
+  for (const integration of integrations ?? []) {
+    const syncer = getSyncer(integration.provider);
+    if (!syncer) {
+      // Provider has no registered syncer — skip silently
+      results.push({
+        companyId: integration.company_id,
+        provider: integration.provider,
+        status: "skipped",
+        recordsSeen: 0,
+        error: null,
       });
       continue;
     }
 
-    for (const job of jobs) {
-      try {
-        const rows = await job.fetcher();
-        const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-        const mapping = guessImportMapping(headers, job.recordType);
-        const { sessionId } = await createImportSessionFromRows({
-          supabase,
-          companyId,
-          sourceType: job.sourceType,
-          sourceName: job.sourceName,
-          fileName: `${provider}_${job.recordType}`,
-          recordType: job.recordType,
-          rows,
-          mapping,
-        });
-        await commitImportSession({ supabase, companyId, importSessionId: sessionId });
-        allResults.push({ companyId, provider, record_type: job.recordType, rows_synced: rows.length, error: null });
-      } catch (err) {
-        allResults.push({
-          companyId,
-          provider,
-          record_type: job.recordType,
-          rows_synced: 0,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-    }
+    const startedAt = new Date().toISOString();
 
-    // Update last_sync_at for all connections belonging to this company+provider
-    await supabase
-      .from("sync_connections")
-      .update({ last_sync_at: new Date().toISOString() })
-      .eq("company_id", companyId)
-      .eq("source_type", provider);
+    try {
+      await refreshIntegrationToken(supabase as any, integration);
+
+      const { data: freshIntegration } = await supabase
+        .from("integrations")
+        .select("*")
+        .eq("id", integration.id)
+        .single();
+
+      const result = await syncer.sync(
+        supabase as any,
+        integration.company_id,
+        freshIntegration!,
+      );
+
+      await supabase.from("sync_runs").insert({
+        company_id: integration.company_id,
+        sync_connection_id: null,
+        status: "success",
+        records_seen: result.recordsStaged,
+        records_created: result.customersCreated,
+        records_updated: result.customersUpdated,
+        records_failed: 0,
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+        error_message: null,
+        metadata: { provider: integration.provider },
+      });
+
+      results.push({
+        companyId: integration.company_id,
+        provider: integration.provider,
+        status: "ok",
+        recordsSeen: result.recordsStaged,
+        error: null,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+
+      await supabase.from("sync_runs").insert({
+        company_id: integration.company_id,
+        sync_connection_id: null,
+        status: "error",
+        records_seen: 0,
+        records_created: 0,
+        records_updated: 0,
+        records_failed: 0,
+        started_at: startedAt,
+        finished_at: new Date().toISOString(),
+        error_message: message,
+        metadata: { provider: integration.provider },
+      });
+
+      results.push({
+        companyId: integration.company_id,
+        provider: integration.provider,
+        status: "error",
+        recordsSeen: 0,
+        error: message,
+      });
+    }
   }
 
-  return NextResponse.json({ ok: true, synced: allResults.length, results: allResults });
+  // Check for overdue follow-ups and insert notifications
+  const nowStr = new Date().toISOString();
+  const oneDayAgoStr = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: overdueFollowUps } = await supabase
+    .from("follow_ups")
+    .select("id, company_id, message")
+    .lt("due_date", nowStr)
+    .not("status", "in", '("completed","cancelled")')
+    .limit(100);
+
+  for (const followUp of overdueFollowUps ?? []) {
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", followUp.company_id)
+      .eq("type", "follow_up_overdue")
+      .like("body", `%${followUp.id}%`)
+      .gte("created_at", oneDayAgoStr);
+
+    if ((count ?? 0) === 0) {
+      await supabase.from("notifications").insert({
+        company_id: followUp.company_id,
+        type: "follow_up_overdue",
+        title: "Overdue follow-up",
+        body: `"${followUp.message ?? "Follow-up"}" is past its due date. ID: ${followUp.id}`,
+      });
+    }
+  }
+
+  return NextResponse.json({ ok: true, results });
 }

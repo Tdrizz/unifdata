@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
 import type { CustomerRow } from "./types";
 
 type CustomersPageOpts = { q?: string; page?: number; pageSize?: number };
@@ -74,4 +75,64 @@ export async function getCustomerLinkedCounts(
     jobsCount: jobsResult.count ?? 0,
     followUpsCount: followUpsResult.count ?? 0,
   };
+}
+
+export async function findDuplicateCustomers(companyId: string) {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("company_id", companyId);
+
+  if (!data || data.length === 0) return [];
+
+  const byEmail = new Map<string, typeof data>();
+  const byPhone = new Map<string, typeof data>();
+
+  for (const customer of data) {
+    if (customer.email) {
+      const key = customer.email.toLowerCase().trim();
+      if (!byEmail.has(key)) byEmail.set(key, []);
+      byEmail.get(key)!.push(customer);
+    }
+    if (customer.phone) {
+      const key = customer.phone.replace(/\D/g, "");
+      if (key.length >= 7) {
+        if (!byPhone.has(key)) byPhone.set(key, []);
+        byPhone.get(key)!.push(customer);
+      }
+    }
+  }
+
+  const groups: Array<{
+    key: string;
+    type: "email" | "phone";
+    customers: typeof data;
+  }> = [];
+  const seenIds = new Set<string>();
+
+  for (const [key, customers] of byEmail.entries()) {
+    if (customers.length < 2) continue;
+    const ids = customers
+      .map((c) => c.id)
+      .sort()
+      .join(",");
+    if (seenIds.has(ids)) continue;
+    seenIds.add(ids);
+    groups.push({ key, type: "email", customers });
+  }
+
+  for (const [key, customers] of byPhone.entries()) {
+    if (customers.length < 2) continue;
+    const ids = customers
+      .map((c) => c.id)
+      .sort()
+      .join(",");
+    if (seenIds.has(ids)) continue;
+    seenIds.add(ids);
+    groups.push({ key, type: "phone", customers });
+  }
+
+  return groups;
 }

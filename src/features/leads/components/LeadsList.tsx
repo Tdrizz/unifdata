@@ -6,12 +6,13 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { Pagination } from "@/components/ui/Pagination";
-import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
+import { isTodayOrPast } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow, CustomerRow } from "../types";
 import { LeadCreateForm } from "./LeadCreateForm";
+import { LeadsTableClient } from "./LeadsTableClient";
 
 const PAGE_SIZE = 50;
 
@@ -36,50 +37,7 @@ function isLost(status: string | null) {
   );
 }
 
-function getFollowUpText(date: string | null) {
-  if (!date) return "No follow-up";
-  if (isTodayOrPast(date)) return `Due ${formatDateOnly(date)}`;
-  return `Follow up ${formatDateOnly(date)}`;
-}
-
-function getFollowUpTone(date: string | null) {
-  if (!date) return "warning" as const;
-  if (isTodayOrPast(date)) return "danger" as const;
-  return "neutral" as const;
-}
-
-function getOpportunityIssues(opportunity: LeadRow) {
-  const issues: {
-    label: string;
-    tone: "success" | "warning" | "danger" | "neutral";
-  }[] = [];
-
-  if (!opportunity.customer_id) {
-    issues.push({ label: "Link person", tone: "warning" });
-  }
-  if (!opportunity.source) {
-    issues.push({ label: "Add source", tone: "neutral" });
-  }
-  if (
-    opportunity.estimated_value === null ||
-    opportunity.estimated_value === undefined
-  ) {
-    issues.push({ label: "Add estimate", tone: "neutral" });
-  }
-  if (!opportunity.next_follow_up_date) {
-    issues.push({ label: "Add follow-up", tone: "warning" });
-  } else if (isTodayOrPast(opportunity.next_follow_up_date)) {
-    issues.push({ label: "Follow-up due", tone: "danger" });
-  }
-  if (issues.length === 0) {
-    issues.push({ label: "Looks clean", tone: "success" });
-  }
-  return issues;
-}
-
 export function LeadsList({ leads, count, customers, profile }: Props) {
-  const customerById = new Map(customers.map((c) => [c.id, c]));
-
   const openOpportunities = leads.filter(
     (l) => !isWon(l.status) && !isLost(l.status),
   );
@@ -169,6 +127,14 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
         description={`Create, review, and clean up ${profile.labels.leadPlural.toLowerCase()} before they become ${profile.labels.jobPlural.toLowerCase()} and ${profile.labels.salePlural.toLowerCase()}.`}
         actions={
           <div className="flex flex-wrap gap-2">
+            <a
+              href="/api/export/csv?table=leads"
+              download
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Export CSV
+            </a>
+
             <Link
               href="/crm"
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
@@ -229,76 +195,12 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
               description={`Add or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
             />
           ) : (
-            <div className="divide-y divide-slate-100">
-              {prioritizedOpenOpportunities.map((opportunity) => {
-                const customer = opportunity.customer_id
-                  ? customerById.get(opportunity.customer_id)
-                  : null;
-                const issues = getOpportunityIssues(opportunity);
-
-                return (
-                  <Link
-                    key={opportunity.id}
-                    href={`/leads/${opportunity.id}/edit`}
-                    className="block p-4 transition-colors hover:bg-slate-50"
-                  >
-                    <div className="grid gap-4 md:grid-cols-[1fr_135px_165px] md:items-start">
-                      <div>
-                        <p className="font-semibold text-slate-950">
-                          {opportunity.service_requested || "Untitled opportunity"}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {customer?.name ||
-                            opportunity.source ||
-                            `No ${profile.labels.customerSingular.toLowerCase()} or source saved`}
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {issues.slice(0, 3).map((issue) => (
-                            <StatusBadge key={issue.label} tone={issue.tone}>
-                              {issue.label}
-                            </StatusBadge>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-medium text-slate-500">Value</p>
-                        <p className="mt-1 text-sm font-semibold text-slate-700">
-                          {formatCurrency(opportunity.estimated_value)}
-                        </p>
-                        <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
-                        <p className="mt-1 text-sm font-semibold text-slate-700">
-                          {opportunity.source || "Not set"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-medium text-slate-500">Next step</p>
-                        <div className="mt-1">
-                          <StatusBadge
-                            tone={getFollowUpTone(opportunity.next_follow_up_date)}
-                          >
-                            {getFollowUpText(opportunity.next_follow_up_date)}
-                          </StatusBadge>
-                        </div>
-                        <p className="mt-3 text-xs font-medium text-slate-500">Status</p>
-                        <div className="mt-1">
-                          <StatusBadge tone={getOpportunityTone(opportunity.status)}>
-                            {opportunity.status || "Open"}
-                          </StatusBadge>
-                        </div>
-                      </div>
-                    </div>
-
-                    {opportunity.notes && (
-                      <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                        {opportunity.notes}
-                      </p>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+            <LeadsTableClient
+              leads={prioritizedOpenOpportunities}
+              customers={customers}
+              profile={profile}
+              sectionTitle={`open ${profile.labels.leadPlural.toLowerCase()}`}
+            />
           )}
         </SectionCard>
 

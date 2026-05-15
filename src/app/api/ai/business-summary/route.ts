@@ -8,6 +8,7 @@ import { getTodayString } from "@/lib/date-format";
 import { formatCurrency, compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { GEMINI_MODEL } from "@/lib/constants";
+import { rateLimit } from "@/lib/rate-limit";
 
 function getStartOfMonth() {
   const now = new Date();
@@ -38,6 +39,14 @@ export async function POST() {
   }
 
   const { company } = currentCompany;
+
+  if (!rateLimit(`ai:${company.id}`, 5)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in a moment." },
+      { status: 429 },
+    );
+  }
+
   const supabase = await createClient();
 
   // Rate limit: one brief per 10 minutes per company

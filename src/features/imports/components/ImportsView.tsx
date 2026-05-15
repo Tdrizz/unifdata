@@ -10,6 +10,7 @@ import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
 import type { Json } from "@/types/db";
+import { revertImportSession } from "../actions";
 
 function formatTimestamp(date: string | null) {
   if (!date) {
@@ -106,7 +107,7 @@ export function ImportsView({
   );
 
   const committedSessions = importSessions.filter(
-    (session) => session.status === "committed",
+    (session) => session.status === "committed" || session.status === "reverted",
   );
 
   const completedImports = committedSessions.length;
@@ -396,6 +397,64 @@ export function ImportsView({
           </div>
         </SectionCard>
       </section>
+
+      {committedSessions.length > 0 && (
+        <SectionCard
+          title="Committed imports"
+          description="Imports that have been committed to the workspace. Use Revert to undo a specific import."
+        >
+          <div className="divide-y divide-slate-100">
+            {committedSessions.map((session) => (
+              <article
+                key={session.id}
+                className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_140px] md:items-center"
+              >
+                <div>
+                  <p className="line-clamp-1 font-semibold text-slate-950">
+                    {session.file_name ||
+                      session.source_name ||
+                      "Import"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {getSourceLabel(session.source_type)} ·{" "}
+                    {getRecordTypeLabel(session.record_type)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Records</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                    {Number(session.created_rows || 0) + Number(session.updated_rows || 0)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Committed</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                    {formatTimestamp(session.committed_at || session.created_at)}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2 md:items-end">
+                  <StatusBadge tone={getStatusTone(session.status)}>
+                    {session.status}
+                  </StatusBadge>
+
+                  <form action={revertImportSession.bind(null, session.id)}>
+                    <button
+                      type="submit"
+                      disabled={session.status === "reverted"}
+                      className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {session.status === "reverted" ? "Reverted" : "Revert"}
+                    </button>
+                  </form>
+                </div>
+              </article>
+            ))}
+          </div>
+        </SectionCard>
+      )}
 
       {syncConnections.length > 0 ? (
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr] items-start">

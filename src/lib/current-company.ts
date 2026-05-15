@@ -48,3 +48,8 @@ export async function getCurrentCompanyId() {
 
   return currentCompany?.company.id ?? null;
 }
+
+export async function getCurrentUserRole(): Promise<string | null> {
+  const company = await getCurrentCompany();
+  return company?.role ?? null;
+}

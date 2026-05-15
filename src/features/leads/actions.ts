@@ -119,3 +119,19 @@ export async function deleteLeadAction(id: string) {
   revalidatePath("/workspace");
   redirect("/leads?toast=Opportunity+deleted");
 }
+
+export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
+  if (ids.length === 0 || !status) return;
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return;
+  const { company } = currentCompany;
+
+  await supabase
+    .from("leads")
+    .update({ status })
+    .in("id", ids)
+    .eq("company_id", company.id);
+
+  revalidatePath("/leads");
+}

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFollowUpPageData } from "@/features/follow-ups/queries";
-import { FollowUpList } from "@/features/follow-ups/components/FollowUpList";
+import { FollowUpViewToggle } from "@/features/follow-ups/components/FollowUpViewToggle";
 import { FollowUpCreateForm } from "@/features/follow-ups/components/FollowUpCreateForm";
 
 export default async function FollowUpsPage({
@@ -49,7 +49,7 @@ export default async function FollowUpsPage({
         <FollowUpCreateForm
           people={data.people}
         />
-        <FollowUpList
+        <FollowUpViewToggle
           followUps={data.followUps}
           opportunities={data.opportunities}
           people={data.people}

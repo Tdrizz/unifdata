@@ -8,8 +8,9 @@ import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
-import { updateWorkspaceAction, signOutAction } from "../actions";
+import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
+import { InviteMemberForm } from "./InviteMemberForm";
 
 interface Company {
   id: string;
@@ -28,6 +29,8 @@ interface SettingsViewProps {
   user: User;
   integrations: SettingsIntegration[];
   geminiEnabled: boolean;
+  members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
+  currentUserRole: string | null;
 }
 
 function titleCase(value: string | null) {
@@ -86,6 +89,8 @@ export function SettingsView({
   user,
   integrations,
   geminiEnabled,
+  members,
+  currentUserRole,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((integration) =>
     String(integration.provider || "")
@@ -399,6 +404,30 @@ export function SettingsView({
             ))}
           </div>
         )}
+      </SectionCard>
+
+      <SectionCard
+        title="Team Members"
+        description="Manage who has access to this workspace."
+      >
+        <div className="p-5">
+          <div className="space-y-2">
+            {members.map((member) => (
+              <div key={member.user_id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3">
+                <div>
+                  <p className="font-semibold text-slate-950">{member.profiles?.full_name ?? "Team member"}</p>
+                  <p className="text-xs text-slate-500 capitalize">{member.role}</p>
+                </div>
+                {currentUserRole === "owner" && (
+                  <form action={removeMember.bind(null, member.user_id)}>
+                    <button type="submit" className="text-xs text-red-500 hover:underline">Remove</button>
+                  </form>
+                )}
+              </div>
+            ))}
+          </div>
+          {currentUserRole === "owner" && <InviteMemberForm />}
+        </div>
       </SectionCard>
     </div>
   );
