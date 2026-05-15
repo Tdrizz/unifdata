@@ -201,4 +201,8 @@ table {
 
   /* Eyebrow label */
   .tracking-eyebrow { letter-spacing: 0.16em; }
+
+  /* Hide scrollbars (mobile shell content, CRM columns) */
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
 }

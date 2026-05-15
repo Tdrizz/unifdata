@@ -1,22 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getIndustryProfile } from "@/lib/industry-profiles";
+import { cn } from "@/lib/utils";
 
-function IconHome({ size = 22 }: { size?: number }) {
+// ── Per-tab SVG icons (21px, variable strokeWidth) ─────────────────────────
+function SvgHome({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
       <path d="M9 21V12h6v9" />
     </svg>
   );
 }
-
-function IconPeople({ size = 22 }: { size?: number }) {
+function SvgUsers({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="8" cy="7" r="3" />
       <path d="M2 21v-1a6 6 0 0 1 12 0v1" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -24,41 +23,35 @@ function IconPeople({ size = 22 }: { size?: number }) {
     </svg>
   );
 }
-
-function IconBriefcase({ size = 22 }: { size?: number }) {
+function SvgBriefcase({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="7" width="20" height="14" rx="2" />
       <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-      <line x1="12" y1="12" x2="12" y2="12.01" strokeWidth={2.5} />
       <path d="M2 12h20" />
     </svg>
   );
 }
-
-function IconChart({ size = 22 }: { size?: number }) {
+function SvgCalendar({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="20" x2="12" y2="10" />
-      <line x1="18" y1="20" x2="18" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="16" />
-      <line x1="2" y1="20" x2="22" y2="20" />
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
     </svg>
   );
 }
-
-function IconCheck({ size = 22 }: { size?: number }) {
+function SvgSparkles({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M8.5 12.5l2.5 2.5 4.5-5" />
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+      <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z" />
+      <path d="M5 17l.5 1.5L7 19l-1.5.5L5 21l-.5-1.5L3 19l1.5-.5L5 17z" />
     </svg>
   );
 }
-
-function IconMore({ size = 22 }: { size?: number }) {
+function SvgMore({ active }: { active: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
       <circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none" />
@@ -66,141 +59,100 @@ function IconMore({ size = 22 }: { size?: number }) {
   );
 }
 
-function IconLeads({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.27 18a19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  );
-}
+// ── Tab definitions ────────────────────────────────────────────────────────
+const TABS = [
+  {
+    href: "/workspace",
+    label: "Today",
+    Icon: SvgHome,
+    match: (p: string) => p === "/workspace",
+  },
+  {
+    href: "/customers",
+    label: "Clients",
+    Icon: SvgUsers,
+    match: (p: string) => p === "/customers" || p.startsWith("/customers/"),
+  },
+  {
+    href: "/crm",
+    label: "Pipeline",
+    Icon: SvgBriefcase,
+    match: (p: string) =>
+      p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
+  },
+  {
+    href: "/jobs",
+    label: "Visits",
+    Icon: SvgCalendar,
+    match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
+  },
+  {
+    href: "/ai-assistant",
+    label: "Ask",
+    Icon: SvgSparkles,
+    match: (p: string) =>
+      p === "/ai-assistant" || p.startsWith("/ai-assistant/"),
+  },
+  {
+    href: "/settings",
+    label: "More",
+    Icon: SvgMore,
+    match: (p: string) =>
+      p === "/settings" ||
+      p.startsWith("/settings/") ||
+      p === "/imports" ||
+      p === "/sales" ||
+      p === "/follow-ups" ||
+      p.startsWith("/follow-ups/") ||
+      p === "/data-hub",
+  },
+] as const;
 
-function IconImport({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-
-function IconSettings({ size = 22 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-}
-
-const ICON_MAP: Record<string, (props: { size?: number }) => React.ReactElement> = {
-  "/workspace": IconHome,
-  "/customers": IconPeople,
-  "/jobs": IconBriefcase,
-  "/sales": IconChart,
-  "/follow-ups": IconCheck,
-};
-
-const MORE_ITEMS = [
-  { href: "/leads", label: "Leads", Icon: IconLeads },
-  { href: "/imports", label: "Import", Icon: IconImport },
-  { href: "/settings", label: "Settings", Icon: IconSettings },
-];
-
+// ── Component ───────────────────────────────────────────────────────────────
 export function MobileTabBar({
-  businessSector,
-  accentColor = "#7A8C2A",
+  businessSector: _businessSector,
 }: {
   businessSector?: string | null;
+  // v1 compat — no longer used
   accentColor?: string;
 }) {
   const pathname = usePathname();
-  const profile = getIndustryProfile(businessSector);
-  const [moreOpen, setMoreOpen] = useState(false);
-
-  const PRIMARY_TABS = [
-    { href: "/workspace", label: "Home" },
-    { href: "/customers", label: profile.labels.customerPlural },
-    { href: "/jobs", label: profile.labels.jobPlural ?? "Jobs" },
-    { href: "/sales", label: "Sales" },
-    { href: "/follow-ups", label: "Tasks" },
-  ];
-
-  const moreActive = MORE_ITEMS.some(
-    (item) => pathname === item.href || pathname.startsWith(item.href + "/"),
-  );
 
   return (
-    <>
-      {/* More drawer backdrop */}
-      {moreOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          onClick={() => setMoreOpen(false)}
-        />
-      )}
-
-      {/* More drawer */}
-      {moreOpen && (
-        <div
-          className="fixed left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-lg md:hidden"
-          style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
-        >
-          <div className="grid grid-cols-3 divide-x divide-slate-100">
-            {MORE_ITEMS.map(({ href, label, Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMoreOpen(false)}
-                  style={active ? { color: accentColor } : undefined}
-                  className={`flex flex-col items-center gap-2 px-4 py-5 text-xs font-medium ${active ? "font-semibold" : "text-slate-600"}`}
-                >
-                  <Icon size={24} />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Tab bar */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-slate-200 bg-white/85 backdrop-blur-xl backdrop-saturate-[160%] md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        {PRIMARY_TABS.map((tab) => {
-          const active =
-            !moreOpen &&
-            (pathname === tab.href || pathname.startsWith(tab.href + "/"));
-          const Icon = ICON_MAP[tab.href];
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              onClick={() => setMoreOpen(false)}
-              style={active ? { color: accentColor } : undefined}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${active ? "font-semibold" : "text-slate-400"}`}
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-ud backdrop-blur-[24px] saturate-[160%]"
+      style={{
+        background: "rgba(247,246,243,0.88)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingLeft: 6,
+        paddingRight: 6,
+        paddingTop: 8,
+      }}
+    >
+      {TABS.map((tab) => {
+        const active = tab.match(pathname);
+        const Icon = tab.Icon;
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={cn(
+              "flex flex-1 flex-col items-center gap-[3px] pb-1 transition-colors",
+              active ? "text-ud-ink" : "text-ud-faint",
+            )}
+          >
+            <Icon active={active} />
+            <span
+              className={cn(
+                "text-[9.5px] tracking-[-0.005em]",
+                active ? "font-bold" : "font-medium",
+              )}
             >
-              {Icon && <Icon size={22} />}
               {tab.label}
-            </Link>
-          );
-        })}
-
-        {/* More button */}
-        <button
-          type="button"
-          onClick={() => setMoreOpen((o) => !o)}
-          style={moreOpen || moreActive ? { color: accentColor } : undefined}
-          className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium ${moreOpen || moreActive ? "font-semibold" : "text-slate-400"}`}
-        >
-          <IconMore size={22} />
-          More
-        </button>
-      </nav>
-    </>
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
