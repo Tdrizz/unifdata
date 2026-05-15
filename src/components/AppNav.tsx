@@ -55,14 +55,14 @@ export function AppNav({
   const navGroups = getProductNavigation(profile);
 
   return (
-    <nav className="space-y-6">
+    <nav className="space-y-5">
       {navGroups.map((group) => (
         <div key={group.label}>
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+          <p className="mb-2 px-3 text-[10.5px] font-bold uppercase tracking-[0.18em] text-white/45">
             {group.label}
           </p>
 
-          <div className="mt-2 space-y-1">
+          <div className="space-y-0.5">
             {group.items.map((item) => {
               const active = pathname === item.href;
 
@@ -80,31 +80,28 @@ export function AppNav({
                   }
                   className={
                     active
-                      ? "group block rounded-2xl border border-white/10 px-4 py-3 shadow-sm"
-                      : "group block rounded-2xl px-4 py-3 text-white/60 hover:bg-white/10 hover:text-white"
+                      ? "group flex items-center justify-between gap-3 rounded-2xl border border-white/10 px-3 py-2.5"
+                      : "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-white/62 hover:bg-white/10 hover:text-white"
                   }
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">
-                        {item.label}
-                      </p>
-
-                      <p
-                        className={
-                          active
-                            ? "mt-0.5 truncate text-xs font-medium text-white/75"
-                            : "mt-0.5 truncate text-xs font-medium text-white/40 group-hover:text-white/65"
-                        }
-                      >
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {active && (
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-white" />
-                    )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold">
+                      {item.label}
+                    </p>
+                    <p
+                      className={
+                        active
+                          ? "mt-0.5 truncate text-[10.5px] font-medium text-white/75"
+                          : "mt-0.5 truncate text-[10.5px] font-medium text-white/40 group-hover:text-white/60"
+                      }
+                    >
+                      {item.description}
+                    </p>
                   </div>
+
+                  {active && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-white" />
+                  )}
                 </Link>
               );
             })}

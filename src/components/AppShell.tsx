@@ -51,39 +51,38 @@ export async function AppShell({
     >
       <div className="flex min-h-screen">
         <aside
-          className="hidden w-76 shrink-0 flex-col border-r border-white/10 p-4 text-white md:flex"
+          className="hidden w-72 shrink-0 flex-col gap-[18px] p-[18px] text-white md:flex"
           style={{ backgroundColor: "var(--fo-primary)" }}
         >
           <Link
             href="/workspace"
-            className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-sm hover:bg-white/15"
+            className="rounded-3xl border border-white/8 bg-white/8 p-[14px] hover:bg-white/12"
           >
             <ProductMark companyName={companyName} inverse />
           </Link>
 
-          <div className="mt-6 flex-1 overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto">
             <AppNav businessSector={businessSector} />
           </div>
 
-          {companyId && (
-            <div className="mt-4 flex justify-end">
-              <NotificationBell
-                companyId={companyId}
-                initialNotifications={initialNotifications ?? []}
-              />
+          <div className="rounded-3xl border border-white/6 bg-white/6 p-[14px]">
+            <div className="flex items-center gap-2.5">
+              {companyId && (
+                <NotificationBell
+                  companyId={companyId}
+                  initialNotifications={initialNotifications ?? []}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
+                  Signed in
+                </p>
+                <p className="mt-0.5 truncate text-[12.5px] font-medium text-white/85">
+                  {userEmail}
+                </p>
+              </div>
             </div>
-          )}
-
-          <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
-              Signed in
-            </p>
-
-            <p className="mt-2 truncate text-sm font-medium text-white/80">
-              {userEmail}
-            </p>
-
-            <div className="mt-4">
+            <div className="mt-3">
               <LogoutButton variant="sidebar" />
             </div>
           </div>
