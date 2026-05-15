@@ -5,7 +5,7 @@ import { ProductMark } from "@/components/ProductMark";
 export const metadata: Metadata = {
   title: "Docs",
   description:
-    "FrontierOps documentation for setup, core concepts, workflows, and product preview guidance.",
+    "UnifData documentation for setup, core concepts, workflows, and product preview guidance.",
 };
 
 const lifecycle = [
@@ -190,7 +190,7 @@ const integrations = [
   {
     name: "Jobber",
     description:
-      "Pull customers, jobs, and invoices from Jobber into FrontierOps. Keeps field service records in sync without manual re-entry.",
+      "Pull customers, jobs, and invoices from Jobber into UnifData. Keeps field service records in sync without manual re-entry.",
     path: "/settings",
     status: "Available",
   },
@@ -275,13 +275,13 @@ export default function DocsPage() {
 
         <header className="mt-12 rounded-4xl border border-slate-200 bg-white p-8 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-            FrontierOps Docs
+            UnifData Docs
           </p>
           <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight md:text-6xl">
             Documentation for the business operating system.
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">
-            FrontierOps helps local businesses organize relationships,
+            UnifData helps local businesses organize relationships,
             opportunities, work, revenue, actions, imports, and AI summaries
             into one industry-aware workspace.
           </p>
@@ -316,7 +316,7 @@ export default function DocsPage() {
                 Getting started
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                FrontierOps is built around a single company workspace. Every
+                UnifData is built around a single company workspace. Every
                 record — customers, leads, jobs, sales, and follow-ups — belongs
                 to a company. Create a workspace, choose the business sector,
                 and start adding records.
@@ -378,7 +378,7 @@ export default function DocsPage() {
                 Overview
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                FrontierOps is built for businesses that have important
+                UnifData is built for businesses that have important
                 information scattered across spreadsheets, QuickBooks, old CRMs,
                 texts, inboxes, and memory. The goal is to give business owners
                 one clear place to see what needs attention, what work is
@@ -425,7 +425,7 @@ export default function DocsPage() {
                 Core lifecycle
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                FrontierOps organizes every business around five layers. The
+                UnifData organizes every business around five layers. The
                 labels change based on the company sector, but the structure
                 stays the same across all industries.
               </p>
@@ -464,7 +464,7 @@ export default function DocsPage() {
                 Product pages
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                Each page in FrontierOps covers a specific part of the business
+                Each page in UnifData covers a specific part of the business
                 operating layer. Pages are accessible from the main navigation
                 after logging in.
               </p>
@@ -508,7 +508,7 @@ export default function DocsPage() {
                 The same five-layer lifecycle powers every workspace. What
                 changes is the language. A dental office should see
                 &quot;Patients&quot; and &quot;Appointments&quot; — not
-                &quot;Customers&quot; and &quot;Jobs.&quot; FrontierOps adapts
+                &quot;Customers&quot; and &quot;Jobs.&quot; UnifData adapts
                 the workspace labels and priorities to the company&apos;s
                 operating model during onboarding.
               </p>
@@ -543,7 +543,7 @@ export default function DocsPage() {
                 Connected workflow
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                When an opportunity is marked accepted or won, FrontierOps can
+                When an opportunity is marked accepted or won, UnifData can
                 create the connected work record and expected revenue record.
                 Payment status stays separate, so accepted business does not
                 automatically mean the money has been collected.
@@ -608,7 +608,7 @@ export default function DocsPage() {
                 Integrations
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                FrontierOps connects to the tools local businesses already use.
+                UnifData connects to the tools local businesses already use.
                 Integrations pull records into the workspace so you are not
                 re-entering data from Jobber, QuickBooks, HubSpot, Square, or
                 Google Sheets. Connect and manage integrations from{" "}
@@ -650,7 +650,7 @@ export default function DocsPage() {
                     {
                       step: "02",
                       label: "Authorize access",
-                      detail: "Complete the OAuth flow for the connected service. FrontierOps only reads the data it needs.",
+                      detail: "Complete the OAuth flow for the connected service. UnifData only reads the data it needs.",
                     },
                     {
                       step: "03",

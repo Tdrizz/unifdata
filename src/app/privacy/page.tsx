@@ -11,7 +11,7 @@ export default function PrivacyPage() {
             href="/"
             className="text-sm font-semibold text-slate-600 hover:text-slate-950"
           >
-            ← Back to FrontierOps
+            ← Back to UnifData
           </Link>
 
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           </p>
 
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-            FrontierOps Privacy Policy
+            UnifData Privacy Policy
           </h1>
 
           <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -32,10 +32,10 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-lg font-semibold text-slate-950">Overview</h2>
               <p className="mt-2">
-                FrontierOps is a business operations platform that helps users
+                UnifData is a business operations platform that helps users
                 organize people, opportunities, work, revenue, follow-ups,
                 imports, and AI-generated operating briefs. This Privacy Policy
-                explains what information FrontierOps collects, how it is used,
+                explains what information UnifData collects, how it is used,
                 and how users can contact us.
               </p>
             </div>
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
                 Information We Collect
               </h2>
               <p className="mt-2">
-                FrontierOps may collect account information such as your email
+                UnifData may collect account information such as your email
                 address, workspace information such as business name and
                 settings, and business records you create or import, including
                 customers, opportunities, work records, revenue records,
@@ -58,16 +58,16 @@ export default function PrivacyPage() {
                 Google Sheets and Google Account Data
               </h2>
               <p className="mt-2">
-                If you connect Google Sheets, FrontierOps requests permission to
+                If you connect Google Sheets, UnifData requests permission to
                 access the Google files or spreadsheets you choose to use with
-                the app. FrontierOps uses this access to let you select
+                the app. UnifData uses this access to let you select
                 spreadsheets, review rows, and import business data into your
                 workspace.
               </p>
               <p className="mt-2">
-                FrontierOps does not use Google user data for advertising and
+                UnifData does not use Google user data for advertising and
                 does not sell Google user data. Google data is used only to
-                provide user-facing features in FrontierOps, such as spreadsheet
+                provide user-facing features in UnifData, such as spreadsheet
                 selection, import review, and data import.
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
                 AI Features
               </h2>
               <p className="mt-2">
-                FrontierOps may use AI services, including Gemini, to generate
+                UnifData may use AI services, including Gemini, to generate
                 operating briefs from your workspace data. These briefs are
                 intended to help summarize business activity, risks, priorities,
                 and next steps. AI-generated content may be incomplete or
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
                 How We Use Information
               </h2>
               <p className="mt-2">
-                We use information to provide the FrontierOps service, operate
+                We use information to provide the UnifData service, operate
                 workspaces, import and organize business records, display
                 dashboards, generate AI briefs, troubleshoot issues, improve the
                 product, and maintain security.
@@ -103,10 +103,10 @@ export default function PrivacyPage() {
               </h2>
               <p className="mt-2">
                 We do not sell user data. We may share information with service
-                providers that help operate FrontierOps, such as hosting,
+                providers that help operate UnifData, such as hosting,
                 database, authentication, and AI infrastructure providers. We
                 may also disclose information if required by law or to protect
-                the rights, security, or integrity of FrontierOps.
+                the rights, security, or integrity of UnifData.
               </p>
             </div>
 
@@ -126,7 +126,7 @@ export default function PrivacyPage() {
                 Your Choices
               </h2>
               <p className="mt-2">
-                You may update or delete records inside FrontierOps. You may
+                You may update or delete records inside UnifData. You may
                 also disconnect Google access through your Google Account
                 settings. If you need help with data access or deletion, contact
                 us using the email below.

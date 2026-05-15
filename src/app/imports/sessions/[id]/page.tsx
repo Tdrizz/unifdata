@@ -126,7 +126,7 @@ export default async function ImportSessionPage({
         <PageHeader
           eyebrow="Import review"
           title={session.file_name || session.source_name || "Import session"}
-          description="Review staged rows, resolve duplicates, and commit clean records into FrontierOps."
+          description="Review staged rows, resolve duplicates, and commit clean records into UnifData."
           actions={
             <Link
               href="/imports"

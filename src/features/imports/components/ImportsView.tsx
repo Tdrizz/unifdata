@@ -138,7 +138,7 @@ export function ImportsView({
     <div className="space-y-5">
       <PageHeader
         eyebrow="Import"
-        title="Bring data into FrontierOps"
+        title="Bring data into UnifData"
         description="Upload CSV files or choose a Google Sheet, review the rows, fix issues, and commit clean records."
         actions={
           <div className="flex flex-wrap gap-2">
@@ -191,7 +191,7 @@ export function ImportsView({
 
       <SectionCard
         title="Add data"
-        description="Pick a source. FrontierOps stages everything for review before writing to the workspace."
+        description="Pick a source. UnifData stages everything for review before writing to the workspace."
       >
         <div className="grid gap-4 p-4 xl:grid-cols-2">
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
@@ -246,7 +246,7 @@ export function ImportsView({
                   Connect Google to import sheets.
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  FrontierOps only imports sheets you choose.
+                  UnifData only imports sheets you choose.
                 </p>
 
                 <a
@@ -276,7 +276,7 @@ export function ImportsView({
                       {getSourceLabel(integration.provider)}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Sync your connected account data into FrontierOps for
+                      Sync your connected account data into UnifData for
                       review.
                     </p>
                   </div>

@@ -349,7 +349,7 @@ export async function POST() {
       }),
   };
 
-  const systemInstruction = `You are the operating assistant inside FrontierOps, a business management platform.
+  const systemInstruction = `You are the operating assistant inside UnifData, a business management platform.
 Your job is to give ${company.name} a short, direct operating brief based on real workspace data.
 This business runs as a ${profile.label} operation.
 In this workspace: customers are called "${profile.labels.customerPlural}", leads/opportunities are called "${profile.labels.leadPlural}", active work is called "${profile.labels.jobPlural}", payments are called "${profile.labels.salePlural}", and reminders are called "${profile.labels.followUpPlural}".

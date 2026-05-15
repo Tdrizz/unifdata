@@ -121,7 +121,7 @@ const workflowCards = [
     label: "2",
     title: "Organize the business",
     description:
-      "FrontierOps connects records into one coherent view of your customers, work, and revenue.",
+      "UnifData connects records into one coherent view of your customers, work, and revenue.",
   },
   {
     label: "3",
@@ -192,7 +192,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              FrontierOps gives local businesses one clean, industry-aware
+              UnifData gives local businesses one clean, industry-aware
               workspace for customers, jobs, open quotes, and revenue — so
               nothing gets missed.
             </p>
@@ -322,7 +322,7 @@ export default function HomePage() {
             <p className="mt-4 text-base leading-8 text-slate-300">
               Customer info sits in spreadsheets. Follow-ups live in memory.
               Revenue is tracked in a notebook. Jobs come in through texts.
-              FrontierOps brings it all together so owners can see what needs
+              UnifData brings it all together so owners can see what needs
               attention — and act on it.
             </p>
           </div>
@@ -451,7 +451,7 @@ export default function HomePage() {
 
       <footer className="border-t border-slate-200 bg-white px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-          <p>© 2026 FrontierOps. All rights reserved.</p>
+          <p>© 2026 UnifData. All rights reserved.</p>
 
           <div className="flex gap-4">
             <Link

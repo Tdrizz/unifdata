@@ -12,46 +12,36 @@ export function ProductMark({
       <div
         className={
           inverse
-            ? "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#08111F] shadow-sm"
-            : "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-[#08111F] shadow-sm"
+            ? "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1D2D3E] shadow-sm"
+            : "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-[#1D2D3E] shadow-sm"
         }
       >
         <svg viewBox="0 0 512 512" className="h-10 w-10" aria-hidden="true">
-          <rect width="512" height="512" rx="112" fill="#08111F" />
-          <rect x="72" y="72" width="368" height="368" rx="84" fill="#0F1B2E" />
+          <rect width="512" height="512" rx="112" fill="#1D2D3E" />
 
-          <path
-            d="M112 318C151 282 184 270 216 282C251 295 273 333 310 333C344 333 369 302 400 277"
-            stroke="#E2E8F0"
-            strokeWidth="24"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M112 370C153 348 188 340 222 348C258 357 285 382 324 381C354 380 378 363 400 344"
-            stroke="#475569"
-            strokeWidth="20"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {/* Gear outer ring */}
+          <circle cx="256" cy="256" r="170" fill="none" stroke="#E8EDF2" strokeWidth="26" />
 
-          <path
-            d="M156 246L226 210L292 236L360 158"
-            stroke="#38BDF8"
-            strokeWidth="18"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {/* Gear teeth */}
+          <rect x="238" y="64" width="36" height="52" rx="8" fill="#E8EDF2" />
+          <rect x="238" y="396" width="36" height="52" rx="8" fill="#E8EDF2" />
+          <rect x="64" y="238" width="52" height="36" rx="8" fill="#E8EDF2" />
+          <rect x="396" y="238" width="52" height="36" rx="8" fill="#E8EDF2" />
+          <rect x="136" y="102" width="36" height="50" rx="8" fill="#E8EDF2" transform="rotate(-45 154 127)" />
+          <rect x="340" y="102" width="36" height="50" rx="8" fill="#E8EDF2" transform="rotate(45 358 127)" />
+          <rect x="136" y="360" width="36" height="50" rx="8" fill="#E8EDF2" transform="rotate(45 154 385)" />
+          <rect x="340" y="360" width="36" height="50" rx="8" fill="#E8EDF2" transform="rotate(-45 358 385)" />
 
-          <circle cx="156" cy="246" r="18" fill="#38BDF8" />
-          <circle cx="226" cy="210" r="14" fill="#F8FAFC" />
-          <circle cx="292" cy="236" r="14" fill="#F8FAFC" />
-          <circle cx="360" cy="158" r="20" fill="#38BDF8" />
+          {/* Inner circle mask */}
+          <circle cx="256" cy="256" r="142" fill="#1D2D3E" />
 
-          <path
-            d="M360 112L374 146L408 160L374 174L360 208L346 174L312 160L346 146L360 112Z"
-            fill="#F8FAFC"
-          />
+          {/* USB / circuit fork symbol in olive green */}
+          <line x1="256" y1="190" x2="256" y2="270" stroke="#7A8C2A" strokeWidth="20" strokeLinecap="round" />
+          <line x1="256" y1="222" x2="198" y2="222" stroke="#7A8C2A" strokeWidth="18" strokeLinecap="round" />
+          <line x1="256" y1="254" x2="314" y2="254" stroke="#7A8C2A" strokeWidth="18" strokeLinecap="round" />
+          <circle cx="194" cy="222" r="20" fill="none" stroke="#7A8C2A" strokeWidth="16" />
+          <rect x="300" y="238" width="32" height="32" rx="5" fill="none" stroke="#7A8C2A" strokeWidth="16" />
+          <circle cx="256" cy="316" r="24" fill="#7A8C2A" />
         </svg>
       </div>
 
@@ -64,7 +54,8 @@ export function ProductMark({
                 : "truncate text-sm font-semibold tracking-tight text-slate-950"
             }
           >
-            FrontierOps
+            <span>UNIF</span>
+            <span className={inverse ? "text-[#7A8C2A]" : "text-[#7A8C2A]"}>DATA</span>
           </p>
 
           {companyName && (

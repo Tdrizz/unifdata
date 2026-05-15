@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     })),
   };
 
-  const systemInstruction = `You are the AI advisor inside FrontierOps for ${company.name}, a ${profile.label} business.
+  const systemInstruction = `You are the AI advisor inside UnifData for ${company.name}, a ${profile.label} business.
 You have access to the owner's live workspace data. Answer questions directly and specifically using that data.
 Use the correct terminology for this business: ${profile.labels.customerPlural}, ${profile.labels.leadPlural}, ${profile.labels.jobPlural}, ${profile.labels.salePlural}, ${profile.labels.followUpPlural}.
 

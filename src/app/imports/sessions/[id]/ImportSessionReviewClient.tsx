@@ -493,7 +493,7 @@ export function ImportSessionReviewClient({
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Edit bad rows directly, resolve duplicates, then commit only the rows
-          you want written into FrontierOps.
+          you want written into UnifData.
         </p>
       </div>
 

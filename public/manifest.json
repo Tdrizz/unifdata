@@ -1,11 +1,11 @@
 {
-  "name": "FrontierOps",
-  "short_name": "FrontierOps",
-  "description": "Business management for field service teams",
+  "name": "UnifData",
+  "short_name": "UnifData",
+  "description": "Unified business data. Clearer decisions.",
   "start_url": "/workspace",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f172a",
+  "theme_color": "#1D2D3E",
   "orientation": "portrait-primary",
   "icons": [
     {

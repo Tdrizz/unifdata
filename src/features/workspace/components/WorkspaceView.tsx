@@ -277,7 +277,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
       {customers.length === 0 && (
         <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-lg font-black text-slate-950">Welcome to FrontierOps</p>
+          <p className="text-lg font-black text-slate-950">Welcome to UnifData</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
             Start by adding your first customer. You can also import a CSV file if you have existing data.
           </p>
