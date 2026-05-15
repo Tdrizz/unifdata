@@ -102,8 +102,6 @@ export function SettingsView({
   const squareIntegration = integrations.find((i) => i.provider === "square");
   const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
   const jobberIntegration = integrations.find((i) => i.provider === "jobber");
-  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
-
   return (
     <div className="space-y-5">
       <PageHeader
@@ -310,13 +308,6 @@ export function SettingsView({
               description: "Syncs clients, jobs, quotes, and invoices.",
               integration: jobberIntegration,
               startHref: "/api/integrations/jobber/start",
-            },
-            {
-              provider: "stripe",
-              label: "Stripe",
-              description: "Syncs customers and charges.",
-              integration: stripeIntegration,
-              startHref: "/api/integrations/stripe/start",
             },
           ].map(({ provider, label, description, integration, startHref }) => (
             <div
