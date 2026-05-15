@@ -122,5 +122,35 @@ export async function GET(request: Request) {
     }
   }
 
+  // Check for overdue follow-ups and insert notifications
+  const nowStr = new Date().toISOString();
+  const oneDayAgoStr = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: overdueFollowUps } = await supabase
+    .from("follow_ups")
+    .select("id, company_id, message")
+    .lt("due_date", nowStr)
+    .not("status", "in", '("completed","cancelled")')
+    .limit(100);
+
+  for (const followUp of overdueFollowUps ?? []) {
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", followUp.company_id)
+      .eq("type", "follow_up_overdue")
+      .like("body", `%${followUp.id}%`)
+      .gte("created_at", oneDayAgoStr);
+
+    if ((count ?? 0) === 0) {
+      await supabase.from("notifications").insert({
+        company_id: followUp.company_id,
+        type: "follow_up_overdue",
+        title: "Overdue follow-up",
+        body: `"${followUp.message ?? "Follow-up"}" is past its due date. ID: ${followUp.id}`,
+      });
+    }
+  }
+
   return NextResponse.json({ ok: true, results });
 }
