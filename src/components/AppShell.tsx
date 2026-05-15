@@ -4,13 +4,16 @@ import { AppNav } from "@/components/AppNav";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileTabBar } from "@/components/MobileTabBar";
 import { ProductMark } from "@/components/ProductMark";
+import { NotificationBell } from "@/components/NotificationBell";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompanyId } from "@/lib/current-company";
 
 type ThemeStyle = CSSProperties & {
   "--fo-primary"?: string;
   "--fo-accent"?: string;
 };
 
-export function AppShell({
+export async function AppShell({
   children,
   companyName,
   userEmail,
@@ -29,6 +32,17 @@ export function AppShell({
     "--fo-primary": brandColor,
     "--fo-accent": accentColor,
   };
+
+  const supabase = await createClient();
+  const companyId = await getCurrentCompanyId();
+  const { data: initialNotifications } = companyId
+    ? await supabase
+        .from("notifications")
+        .select("id, type, title, body, read, created_at")
+        .eq("company_id", companyId)
+        .order("created_at", { ascending: false })
+        .limit(10)
+    : { data: [] };
 
   return (
     <div
@@ -50,6 +64,15 @@ export function AppShell({
           <div className="mt-6 flex-1 overflow-y-auto pr-1">
             <AppNav businessSector={businessSector} />
           </div>
+
+          {companyId && (
+            <div className="mt-4 flex justify-end">
+              <NotificationBell
+                companyId={companyId}
+                initialNotifications={initialNotifications ?? []}
+              />
+            </div>
+          )}
 
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
@@ -73,7 +96,15 @@ export function AppShell({
                 <ProductMark companyName={companyName} />
               </Link>
 
-              <LogoutButton />
+              <div className="flex items-center gap-1">
+                {companyId && (
+                  <NotificationBell
+                    companyId={companyId}
+                    initialNotifications={initialNotifications ?? []}
+                  />
+                )}
+                <LogoutButton />
+              </div>
             </div>
 
           </header>
