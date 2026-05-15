@@ -5,6 +5,7 @@ import { getCurrentCompanyId } from "@/lib/current-company";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
 import { rateLimit } from "@/lib/rate-limit";
+import { insertNotification } from "@/lib/notifications";
 
 // Import all syncers so they self-register via registerSyncer().
 import "@/lib/integrations/quickbooks";
@@ -72,6 +73,13 @@ export async function POST(
       .single();
 
     const result = await syncer.sync(supabase, companyId, freshIntegration!);
+    await insertNotification(
+      supabase,
+      companyId,
+      "sync_complete",
+      `${provider} sync complete`,
+      `${result.recordsStaged ?? 0} records staged`,
+    );
     revalidatePath("/workspace");
     revalidatePath("/customers");
     revalidatePath("/imports");

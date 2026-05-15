@@ -47,6 +47,12 @@ export function CustomersList({ customers, count, profile, errorParam }: Props) 
 
           <div className="flex flex-wrap gap-2">
             <a
+              href="/customers/duplicates"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Find duplicates
+            </a>
+            <a
               href="/api/export/csv?table=customers"
               download
               className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
