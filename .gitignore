@@ -40,3 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .worktrees
+
+# remotion video project artifacts
+remotion/node_modules/
+remotion/out/
+remotion/package-lock.json
+
+# claude code worktrees
+.claude/worktrees/

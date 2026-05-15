@@ -1,0 +1,75 @@
+{
+  "planPath": "docs/superpowers/plans/2026-05-12-architecture-rebuild-phase-a.md",
+  "tasks": [
+    {
+      "id": 2,
+      "subject": "Task 0: Generate Supabase types and scaffold feature directories",
+      "status": "completed",
+      "description": "**Goal:** Create `src/types/db.ts` from the live Supabase schema and scaffold all feature module directories.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/types/db.ts\", \"src/features/\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"src/types/db.ts exports Database type\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 3,
+      "subject": "Task 1: Migrate follow-ups feature module",
+      "status": "completed",
+      "blockedBy": [2],
+      "description": "**Goal:** Extract all types, queries, actions, and rendering from follow-ups pages into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/follow-ups/\", \"src/app/follow-ups/page.tsx\", \"src/app/follow-ups/[id]/edit/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"page.tsx ≤ 70 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 4,
+      "subject": "Task 2: Migrate sales feature module",
+      "status": "completed",
+      "blockedBy": [3],
+      "description": "**Goal:** Extract all types, queries, actions, and rendering from sales pages into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/sales/\", \"src/app/sales/page.tsx\", \"src/app/sales/[id]/edit/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"page.tsx ≤ 70 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 5,
+      "subject": "Task 3: Migrate customers feature module",
+      "status": "completed",
+      "blockedBy": [4],
+      "description": "**Goal:** Extract all types, queries, actions, and rendering from customers pages into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/customers/\", \"src/app/customers/page.tsx\", \"src/app/customers/[id]/edit/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"page.tsx ≤ 70 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 6,
+      "subject": "Task 4: Migrate leads feature module",
+      "status": "completed",
+      "blockedBy": [5],
+      "description": "**Goal:** Extract all types, queries, actions, and rendering from leads pages into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/leads/\", \"src/app/leads/page.tsx\", \"src/app/leads/[id]/edit/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"page.tsx ≤ 70 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 7,
+      "subject": "Task 5: Migrate jobs feature module",
+      "status": "completed",
+      "blockedBy": [6],
+      "description": "**Goal:** Extract all types, queries, actions, and rendering from jobs pages into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/jobs/\", \"src/app/jobs/page.tsx\", \"src/app/jobs/[id]/edit/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"page.tsx ≤ 70 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 8,
+      "subject": "Task 6: Migrate workspace and CRM feature modules",
+      "status": "completed",
+      "blockedBy": [7],
+      "description": "**Goal:** Extract workspace dashboard and CRM pipeline logic into feature modules.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/workspace/\", \"src/features/crm/\", \"src/app/workspace/page.tsx\", \"src/app/crm/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"workspace/page.tsx ≤ 50 lines\", \"crm/page.tsx ≤ 50 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 9,
+      "subject": "Task 7: Migrate imports feature module",
+      "status": "completed",
+      "blockedBy": [8],
+      "description": "**Goal:** Extract types and queries for imports flow into feature module.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/imports/\", \"src/app/imports/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"imports/page.tsx ≤ 60 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 10,
+      "subject": "Task 8: Migrate AI assistant and settings feature modules",
+      "status": "completed",
+      "blockedBy": [9],
+      "description": "**Goal:** Extract types, queries, actions for AI and settings into feature modules.\n\n**Verify:** `npm run build` → exits 0\n\n```json:metadata\n{\"files\": [\"src/features/ai/\", \"src/features/settings/\", \"src/app/ai-assistant/page.tsx\", \"src/app/settings/page.tsx\"], \"verifyCommand\": \"npm run build\", \"acceptanceCriteria\": [\"ai-assistant/page.tsx ≤ 60 lines\", \"settings/page.tsx ≤ 60 lines\", \"npm run build exits 0\"]}\n```"
+    },
+    {
+      "id": 11,
+      "subject": "Task 9: Final cleanup — remove dead code, verify production build",
+      "status": "completed",
+      "blockedBy": [10],
+      "description": "**Goal:** Remove all remaining inline types and Server Actions from pages. Migrate data-hub. Run final build.\n\n**Verify:** `npm run build && npx tsc --noEmit` → both exit 0\n\n```json:metadata\n{\"files\": [\"src/features/data-hub/\", \"src/app/data-hub/page.tsx\"], \"verifyCommand\": \"npm run build && npx tsc --noEmit\", \"acceptanceCriteria\": [\"grep for inline types returns no matches in src/app/\", \"npm run build exits 0\", \"npx tsc --noEmit exits 0\"]}\n```"
+    }
+  ],
+  "lastUpdated": "2026-05-13T09:00:00Z"
+}
