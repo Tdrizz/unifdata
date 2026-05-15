@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     const startedAt = new Date().toISOString();
 
     try {
-      await refreshIntegrationToken(supabase as any, integration);
+      await refreshIntegrationToken(supabase, integration);
 
       const { data: freshIntegration } = await supabase
         .from("integrations")
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
         .single();
 
       const result = await syncer.sync(
-        supabase as any,
+        supabase,
         integration.company_id,
         freshIntegration!,
       );

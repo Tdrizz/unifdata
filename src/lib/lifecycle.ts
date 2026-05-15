@@ -23,7 +23,7 @@ export function isAcceptedOpportunityStatus(status: string | null) {
 }
 
 type SupabaseWriteClient = {
-  from: (table: string) => any;
+  from: SupabaseClient<Database>["from"];
 };
 
 export async function syncAcceptedOpportunity({
@@ -144,3 +144,5 @@ export async function syncAcceptedOpportunity({
     throw new Error(updateRevenueError.message);
   }
 }
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/db";

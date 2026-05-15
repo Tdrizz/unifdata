@@ -259,13 +259,13 @@ export default function DocsPage() {
               Preview
             </Link>
             <Link
-              href="/login"
+              href="/sign-in"
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Log in
             </Link>
             <Link
-              href="/signup"
+              href="/waitlist"
               className="rounded-full bg-[#1D2D3E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Get started
@@ -834,7 +834,7 @@ Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested
               </p>
               <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <Link
-                  href="/signup"
+                  href="/waitlist"
                   className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
                 >
                   Create workspace

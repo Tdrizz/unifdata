@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { requireSubscription } from "@/lib/auth/requireSubscription";
 import { redirect } from "next/navigation";
 
 export async function createCompanyAction(formData: FormData) {
+  const user = await requireSubscription();
   const companyName = String(formData.get("companyName") || "").trim();
   const industry = String(formData.get("industry") || "").trim();
   const businessSector = String(
@@ -16,22 +18,28 @@ export async function createCompanyAction(formData: FormData) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .insert({
+      name: companyName,
+      industry: industry || null,
+      business_sector: businessSector || "general",
+    })
+    .select("id")
+    .single();
 
-  if (!user) {
-    redirect("/login");
+  if (companyError) {
+    throw new Error(companyError.message);
   }
 
-  const { error } = await supabase.rpc("create_company", {
-    p_name: companyName,
-    p_industry: industry || null,
-    p_business_sector: businessSector || "general",
+  const { error: memberError } = await supabase.from("company_members").insert({
+    company_id: company.id,
+    user_id: user.profileId,
+    role: "owner",
   });
 
-  if (error) {
-    throw new Error(error.message);
+  if (memberError) {
+    throw new Error(memberError.message);
   }
 
   redirect("/workspace");

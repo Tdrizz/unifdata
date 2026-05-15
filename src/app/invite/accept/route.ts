@@ -1,41 +1,45 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAppUser } from "@/lib/auth/session";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
+  const user = await requireAppUser();
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
+  if (!user) {
     return NextResponse.redirect(
-      new URL("/login?error=invite_failed", request.url),
+      new URL("/sign-in?error=invite_failed", request.url),
     );
   }
 
-  const companyId = user.user_metadata?.company_id as string | undefined;
-  // role will be used once Task 53 migration adds the role column to company_members
-  // const role = (user.user_metadata?.invited_role as string | undefined) ?? "member";
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.profileId)
+    .maybeSingle();
 
-  if (!companyId) {
+  const companyId = user.invitationCompanyId;
+
+  if (!profile || !companyId) {
     return NextResponse.redirect(
-      new URL("/login?error=invite_missing_company", request.url),
+      new URL("/onboarding", request.url),
     );
   }
 
-  // Use minimal insert — role column will be added by Task 53 migration
   const { error: memberError } = await supabase
     .from("company_members")
     .upsert(
-      { user_id: user.id, company_id: companyId },
+      {
+        user_id: user.profileId,
+        company_id: companyId,
+        role: user.invitationRole ?? "member",
+      },
       { onConflict: "user_id,company_id" },
     );
 
   if (memberError) {
     return NextResponse.redirect(
-      new URL("/login?error=invite_failed", request.url),
+      new URL("/sign-in?error=invite_failed", request.url),
     );
   }
 

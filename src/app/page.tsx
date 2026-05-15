@@ -166,14 +166,14 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/login"
+              href="/sign-in"
               className="rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white"
             >
               Log in
             </Link>
 
             <Link
-              href="/signup"
+              href="/waitlist"
               className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
             >
               Get started
@@ -199,7 +199,7 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/signup"
+                href="/waitlist"
                 className="rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
                 Get started
@@ -367,7 +367,7 @@ export default function HomePage() {
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
-                href="/signup"
+                href="/waitlist"
                 className="rounded-2xl bg-[#7A8C2A] px-6 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
                 Get started
@@ -432,7 +432,7 @@ export default function HomePage() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/signup"
+                  href="/waitlist"
                   className="flex-1 rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
                 >
                   Get started

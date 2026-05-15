@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProductMark } from "@/components/ProductMark";
+import { CheckoutButton } from "@/components/pricing/CheckoutButton";
 
 const features = [
   "Industry-aware CRM workspace",
@@ -44,16 +45,16 @@ export default function PricingPage() {
         </Link>
         <div className="flex items-center gap-2 text-sm">
           <Link
-            href="/login"
+            href="/sign-in"
             className="rounded-full px-4 py-2 font-medium text-slate-300 hover:bg-white/10 hover:text-white"
           >
             Log in
           </Link>
           <Link
-            href="/signup"
+            href="/waitlist"
             className="rounded-full bg-white px-4 py-2 font-semibold text-slate-950 hover:bg-slate-200"
           >
-            Get started
+            Request access
           </Link>
         </div>
       </nav>
@@ -127,14 +128,10 @@ export default function PricingPage() {
             </ul>
 
             <div className="mt-8">
-              <Link
-                href="/signup"
-                className="block rounded-2xl bg-white px-5 py-4 text-center text-lg font-semibold text-slate-950 transition-colors hover:bg-slate-200"
-              >
-                Get started
-              </Link>
+              <CheckoutButton />
               <p className="mt-3 text-center text-xs text-slate-500">
-                We&apos;ll reach out to schedule your onboarding after signup.
+                Invited users can subscribe immediately. New companies should
+                request beta access first.
               </p>
             </div>
           </div>
@@ -183,10 +180,10 @@ export default function PricingPage() {
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="/signup"
+              href="/waitlist"
               className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
             >
-              Get started
+              Request access
             </Link>
             <Link
               href="/"

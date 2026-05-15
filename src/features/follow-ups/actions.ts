@@ -19,12 +19,14 @@ export async function createFollowUpAction(
 
   const message = getFormString(formData, "message");
   if (!message) return { fieldErrors: { message: "Follow-up action is required." } };
+  const dueDate = getFormString(formData, "due_date");
+  if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
   const { error } = await supabase.from("follow_ups").insert({
     company_id: company.id,
     customer_id: getFormString(formData, "customer_id") || null,
     message,
-    due_date: getFormString(formData, "due_date") || null,
+    due_date: dueDate,
     status: getFormString(formData, "status") || "Open",
   });
 
@@ -46,14 +48,16 @@ export async function updateFollowUpAction(
 
   const message = getFormString(formData, "message");
   if (!message) return { fieldErrors: { message: "Follow-up action is required." } };
+  const dueDate = getFormString(formData, "due_date");
+  if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
   const { error } = await supabase
     .from("follow_ups")
     .update({
       customer_id: getFormString(formData, "customer_id") || null,
       message,
-      due_date: getFormString(formData, "due_date") || null,
-      status: getFormString(formData, "status") || null,
+      due_date: dueDate,
+      status: getFormString(formData, "status") || "Open",
     })
     .eq("id", id)
     .eq("company_id", company.id);

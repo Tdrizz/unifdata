@@ -18,7 +18,7 @@ export const Dashboard: React.FC = () => {
     <AbsoluteFill style={{ background: "#0a0f1e" }}>
       <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 80px", gap: 40 }}>
         <div style={{ opacity: titleOpacity, transform: `translateY(${titleY}px)`, textAlign: "center" }}>
-          <p style={{ fontSize: 16, color: C.accent, fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>Today's brief</p>
+          <p style={{ fontSize: 16, color: C.accent, fontWeight: 600, margin: "0 0 12px", fontFamily: "system-ui, sans-serif", textTransform: "uppercase", letterSpacing: "3px" }}>Today&apos;s brief</p>
           <h2 style={{ fontSize: 48, fontWeight: 800, color: "#f1f5f9", margin: 0, fontFamily: "system-ui, sans-serif" }}>Your operating command center</h2>
         </div>
         <div style={{ opacity: browserSpring, transform: `scale(${0.88 + browserSpring * 0.12}) translateY(${(1 - browserSpring) * 24}px)`, width: "100%", borderRadius: 14, overflow: "hidden", border: "1px solid #334155", boxShadow: "0 32px 64px rgba(0,0,0,0.7)" }}>

@@ -1,28 +1,33 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createAdminClient } from "./admin";
+import { getCurrentAppUser } from "@/lib/auth/session";
 
 export async function createClient() {
-  const cookieStore = await cookies();
+  const supabase = createAdminClient();
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
+  Object.assign(supabase.auth, {
+    async getUser() {
+      const user = await getCurrentAppUser();
+
+      return {
+        data: {
+          user: user
+            ? {
+                id: user.profileId,
+                email: user.email,
+                user_metadata: {
+                  clerk_user_id: user.clerkUserId,
+                  full_name: user.fullName,
+                  subscribed: user.subscribed,
+                  company_id: user.invitationCompanyId,
+                  invited_role: user.invitationRole,
+                },
+              }
+            : null,
         },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Some server contexts cannot set cookies directly.
-            // Middleware will handle session refresh later.
-          }
-        },
-      },
+        error: null,
+      };
     },
-  );
+  });
+
+  return supabase;
 }

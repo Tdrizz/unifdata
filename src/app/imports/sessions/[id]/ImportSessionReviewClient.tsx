@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { LinkageSuggestion } from "@/lib/import-engine";
 
-type ImportRow = {
+export type ImportRow = {
   id: string;
   row_number: number;
   raw_data: Record<string, unknown>;

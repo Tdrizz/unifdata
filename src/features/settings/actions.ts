@@ -1,9 +1,9 @@
 "use server";
 
+import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { getCurrentCompany, getCurrentCompanyId, getCurrentUserRole } from "@/lib/current-company";
 import { industryProfiles } from "@/lib/industry-profiles";
 
@@ -162,14 +162,18 @@ export async function inviteMember(email: string, role: "owner" | "member" = "me
   const currentRole = await getCurrentUserRole();
   if (currentRole !== "owner") throw new Error("Only owners can invite members");
 
-  const supabase = createServiceClient();
+  const client = await clerkClient();
 
-  const { error } = await (supabase.auth.admin as any).inviteUserByEmail(email, {
-    data: { company_id: companyId, invited_role: role },
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/invite/accept`,
+  await client.invitations.createInvitation({
+    emailAddress: email,
+    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/invite/accept`,
+    notify: true,
+    ignoreExisting: true,
+    publicMetadata: {
+      company_id: companyId,
+      invited_role: role,
+    },
   });
-
-  if (error) return { error: error.message };
 
   revalidatePath("/settings");
   return { ok: true as const };
