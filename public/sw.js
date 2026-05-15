@@ -1,4 +1,4 @@
-const CACHE_NAME = "frontierops-shell-v1";
+const CACHE_NAME = "unifdata-shell-v2";
 const SHELL_URLS = ["/", "/workspace"];
 
 self.addEventListener("install", (event) => {
