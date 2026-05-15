@@ -8,6 +8,7 @@ export async function revertImportSession(sessionId: string) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
+  if (currentCompany.role !== "owner") throw new Error("Only owners can revert imports");
   const { company } = currentCompany;
 
   // Security: verify session belongs to this company

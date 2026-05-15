@@ -83,6 +83,7 @@ export async function bulkDeleteCustomers(ids: string[]): Promise<ActionState> {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return { error: "Unauthorized" };
+  if (currentCompany.role !== "owner") return { error: "Only owners can delete customers" };
   const { company } = currentCompany;
 
   const { error } = await supabase
@@ -101,6 +102,7 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
+  if (currentCompany.role !== "owner") throw new Error("Only owners can merge customers");
   const { company } = currentCompany;
 
   // Security: verify both customers belong to this company
