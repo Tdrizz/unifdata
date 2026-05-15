@@ -15,12 +15,12 @@ export function SectionCard({
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-slate-950">
+          <h2 className="border-l-2 border-[#7A8C2A] pl-3 text-lg font-semibold tracking-tight text-slate-950">
             {title}
           </h2>
 
           {description && (
-            <p className="mt-1 text-sm leading-6 text-slate-500">
+            <p className="mt-1 pl-3 text-sm leading-6 text-slate-500">
               {description}
             </p>
           )}

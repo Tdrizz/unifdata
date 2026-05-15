@@ -1,11 +1,11 @@
 const toneStyles = {
   default: {
     card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-slate-300",
+    accent: "bg-[#7A8C2A]",
   },
   subtle: {
     card: "border-slate-200 bg-slate-50 text-slate-950",
-    accent: "bg-slate-400",
+    accent: "bg-[#a8b96a]",
   },
   positive: {
     card: "border-slate-200 bg-white text-slate-950",
@@ -27,7 +27,7 @@ const toneStyles = {
   },
   blue: {
     card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-slate-400",
+    accent: "bg-[#7A8C2A]",
   },
   amber: {
     card: "border-amber-200 bg-amber-50 text-amber-950",

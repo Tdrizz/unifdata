@@ -58,7 +58,7 @@ export function AppNav({
     <nav className="space-y-6">
       {navGroups.map((group) => (
         <div key={group.label}>
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
             {group.label}
           </p>
 
