@@ -133,6 +133,14 @@ export async function POST(request: Request) {
 
     const file = uploadedFile as File;
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "File too large. Maximum size is 10MB." },
+        { status: 400 },
+      );
+    }
+
     const isXlsx =
       file.name.endsWith(".xlsx") ||
       file.type ===
@@ -182,7 +190,14 @@ export async function POST(request: Request) {
     let mapping = guessImportMapping(headers, recordTypeValue);
 
     if (typeof mappingValue === "string" && mappingValue.trim()) {
-      mapping = JSON.parse(mappingValue) as ImportMapping;
+      try {
+        const parsed = JSON.parse(mappingValue) as unknown;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          mapping = parsed as ImportMapping;
+        }
+      } catch {
+        // ignore malformed mapping, use auto-guessed
+      }
     }
 
     const requestUrl = new URL(request.url);

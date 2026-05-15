@@ -40,7 +40,7 @@ export async function revertImportSession(sessionId: string) {
     }
 
     for (const [table, ids] of Object.entries(byTable)) {
-      await (supabase.from(table as never) as any).delete().in("id", ids);
+      await (supabase.from(table as never) as any).delete().in("id", ids).eq("company_id", company.id);
     }
   }
 

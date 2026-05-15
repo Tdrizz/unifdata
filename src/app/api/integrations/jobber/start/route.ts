@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const state = crypto.randomUUID();
+  const state = `${crypto.randomUUID()}:${companyId}`;
   const redirectUri = `${new URL(request.url).origin}/api/integrations/jobber/callback`;
 
   const authUrl = new URL("https://api.getjobber.com/api/oauth/authorize");

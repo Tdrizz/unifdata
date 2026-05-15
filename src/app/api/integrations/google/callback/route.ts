@@ -58,6 +58,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Verify the companyId embedded in state matches the current session
+  const stateCompanyId = state.split(":")[1];
+  if (!stateCompanyId || stateCompanyId !== companyId) {
+    return NextResponse.redirect(
+      new URL("/imports?google_error=invalid_state", request.url),
+    );
+  }
+
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 

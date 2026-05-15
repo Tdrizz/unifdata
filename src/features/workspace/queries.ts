@@ -20,9 +20,8 @@ export async function getWorkspaceData(
   supabase: SupabaseClient<Database>,
   companyId: string,
 ): Promise<WorkspaceData> {
-  // Calculate 6 months ago for sales filter
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // Calculate 6 months ago for sales filter (~183 days, avoids setMonth overflow on month-end dates)
+  const sixMonthsAgo = new Date(Date.now() - 183 * 24 * 60 * 60 * 1000);
   const sixMonthsAgoStr = sixMonthsAgo.toISOString().split("T")[0]; // "YYYY-MM-DD"
 
   const [

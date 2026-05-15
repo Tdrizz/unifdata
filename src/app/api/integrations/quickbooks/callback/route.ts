@@ -53,6 +53,11 @@ export async function GET(request: Request) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) return NextResponse.redirect(new URL("/login", request.url));
 
+  const stateCompanyId = state?.split(":")[1];
+  if (!stateCompanyId || stateCompanyId !== companyId) {
+    return NextResponse.redirect(new URL("/settings?error=invalid_state", request.url));
+  }
+
   const clientId = process.env.QUICKBOOKS_CLIENT_ID;
   const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET;
 

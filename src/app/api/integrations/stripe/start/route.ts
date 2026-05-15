@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const state = crypto.randomUUID();
+  const state = `${crypto.randomUUID()}:${companyId}`;
   const redirectUri = `${new URL(request.url).origin}/api/integrations/stripe/callback`;
 
   const authUrl = new URL("https://connect.stripe.com/oauth/authorize");

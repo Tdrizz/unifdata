@@ -71,6 +71,7 @@ export async function AppShell({
                 <NotificationBell
                   companyId={companyId}
                   initialNotifications={initialNotifications ?? []}
+                  variant="header"
                 />
               )}
               <div className="min-w-0 flex-1">
@@ -108,7 +109,7 @@ export async function AppShell({
 
           </header>
 
-          <main className="flex-1 pb-16 md:pb-0">
+          <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             <div className="mx-auto w-full max-w-360 px-4 py-6 md:px-8 md:py-8">
               {children}
             </div>

@@ -228,7 +228,7 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
       {/* Mobile stage list */}
       <div className="block md:hidden space-y-4">
         {/* Horizontal scrollable stage chips */}
-        <div className="flex gap-2 overflow-x-auto px-4 py-2 pb-1 -mx-0">
+        <div className="flex gap-2 overflow-x-auto px-4 py-2 pb-1 -mx-4">
           {stageGroups.map((group) => (
             <div
               key={group.status}
@@ -245,9 +245,8 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
         </div>
 
         {/* Lead cards for each non-empty active stage */}
-        {stageGroups.filter(g => !isClosed(g.status) && !isWon(g.status) && !isLost(g.status)).map((group) => {
+        {stageGroups.filter(g => !isClosed(g.status) && !isWon(g.status) && !isLost(g.status) && g.count > 0).map((group) => {
           const groupLeads = leads.filter((o) => (o.status || "New") === group.status).slice(0, 4);
-          if (groupLeads.length === 0) return null;
           return (
             <div key={group.status}>
               <div className="flex items-center gap-2 px-1 mb-2">

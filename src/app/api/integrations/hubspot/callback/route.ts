@@ -42,6 +42,11 @@ export async function GET(request: Request) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) return NextResponse.redirect(new URL("/login", request.url));
 
+  const stateCompanyId = state?.split(":")[1];
+  if (!stateCompanyId || stateCompanyId !== companyId) {
+    return NextResponse.redirect(new URL("/settings?error=invalid_state", request.url));
+  }
+
   const redirectUri = `${requestUrl.origin}/api/integrations/hubspot/callback`;
   const tokenData = await exchangeHubSpotCode(code, redirectUri);
 

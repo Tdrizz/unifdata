@@ -142,8 +142,9 @@ export function MobileTabBar({
 
       {/* More drawer */}
       {moreOpen && (
-        <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-lg md:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        <div
+          className="fixed left-0 right-0 z-50 border-t border-slate-200 bg-white shadow-lg md:hidden"
+          style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
         >
           <div className="grid grid-cols-3 divide-x divide-slate-100">
             {MORE_ITEMS.map(({ href, label, Icon }) => {

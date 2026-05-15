@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const state = crypto.randomUUID();
+  const state = `${crypto.randomUUID()}:${companyId}`;
   const redirectUri = `${new URL(request.url).origin}/api/integrations/google/callback`;
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");

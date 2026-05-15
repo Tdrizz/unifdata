@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     .eq("status", "active");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Sync failed" }, { status: 500 });
   }
 
   const results: {

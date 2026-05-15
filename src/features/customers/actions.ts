@@ -121,7 +121,7 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
   for (const table of tables) {
     await supabase
       .from(table as never)
-      .update({ customer_id: winnerId } as never)
+      .update({ customer_id: winnerId, updated_at: new Date().toISOString() } as never)
       .eq("customer_id" as never, loserId);
   }
 
