@@ -144,13 +144,13 @@ export default function PreviewPage() {
               Docs
             </Link>
             <Link
-              href="/login"
+              href="/sign-in"
               className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Log in
             </Link>
             <Link
-              href="/signup"
+              href="/waitlist"
               className="rounded-full bg-[#1D2D3E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Start
@@ -176,7 +176,7 @@ export default function PreviewPage() {
               </p>
             </div>
             <Link
-              href="/signup"
+              href="/waitlist"
               className="shrink-0 rounded-2xl bg-[#1D2D3E] px-6 py-3 text-center text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Create workspace →
@@ -281,7 +281,7 @@ export default function PreviewPage() {
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
               <Link
-                href="/signup"
+                href="/waitlist"
                 className="rounded-2xl bg-white px-6 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-200"
               >
                 Create workspace

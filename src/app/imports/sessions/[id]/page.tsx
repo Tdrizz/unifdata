@@ -7,7 +7,10 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { ImportSessionReviewClient } from "./ImportSessionReviewClient";
+import {
+  ImportSessionReviewClient,
+  type ImportRow,
+} from "./ImportSessionReviewClient";
 
 function getStatusTone(status: string | null) {
   if (status === "completed" || status === "active" || status === "committed") {
@@ -186,7 +189,10 @@ export default async function ImportSessionPage({
         >
           {rows && rows.length > 0 ? (
             <div className="p-5">
-              <ImportSessionReviewClient session={session} rows={rows} />
+              <ImportSessionReviewClient
+                session={session}
+                rows={rows as unknown as ImportRow[]}
+              />
             </div>
           ) : (
             <EmptyState

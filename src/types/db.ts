@@ -761,19 +761,88 @@ export type Database = {
       }
       profiles: {
         Row: {
+          clerk_user_id: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
         }
         Insert: {
+          clerk_user_id?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
+          id?: string
+        }
+        Update: {
+          clerk_user_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      stripe_events: {
+        Row: {
+          created_at: string
           id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type: string
         }
         Update: {
           created_at?: string
-          full_name?: string | null
           id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      waitlist_requests: {
+        Row: {
+          company: string
+          company_size: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          use_case: string
+          website: string | null
+        }
+        Insert: {
+          company: string
+          company_size: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          status?: string
+          use_case: string
+          website?: string | null
+        }
+        Update: {
+          company?: string
+          company_size?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          use_case?: string
+          website?: string | null
         }
         Relationships: []
       }

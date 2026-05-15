@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import type { Json } from "@/types/db";
 import {
   cleanImportValue,
   importFieldDefinitions,
@@ -268,10 +269,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       const { error: updateError } = await supabase
         .from("import_session_rows")
         .update({
-          normalized_data: normalizedData,
+          normalized_data: normalizedData as Json,
           action: nextAction,
           status: hasErrors ? "error" : "valid",
-          validation_errors: validationErrors,
+          validation_errors: validationErrors as Json,
           duplicate_reason: null,
           match_confidence: null,
           target_id: nextAction === "create" ? null : row.target_id,

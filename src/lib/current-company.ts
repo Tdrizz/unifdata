@@ -1,15 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireSubscription } from "@/lib/auth/requireSubscription";
 
 export async function getCurrentCompany() {
+  const appUser = await requireSubscription();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
 
   const { data, error } = await supabase
     .from("company_members")
@@ -26,10 +20,10 @@ export async function getCurrentCompany() {
         plan,
         status,
         created_at
-      )
+    )
     `,
     )
-    .eq("user_id", user.id)
+    .eq("user_id", appUser.profileId)
     .limit(1)
     .single();
 

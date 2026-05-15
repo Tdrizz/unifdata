@@ -43,11 +43,18 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const { error } = await supabase
-        .from(update.table)
-        .update({ [update.field]: update.value })
-        .eq("id", update.record_id)
-        .eq("company_id", companyId);
+      const { error } =
+        update.table === "jobs"
+          ? await supabase
+              .from("jobs")
+              .update({ lead_id: update.value })
+              .eq("id", update.record_id)
+              .eq("company_id", companyId)
+          : await supabase
+              .from("sales")
+              .update({ job_id: update.value })
+              .eq("id", update.record_id)
+              .eq("company_id", companyId);
 
       if (!error) {
         appliedCount += 1;

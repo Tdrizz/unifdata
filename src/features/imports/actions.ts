@@ -26,7 +26,7 @@ export async function revertImportSession(sessionId: string) {
   const { data: rows } = await supabase
     .from("import_session_rows")
     .select("target_table, target_id")
-    .eq("session_id", sessionId)
+    .eq("import_session_id", sessionId)
     .eq("action", "create")
     .not("target_id", "is", null);
 
@@ -40,7 +40,17 @@ export async function revertImportSession(sessionId: string) {
     }
 
     for (const [table, ids] of Object.entries(byTable)) {
-      await (supabase.from(table as never) as any).delete().in("id", ids).eq("company_id", company.id);
+      if (table === "customers") {
+        await supabase.from("customers").delete().in("id", ids).eq("company_id", company.id);
+      } else if (table === "leads") {
+        await supabase.from("leads").delete().in("id", ids).eq("company_id", company.id);
+      } else if (table === "jobs") {
+        await supabase.from("jobs").delete().in("id", ids).eq("company_id", company.id);
+      } else if (table === "sales") {
+        await supabase.from("sales").delete().in("id", ids).eq("company_id", company.id);
+      } else if (table === "follow_ups") {
+        await supabase.from("follow_ups").delete().in("id", ids).eq("company_id", company.id);
+      }
     }
   }
 
