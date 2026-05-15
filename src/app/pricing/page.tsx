@@ -15,7 +15,7 @@ const features = [
 const faqs = [
   {
     q: "What's included in the $300 setup fee?",
-    a: "A hands-on onboarding session where we configure your workspace, import your existing data, set up your industry profile, and make sure your team is ready to use FrontierOps on day one.",
+    a: "A hands-on onboarding session where we configure your workspace, import your existing data, set up your industry profile, and make sure your team is ready to use UnifData on day one.",
   },
   {
     q: "When do I get charged?",
@@ -200,7 +200,7 @@ export default function PricingPage() {
 
       <footer className="border-t border-slate-200 bg-white px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-          <p>© 2026 FrontierOps. All rights reserved.</p>
+          <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/privacy" className="font-semibold hover:text-slate-950">
               Privacy

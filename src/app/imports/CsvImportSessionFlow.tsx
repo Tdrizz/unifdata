@@ -237,7 +237,7 @@ export function CsvImportSessionFlow() {
             Review column mapping
           </p>
           <p className="text-sm text-slate-500">
-            We matched your columns to FrontierOps fields. Adjust any that look
+            We matched your columns to UnifData fields. Adjust any that look
             wrong, then confirm.
           </p>
           <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">

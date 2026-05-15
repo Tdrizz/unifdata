@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "FrontierOps – CRM & Data Management for Local Businesses",
-    template: "%s | FrontierOps",
+    default: "UnifData – Unified Business Data. Clearer Decisions.",
+    template: "%s | UnifData",
   },
   description:
-    "FrontierOps organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Built for home services, contractors, medical offices, and local businesses.",
+    "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, medical offices, and local businesses.",
   keywords: [
     "CRM for local business",
     "small business CRM",
@@ -34,20 +34,20 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "FrontierOps",
+    title: "UnifData",
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#0f172a",
+    "theme-color": "#1D2D3E",
   },
   icons: {
-    icon: "/frontierops-mark.svg",
+    icon: "/unifdata-mark.svg",
   },
   openGraph: {
-    title: "FrontierOps – CRM & Data Management for Local Businesses",
+    title: "UnifData – Unified Business Data. Clearer Decisions.",
     description:
       "Organize your customers, jobs, follow-ups, and revenue into one clean workspace. Industry-aware CRM built for local businesses.",
-    siteName: "FrontierOps",
+    siteName: "UnifData",
     type: "website",
   },
 };
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "FrontierOps",
+  name: "UnifData",
   applicationCategory: "BusinessApplication",
   description:
     "Industry-aware CRM and data management for local businesses. Organize customers, jobs, follow-ups, and revenue in one workspace.",

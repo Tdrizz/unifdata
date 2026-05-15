@@ -61,7 +61,7 @@ export function AuthFrame({
 
               <div className="mt-8">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                  FrontierOps
+                  UnifData
                 </p>
 
                 <h1 className="mt-3 text-3xl font-semibold tracking-tight">

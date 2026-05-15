@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#1D2D3E"/>
+  <!-- Gear outer ring -->
+  <circle cx="256" cy="256" r="170" fill="none" stroke="#E8EDF2" stroke-width="28"/>
+  <!-- Gear teeth (8 teeth) -->
+  <rect x="238" y="64" width="36" height="52" rx="8" fill="#E8EDF2"/>
+  <rect x="238" y="396" width="36" height="52" rx="8" fill="#E8EDF2"/>
+  <rect x="64" y="238" width="52" height="36" rx="8" fill="#E8EDF2"/>
+  <rect x="396" y="238" width="52" height="36" rx="8" fill="#E8EDF2"/>
+  <rect x="138" y="100" width="36" height="52" rx="8" fill="#E8EDF2" transform="rotate(-45 156 126)"/>
+  <rect x="338" y="100" width="36" height="52" rx="8" fill="#E8EDF2" transform="rotate(45 356 126)"/>
+  <rect x="138" y="360" width="36" height="52" rx="8" fill="#E8EDF2" transform="rotate(45 156 386)"/>
+  <rect x="338" y="360" width="36" height="52" rx="8" fill="#E8EDF2" transform="rotate(-45 356 386)"/>
+  <!-- Inner fill to mask ring interior -->
+  <circle cx="256" cy="256" r="142" fill="#1D2D3E"/>
+  <!-- USB / circuit fork symbol in olive green -->
+  <!-- Stem -->
+  <line x1="256" y1="188" x2="256" y2="272" stroke="#7A8C2A" stroke-width="20" stroke-linecap="round"/>
+  <!-- Left arm -->
+  <line x1="256" y1="220" x2="196" y2="220" stroke="#7A8C2A" stroke-width="18" stroke-linecap="round"/>
+  <!-- Right arm -->
+  <line x1="256" y1="252" x2="316" y2="252" stroke="#7A8C2A" stroke-width="18" stroke-linecap="round"/>
+  <!-- Left terminal (circle) -->
+  <circle cx="192" cy="220" r="20" fill="none" stroke="#7A8C2A" stroke-width="16"/>
+  <!-- Right terminal (square) -->
+  <rect x="302" y="236" width="32" height="32" rx="5" fill="none" stroke="#7A8C2A" stroke-width="16"/>
+  <!-- Bottom connector dot -->
+  <circle cx="256" cy="318" r="24" fill="#7A8C2A"/>
+</svg>

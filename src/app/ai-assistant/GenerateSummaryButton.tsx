@@ -79,7 +79,7 @@ export function GenerateSummaryButton() {
           </h2>
 
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-            FrontierOps sends Gemini a compact view of your workspace data, then
+            UnifData sends Gemini a compact view of your workspace data, then
             saves the operating brief here. One brief per 10 minutes.
           </p>
         </div>

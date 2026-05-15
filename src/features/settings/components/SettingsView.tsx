@@ -142,7 +142,7 @@ export function SettingsView({
                   name="name"
                   required
                   defaultValue={company.name || ""}
-                  placeholder="FrontierOps Demo Company"
+                  placeholder="UnifData Demo Company"
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </label>
@@ -234,7 +234,7 @@ export function SettingsView({
 
           <SectionCard
             title="Launch tools"
-            description="Status for the tools FrontierOps uses."
+            description="Status for the tools UnifData uses."
           >
             <div className="space-y-3 p-5">
               <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -279,7 +279,7 @@ export function SettingsView({
 
       <SectionCard
         title="Data integrations"
-        description="Connect your business tools. Once connected, FrontierOps syncs their data automatically every day — no CSV exports needed."
+        description="Connect your business tools. Once connected, UnifData syncs their data automatically every day — no CSV exports needed."
       >
         <div className="divide-y divide-slate-100">
           {[

@@ -5,7 +5,7 @@ import { ProductMark } from "@/components/ProductMark";
 export const metadata: Metadata = {
   title: "Product Preview",
   description:
-    "See how FrontierOps adapts to different business types — home services, construction, medical, professional services, and general business.",
+    "See how UnifData adapts to different business types — home services, construction, medical, professional services, and general business.",
 };
 
 const sectors = [
@@ -169,7 +169,7 @@ export default function PreviewPage() {
                 One operating system. Different business models.
               </h1>
               <p className="mt-4 text-base leading-8 text-slate-600">
-                FrontierOps adapts its dashboard language and metrics to the
+                UnifData adapts its dashboard language and metrics to the
                 type of company using it. A medical office, contractor, and home
                 services crew should not all run from the same generic
                 workspace.
