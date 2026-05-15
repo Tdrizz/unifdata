@@ -12,6 +12,8 @@ import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone 
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
 import { JobCreateForm } from "./JobCreateForm";
+import { JobsCalendarToggle } from "./JobsCalendarToggle";
+import type { CalendarEvent } from "@/components/WeeklyCalendar";
 
 const PAGE_SIZE = 50;
 
@@ -185,6 +187,20 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
     .map(([, group]) => group)
     .sort((a, b) => b.count - a.count);
 
+  const calendarEvents: CalendarEvent[] = jobs
+    .filter((job) => Boolean(job.start_date))
+    .map((job) => {
+      const date = new Date(job.start_date!);
+      return {
+        id: job.id,
+        title: job.service_type ?? job.id,
+        date: job.start_date!,
+        hour: date.getHours(),
+        color: "bg-blue-500",
+        href: `/jobs/${job.id}/edit`,
+      };
+    });
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -250,6 +266,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
         <SearchInput placeholder={`Search ${profile.labels.jobPlural.toLowerCase()}…`} />
       </div>
 
+      <JobsCalendarToggle calendarEvents={calendarEvents}>
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
         <SectionCard
           title={selectedStage ? `${selectedStage} work` : "Work queue"}
@@ -428,6 +445,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
       </SectionCard>
 
       <Pagination count={count} pageSize={PAGE_SIZE} />
+      </JobsCalendarToggle>
     </div>
   );
 }
