@@ -1,42 +1,14 @@
-const toneStyles = {
-  default: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-[#7A8C2A]",
-  },
-  subtle: {
-    card: "border-slate-200 bg-slate-50 text-slate-950",
-    accent: "bg-[#a8b96a]",
-  },
-  positive: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-emerald-500",
-  },
-  warning: {
-    card: "border-amber-200 bg-amber-50 text-amber-950",
-    accent: "bg-amber-500",
-  },
-  danger: {
-    card: "border-red-200 bg-red-50 text-red-950",
-    accent: "bg-red-500",
-  },
-
-  // Backward-compatible aliases so older pages don't break
-  green: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-emerald-500",
-  },
-  blue: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-[#7A8C2A]",
-  },
-  amber: {
-    card: "border-amber-200 bg-amber-50 text-amber-950",
-    accent: "bg-amber-500",
-  },
-  red: {
-    card: "border-red-200 bg-red-50 text-red-950",
-    accent: "bg-red-500",
-  },
+const toneAccent: Record<string, string> = {
+  default: "bg-[#7A8C2A]",
+  subtle: "bg-[#a8b96a]",
+  positive: "bg-emerald-500",
+  warning: "bg-amber-500",
+  danger: "bg-red-500",
+  // backward-compatible aliases
+  green: "bg-emerald-500",
+  blue: "bg-[#7A8C2A]",
+  amber: "bg-amber-500",
+  red: "bg-red-500",
 };
 
 export function StatCard({
@@ -48,24 +20,22 @@ export function StatCard({
   label: string;
   value: string | number;
   helper?: string;
-  tone?: keyof typeof toneStyles;
+  tone?: keyof typeof toneAccent;
 }) {
-  const styles = toneStyles[tone];
+  const accent = toneAccent[tone] ?? toneAccent.default;
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-3xl border p-5 shadow-sm ${styles.card}`}
-    >
-      <div className={`absolute left-0 top-0 h-full w-1 ${styles.accent}`} />
+    <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className={`absolute left-0 top-0 h-full w-[3px] ${accent}`} />
 
-      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="text-[12px] font-medium text-slate-500">{label}</p>
 
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+      <p className="mt-1.5 text-[30px] font-bold tracking-[-0.025em] text-slate-950">
         {value}
       </p>
 
       {helper && (
-        <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
+        <p className="mt-1 text-[12px] font-medium text-slate-400">
           {helper}
         </p>
       )}
