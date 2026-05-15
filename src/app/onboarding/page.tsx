@@ -2,9 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { businessSectorOptions } from "@/lib/industry-profiles";
-import { createCompanyAction } from "./actions";
 import { ProductMark } from "@/components/ProductMark";
+import { OnboardingForm } from "./OnboardingForm";
 
 export default async function OnboardingPage() {
   const supabase = await createClient();
@@ -68,63 +67,8 @@ export default async function OnboardingPage() {
             </p>
           </div>
 
-          <form action={createCompanyAction} className="mt-8 space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-200">
-                Company name
-              </label>
-              <input
-                name="companyName"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-                placeholder="Arctic Ridge Services"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-200">
-                Business sector
-              </label>
-              <select
-                name="businessSector"
-                defaultValue="general"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-              >
-                {businessSectorOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs leading-5 text-slate-400">
-                This controls the language and priorities shown in dashboards.
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-slate-200">
-                Industry description
-              </label>
-              <input
-                name="industry"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-white/40"
-                placeholder="Excavation, dental office, landscaping, accounting, IT services..."
-              />
-            </div>
-
-            <button className="w-full rounded-2xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200">
-              Create company workspace
-            </button>
-          </form>
-
-          <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
-            <p className="font-semibold text-white">What changes by sector?</p>
-            <p className="mt-1">
-              Relationships become patients, clients, or customers.
-              Opportunities become treatment plans, quotes, estimates, or
-              proposals — and the dashboard, navigation, and reports follow the
-              same language throughout.
-            </p>
+          <div className="mt-8">
+            <OnboardingForm />
           </div>
         </section>
       </div>

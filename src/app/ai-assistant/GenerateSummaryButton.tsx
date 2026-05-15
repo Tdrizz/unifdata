@@ -64,7 +64,7 @@ export function GenerateSummaryButton() {
         : "mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700";
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
