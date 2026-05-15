@@ -97,6 +97,44 @@ export async function bulkDeleteCustomers(ids: string[]): Promise<ActionState> {
   return null;
 }
 
+export async function mergeCustomers(winnerId: string, loserId: string) {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+  const { company } = currentCompany;
+
+  // Security: verify both customers belong to this company
+  const { data: customers, error: fetchError } = await supabase
+    .from("customers")
+    .select("id, company_id")
+    .in("id", [winnerId, loserId])
+    .eq("company_id", company.id);
+
+  if (fetchError || !customers || customers.length !== 2) {
+    throw new Error("Invalid customer IDs or access denied");
+  }
+
+  // Re-parent all related records from loser to winner
+  const tables = ["leads", "jobs", "follow_ups", "sales"] as const;
+  for (const table of tables) {
+    await supabase
+      .from(table as never)
+      .update({ customer_id: winnerId } as never)
+      .eq("customer_id" as never, loserId);
+  }
+
+  // Delete the loser
+  await supabase.from("customers").delete().eq("id", loserId);
+
+  // Touch winner's updated_at
+  await supabase
+    .from("customers")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", winnerId);
+
+  revalidatePath("/customers");
+}
+
 export async function deleteCustomerAction(id: string) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
