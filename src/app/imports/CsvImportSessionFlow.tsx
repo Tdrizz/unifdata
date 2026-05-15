@@ -207,7 +207,7 @@ export function CsvImportSessionFlow() {
                 setFile(event.target.files?.[0] || null);
                 setMessage("");
               }}
-              className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+              className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-[#1D2D3E] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
             />
 
             {file && (
@@ -221,7 +221,7 @@ export function CsvImportSessionFlow() {
             type="button"
             onClick={analyzeCsv}
             disabled={!file || analyzing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {analyzing && (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -278,7 +278,7 @@ export function CsvImportSessionFlow() {
               type="button"
               onClick={confirmAndCreate}
               disabled={analyzing}
-              className="flex-1 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              className="flex-1 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-60"
             >
               {analyzing ? "Importing…" : "Confirm and import"}
             </button>

@@ -291,7 +291,7 @@ export function GoogleSheetsImportFlow() {
         type="button"
         onClick={openGooglePicker}
         disabled={loadingPicker || loadingTabs}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {(loadingPicker || loadingTabs) && (
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -357,7 +357,7 @@ export function GoogleSheetsImportFlow() {
             type="button"
             onClick={analyzeSheet}
             disabled={analyzing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {analyzing && (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

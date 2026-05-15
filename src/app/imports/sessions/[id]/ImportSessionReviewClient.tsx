@@ -722,7 +722,7 @@ export function ImportSessionReviewClient({
                               onClick={() =>
                                 updateRowAction(row.id, "update_existing")
                               }
-                              className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                              className="rounded-xl bg-[#1D2D3E] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-60"
                             >
                               Update matched record
                             </button>
@@ -839,7 +839,7 @@ export function ImportSessionReviewClient({
           type="button"
           onClick={commitImport}
           disabled={!canCommit || committing || cancelling}
-          className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 md:min-w-55"
+          className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60 md:min-w-55"
         >
           {session.status === "committed"
             ? "Import already committed"

@@ -42,7 +42,7 @@ export default async function FollowUpsPage({
           actions={
             <div className="flex flex-wrap gap-2">
               <Link href="/leads" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Opportunities</Link>
-              <Link href="/imports" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Import data</Link>
+              <Link href="/imports" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">Import data</Link>
             </div>
           }
         />
