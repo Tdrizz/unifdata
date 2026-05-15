@@ -30,6 +30,16 @@ export const metadata: Metadata = {
     "contractor CRM",
     "follow-up management",
   ],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "FrontierOps",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "theme-color": "#0f172a",
+  },
   icons: {
     icon: "/frontierops-mark.svg",
   },
@@ -72,6 +82,11 @@ export default function RootLayout({
         {children}
         <Toaster position="bottom-right" richColors />
         <ToastHandler />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});}`,
+          }}
+        />
       </body>
     </html>
   );
