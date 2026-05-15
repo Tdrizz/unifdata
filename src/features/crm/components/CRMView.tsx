@@ -183,7 +183,7 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/leads"
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Manage opportunities
             </Link>
@@ -290,6 +290,7 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
                             {formatCurrency(opportunity.estimated_value)}
                           </p>
                           <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
+
                           <p className="mt-1 text-sm font-semibold text-slate-700">
                             {opportunity.source || "Not set"}
                           </p>

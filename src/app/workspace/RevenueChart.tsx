@@ -86,7 +86,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
     <div>
       <div className="mb-3 flex items-center gap-4 text-xs font-medium text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 rounded-full bg-emerald-500" />
+          <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: "#7A8C2A" }} />
           Collected
         </span>
         <span className="flex items-center gap-1.5">
@@ -126,7 +126,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
           <path d={areaClose(totalPts)} fill="#e2e8f0" fillOpacity={0.4} />
 
           {/* Collected area */}
-          <path d={areaClose(collectedPts)} fill="#10b981" fillOpacity={0.12} />
+          <path d={areaClose(collectedPts)} fill="#7A8C2A" fillOpacity={0.12} />
 
           {/* Total line */}
           <path
@@ -141,7 +141,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
           <path
             d={collectedPath}
             fill="none"
-            stroke="#10b981"
+            stroke="#7A8C2A"
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -149,7 +149,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
 
           {/* Dots on collected line */}
           {collectedPts.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r={3} fill="#10b981" />
+            <circle key={i} cx={x} cy={y} r={3} fill="#7A8C2A" />
           ))}
 
           {/* Month labels */}

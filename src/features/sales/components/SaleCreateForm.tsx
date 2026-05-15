@@ -24,7 +24,7 @@ export function SaleCreateForm({ profile }: Props) {
             <p className="font-semibold text-slate-950">Quick add</p>
             <p className="mt-1 text-sm text-slate-500">Add collected revenue, unpaid invoices, deposits, or partial payments.</p>
           </div>
-          <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">Add revenue</span>
+          <span className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white group-open:hidden">Add revenue</span>
           <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">Close</span>
         </summary>
 
@@ -70,7 +70,7 @@ export function SaleCreateForm({ profile }: Props) {
           </div>
 
           <div className="mt-5 flex justify-end">
-            <button type="submit" className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+            <button type="submit" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">
               Create {profile.labels.saleSingular.toLowerCase()}
             </button>
           </div>

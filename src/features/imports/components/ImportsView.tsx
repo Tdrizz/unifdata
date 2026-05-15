@@ -151,7 +151,7 @@ export function ImportsView({
 
             <Link
               href="/workspace"
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Home
             </Link>
@@ -251,7 +251,7 @@ export function ImportsView({
 
                 <a
                   href="/api/integrations/google/start"
-                  className="mt-4 inline-flex rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="mt-4 inline-flex rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
                 >
                   Connect Google
                 </a>

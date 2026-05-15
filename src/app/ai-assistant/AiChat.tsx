@@ -73,7 +73,7 @@ export function AiChat() {
               key={q}
               type="button"
               onClick={() => sendMessage(q)}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="rounded-xl bg-slate-100 border border-slate-100 px-3 py-2.5 text-left text-[12.5px] text-slate-700 hover:bg-slate-200"
             >
               {q}
             </button>
@@ -96,8 +96,8 @@ export function AiChat() {
               <div
                 className={
                   message.role === "user"
-                    ? "max-w-[80%] rounded-2xl bg-slate-950 px-4 py-3 text-sm leading-6 text-white"
-                    : "max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700"
+                    ? "max-w-[80%] bg-[#7A8C2A] text-white px-4 py-2.5 rounded-[18px] rounded-br-md text-[13.5px] leading-[1.55]"
+                    : "max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13.5px] leading-[1.55] text-slate-700"
                 }
               >
                 {message.text}
@@ -138,12 +138,12 @@ export function AiChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask anything about your workspace..."
           disabled={loading}
-          className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-slate-300 disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#7A8C2A]/40 focus:border-[#7A8C2A] disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-xl bg-[#7A8C2A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6b7c24] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Send
         </button>

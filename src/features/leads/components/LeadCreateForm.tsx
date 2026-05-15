@@ -30,7 +30,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               Add a quote, request, estimate, deal, or potential job.
             </p>
           </div>
-          <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+          <span className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white group-open:hidden">
             Add {profile.labels.leadSingular.toLowerCase()}
           </span>
           <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
@@ -144,7 +144,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
           <div className="mt-5 flex justify-end">
             <button
               type="submit"
-              className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Create {profile.labels.leadSingular.toLowerCase()}
             </button>

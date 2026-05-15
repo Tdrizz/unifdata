@@ -123,6 +123,9 @@ export function CustomersTableClient({ customers, profile }: Props) {
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[33%] bg-[#1D2D3E] text-[13px] font-bold text-white">
+                    {(customer.name || "?")[0].toUpperCase()}
+                  </span>
                   <p className="font-semibold text-slate-950">
                     {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
                   </p>
