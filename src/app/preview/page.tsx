@@ -151,7 +151,7 @@ export default function PreviewPage() {
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-full bg-[#1D2D3E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Start
             </Link>
@@ -177,7 +177,7 @@ export default function PreviewPage() {
             </div>
             <Link
               href="/signup"
-              className="shrink-0 rounded-2xl bg-slate-950 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800"
+              className="shrink-0 rounded-2xl bg-[#1D2D3E] px-6 py-3 text-center text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Create workspace →
             </Link>
@@ -267,7 +267,7 @@ export default function PreviewPage() {
         </div>
 
         {/* CTA */}
-        <section className="my-10 rounded-4xl bg-slate-950 p-10 text-white">
+        <section className="my-10 rounded-4xl bg-[#1D2D3E] p-10 text-white">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight">

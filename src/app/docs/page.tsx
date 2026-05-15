@@ -266,7 +266,7 @@ export default function DocsPage() {
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-full bg-[#1D2D3E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Get started
             </Link>
@@ -436,7 +436,7 @@ export default function DocsPage() {
                     key={item.title}
                     className="grid gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5 md:grid-cols-[64px_1fr_auto]"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1D2D3E] text-sm font-semibold text-white">
                       {index + 1}
                     </div>
                     <div>
@@ -700,7 +700,7 @@ export default function DocsPage() {
                     </code>
                     <span>
                       {col.required ? (
-                        <span className="rounded-full bg-slate-950 px-2 py-0.5 text-xs font-semibold text-white">
+                        <span className="rounded-full bg-[#1D2D3E] px-2 py-0.5 text-xs font-semibold text-white">
                           Required
                         </span>
                       ) : (
@@ -824,7 +824,7 @@ Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested
             </section>
 
             {/* CTA */}
-            <section className="rounded-4xl border border-slate-200 bg-slate-950 p-10 text-center text-white">
+            <section className="rounded-4xl border border-slate-200 bg-[#1D2D3E] p-10 text-center text-white">
               <h2 className="text-2xl font-semibold tracking-tight">
                 Ready to build the workspace?
               </h2>
