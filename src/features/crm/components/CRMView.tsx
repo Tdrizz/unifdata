@@ -225,6 +225,72 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
         />
       </section>
 
+      {/* Mobile stage list */}
+      <div className="block md:hidden space-y-4">
+        {/* Horizontal scrollable stage chips */}
+        <div className="flex gap-2 overflow-x-auto px-4 py-2 pb-1 -mx-0">
+          {stageGroups.map((group) => (
+            <div
+              key={group.status}
+              className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full ${getStageDot(group.status)}`} />
+                <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-700">{group.status}</p>
+                <span className="text-[11px] font-semibold text-slate-400">{group.count}</span>
+              </div>
+              <p className="mt-0.5 font-mono text-[11px] text-slate-400">{formatCurrency(group.value)}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Lead cards for each non-empty active stage */}
+        {stageGroups.filter(g => !isClosed(g.status) && !isWon(g.status) && !isLost(g.status)).map((group) => {
+          const groupLeads = leads.filter((o) => (o.status || "New") === group.status).slice(0, 4);
+          if (groupLeads.length === 0) return null;
+          return (
+            <div key={group.status}>
+              <div className="flex items-center gap-2 px-1 mb-2">
+                <span className={`h-2 w-2 rounded-full ${getStageDot(group.status)}`} />
+                <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600">{group.status}</p>
+              </div>
+              <div className="space-y-2">
+                {groupLeads.map((opportunity) => {
+                  const person = personById.get(opportunity.customer_id ?? "");
+                  const followUpLabel = getFollowUpLabel(opportunity.next_follow_up_date);
+                  const followUpTone = getFollowUpTone(opportunity.next_follow_up_date);
+                  return (
+                    <Link
+                      key={opportunity.id}
+                      href={`/leads/${opportunity.id}/edit`}
+                      className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-semibold text-slate-950 truncate">
+                            {opportunity.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+                          </p>
+                          {person && <p className="mt-0.5 text-[11px] text-slate-500">{person.name}</p>}
+                        </div>
+                        {opportunity.estimated_value && (
+                          <span className="shrink-0 font-mono text-[12px] font-semibold text-[#7A8C2A]">
+                            {formatCurrency(opportunity.estimated_value)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <StatusBadge tone={followUpTone}>{followUpLabel}</StatusBadge>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden md:block">
       <SectionCard
         title="Pipeline stages"
         description="Drag cards or click to edit."
@@ -301,6 +367,7 @@ export function CRMView({ leads, customers, selectedStatus, profile }: Props) {
           </div>
         </div>
       </SectionCard>
+      </div>
 
       <SectionCard
         title={selectedStatus ? `${selectedStatus} opportunities` : "Pipeline queue"}

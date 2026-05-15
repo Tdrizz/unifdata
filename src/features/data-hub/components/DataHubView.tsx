@@ -2,7 +2,6 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDateOnly, formatTimestampDate, isTodayOrPast } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
@@ -16,6 +15,7 @@ import {
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { OrphanQuickLink } from "@/app/data-hub/OrphanQuickLink";
+import { DataHealthRing } from "@/app/workspace/RevenueChart";
 import type { OrphanGroup } from "@/app/data-hub/OrphanQuickLink";
 import type { DataHubPageData } from "../queries";
 
@@ -567,34 +567,57 @@ export function DataHubView({
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Data health"
-          value={`${healthScore}%`}
-          helper={`${totalIssues} cleanup issues across ${totalRecords} records`}
-          tone={getHealthTone(healthScore)}
-        />
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_2fr] items-start">
+        {/* Workspace health card */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <p className="text-sm font-semibold text-slate-500">Workspace health</p>
+          <div className="mt-4 flex justify-center">
+            <DataHealthRing score={healthScore} />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-center">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-lg font-semibold text-slate-950">{totalRecords}</p>
+              <p className="mt-0.5 text-xs text-slate-500">Total records</p>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-lg font-semibold text-slate-950">{totalIssues}</p>
+              <p className="mt-0.5 text-xs text-slate-500">Issues found</p>
+            </div>
+          </div>
+        </div>
 
-        <StatCard
-          label="Total records"
-          value={totalRecords}
-          helper={`${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, ${profile.labels.jobPlural.toLowerCase()}, ${profile.labels.salePlural.toLowerCase()}, and ${profile.labels.followUpPlural.toLowerCase()}`}
-          tone={totalRecords > 0 ? "positive" : "default"}
-        />
-
-        <StatCard
-          label="Open pipeline"
-          value={formatCurrency(openPipelineValue)}
-          helper={`${openOpportunities.length} open opportunities`}
-          tone={openPipelineValue > 0 ? "positive" : "default"}
-        />
-
-        <StatCard
-          label="Payment review"
-          value={formatCurrency(unpaidRevenueValue)}
-          helper={`${unpaidRevenue.length} unpaid or partial records`}
-          tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
-        />
+        {/* Needs attention list */}
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="border-b border-slate-100 px-5 py-4">
+            <p className="font-semibold text-slate-950">Needs attention</p>
+            <p className="mt-0.5 text-sm text-slate-500">Top data issues by record count.</p>
+          </div>
+          {activeCleanupItems.length === 0 ? (
+            <div className="px-5 py-8 text-center text-sm text-slate-500">All records look clean.</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {activeCleanupItems.slice(0, 6).map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-950">{item.title}</p>
+                    <p className="text-xs text-slate-500">{item.area}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                      {item.count}
+                    </span>
+                    <Link
+                      href={item.href}
+                      className="text-xs font-semibold text-[#7A8C2A] hover:underline"
+                    >
+                      Review →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       <OrphanQuickLink groups={orphanGroups} />

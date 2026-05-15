@@ -329,10 +329,46 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         />
       </section>
 
+      {/* Mobile brief chips — md:hidden */}
+      <div className="flex flex-wrap gap-2 md:hidden">
+        {unpaidRevenueValue > 0 && (
+          <Link
+            href="/sales"
+            className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700"
+          >
+            Unpaid {formatCurrency(unpaidRevenueValue)}
+          </Link>
+        )}
+        {openLeads.length > 0 && (
+          <Link
+            href="/leads"
+            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
+          >
+            {openLeads.length} open {leadPlural.toLowerCase()}
+          </Link>
+        )}
+        {followUpSchedule.length > 0 && (
+          <Link
+            href="/follow-ups"
+            className="rounded-full border border-[#7A8C2A]/30 bg-[rgba(122,140,42,0.08)] px-3 py-1.5 text-xs font-semibold text-[#7A8C2A]"
+          >
+            {followUpSchedule.length} follow-ups due
+          </Link>
+        )}
+        {activeWork.length > 0 && (
+          <Link
+            href="/jobs"
+            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600"
+          >
+            {activeWork.length} active {jobPlural.toLowerCase()}
+          </Link>
+        )}
+      </div>
+
       {/* Two-column body */}
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.6fr_1fr] items-start">
         {/* Left column */}
-        <div className="space-y-5">
+        <div className="space-y-5 xl:order-first">
           {/* Revenue chart */}
           <SectionCard title="Revenue trend" description="Collected vs. pending — last 6 months.">
             <div className="p-5">
@@ -373,7 +409,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         </div>
 
         {/* Right column */}
-        <div className="space-y-5">
+        <div className="space-y-5 order-first xl:order-last">
           {/* AI Brief hero card */}
           <div
             className="relative overflow-hidden rounded-[22px] p-[22px] text-white"

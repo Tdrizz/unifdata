@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatTimestampDate } from "@/lib/date-format";
 import { bulkDeleteCustomers } from "../actions";
@@ -76,8 +77,67 @@ export function CustomersTableClient({ customers, profile }: Props) {
         </div>
       )}
 
+      {/* Mobile card list */}
+      <div className="block md:hidden divide-y divide-slate-100">
+        {customers.length === 0 ? (
+          <EmptyState
+            title={`No ${profile.labels.customerPlural.toLowerCase()} found`}
+            description={`Add your first ${profile.labels.customerSingular.toLowerCase()} or import a CSV to get started.`}
+          />
+        ) : (
+          customers.map((customer) => {
+            const missingFields: string[] = [];
+            if (!customer.email) missingFields.push("email");
+            if (!customer.phone) missingFields.push("phone");
+
+            const initials = (customer.name ?? "?")
+              .split(" ")
+              .slice(0, 2)
+              .map((w: string) => w[0]?.toUpperCase() ?? "")
+              .join("");
+
+            return (
+              <Link
+                key={customer.id}
+                href={`/customers/${customer.id}/edit`}
+                className="flex items-center gap-3.5 px-5 py-4 hover:bg-slate-50 transition-colors"
+              >
+                {/* Avatar */}
+                <div
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[33%] text-sm font-bold text-white"
+                  style={{ backgroundColor: "#1D2D3E" }}
+                >
+                  {initials}
+                </div>
+
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13.5px] font-semibold text-slate-950">
+                    {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
+                  </p>
+                  {missingFields.length > 0 ? (
+                    <span className="mt-0.5 inline-block rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      Missing {missingFields.join(", ")}
+                    </span>
+                  ) : (
+                    <p className="mt-0.5 truncate text-[11.5px] text-slate-400 font-medium">
+                      {customer.email || customer.phone || (customer.address ? customer.address.split(",").slice(-2, -1)[0]?.trim() : null) || "No contact info"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Chevron */}
+                <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
       {/* Table wrapper */}
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         {/* Table header */}
         <div
           className="grid border-b border-slate-100 bg-slate-50 px-5 py-3"

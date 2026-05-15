@@ -82,7 +82,66 @@ export function CustomerForm({
   );
 
   return (
-    <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
+    <div className="space-y-5">
+      {/* Mobile lifecycle metrics — mobile only */}
+      <div className="flex rounded-3xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden md:hidden">
+        <div className="flex-1 border-r border-slate-100 px-4 py-3 text-center">
+          <p className="text-[20px] font-bold text-slate-950">{leadsCount}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 mt-0.5">{profile.labels.leadPlural}</p>
+        </div>
+        <div className="flex-1 border-r border-slate-100 px-4 py-3 text-center">
+          <p className="text-[20px] font-bold text-slate-950">{jobsCount}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 mt-0.5">{profile.labels.jobPlural}</p>
+        </div>
+        <div className="flex-1 px-4 py-3 text-center">
+          <p className="text-[20px] font-bold text-slate-950">{followUpsCount}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 mt-0.5">Follow-ups</p>
+        </div>
+      </div>
+
+      {/* Mobile quick actions */}
+      {(customer.phone || customer.email || customer.address) && (
+        <div className="grid grid-cols-3 gap-2 md:hidden">
+          {customer.phone && (
+            <a
+              href={`tel:${customer.phone}`}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <svg className="h-5 w-5 text-[#7A8C2A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+              </svg>
+              <span className="text-[11px] font-semibold text-slate-700">Call</span>
+            </a>
+          )}
+          {customer.email && (
+            <a
+              href={`mailto:${customer.email}`}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <svg className="h-5 w-5 text-[#7A8C2A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span className="text-[11px] font-semibold text-slate-700">Email</span>
+            </a>
+          )}
+          {customer.address && (
+            <a
+              href={`https://maps.google.com/?q=${encodeURIComponent(customer.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+            >
+              <svg className="h-5 w-5 text-[#7A8C2A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-[11px] font-semibold text-slate-700">Directions</span>
+            </a>
+          )}
+        </div>
+      )}
+
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
       <SectionCard
         title="Person details"
         description="These fields help connect people to opportunities, work, revenue, and follow-ups."
@@ -256,5 +315,6 @@ export function CustomerForm({
         </SectionCard>
       </div>
     </section>
+    </div>
   );
 }

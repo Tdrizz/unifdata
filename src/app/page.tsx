@@ -202,7 +202,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
-                Get started — free 14 days
+                Get started
               </Link>
 
               <Link
@@ -370,7 +370,7 @@ export default function HomePage() {
                 href="/signup"
                 className="rounded-2xl bg-[#7A8C2A] px-6 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
-                Get started — free 14 days
+                Get started
               </Link>
               <Link
                 href="/preview"
@@ -435,7 +435,7 @@ export default function HomePage() {
                   href="/signup"
                   className="flex-1 rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
                 >
-                  Get started — free 14 days
+                  Get started
                 </Link>
                 <Link
                   href="/pricing"
