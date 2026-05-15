@@ -613,7 +613,7 @@ export function ImportSessionReviewClient({
                           type="button"
                           disabled={isWorking}
                           onClick={() => saveRowEdit(row.id)}
-                          className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="rounded-xl bg-[#1D2D3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-60"
                         >
                           Save row changes
                         </button>
@@ -763,13 +763,13 @@ export function ImportSessionReviewClient({
       </div>
 
       {activeSuggestions.length > 0 && (
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-blue-900">
+              <p className="text-sm font-semibold text-slate-900">
                 Link related records
               </p>
-              <p className="mt-1 text-sm text-blue-700">
+              <p className="mt-1 text-sm text-slate-600">
                 We found {activeSuggestions.length} record{activeSuggestions.length !== 1 ? "s" : ""} that can be automatically linked based on matching customers and similar data.
               </p>
             </div>
@@ -778,24 +778,24 @@ export function ImportSessionReviewClient({
               type="button"
               disabled={applyingLinks}
               onClick={applyAllLinkSuggestions}
-              className="shrink-0 rounded-xl bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
+              className="shrink-0 rounded-xl bg-[#1D2D3E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-60"
             >
               {applyingLinks ? "Linking..." : `Apply all ${activeSuggestions.length}`}
             </button>
           </div>
 
-          <div className="mt-4 divide-y divide-blue-100">
+          <div className="mt-4 divide-y divide-slate-100">
             {activeSuggestions.map((suggestion) => (
               <div key={suggestion.record_id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-blue-950">
+                  <p className="truncate text-sm font-semibold text-slate-900">
                     {suggestion.record_label}
                   </p>
-                  <p className="mt-0.5 text-xs text-blue-600">
+                  <p className="mt-0.5 text-xs text-[#7A8C2A] font-medium">
                     {suggestion.table === "jobs" ? "Job" : "Sale"} → {suggestion.suggested_label}
                     {suggestion.customer_name ? ` · ${suggestion.customer_name}` : ""}
                   </p>
-                  <p className="mt-0.5 text-xs text-blue-500">{suggestion.reason}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{suggestion.reason}</p>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
@@ -812,7 +812,7 @@ export function ImportSessionReviewClient({
                         return next;
                       })
                     }
-                    className="text-xs text-blue-400 hover:text-blue-600"
+                    className="text-xs text-slate-400 hover:text-slate-600"
                   >
                     Skip
                   </button>

@@ -287,7 +287,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a
               href="/customers"
-              className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
             >
               Add your first customer
             </a>

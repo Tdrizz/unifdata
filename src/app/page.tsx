@@ -200,9 +200,9 @@ export default function HomePage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/signup"
-                className="rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
+                className="rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
-                Get started
+                Get started — free 14 days
               </Link>
 
               <Link
@@ -368,9 +368,9 @@ export default function HomePage() {
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/signup"
-                className="rounded-2xl bg-white px-6 py-3 font-semibold text-slate-950 hover:bg-slate-200"
+                className="rounded-2xl bg-[#7A8C2A] px-6 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
               >
-                Get started
+                Get started — free 14 days
               </Link>
               <Link
                 href="/preview"
@@ -433,9 +433,9 @@ export default function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className="flex-1 rounded-2xl bg-white px-5 py-3 text-center font-semibold text-slate-950 hover:bg-slate-200"
+                  className="flex-1 rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
                 >
-                  Get started
+                  Get started — free 14 days
                 </Link>
                 <Link
                   href="/pricing"

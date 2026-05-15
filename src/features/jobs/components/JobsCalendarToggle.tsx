@@ -21,7 +21,7 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
           onClick={() => setView("list")}
           className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "list"
-              ? "border-slate-900 bg-slate-900 text-white"
+              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
@@ -31,7 +31,7 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
           onClick={() => setView("calendar")}
           className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "calendar"
-              ? "border-slate-900 bg-slate-900 text-white"
+              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >

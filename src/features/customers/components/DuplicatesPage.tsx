@@ -57,7 +57,7 @@ export function DuplicatesPage({ groups: initialGroups }: { groups: DuplicateGro
                   <button
                     onClick={() => handleMerge(group.customers[0].id, customer.id)}
                     disabled={isPending}
-                    className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+                    className="shrink-0 rounded-lg bg-[#1D2D3E] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-50"
                   >
                     Merge into first
                   </button>

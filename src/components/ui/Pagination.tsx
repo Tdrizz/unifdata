@@ -44,7 +44,7 @@ function PaginationInner({
           onClick={() => goTo(page)}
           className={
             page === currentPage
-              ? "rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white"
+              ? "rounded-xl bg-[#1D2D3E] px-3 py-2 text-xs font-semibold text-white"
               : "rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           }
         >

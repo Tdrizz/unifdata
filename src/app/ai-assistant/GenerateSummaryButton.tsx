@@ -88,7 +88,7 @@ export function GenerateSummaryButton() {
           type="button"
           onClick={generateSummary}
           disabled={loading}
-          className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 md:min-w-40"
+          className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60 md:min-w-40"
         >
           {loading ? "Generating..." : "Generate brief"}
         </button>

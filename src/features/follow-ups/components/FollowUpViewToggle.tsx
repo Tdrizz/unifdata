@@ -59,7 +59,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
           onClick={() => setView("list")}
           className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
             view === "list"
-              ? "border-slate-950 bg-slate-950 text-white"
+              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
@@ -69,7 +69,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
           onClick={() => setView("calendar")}
           className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
             view === "calendar"
-              ? "border-slate-950 bg-slate-950 text-white"
+              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
