@@ -1,3 +1,7 @@
+export function cn(...classes: (string | undefined | null | false | 0)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
 export function formatCurrency(value: number | string | null | undefined) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

@@ -1,27 +1,35 @@
+import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-const toneStyles = {
-  neutral: "bg-slate-100 text-slate-600",
-  success: "bg-emerald-100 text-emerald-700",
-  warning: "bg-amber-100 text-amber-700",
-  danger: "bg-red-100 text-red-700",
-  info: "bg-blue-100 text-blue-700",
-  accent: "bg-[rgba(122,140,42,0.12)] text-[#5a6820]",
+type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink";
+
+const toneClasses: Record<Tone, string> = {
+  neutral: "bg-ud-surface-sunk text-ud-text",
+  success: "bg-[#eef5ec] text-ud-success",
+  warning: "bg-[#faf0e3] text-ud-warning",
+  danger:  "bg-[#fbeded] text-ud-danger",
+  info:    "bg-[#ebf2f9] text-ud-info",
+  accent:  "bg-ud-accent/10 text-ud-accent",
+  ink:     "bg-ud-ink text-ud-surface",
 };
 
-export function Pill({
-  children,
-  tone = "neutral",
-  className,
-}: {
+type Props = {
   children: ReactNode;
-  tone?: keyof typeof toneStyles;
+  tone?: Tone;
+  icon?: ReactNode;
   className?: string;
-}) {
+};
+
+export function Pill({ children, tone = "neutral", icon, className }: Props) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${toneStyles[tone]} ${className ?? ""}`}
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-[3px] rounded-md text-[10.5px] font-semibold leading-tight tracking-[0.01em]",
+        toneClasses[tone],
+        className,
+      )}
     >
+      {icon}
       {children}
     </span>
   );
