@@ -23,7 +23,7 @@ export async function getTeamMembers(companyId: string) {
     .select("user_id, role, profiles(full_name)")
     .eq("company_id", companyId);
 
-  return (data ?? []) as Array<{
+  return (data ?? []) as unknown as Array<{
     user_id: string;
     role: string;
     profiles: { full_name: string | null } | null;
