@@ -357,11 +357,11 @@ export default function DocsPage() {
                 ))}
               </div>
 
-              <div className="mt-5 rounded-3xl border border-blue-100 bg-blue-50 p-5">
-                <p className="text-sm font-semibold text-blue-900">
+              <div className="mt-5 rounded-3xl border border-[#d4dba8] bg-[#f2f5e7] p-5">
+                <p className="text-sm font-semibold text-[#3d4f17]">
                   Tip: Start with your customer list
                 </p>
-                <p className="mt-1 text-sm leading-6 text-blue-800">
+                <p className="mt-1 text-sm leading-6 text-[#4a5e1c]">
                   Importing customers first means leads, jobs, sales, and
                   follow-ups can be linked to real records from the start. A CSV
                   with just name, phone, and email is enough to get going.
@@ -810,11 +810,11 @@ Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested
                 </div>
               </div>
 
-              <div className="mt-4 rounded-3xl border border-blue-100 bg-blue-50 p-5">
-                <p className="text-sm font-semibold text-blue-900">
+              <div className="mt-4 rounded-3xl border border-[#d4dba8] bg-[#f2f5e7] p-5">
+                <p className="text-sm font-semibold text-[#3d4f17]">
                   Get better results with more data
                 </p>
-                <p className="mt-1 text-sm leading-6 text-blue-800">
+                <p className="mt-1 text-sm leading-6 text-[#4a5e1c]">
                   The AI Advisor is most useful after the workspace has real
                   records. Add customers, leads, jobs, sales, and follow-ups
                   first. A workspace with only a few records will produce a
