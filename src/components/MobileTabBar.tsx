@@ -32,14 +32,6 @@ function SvgBriefcase({ active }: { active: boolean }) {
     </svg>
   );
 }
-function SvgCalendar({ active }: { active: boolean }) {
-  return (
-    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
-  );
-}
 function SvgSparkles({ active }: { active: boolean }) {
   return (
     <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
@@ -81,12 +73,6 @@ const TABS = [
       p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
   },
   {
-    href: "/jobs",
-    label: "Visits",
-    Icon: SvgCalendar,
-    match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
-  },
-  {
     href: "/ai-assistant",
     label: "Ask",
     Icon: SvgSparkles,
@@ -102,6 +88,8 @@ const TABS = [
       p.startsWith("/settings/") ||
       p === "/imports" ||
       p === "/sales" ||
+      p === "/jobs" ||
+      p.startsWith("/jobs/") ||
       p === "/follow-ups" ||
       p.startsWith("/follow-ups/") ||
       p === "/data-hub",
@@ -124,9 +112,9 @@ export function MobileTabBar({
       style={{
         background: "rgba(247,246,243,0.88)",
         paddingBottom: "env(safe-area-inset-bottom)",
-        paddingLeft: 6,
-        paddingRight: 6,
-        paddingTop: 8,
+        paddingLeft: 4,
+        paddingRight: 4,
+        paddingTop: 9,
       }}
     >
       {TABS.map((tab) => {
