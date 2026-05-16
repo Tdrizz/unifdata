@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
@@ -102,6 +101,7 @@ export function SettingsView({
   const squareIntegration = integrations.find((i) => i.provider === "square");
   const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
   const jobberIntegration = integrations.find((i) => i.provider === "jobber");
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -112,14 +112,14 @@ export function SettingsView({
           <div className="flex flex-wrap gap-2">
             <Link
               href="/workspace"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
             >
               Home
             </Link>
 
             <Link
               href="/imports"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
             >
               Import data
             </Link>
@@ -128,136 +128,134 @@ export function SettingsView({
       />
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
-        <SectionCard
-          title="Business profile"
-          description="Basic details used across the workspace."
-        >
-          <form action={updateWorkspaceAction} className="space-y-5 p-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm font-medium text-slate-700">
-                Business name
-                <input
-                  name="name"
-                  required
-                  defaultValue={company.name || ""}
-                  placeholder="UnifData Demo Company"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                />
-              </label>
+        {/* Business profile card */}
+        <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+          <div className="px-[22px] py-[18px] border-b border-ud">
+            <p className="text-[14.5px] font-semibold text-ud-ink">Business profile</p>
+            <p className="mt-0.5 text-[13px] text-ud-muted">Basic details used across the workspace.</p>
+          </div>
+          <div className="p-[22px]">
+            <form action={updateWorkspaceAction} className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block text-[13px] font-medium text-ud-ink">
+                  Business name
+                  <input
+                    name="name"
+                    required
+                    defaultValue={company.name || ""}
+                    placeholder="UnifData Demo Company"
+                    className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
+                  />
+                </label>
 
-              <label className="block text-sm font-medium text-slate-700">
-                Business sector
-                <select
-                  name="business_sector"
-                  defaultValue={company.business_sector || "general"}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  {businessSectorOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <span className="mt-2 block text-xs leading-5 text-slate-500">
-                  Controls the language and priorities shown in dashboards.
-                </span>
-              </label>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-4">
-                <p className="font-semibold text-slate-950">Appearance</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Pick the colors used for workspace branding and accents.
-                </p>
+                <label className="block text-[13px] font-medium text-ud-ink">
+                  Business sector
+                  <select
+                    name="business_sector"
+                    defaultValue={company.business_sector || "general"}
+                    className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
+                  >
+                    {businessSectorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-2 block text-[12px] leading-5 text-ud-muted">
+                    Controls the language and priorities shown in dashboards.
+                  </span>
+                </label>
               </div>
-              <ColorPickers
-                defaultBrandColor={company.brand_color}
-                defaultAccentColor={company.accent_color}
-              />
-            </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
-              >
-                Save settings
-              </button>
-            </div>
-          </form>
-        </SectionCard>
+              <div className="rounded-[14px] border border-ud bg-ud-surface-soft p-[18px]">
+                <div className="mb-4">
+                  <p className="text-[14px] font-semibold text-ud-ink">Appearance</p>
+                  <p className="mt-1 text-[13px] leading-6 text-ud-muted">
+                    Pick the colors used for workspace branding and accents.
+                  </p>
+                </div>
+                <ColorPickers
+                  defaultBrandColor={company.brand_color}
+                  defaultAccentColor={company.accent_color}
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
+                >
+                  Save settings
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
 
         <div className="space-y-5">
-          <SectionCard
-            title="Account"
-            description="Signed-in user and current workspace."
-          >
-            <div className="space-y-4 p-5">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-medium text-slate-500">
-                  Signed in
-                </p>
-                <p className="mt-1 font-semibold text-slate-950">
+          {/* Account card */}
+          <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+            <div className="px-[22px] py-[18px] border-b border-ud">
+              <p className="text-[14.5px] font-semibold text-ud-ink">Account</p>
+              <p className="mt-0.5 text-[13px] text-ud-muted">Signed-in user and current workspace.</p>
+            </div>
+            <div className="p-[22px] space-y-3">
+              <div className="rounded-[10px] border border-ud bg-ud-surface-soft p-[14px]">
+                <p className="text-[12px] font-medium text-ud-muted">Signed in</p>
+                <p className="mt-1 text-[14px] font-semibold text-ud-ink">
                   {user.email || "No email available"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-medium text-slate-500">
-                  Workspace
-                </p>
-                <p className="mt-1 font-semibold text-slate-950">
-                  {company.name}
-                </p>
+              <div className="rounded-[10px] border border-ud bg-ud-surface-soft p-[14px]">
+                <p className="text-[12px] font-medium text-ud-muted">Workspace</p>
+                <p className="mt-1 text-[14px] font-semibold text-ud-ink">{company.name}</p>
               </div>
 
               <form action={signOutAction}>
                 <button
                   type="submit"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="w-full rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
                 >
                   Sign out
                 </button>
               </form>
             </div>
-          </SectionCard>
+          </div>
 
-          <SectionCard
-            title="Change password"
-            description="Set a new password for your account."
-          >
-            <ChangePasswordForm />
-          </SectionCard>
+          {/* Change password card */}
+          <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+            <div className="px-[22px] py-[18px] border-b border-ud">
+              <p className="text-[14.5px] font-semibold text-ud-ink">Change password</p>
+              <p className="mt-0.5 text-[13px] text-ud-muted">Set a new password for your account.</p>
+            </div>
+            <div>
+              <ChangePasswordForm />
+            </div>
+          </div>
 
-          <SectionCard
-            title="Launch tools"
-            description="Status for the tools UnifData uses."
-          >
-            <div className="space-y-3 p-5">
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          {/* Launch tools card */}
+          <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+            <div className="px-[22px] py-[18px] border-b border-ud">
+              <p className="text-[14.5px] font-semibold text-ud-ink">Launch tools</p>
+              <p className="mt-0.5 text-[13px] text-ud-muted">Status for the tools UnifData uses.</p>
+            </div>
+            <div className="p-[22px] space-y-3">
+              <div className="flex items-center justify-between gap-3 rounded-[10px] border border-ud bg-ud-surface-soft p-[14px]">
                 <div>
-                  <p className="font-semibold text-slate-950">Gemini AI</p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Generates operating briefs.
-                  </p>
+                  <p className="text-[14px] font-semibold text-ud-ink">Gemini AI</p>
+                  <p className="mt-1 text-[13px] text-ud-muted">Generates operating briefs.</p>
                 </div>
-
                 <StatusBadge tone={geminiEnabled ? "success" : "warning"}>
                   {geminiEnabled ? "Enabled" : "Missing key"}
                 </StatusBadge>
               </div>
 
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3 rounded-[10px] border border-ud bg-ud-surface-soft p-[14px]">
                 <div>
-                  <p className="font-semibold text-slate-950">
-                    Google Sheets
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Used for spreadsheet imports.
-                  </p>
+                  <p className="text-[14px] font-semibold text-ud-ink">Google Sheets</p>
+                  <p className="mt-1 text-[13px] text-ud-muted">Used for spreadsheet imports.</p>
                 </div>
-
                 <StatusBadge
                   tone={
                     googleIntegration
@@ -271,15 +269,19 @@ export function SettingsView({
                 </StatusBadge>
               </div>
             </div>
-          </SectionCard>
+          </div>
         </div>
       </section>
 
-      <SectionCard
-        title="Data integrations"
-        description="Connect your business tools. Once connected, UnifData syncs their data automatically every day — no CSV exports needed."
-      >
-        <div className="divide-y divide-slate-100">
+      {/* Data integrations card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Data integrations</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">
+            Connect your business tools. Once connected, UnifData syncs their data automatically every day — no CSV exports needed.
+          </p>
+        </div>
+        <div className="divide-y divide-ud">
           {[
             {
               provider: "quickbooks",
@@ -312,13 +314,13 @@ export function SettingsView({
           ].map(({ provider, label, description, integration, startHref }) => (
             <div
               key={label}
-              className="flex flex-wrap items-center justify-between gap-4 p-4"
+              className="flex flex-wrap items-center justify-between gap-4 p-[18px]"
             >
               <div>
-                <p className="font-semibold text-slate-950">{label}</p>
-                <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+                <p className="text-[14px] font-semibold text-ud-ink">{label}</p>
+                <p className="mt-0.5 text-[13px] text-ud-muted">{description}</p>
                 {integration?.provider_account_name && (
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-[12px] text-ud-faint">
                     {integration.provider_account_name}
                     {integration.created_at && (
                       <> · Connected {formatTimestampDate(integration.created_at)}</>
@@ -338,7 +340,7 @@ export function SettingsView({
                     )}
                     <Link
                       href={startHref}
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                      className="rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
                     >
                       Reconnect
                     </Link>
@@ -346,7 +348,7 @@ export function SettingsView({
                 ) : (
                   <Link
                     href={startHref}
-                    className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+                    className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
                   >
                     Connect {label}
                   </Link>
@@ -355,63 +357,79 @@ export function SettingsView({
             </div>
           ))}
         </div>
-      </SectionCard>
+      </div>
 
-      <SectionCard
-        title="Connected tools"
-        description="All external services connected to this workspace."
-      >
-        {integrations.length === 0 ? (
-          <EmptyState
-            title="No connected tools"
-            description="Connect a data provider above to get started."
-          />
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {integrations.map((integration) => (
-              <article
-                key={integration.id}
-                className="grid gap-3 p-4 md:grid-cols-[1fr_180px_130px] md:items-center"
-              >
-                <div>
-                  <p className="font-semibold text-slate-950">
-                    {getProviderLabel(integration.provider)}
+      {/* Connected tools card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Connected tools</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">All external services connected to this workspace.</p>
+        </div>
+        <div>
+          {integrations.length === 0 ? (
+            <EmptyState
+              title="No connected tools"
+              description="Connect a data provider above to get started."
+            />
+          ) : (
+            <div className="divide-y divide-ud">
+              {integrations.map((integration) => (
+                <article
+                  key={integration.id}
+                  className="grid gap-3 p-[18px] md:grid-cols-[1fr_180px_130px] md:items-center"
+                >
+                  <div>
+                    <p className="text-[14px] font-semibold text-ud-ink">
+                      {getProviderLabel(integration.provider)}
+                    </p>
+                    <p className="mt-1 text-[13px] text-ud-muted">
+                      {integration.provider_account_name || "Connected account"}
+                    </p>
+                  </div>
+
+                  <p className="text-[13px] font-medium text-ud-muted">
+                    Added {formatTimestampDate(integration.created_at)}
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {integration.provider_account_name || "Connected account"}
-                  </p>
-                </div>
 
-                <p className="text-sm font-medium text-slate-500">
-                  Added {formatTimestampDate(integration.created_at)}
-                </p>
+                  <div className="md:text-right">
+                    <StatusBadge tone={getStatusTone(integration.status)}>
+                      {getStatusLabel(integration.status)}
+                    </StatusBadge>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
-                <div className="md:text-right">
-                  <StatusBadge tone={getStatusTone(integration.status)}>
-                    {getStatusLabel(integration.status)}
-                  </StatusBadge>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Team Members"
-        description="Manage who has access to this workspace."
-      >
-        <div className="p-5">
+      {/* Team members card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Team Members</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Manage who has access to this workspace.</p>
+        </div>
+        <div className="p-[22px]">
           <div className="space-y-2">
             {members.map((member) => (
-              <div key={member.user_id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3">
+              <div
+                key={member.user_id}
+                className="flex items-center justify-between rounded-[10px] border border-ud bg-ud-surface p-[12px]"
+              >
                 <div>
-                  <p className="font-semibold text-slate-950">{member.profiles?.full_name ?? "Team member"}</p>
-                  <p className="text-xs text-slate-500 capitalize">{member.role}</p>
+                  <p className="text-[14px] font-semibold text-ud-ink">
+                    {member.profiles?.full_name ?? "Team member"}
+                  </p>
+                  <p className="text-[12px] text-ud-muted capitalize">{member.role}</p>
                 </div>
                 {currentUserRole === "owner" && (
                   <form action={removeMember.bind(null, member.user_id)}>
-                    <button type="submit" className="text-xs text-red-500 hover:underline">Remove</button>
+                    <button
+                      type="submit"
+                      className="text-[12.5px] font-medium text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
                   </form>
                 )}
               </div>
@@ -419,7 +437,7 @@ export function SettingsView({
           </div>
           {currentUserRole === "owner" && <InviteMemberForm />}
         </div>
-      </SectionCard>
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
+import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,10 @@ export default async function WorkspacePage() {
       accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
-      <WorkspaceView {...data} profile={profile} />
+      <>
+        <WorkspaceView {...data} profile={profile} />
+        <MobileWorkspaceView {...data} profile={profile} />
+      </>
     </AppShell>
   );
 }

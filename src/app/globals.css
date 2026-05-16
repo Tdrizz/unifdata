@@ -27,11 +27,6 @@
   --color-ud-info:       rgb(44 82 130);
   --color-ud-info-bg:    rgb(235 242 249);
 
-  /* ── Keep v1 brand names for backward compat ──────────────────────── */
-  --color-brand-navy:       rgb(29 45 62);
-  --color-brand-olive:      rgb(92 111 26);
-  --color-brand-olive-soft: rgb(163 184 90);
-
   /* ── Shadows ──────────────────────────────────────────────────────── */
   --shadow-ud:        0 1px 0 rgba(23,22,20,0.04), 0 1px 2px rgba(23,22,20,0.03);
   --shadow-ud-raised: 0 2px 4px rgba(23,22,20,0.04), 0 8px 24px rgba(23,22,20,0.06);
@@ -90,30 +85,37 @@
   --ud-shadow-raised: 0 2px 4px rgba(23,22,20,0.04), 0 8px 24px rgba(23,22,20,0.06);
   --ud-shadow-pop:    0 24px 64px rgba(23,22,20,0.18), 0 4px 12px rgba(23,22,20,0.08);
 
-  /* ── v1 aliases — existing pages keep working ─────────────────────── */
-  --background:       var(--ud-page);
-  --foreground:       var(--ud-ink);
-  --fo-bg:            var(--ud-page);
-  --fo-surface:       var(--ud-surface);
-  --fo-surface-soft:  var(--ud-surface-soft);
-  --fo-surface-muted: var(--ud-surface-sunk);
-  --fo-border:        var(--ud-border);
-  --fo-border-soft:   var(--ud-border-soft);
-  --fo-ink:           var(--ud-ink);
-  --fo-text:          var(--ud-text);
-  --fo-muted:         var(--ud-text-muted);
-  --fo-faint:         var(--ud-text-faint);
-  --fo-primary:       var(--ud-navy);
-  --fo-accent:        var(--ud-accent);
-  --fo-accent-soft:   var(--ud-accent-soft);
-  --fo-success:       var(--ud-success);
-  --fo-success-bg:    var(--ud-success-bg);
-  --fo-warning:       var(--ud-warning);
-  --fo-warning-bg:    var(--ud-warning-bg);
-  --fo-danger:        var(--ud-danger);
-  --fo-danger-bg:     var(--ud-danger-bg);
-  --fo-info:          var(--ud-info);
-  --fo-info-bg:       var(--ud-info-bg);
+  --background: var(--ud-page);
+  --foreground: var(--ud-ink);
+}
+
+.dark {
+  --ud-page:         #111110;
+  --ud-surface:      #1a1917;
+  --ud-surface-soft: #1f1e1c;
+  --ud-surface-sunk: #252422;
+
+  --ud-ink:        #f5f3ef;
+  --ud-text:       #d9d5cc;
+  --ud-text-muted: #8a8479;
+  --ud-text-faint: #5a5650;
+
+  --ud-border:      rgba(255, 253, 245, 0.08);
+  --ud-border-soft: rgba(255, 253, 245, 0.05);
+  --ud-border-hard: rgba(255, 253, 245, 0.14);
+
+  --ud-accent:      #8aab2e;
+  --ud-accent-soft: rgba(138, 171, 46, 0.12);
+  --ud-accent-tint: rgba(138, 171, 46, 0.07);
+
+  --ud-success:    #5aab5a;
+  --ud-success-bg: #1a2e1a;
+  --ud-warning:    #c4813a;
+  --ud-warning-bg: #2a1f0f;
+  --ud-danger:     #d95f5f;
+  --ud-danger-bg:  #2e1515;
+  --ud-info:       #5a8ec8;
+  --ud-info-bg:    #141c2a;
 }
 
 * {

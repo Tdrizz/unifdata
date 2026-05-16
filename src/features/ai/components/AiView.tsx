@@ -1,13 +1,13 @@
-import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatTimestampDate } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { GenerateSummaryButton } from "@/app/ai-assistant/GenerateSummaryButton";
 import { BriefDisplay } from "@/app/ai-assistant/BriefDisplay";
-import { AiChat } from "@/app/ai-assistant/AiChat";
+import { AiAssistantView } from "@/features/ai-assistant/AiAssistantView";
+import { MobileAiView } from "@/features/ai-assistant/MobileAiView";
 import type { AiReport } from "../types";
 
 interface AiViewProps {
@@ -20,57 +20,65 @@ export function AiView({ reports, profile }: AiViewProps) {
   const previousReports = reports.slice(1);
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        eyebrow="AI Assistant"
-        title="Ask UnifData about your workspace"
-        description={`Trained on your live ${profile.labels.customerPlural.toLowerCase()}, opportunities, jobs, revenue, and follow-ups — talks in your industry's vocabulary.`}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/workspace"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Home
-            </Link>
-          </div>
-        }
-      />
+    <>
+      {/* ── Desktop layout (md+) ── */}
+      <div className="hidden md:block space-y-6">
+        <PageHeader
+          eyebrow="AI assistant"
+          title={
+            <>
+              What do you want to know about your{" "}
+              <em className="font-serif italic text-ud-accent">workspace</em>?
+            </>
+          }
+          description="Ask in plain English. UnifData reads your customers, quotes, jobs, revenue, and follow-ups."
+          actions={
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm">
+                Clear thread
+              </Button>
+              <Button variant="secondary" size="sm">
+                New thread
+              </Button>
+            </div>
+          }
+        />
 
-      <GenerateSummaryButton />
+        {/* Chat — two-column v2 layout */}
+        <AiAssistantView />
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
-        <SectionCard
-          title="Latest brief"
-          description="The most recent Gemini-generated operating report."
-        >
-          {!latestReport ? (
+        {/* Generate brief + Latest brief */}
+        <GenerateSummaryButton />
+
+        {latestReport ? (
+          <Card padding={22} radius="lg">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div>
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
+                  Operating brief
+                </p>
+                <p className="mt-1 text-[13px] text-ud-muted">
+                  {formatTimestampDate(latestReport.created_at)}
+                </p>
+              </div>
+            </div>
+            <BriefDisplay summary={latestReport.summary || ""} />
+          </Card>
+        ) : (
+          <Card padding={0} radius="lg">
             <EmptyState
               title="No AI brief generated yet"
               description="Generate your first brief to see priorities, risks, and next steps."
             />
-          ) : (
-            <div className="p-5">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <StatusBadge tone="neutral">Operating brief</StatusBadge>
-                  <p className="text-sm font-medium text-slate-500">
-                    {formatTimestampDate(latestReport.created_at)}
-                  </p>
-                </div>
-                <div className="mt-5">
-                  <BriefDisplay summary={latestReport.summary || ""} />
-                </div>
-              </div>
-            </div>
-          )}
-        </SectionCard>
+          </Card>
+        )}
 
-        <SectionCard
-          title="What Gemini reviews"
-          description="The brief is generated from live workspace data."
-        >
-          <div className="space-y-3 p-4">
+        {/* What Gemini reviews */}
+        <Card padding={22} radius="lg">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted mb-4">
+            What Gemini reviews
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {[
               {
                 title: profile.labels.customerPlural,
@@ -95,60 +103,62 @@ export function AiView({ reports, profile }: AiViewProps) {
             ].map((item) => (
               <div
                 key={item.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                className="rounded-[10px] border border-ud bg-ud-surface-soft p-4"
               >
-                <p className="font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p className="text-[13px] font-semibold text-ud-ink">
+                  {item.title}
+                </p>
+                <p className="mt-1 text-[12.5px] leading-[1.5] text-ud-muted">
                   {item.detail}
                 </p>
               </div>
             ))}
           </div>
-        </SectionCard>
-      </section>
+        </Card>
 
-      <SectionCard
-        title="Ask Gemini"
-        description={`Ask anything about your ${profile.labels.customerPlural.toLowerCase()}, ${profile.labels.leadPlural.toLowerCase()}, revenue, or follow-ups.`}
-      >
-        <AiChat />
-      </SectionCard>
-
-      {previousReports.length > 0 && (
-        <SectionCard
-          title="Previous briefs"
-          description="Older saved AI reports. Kept collapsed so the page stays clean."
-        >
-          <div className="divide-y divide-slate-100">
-            {previousReports.map((report) => (
-              <details key={report.id} className="group p-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      Gemini operating brief
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {formatTimestampDate(report.created_at)}
-                    </p>
+        {/* Previous briefs */}
+        {previousReports.length > 0 && (
+          <Card padding={0} radius="lg" className="overflow-hidden">
+            <div className="px-[22px] py-[16px] border-b border-ud">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
+                Previous briefs
+              </p>
+            </div>
+            <div className="divide-y divide-ud">
+              {previousReports.map((report) => (
+                <details key={report.id} className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-[22px] py-[16px]">
+                    <div>
+                      <p className="text-[14px] font-semibold text-ud-ink">
+                        Gemini operating brief
+                      </p>
+                      <p className="mt-0.5 text-[12.5px] text-ud-muted">
+                        {formatTimestampDate(report.created_at)}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-[8px] border border-ud bg-ud-surface px-3 py-1.5 text-[12px] font-semibold text-ud-text shadow-ud group-open:hidden">
+                      Open
+                    </span>
+                    <span className="shrink-0 hidden rounded-[8px] border border-ud bg-ud-surface px-3 py-1.5 text-[12px] font-semibold text-ud-text shadow-ud group-open:inline-flex">
+                      Close
+                    </span>
+                  </summary>
+                  <div className="px-[22px] pb-[20px]">
+                    <div className="rounded-[10px] border border-ud bg-ud-surface-soft p-4">
+                      <BriefDisplay summary={report.summary || ""} />
+                    </div>
                   </div>
+                </details>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
 
-                  <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:hidden">
-                    Open
-                  </span>
-
-                  <span className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:inline-flex">
-                    Close
-                  </span>
-                </summary>
-
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <BriefDisplay summary={report.summary || ""} />
-                </div>
-              </details>
-            ))}
-          </div>
-        </SectionCard>
-      )}
-    </div>
+      {/* ── Mobile layout (< md) ── */}
+      <div className="block md:hidden">
+        <MobileAiView />
+      </div>
+    </>
   );
 }

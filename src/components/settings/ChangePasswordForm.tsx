@@ -72,9 +72,9 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-5">
+    <form onSubmit={handleSubmit} className="space-y-4 p-[22px]">
       <div>
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-[13px] font-medium text-ud-ink">
           Current password
           <input
             type="password"
@@ -83,13 +83,13 @@ export function ChangePasswordForm() {
             placeholder="Enter your current password"
             autoComplete="current-password"
             required
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+            className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
           />
         </label>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-[13px] font-medium text-ud-ink">
           New password
           <input
             type="password"
@@ -99,13 +99,13 @@ export function ChangePasswordForm() {
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+            className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
           />
         </label>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700">
+        <label className="block text-[13px] font-medium text-ud-ink">
           Confirm new password
           <input
             type="password"
@@ -115,19 +115,19 @@ export function ChangePasswordForm() {
             autoComplete="new-password"
             required
             minLength={8}
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+            className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
           />
         </label>
       </div>
 
       {success && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 p-3 text-[13px] text-emerald-700">
           Password updated successfully.
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-[10px] border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
           {error}
         </div>
       )}
@@ -136,7 +136,7 @@ export function ChangePasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Updating..." : "Update password"}
         </button>

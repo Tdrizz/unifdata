@@ -1,11 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { RefreshButton } from "@/app/workspace/RefreshButton";
-import { RevenueLineChart, computeMonthlyRevenue } from "@/app/workspace/RevenueChart";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/Button";
+import { StatStrip } from "@/components/ui/StatStrip";
+import { Pill } from "@/components/ui/Pill";
+import { Card } from "@/components/ui/Card";
+import { AiBriefCard } from "@/features/workspace/AiBriefCard";
+import { RevenueChartCard } from "@/features/workspace/RevenueChartCard";
 import {
   formatDateOnly,
   formatTimestampDate,
@@ -57,6 +59,11 @@ function getFollowUpTone(date: string | null) {
   return "neutral" as const;
 }
 
+function getDayLabel() {
+  const now = new Date();
+  return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
 type Props = WorkspaceData & { profile: IndustryProfile };
 
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile }: Props) {
@@ -103,7 +110,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
   const dataHealthScore = computeHealthScore(criticalIssues, importantIssues, cosmeticIssues, totalRecords);
   const customersWithContact = customers.filter((c) => c.name && (c.phone || c.email)).length;
-  const monthlyRevenue = computeMonthlyRevenue(sales);
 
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
@@ -137,7 +143,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     title: record.service_type || formatCurrency(record.amount),
     detail: `${formatCurrency(record.amount)} marked ${record.payment_status || "unpaid"}`,
     href: `/sales/${record.id}/edit`,
-    tone: "danger",
+    tone: "danger" as const,
     priority: 1,
   }));
 
@@ -252,274 +258,209 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
   const leadPlural = profile.labels.leadPlural;
   const jobPlural = profile.labels.jobPlural;
+  const dayLabel = getDayLabel();
+  const firstName = profile.headline.split(" ")[0];
+
+  const visitsToShow = activeWork.slice(0, 5);
 
   return (
-    <div className="space-y-5">
+    <div className="hidden md:block space-y-6">
       <PageHeader
-        eyebrow="Home"
-        title={profile.headline}
+        eyebrow={`${dayLabel} · Operating brief`}
+        title={
+          <>Good morning, <em className="font-serif italic text-ud-accent">{firstName}</em>.</>
+        }
         description={profile.dailyFocus}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <RefreshButton />
-            <Link
-              href="/follow-ups"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
-            >
-              Review follow-ups
-            </Link>
-            <Link
-              href="/imports"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Import data
-            </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm">This week</Button>
+            <Button variant="primary" size="sm">New ▾</Button>
           </div>
         }
       />
 
-      {customers.length === 0 && (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-lg font-black text-slate-950">Welcome to UnifData</p>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-            Start by adding your first customer. You can also import a CSV file if you have existing data.
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <a
-              href="/customers"
-              className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
-            >
-              Add your first customer
-            </a>
-            <a
-              href="/imports"
-              className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Import from CSV
-            </a>
-          </div>
-        </div>
-      )}
+      <StatStrip
+        items={[
+          {
+            label: "Unpaid revenue",
+            value: formatCurrency(unpaidRevenueValue),
+            helper: unpaidRevenueValue > 0 ? `${unpaidRevenue.length} outstanding` : "All clear",
+            tone: unpaidRevenueValue > 0 ? "danger" : "default",
+          },
+          {
+            label: `Open ${leadPlural}`,
+            value: openLeads.length,
+            helper: formatCurrency(openPipelineValue),
+            tone: "default",
+          },
+          {
+            label: `Active ${jobPlural}`,
+            value: activeWork.length,
+            helper: formatCurrency(activeWorkValue),
+            tone: "default",
+          },
+          {
+            label: "Follow-ups due",
+            value: followUpSchedule.length,
+            helper: "Manual + opportunity",
+            tone: followUpSchedule.length > 0 ? "warning" : "default",
+          },
+        ]}
+      />
 
-      {/* KPI strip */}
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
-          label={`Open ${leadPlural}`}
-          value={openLeads.length}
-          helper={formatCurrency(openPipelineValue)}
-          tone={openLeads.length > 0 ? "positive" : "default"}
-        />
-        <StatCard
-          label={`${jobPlural} active`}
-          value={activeWork.length}
-          helper={`${formatCurrency(activeWorkValue)} in progress`}
-          tone={activeWork.length > 0 ? "warning" : "default"}
-        />
-        <StatCard
-          label="Unpaid revenue"
-          value={formatCurrency(unpaidRevenueValue)}
-          helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} outstanding`}
-          tone={unpaidRevenueValue > 0 ? "danger" : "positive"}
-        />
-        <StatCard
-          label="Follow-ups due"
-          value={followUpSchedule.length}
-          helper="Manual and opportunity follow-ups"
-          tone={followUpSchedule.length > 0 ? "warning" : "positive"}
-        />
-      </section>
-
-      {/* Mobile brief chips — md:hidden */}
-      <div className="flex flex-wrap gap-2 md:hidden">
-        {unpaidRevenueValue > 0 && (
-          <Link
-            href="/sales"
-            className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700"
-          >
-            Unpaid {formatCurrency(unpaidRevenueValue)}
-          </Link>
-        )}
-        {openLeads.length > 0 && (
-          <Link
-            href="/leads"
-            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700"
-          >
-            {openLeads.length} open {leadPlural.toLowerCase()}
-          </Link>
-        )}
-        {followUpSchedule.length > 0 && (
-          <Link
-            href="/follow-ups"
-            className="rounded-full border border-[#7A8C2A]/30 bg-[rgba(122,140,42,0.08)] px-3 py-1.5 text-xs font-semibold text-[#7A8C2A]"
-          >
-            {followUpSchedule.length} follow-ups due
-          </Link>
-        )}
-        {activeWork.length > 0 && (
-          <Link
-            href="/jobs"
-            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600"
-          >
-            {activeWork.length} active {jobPlural.toLowerCase()}
-          </Link>
-        )}
-      </div>
-
-      {/* Two-column body */}
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.6fr_1fr] items-start">
+      {/* Two-column grid */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-[24px] items-start">
         {/* Left column */}
-        <div className="space-y-5 xl:order-first">
-          {/* Revenue chart */}
-          <SectionCard title="Revenue trend" description="Collected vs. pending — last 6 months.">
-            <div className="p-5">
-              <RevenueLineChart months={monthlyRevenue} />
-            </div>
-          </SectionCard>
+        <div className="space-y-5">
+          <AiBriefCard
+            eyebrow="UnifData · Suggested action"
+            body={profile.headline}
+            actions={[
+              { label: "Review follow-ups", href: "/follow-ups", variant: "primary" },
+              { label: "Ask follow-up", href: "/ai-assistant", variant: "secondary" },
+              { label: "Snooze", href: "#", variant: "ghost" },
+            ]}
+          />
 
-          {/* Action queue */}
-          <SectionCard
-            title="Action queue"
-            description="What needs attention first across follow-ups, payments, and cleanup."
-          >
-            {priorityQueue.length === 0 ? (
-              <EmptyState
-                title="Nothing needs attention"
-                description="No open follow-ups, unpaid revenue, or important cleanup issues were found."
-              />
+          {/* Today's visits card */}
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-ud-soft">
+              <p className="text-[13px] font-semibold text-ud-ink">
+                Today&apos;s {jobPlural.toLowerCase()}
+              </p>
+              <Link
+                href="/jobs"
+                className="text-[12px] font-semibold text-ud-accent hover:opacity-80"
+              >
+                See all →
+              </Link>
+            </div>
+            {visitsToShow.length === 0 ? (
+              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
+                No active {jobPlural.toLowerCase()} right now.
+              </p>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {priorityQueue.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex items-start gap-4 p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="w-[68px] shrink-0">
-                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-950">{item.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
-                    </div>
-                  </Link>
-                ))}
+              <div>
+                {visitsToShow.map((job) => {
+                  const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+                  const tone = getWorkTone(job.status);
+                  const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
+                    tone === "success" ? "success" :
+                    tone === "warning" ? "warning" :
+                    tone === "danger" ? "danger" :
+                    "neutral";
+                  return (
+                    <Link
+                      key={job.id}
+                      href={`/jobs/${job.id}/edit`}
+                      className="flex items-start gap-3 px-5 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[13px] font-semibold text-ud-ink truncate">
+                            {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
+                          </p>
+                          <Pill tone={pillTone}>{job.status || "Active"}</Pill>
+                        </div>
+                        <p className="text-[12px] text-ud-muted mt-0.5">
+                          {customer?.name || "No customer linked"}
+                        </p>
+                      </div>
+                      {job.job_value != null && (
+                        <span className="udv2-num text-[12.5px] font-semibold text-ud-ink shrink-0">
+                          {formatCurrency(job.job_value)}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             )}
-          </SectionCard>
+          </Card>
+
+          <RevenueChartCard sales={sales} />
         </div>
 
-        {/* Right column */}
-        <div className="space-y-5 order-first xl:order-last">
-          {/* AI Brief hero card */}
-          <div
-            className="relative overflow-hidden rounded-[22px] p-[22px] text-white"
-            style={{ background: "linear-gradient(160deg, #1D2D3E 0%, #2b3d52 100%)" }}
-          >
-            {/* olive radial glow decoration */}
-            <div
-              className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full opacity-20"
-              style={{ background: "radial-gradient(circle, #7A8C2A 0%, transparent 70%)" }}
-            />
-            {/* header */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#7A8C2A]">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
-                </svg>
-              </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">UnifData AI</p>
+        {/* Right column — sticky */}
+        <div className="sticky top-[80px] space-y-5">
+          {/* Needs attention card */}
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-ud-soft">
+              <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
+              {priorityQueue.length > 0 && (
+                <span className="text-[11px] font-semibold text-ud-muted">
+                  {priorityQueue.length} item{priorityQueue.length !== 1 ? "s" : ""}
+                </span>
+              )}
             </div>
-            <p className="text-[17px] font-semibold leading-snug">{profile.headline}</p>
-            <p className="mt-2 text-[13px] leading-6 text-white/70">{profile.dailyFocus}</p>
-            <div className="mt-4 flex gap-2">
-              <Link
-                href="/follow-ups"
-                className="flex-1 rounded-xl bg-white/14 px-3 py-2.5 text-center text-xs font-semibold"
-              >
-                Review follow-ups
-              </Link>
-              <Link
-                href="/ai-assistant"
-                className="flex-1 rounded-xl bg-white/14 px-3 py-2.5 text-center text-xs font-semibold"
-              >
-                Open chat
-              </Link>
-            </div>
-          </div>
-
-          {/* Follow-ups SectionCard */}
-          <SectionCard
-            title="Follow-up schedule"
-            description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates, sorted by due date.`}
-          >
-            {followUpSchedule.length === 0 ? (
-              <EmptyState
-                title="No follow-ups scheduled"
-                description={`Add a manual follow-up or set a next follow-up date on a ${profile.labels.leadSingular.toLowerCase()}.`}
-              />
+            {priorityQueue.length === 0 ? (
+              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
+                Nothing needs attention right now.
+              </p>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {followUpSchedule.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="h-5 w-5 rounded-full border-2 border-slate-200 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-950">{item.title}</p>
-                      <p
-                        className={`text-xs mt-0.5 ${
-                          item.tone === "danger"
-                            ? "text-red-500"
-                            : item.tone === "warning"
-                            ? "text-amber-500"
-                            : "text-slate-500"
-                        }`}
-                      >
-                        {item.detail}
-                      </p>
-                    </div>
-                    <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-                  </Link>
-                ))}
+              <div>
+                {priorityQueue.map((item) => {
+                  const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
+                    item.tone === "danger" ? "danger" :
+                    item.tone === "warning" ? "warning" :
+                    item.tone === "success" ? "success" :
+                    "neutral";
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className="flex items-start gap-3 px-5 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
+                    >
+                      <Pill tone={pillTone} className="shrink-0 mt-0.5">{item.label}</Pill>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-ud-ink truncate">{item.title}</p>
+                        <p className="text-[11.5px] text-ud-muted mt-0.5">{item.detail}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             )}
-          </SectionCard>
+          </Card>
 
-          {/* Recent records SectionCard */}
-          <SectionCard
-            title="Recently added"
-            description="Last 4 records added across the workspace."
-          >
+          {/* Recent activity card */}
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="px-5 py-4 border-b border-ud-soft">
+              <p className="text-[13px] font-semibold text-ud-ink">Recent activity</p>
+            </div>
             {recentRecords.length === 0 ? (
-              <EmptyState
-                title="No records yet"
-                description="Import a customer list or add records manually to get started."
-              />
+              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
+                No recent records.
+              </p>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {recentRecords.map((record) => (
+              <div className="px-5 py-4 space-y-4">
+                {recentRecords.map((record, i) => (
                   <Link
                     key={record.id}
                     href={record.href}
-                    className="grid gap-3 px-4 py-3 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_auto] md:items-center"
+                    className="flex items-start gap-3 group"
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                        <p className="truncate font-semibold text-slate-950">{record.title}</p>
-                      </div>
-                      <p className="mt-0.5 truncate text-sm text-slate-500">{record.detail}</p>
+                    {/* Timeline dot */}
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="h-2 w-2 rounded-full bg-ud-accent mt-1.5" />
+                      {i < recentRecords.length - 1 && (
+                        <div className="w-px flex-1 bg-ud-surface-sunk mt-1 min-h-[20px]" />
+                      )}
                     </div>
-                    <p className="hidden text-xs font-medium text-slate-400 md:block">
-                      {formatTimestampDate(record.date)}
-                    </p>
+                    <div className="flex-1 min-w-0 pb-1">
+                      <p className="text-[10.5px] text-ud-faint uppercase tracking-[0.08em] mb-0.5">
+                        {record.type} · {formatTimestampDate(record.date)}
+                      </p>
+                      <p className="text-[13px] font-semibold text-ud-ink truncate group-hover:text-ud-accent transition-colors">
+                        {record.title}
+                      </p>
+                      <p className="text-[12px] text-ud-muted truncate">{record.detail}</p>
+                    </div>
                   </Link>
                 ))}
               </div>
             )}
-          </SectionCard>
+          </Card>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   getLeadsForJobSelect,
 } from "@/features/jobs/queries";
 import { JobsList } from "@/features/jobs/components/JobsList";
+import { MobileJobsList } from "@/features/jobs/components/MobileJobsList";
 
 export const dynamic = 'force-dynamic';
 
@@ -47,14 +48,26 @@ export default async function WorkPage({
       accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
-      <JobsList
-        jobs={jobs}
-        count={count}
-        customers={customers}
-        leads={leads}
-        profile={profile}
-        selectedStage={selectedStage}
-      />
+      <div className="hidden md:block">
+        <JobsList
+          jobs={jobs}
+          count={count}
+          customers={customers}
+          leads={leads}
+          profile={profile}
+          selectedStage={selectedStage}
+        />
+      </div>
+      <div className="block md:hidden">
+        <MobileJobsList
+          jobs={jobs}
+          count={count}
+          customers={customers}
+          leads={leads}
+          profile={profile}
+          selectedStage={selectedStage}
+        />
+      </div>
     </AppShell>
   );
 }

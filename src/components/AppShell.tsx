@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppNav } from "@/components/AppNav";
+import { CommandPalette } from "@/components/CommandPalette";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileTabBar } from "@/components/MobileTabBar";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -120,6 +121,9 @@ export async function AppShell({
 
       {/* Mobile tab bar */}
       <MobileTabBar businessSector={businessSector} />
+
+      {/* Command palette — overlays everything */}
+      <CommandPalette />
     </div>
   );
 }

@@ -1,12 +1,17 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCustomersPageData } from "@/features/customers/queries";
 import { CustomersList } from "@/features/customers/components/CustomersList";
+import { CustomersTableClient } from "@/features/customers/components/CustomersTableClient";
+import type { Database } from "@/types/db";
+
+type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type SaleRow = Database["public"]["Tables"]["sales"]["Row"];
 
 export const dynamic = 'force-dynamic';
 
@@ -24,16 +29,29 @@ export default async function CustomersPage({
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
   const page = Number(params.page ?? 1);
-  const { customers, count } = await getCustomersPageData(supabase, company.id, { q: params.q, page });
 
-  const actions = (
-    <div className="flex flex-wrap gap-2">
-      <Link href="/workspace" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Home</Link>
-      <Link href="/leads" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">{profile.labels.leadPlural}</Link>
-    </div>
-  );
+  // Fetch customers + related data in parallel
+  const [customersResult, jobsResult, leadsResult, salesResult] = await Promise.all([
+    getCustomersPageData(supabase, company.id, { q: params.q, page }),
+    supabase
+      .from("jobs")
+      .select("id, customer_id, status, completed_date, job_value, lead_id, company_id, created_at, notes, paid_status, service_type, start_date, updated_at")
+      .eq("company_id", company.id),
+    supabase
+      .from("leads")
+      .select("id, customer_id, status, estimated_value, company_id, created_at, next_follow_up_date, notes, service_requested, source, updated_at")
+      .eq("company_id", company.id),
+    supabase
+      .from("sales")
+      .select("id, customer_id, amount, sale_date, company_id, created_at, job_id, payment_status, service_type, source")
+      .eq("company_id", company.id),
+  ]);
+
+  const { customers, count } = customersResult;
+  const jobs = (jobsResult.data ?? []) as JobRow[];
+  const leads = (leadsResult.data ?? []) as LeadRow[];
+  const sales = (salesResult.data ?? []) as SaleRow[];
 
   return (
     <AppShell
@@ -43,15 +61,38 @@ export default async function CustomersPage({
       accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5">
+      {/* Desktop header — hidden on mobile (mobile header is inside CustomersList) */}
+      <div className="hidden md:block">
         <PageHeader
-          eyebrow={profile.labels.customerPlural}
-          title={`${profile.labels.customerPlural} and businesses`}
-          description={`Manage ${profile.labels.customerSingular.toLowerCase()} records and quickly see which contact fields are missing.`}
-          actions={actions}
+          eyebrow="Clients"
+          title={`${count} clients`}
+          description="Everyone you've sold to. Click a row to see quotes, visits, and payments."
+          actions={
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm">Import</Button>
+              <Button variant="primary" size="sm">New client</Button>
+            </div>
+          }
+          className="px-[24px] pt-[20px] pb-[4px]"
         />
-        <CustomersList customers={customers} count={count} profile={profile} errorParam={params.error} />
+
+        <div className="px-[24px] pt-[20px]">
+          <CustomersTableClient
+            customers={customers}
+            jobs={jobs}
+            leads={leads}
+            sales={sales}
+          />
+        </div>
       </div>
+
+      {/* Mobile view */}
+      <CustomersList
+        customers={customers}
+        jobs={jobs}
+        leads={leads}
+        sales={sales}
+      />
     </AppShell>
   );
 }

@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getAiReports } from "@/features/ai/queries";
-import { AiView } from "@/features/ai/components/AiView";
+import { AiAssistantView } from "@/features/ai-assistant/AiAssistantView";
+import { MobileAiView } from "@/features/ai-assistant/MobileAiView";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +25,6 @@ export default async function AiAssistantPage() {
   }
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
-  const reports = await getAiReports(supabase, company.id);
 
   return (
     <AppShell
@@ -37,7 +34,14 @@ export default async function AiAssistantPage() {
       accentColor={company.accent_color || "#7A8C2A"}
       businessSector={company.business_sector}
     >
-      <AiView reports={reports} profile={profile} />
+      <>
+        <div className="hidden md:block">
+          <AiAssistantView />
+        </div>
+        <div className="block md:hidden">
+          <MobileAiView />
+        </div>
+      </>
     </AppShell>
   );
 }

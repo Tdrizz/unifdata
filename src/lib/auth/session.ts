@@ -138,7 +138,7 @@ export async function requireSubscription() {
   const user = await requireAppUser();
 
   if (!user.subscribed) {
-    redirect("/pricing");
+    redirect("/subscribe");
   }
 
   return user;
