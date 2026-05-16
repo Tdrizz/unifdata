@@ -24,7 +24,7 @@ export function WaitlistForm() {
 
   if (state.ok) {
     return (
-      <div className="rounded-3xl border border-emerald-300/25 bg-emerald-400/10 p-6 text-emerald-50">
+      <div className="rounded-[14px] border border-emerald-300/25 bg-emerald-400/10 p-6 text-emerald-50">
         <p className="text-lg font-semibold">Request received.</p>
         <p className="mt-2 text-sm leading-6 text-emerald-100/85">
           We&apos;ll review your company fit and follow up with pilot onboarding
@@ -69,13 +69,13 @@ export function WaitlistForm() {
           autoComplete="organization"
         />
         <div>
-          <label className="text-sm font-medium text-slate-200">
+          <label className="text-sm font-medium text-ud-ink">
             Company size
           </label>
           <select
             name="companySize"
             required
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
+            className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
             defaultValue=""
           >
             <option value="" disabled>
@@ -96,14 +96,14 @@ export function WaitlistForm() {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-200">
+        <label className="text-sm font-medium text-ud-ink">
           Use case or pain points
         </label>
         <textarea
           name="useCase"
           required
           rows={5}
-          className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
+          className="mt-2 w-full resize-none rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
           placeholder="Tell us what data is scattered, duplicated, or hard to act on today."
         />
         {state.fieldErrors?.useCase && (
@@ -114,7 +114,7 @@ export function WaitlistForm() {
       </div>
 
       {state.error && (
-        <div className="rounded-2xl border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
+        <div className="rounded-[10px] border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
           {state.error}
         </div>
       )}
@@ -122,7 +122,7 @@ export function WaitlistForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-2xl bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-[10px] bg-ud-accent px-4 py-3.5 font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Submitting..." : "Request beta access"}
       </button>
@@ -145,13 +145,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-medium text-slate-200">{label}</label>
+      <label className="text-sm font-medium text-ud-ink">{label}</label>
       <input
         name={name}
         type={type}
         autoComplete={autoComplete}
         required
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
+        className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
       />
       {error && <p className="mt-2 text-sm text-red-200">{error}</p>}
     </div>

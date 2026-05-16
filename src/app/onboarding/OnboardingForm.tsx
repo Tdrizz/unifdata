@@ -27,10 +27,10 @@ export function OnboardingForm() {
     <form action={createCompanyAction} className="space-y-5">
       {/* Company name field */}
       <div>
-        <label className="text-sm font-medium text-slate-200">Company name</label>
+        <label className="text-sm font-medium text-ud-ink">Company name</label>
         <input
           name="companyName"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
+          className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
           placeholder="Arctic Ridge Services"
           required
         />
@@ -38,8 +38,8 @@ export function OnboardingForm() {
 
       {/* Industry cards */}
       <div>
-        <label className="text-sm font-medium text-slate-200">Business type</label>
-        <p className="mt-1 text-xs leading-5 text-slate-400">
+        <label className="text-sm font-medium text-ud-ink">Business type</label>
+        <p className="mt-1 text-xs leading-5 text-ud-faint">
           This controls the language and priorities shown across your workspace.
         </p>
         <input type="hidden" name="businessSector" value={selectedSector} />
@@ -51,9 +51,9 @@ export function OnboardingForm() {
                 key={option.value}
                 type="button"
                 onClick={() => setSelectedSector(option.value)}
-                className={`flex flex-col items-start gap-2 rounded-2xl border p-3.5 text-left transition-all ${
+                className={`flex flex-col items-start gap-2 rounded-[10px] border p-3.5 text-left transition-all ${
                   isActive
-                    ? "border-[#4A3FA8] bg-[rgba(74,63,168,0.15)] ring-1 ring-[#4A3FA8]"
+                    ? "border-ud-accent bg-[rgba(74,63,168,0.15)] ring-1 ring-ud-accent"
                     : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
                 }`}
               >
@@ -70,17 +70,17 @@ export function OnboardingForm() {
                 <div>
                   <p
                     className={`text-[13px] font-semibold leading-snug ${
-                      isActive ? "text-white" : "text-slate-200"
+                      isActive ? "text-white" : "text-ud-ink"
                     }`}
                   >
                     {option.label}
                   </p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-400">
+                  <p className="mt-0.5 text-[11px] leading-4 text-ud-faint">
                     {INDUSTRY_DESCRIPTIONS[option.value] ?? ""}
                   </p>
                 </div>
                 {isActive && (
-                  <span className="ml-auto self-end rounded-full bg-[#4A3FA8] px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="ml-auto self-end rounded-full bg-ud-accent px-2 py-0.5 text-[10px] font-bold text-white">
                     ✓
                   </span>
                 )}
@@ -92,20 +92,20 @@ export function OnboardingForm() {
 
       {/* Industry description */}
       <div>
-        <label className="text-sm font-medium text-slate-200">
+        <label className="text-sm font-medium text-ud-ink">
           Describe your work{" "}
-          <span className="text-slate-400">(optional)</span>
+          <span className="text-ud-faint">(optional)</span>
         </label>
         <input
           name="industry"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
+          className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
           placeholder="Excavation, dental office, landscaping..."
         />
       </div>
 
       <button
         type="submit"
-        className="w-full rounded-2xl bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494]"
+        className="w-full rounded-[10px] bg-ud-accent px-4 py-3.5 font-semibold text-white hover:opacity-90"
       >
         Create workspace →
       </button>
