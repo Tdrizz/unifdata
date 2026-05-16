@@ -50,7 +50,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               Link to person or business
               <select
                 name="customer_id"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="">No linked person yet</option>
                 {customers.map((customer) => (
@@ -65,7 +65,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               Link to opportunity
               <select
                 name="lead_id"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="">No linked opportunity yet</option>
                 {leads.map((lead) => (
@@ -84,7 +84,7 @@ export function JobCreateForm({ customers, leads }: Props) {
                 name="service_type"
                 required
                 placeholder="Flooring install, website build, service visit..."
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
               {state?.fieldErrors?.service_type && (
                 <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_type}</p>
@@ -99,7 +99,7 @@ export function JobCreateForm({ customers, leads }: Props) {
                 step="0.01"
                 min="0"
                 placeholder="2500"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
               {state?.fieldErrors?.job_value && (
                 <p className="mt-1 text-sm text-red-600">{state.fieldErrors.job_value}</p>
@@ -113,7 +113,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               <select
                 name="status"
                 defaultValue="Scheduled"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="Scheduled">Scheduled</option>
                 <option value="Active">Active</option>
@@ -128,7 +128,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               <select
                 name="paid_status"
                 defaultValue="Unpaid"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="Unpaid">Unpaid</option>
                 <option value="Partial">Partial</option>
@@ -143,7 +143,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               <input
                 name="start_date"
                 type="date"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
 
@@ -152,7 +152,7 @@ export function JobCreateForm({ customers, leads }: Props) {
               <input
                 name="completed_date"
                 type="date"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
           </div>

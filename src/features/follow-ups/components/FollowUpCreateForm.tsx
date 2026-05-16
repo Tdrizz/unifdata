@@ -50,7 +50,7 @@ export function FollowUpCreateForm({ people }: Props) {
             Link to person or business
             <select
               name="customer_id"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
             >
               <option value="">No linked person yet</option>
               {people.map((person) => (
@@ -70,7 +70,7 @@ export function FollowUpCreateForm({ people }: Props) {
               name="message"
               required
               placeholder="Call customer, send quote, check payment, schedule job..."
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
             />
             {state?.fieldErrors?.message && (
               <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
@@ -83,7 +83,7 @@ export function FollowUpCreateForm({ people }: Props) {
               <input
                 name="due_date"
                 type="date"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
 
@@ -92,7 +92,7 @@ export function FollowUpCreateForm({ people }: Props) {
               <select
                 name="status"
                 defaultValue="Open"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="Open">Open</option>
                 <option value="Pending">Pending</option>

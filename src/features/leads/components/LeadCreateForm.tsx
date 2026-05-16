@@ -50,7 +50,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               Link to person or business
               <select
                 name="customer_id"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="">No linked {profile.labels.customerSingular.toLowerCase()} yet</option>
                 {customers.map((customer) => (
@@ -69,7 +69,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               <select
                 name="status"
                 defaultValue="New"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               >
                 <option value="New">New</option>
                 <option value="Contacted">Contacted</option>
@@ -88,7 +88,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
                 name="service_requested"
                 required
                 placeholder="Website redesign, flooring quote, monthly service plan..."
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
               {state?.fieldErrors?.service_requested && (
                 <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_requested}</p>
@@ -103,7 +103,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
                 step="0.01"
                 min="0"
                 placeholder="2500"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
               {state?.fieldErrors?.estimated_value && (
                 <p className="mt-1 text-sm text-red-600">{state.fieldErrors.estimated_value}</p>
@@ -117,7 +117,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               <input
                 name="source"
                 placeholder="Referral, Google, Facebook, Website..."
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
 
@@ -126,7 +126,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               <input
                 name="next_follow_up_date"
                 type="date"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
           </div>
@@ -137,7 +137,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               name="notes"
               rows={3}
               placeholder="Add quote notes, next steps, or context..."
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-slate-300"
+              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
             />
           </label>
 
