@@ -41,6 +41,14 @@ function SvgSparkles({ active }: { active: boolean }) {
     </svg>
   );
 }
+function SvgCalendar({ active }: { active: boolean }) {
+  return (
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
 function SvgMore({ active }: { active: boolean }) {
   return (
     <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
@@ -73,11 +81,10 @@ const TABS = [
       p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
   },
   {
-    href: "/ai-assistant",
-    label: "Ask",
-    Icon: SvgSparkles,
-    match: (p: string) =>
-      p === "/ai-assistant" || p.startsWith("/ai-assistant/"),
+    href: "/jobs",
+    label: "Visits",
+    Icon: SvgCalendar,
+    match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
   },
   {
     href: "/settings",
@@ -88,8 +95,8 @@ const TABS = [
       p.startsWith("/settings/") ||
       p === "/imports" ||
       p === "/sales" ||
-      p === "/jobs" ||
-      p.startsWith("/jobs/") ||
+      p === "/ai-assistant" ||
+      p.startsWith("/ai-assistant/") ||
       p === "/follow-ups" ||
       p.startsWith("/follow-ups/") ||
       p === "/data-hub",
