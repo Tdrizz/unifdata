@@ -45,19 +45,10 @@ export async function AppShell({
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-ud bg-ud-page">
         {/* Brand block */}
-        <div className="px-[18px] py-[18px] pb-[14px] flex items-center justify-between">
+        <div className="px-[18px] py-[18px] pb-[14px]">
           <Link href="/workspace">
             <ProductMark companyName={companyName} />
           </Link>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center h-7 w-7 rounded-[7px] border border-ud bg-ud-surface text-ud-faint hover:text-ud-text hover:border-ud-hard transition-colors"
-            aria-label="Switch workspace"
-          >
-            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </button>
         </div>
 
         {/* Nav (includes ⌘K trigger) */}

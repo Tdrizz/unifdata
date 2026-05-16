@@ -51,7 +51,7 @@ export function ProductMark({
             className={
               inverse
                 ? "truncate text-sm font-semibold tracking-tight text-white"
-                : "truncate text-sm font-semibold tracking-tight text-slate-950"
+                : "truncate text-sm font-semibold tracking-tight text-ud-ink"
             }
           >
             <span>UNIF</span>
@@ -62,8 +62,8 @@ export function ProductMark({
             <p
               className={
                 inverse
-                  ? "truncate text-xs font-medium text-slate-400"
-                  : "truncate text-xs font-medium text-slate-500"
+                  ? "truncate text-xs font-medium text-white/60"
+                  : "truncate text-xs font-medium text-ud-muted"
               }
             >
               {companyName}

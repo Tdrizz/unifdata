@@ -64,7 +64,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={`Edit ${profile.labels.leadSingular.toLowerCase()}`}
         title={

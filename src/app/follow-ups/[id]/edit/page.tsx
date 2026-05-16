@@ -41,7 +41,9 @@ export default async function EditFollowUpPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <PageHeader eyebrow={profile.labels.followUpPlural} title="Edit follow-up" />
+      <div className="px-6 pt-5">
+        <PageHeader eyebrow={profile.labels.followUpPlural} title="Edit follow-up" />
+      </div>
       <FollowUpForm followUp={followUp} people={people} profile={profile} />
     </AppShell>
   );

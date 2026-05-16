@@ -90,7 +90,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
           Collected
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 rounded-full bg-slate-300" />
+          <span className="inline-block h-0.5 w-4 rounded-full bg-ud-surface-sunk" />
           Total incl. pending
         </span>
       </div>

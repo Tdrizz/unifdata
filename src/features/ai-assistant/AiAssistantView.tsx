@@ -69,7 +69,7 @@ export function AiAssistantView() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-[24px] items-start xl:grid-cols-[1fr_320px]">
+    <div className="px-6 pt-5 pb-8 grid grid-cols-1 gap-[24px] items-start xl:grid-cols-[1fr_320px]">
       {/* Left: Chat card */}
       <Card radius="lg" padding={0} className="flex flex-col min-h-[600px]">
         {/* Thread */}

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -263,19 +262,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
   ].filter((group) => group.count > 0);
 
   return (
-    <>
-      <PageHeader
-        eyebrow={profile.labels.followUpPlural}
-        title={`${openActions.length} open ${profile.labels.followUpPlural.toLowerCase()}`}
-        description={`Manual reminders, ${profile.labels.leadSingular.toLowerCase()} follow-ups, and overdue items — all in one view.`}
-        actions={
-          <div className="flex gap-2">
-            <Link href="/crm" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
-              Pipeline
-            </Link>
-          </div>
-        }
-      />
+    <div className="space-y-5">
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Open follow-ups"
@@ -506,6 +493,6 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
           </div>
         )}
       </SectionCard>
-    </>
+    </div>
   );
 }

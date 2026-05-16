@@ -36,15 +36,15 @@ export default async function FollowUpsPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5">
+      <div className="space-y-5 px-6 pt-5 pb-8">
         <PageHeader
           eyebrow={profile.labels.followUpPlural}
           title="Priority follow-up queue"
           description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates are sorted by urgency and due date.`}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link href="/leads" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Opportunities</Link>
-              <Link href="/imports" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">Import data</Link>
+              <Link href="/leads" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">Opportunities</Link>
+              <Link href="/imports" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">Import data</Link>
             </div>
           }
         />

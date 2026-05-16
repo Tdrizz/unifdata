@@ -135,7 +135,7 @@ export function ImportsView({
   const dataHealthIssues = missingContact + missingAddress;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow="Import"
         title="Bring data into UnifData"

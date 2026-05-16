@@ -190,9 +190,8 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1.5">
           {dayLabel} · Operating brief
         </p>
-        <p className="text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
-          Good morning,{" "}
-          <em className="font-serif italic text-ud-accent">{firstName}</em>.
+        <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
+          Good morning, {firstName}.
         </p>
         {profile.dailyFocus && (
           <p className="text-[14px] leading-[1.55] text-ud-muted mt-2">
@@ -204,11 +203,11 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       {/* 2. AiBriefCard */}
       <div className="px-[14px]">
         <AiBriefCard
-          eyebrow="UnifData · Suggested action"
+          eyebrow="UnifData · Daily focus"
           body={profile.headline}
           actions={[
-            { label: "Draft reminder", href: "/follow-ups", variant: "accent" },
-            { label: "Snooze", href: "#", variant: "ghost" },
+            { label: "Review follow-ups", href: "/follow-ups", variant: "accent" },
+            { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
           ]}
         />
       </div>

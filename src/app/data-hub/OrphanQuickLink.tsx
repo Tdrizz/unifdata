@@ -76,7 +76,7 @@ export function OrphanQuickLink({ groups }: { groups: OrphanGroup[] }) {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="text-xs text-ud-faint hover:text-slate-600"
+            className="text-xs text-ud-faint hover:text-ud-muted"
           >
             Dismiss
           </button>

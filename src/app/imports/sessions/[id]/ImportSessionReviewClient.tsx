@@ -105,10 +105,10 @@ function getRowTone(status: string) {
   }
 
   if (status === "skipped") {
-    return "border-slate-200 bg-ud-surface-sunk text-ud-muted";
+    return "border-ud bg-ud-surface-sunk text-ud-muted";
   }
 
-  return "border-slate-200 bg-ud-surface-sunk text-ud-muted";
+  return "border-ud bg-ud-surface-sunk text-ud-muted";
 }
 
 function getPrimaryRowLabel(
@@ -449,7 +449,7 @@ export function ImportSessionReviewClient({
           <button
             type="button"
             onClick={() => setMessage("")}
-            className="shrink-0 text-ud-faint hover:text-slate-600"
+            className="shrink-0 text-ud-faint hover:text-ud-muted"
             aria-label="Dismiss"
           >
             ×
@@ -524,7 +524,7 @@ export function ImportSessionReviewClient({
         )}
 
       <div className="overflow-hidden rounded-[12px] border border-ud">
-        <div className="border-b border-slate-200 bg-ud-surface-sunk px-4 py-3">
+        <div className="border-b border-ud bg-ud-surface-sunk px-4 py-3">
           <p className="text-sm font-semibold text-ud-ink">Row review</p>
           <p className="mt-1 text-xs text-ud-muted">
             Showing up to 250 staged rows.
@@ -766,7 +766,7 @@ export function ImportSessionReviewClient({
         <div className="rounded-[12px] border border-ud bg-ud-surface-sunk p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-semibold text-ud-ink">
                 Link related records
               </p>
               <p className="mt-1 text-sm text-ud-muted">
@@ -788,7 +788,7 @@ export function ImportSessionReviewClient({
             {activeSuggestions.map((suggestion) => (
               <div key={suggestion.record_id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">
+                  <p className="truncate text-sm font-semibold text-ud-ink">
                     {suggestion.record_label}
                   </p>
                   <p className="mt-0.5 text-xs text-[#4A3FA8] font-medium">
@@ -812,7 +812,7 @@ export function ImportSessionReviewClient({
                         return next;
                       })
                     }
-                    className="text-xs text-ud-faint hover:text-slate-600"
+                    className="text-xs text-ud-faint hover:text-ud-muted"
                   >
                     Skip
                   </button>

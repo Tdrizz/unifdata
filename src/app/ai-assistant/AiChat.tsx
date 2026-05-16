@@ -109,9 +109,9 @@ export function AiChat() {
             <div className="flex justify-start">
               <div className="rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-3">
                 <div className="flex gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:300ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-ud-muted [animation-delay:0ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-ud-muted [animation-delay:150ms]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-ud-muted [animation-delay:300ms]" />
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export function AiChat() {
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="flex items-center gap-3 border-t border-slate-100 p-4"
+        className="flex items-center gap-3 border-t border-ud p-4"
       >
         <input
           type="text"

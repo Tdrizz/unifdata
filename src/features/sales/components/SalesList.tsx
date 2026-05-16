@@ -135,7 +135,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
     .slice(0, 8);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={profile.labels.salePlural}
         title={`Track ${profile.labels.salePlural.toLowerCase()} and collected work`}

@@ -263,12 +263,10 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const visitsToShow = activeWork.slice(0, 5);
 
   return (
-    <div className="hidden md:block space-y-6">
+    <div className="hidden md:block space-y-6 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={`${dayLabel} · Operating brief`}
-        title={
-          <>Good morning, <em className="font-serif italic text-ud-accent">{firstName}</em>.</>
-        }
+        title={<>Good morning, {firstName}.</>}
         description={profile.dailyFocus}
       />
 
@@ -306,12 +304,11 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         {/* Left column */}
         <div className="space-y-5">
           <AiBriefCard
-            eyebrow="UnifData · Suggested action"
+            eyebrow="UnifData · Daily focus"
             body={profile.headline}
             actions={[
               { label: "Review follow-ups", href: "/follow-ups", variant: "primary" },
-              { label: "Ask follow-up", href: "/ai-assistant", variant: "secondary" },
-              { label: "Snooze", href: "#", variant: "ghost" },
+              { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
             ]}
           />
 

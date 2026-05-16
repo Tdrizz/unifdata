@@ -111,7 +111,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-8">
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
         <SectionCard
           title="Follow-up details"

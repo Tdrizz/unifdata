@@ -72,8 +72,8 @@ export function BriefDisplay({ summary }: { summary: string }) {
         if (line.type === "bullet") {
           return (
             <div key={i} className="flex items-start gap-2">
-              <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
-              <span className="text-slate-700">{line.text}</span>
+              <span className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-ud-muted" />
+              <span className="text-ud-text">{line.text}</span>
             </div>
           );
         }
@@ -84,13 +84,13 @@ export function BriefDisplay({ summary }: { summary: string }) {
               <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ud-surface-sunk text-[10px] font-bold text-ud-muted">
                 {line.n}
               </span>
-              <span className="text-slate-700">{line.text}</span>
+              <span className="text-ud-text">{line.text}</span>
             </div>
           );
         }
 
         return (
-          <p key={i} className="text-slate-700">
+          <p key={i} className="text-ud-text">
             {line.text}
           </p>
         );

@@ -62,7 +62,7 @@ export default async function CustomersPage({
       businessSector={company.business_sector}
     >
       {/* Desktop header — hidden on mobile (mobile header is inside CustomersList) */}
-      <div className="hidden md:block">
+      <div className="hidden md:block px-6 pt-5 pb-8">
         <PageHeader
           eyebrow="Clients"
           title={`${count} clients`}
@@ -73,10 +73,10 @@ export default async function CustomersPage({
               <Button variant="primary" size="sm">New client</Button>
             </div>
           }
-          className="px-[24px] pt-[20px] pb-[4px]"
+          className="pb-5"
         />
 
-        <div className="px-[24px] pt-[20px]">
+        <div>
           <CustomersTableClient
             customers={customers}
             jobs={jobs}

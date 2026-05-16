@@ -5,11 +5,11 @@ type Tone = "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "
 
 const toneClasses: Record<Tone, string> = {
   neutral: "bg-ud-surface-sunk text-ud-text",
-  success: "bg-[#eef5ec] text-ud-success",
-  warning: "bg-[#faf0e3] text-ud-warning",
-  danger:  "bg-[#fbeded] text-ud-danger",
-  info:    "bg-[#ebf2f9] text-ud-info",
-  accent:  "bg-ud-accent/10 text-ud-accent",
+  success: "bg-[var(--ud-success-bg)] text-ud-success",
+  warning: "bg-[var(--ud-warning-bg)] text-ud-warning",
+  danger:  "bg-[var(--ud-danger-bg)] text-ud-danger",
+  info:    "bg-[var(--ud-info-bg)] text-ud-info",
+  accent:  "bg-ud-accent-tint text-ud-accent",
   ink:     "bg-ud-ink text-ud-surface",
 };
 

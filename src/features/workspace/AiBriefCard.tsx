@@ -43,8 +43,8 @@ export function AiBriefCard({ eyebrow = "UnifData · Suggested action", body, ac
         </p>
       </div>
 
-      {/* Body — serif italic paragraph */}
-      <div className="relative text-[22px] font-normal leading-[1.3] tracking-[-0.015em] text-ud-ink font-serif italic">
+      {/* Body */}
+      <div className="relative text-[15px] font-medium leading-[1.55] text-ud-text">
         {body}
       </div>
 

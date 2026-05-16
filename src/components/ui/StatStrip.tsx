@@ -26,13 +26,16 @@ export function StatStrip({ items, className }: Props) {
   return (
     <div
       className={cn(
-        "flex divide-x bg-ud-surface border border-ud rounded-[12px] shadow-ud overflow-hidden",
+        "flex bg-ud-surface border border-ud rounded-[12px] shadow-ud overflow-hidden",
         className,
       )}
-      style={{ "--tw-divide-opacity": "1" } as React.CSSProperties}
     >
       {items.map((item, i) => (
-        <div key={i} className="flex-1 px-[14px] py-[14px] border-ud-soft">
+        <div
+          key={i}
+          className="flex-1 px-[14px] py-[14px]"
+          style={i > 0 ? { borderLeft: "1px solid var(--ud-border)" } : undefined}
+        >
           <p className="text-[11px] font-medium text-ud-muted leading-tight">{item.label}</p>
           <p
             className={cn(

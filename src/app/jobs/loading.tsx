@@ -1,11 +1,10 @@
-import { SkeletonCard } from "@/components/ui/Skeleton";
-
 export default function Loading() {
   return (
-    <div className="space-y-[20px] p-[24px]">
-      <SkeletonCard />
-      <SkeletonCard />
-      <SkeletonCard />
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex items-center gap-3">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-ud-surface-sunk border-t-ud-accent" />
+        <p className="text-[13px] text-ud-faint">Loading…</p>
+      </div>
     </div>
   );
 }

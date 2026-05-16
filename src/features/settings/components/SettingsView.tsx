@@ -99,7 +99,7 @@ export function SettingsView({
   const jobberIntegration = integrations.find((i) => i.provider === "jobber");
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"

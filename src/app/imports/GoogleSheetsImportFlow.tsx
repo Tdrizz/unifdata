@@ -373,7 +373,7 @@ export function GoogleSheetsImportFlow() {
           <button
             type="button"
             onClick={() => setMessage("")}
-            className="shrink-0 text-ud-faint hover:text-slate-600"
+            className="shrink-0 text-ud-faint hover:text-ud-muted"
             aria-label="Dismiss"
           >
             ×

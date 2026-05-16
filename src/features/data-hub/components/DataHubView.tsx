@@ -544,7 +544,7 @@ export function DataHubView({
     .slice(0, 8);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow="Data Hub"
         title="Record quality"

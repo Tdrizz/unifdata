@@ -120,16 +120,16 @@ function buildNavGroups(profile: ReturnType<typeof getIndustryProfile>): NavGrou
     {
       label: "Intelligence",
       items: [
-        { href: "/ai-assistant", label: "AI Assistant", icon: IconSparkles, accent: true },
-        { href: "/data-hub",     label: "Data Hub",     icon: IconBarChart },
-        { href: "/imports",      label: "Imports",      icon: IconUpload },
+        { href: "/follow-ups",   label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
+        { href: "/ai-assistant", label: "AI Assistant",                                 icon: IconSparkles, accent: true },
+        { href: "/data-hub",     label: "Data Hub",                                     icon: IconBarChart },
+        { href: "/imports",      label: "Imports",                                       icon: IconUpload },
       ],
     },
     {
       label: "Account",
       items: [
-        { href: "/follow-ups", label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
-        { href: "/settings",   label: "Settings",                                     icon: IconSettings },
+        { href: "/settings", label: "Settings", icon: IconSettings },
       ],
     },
   ];

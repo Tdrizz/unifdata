@@ -120,7 +120,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
     .slice(0, 6);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={profile.labels.leadPlural}
         title={`Manage ${profile.labels.leadPlural.toLowerCase()}`}

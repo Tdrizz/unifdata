@@ -43,17 +43,17 @@ export default async function EditRevenuePage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5">
+      <div className="space-y-5 px-6 pt-5 pb-8">
         <PageHeader
           eyebrow={`Edit ${profile.labels.saleSingular.toLowerCase()}`}
           title={sale.service_type || formatCurrency(sale.amount)}
           description={`Update amount, payment status, ${profile.labels.saleSingular.toLowerCase()} date, source, and service category.`}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link href="/sales" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+              <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
                 Back to Revenue
               </Link>
-              <Link href="/jobs" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">
+              <Link href="/jobs" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
                 Work
               </Link>
             </div>

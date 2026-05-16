@@ -188,7 +188,7 @@ export function CsvImportSessionFlow() {
               <a
                 href={`/templates/${recordType}-template.csv`}
                 download
-                className="font-semibold text-ud-muted underline underline-offset-2 hover:text-slate-900"
+                className="font-semibold text-ud-muted underline underline-offset-2 hover:text-ud-ink"
               >
                 Download template
               </a>
@@ -292,7 +292,7 @@ export function CsvImportSessionFlow() {
           <button
             type="button"
             onClick={() => setMessage("")}
-            className="shrink-0 text-ud-faint hover:text-slate-600"
+            className="shrink-0 text-ud-faint hover:text-ud-muted"
             aria-label="Dismiss"
           >
             &times;
