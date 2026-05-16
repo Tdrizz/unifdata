@@ -99,16 +99,39 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
     };
   }
 
-  // Upsert on email — handles the case where a profile already exists from a
-  // previous Clerk account (e.g. re-invited user) with a different clerk_user_id.
   const { data: insertedProfile, error: insertError } = await supabase
     .from("profiles")
-    .upsert(
-      { clerk_user_id: userId, email, full_name: fullName },
-      { onConflict: "email", ignoreDuplicates: false },
-    )
+    .insert({ clerk_user_id: userId, email, full_name: fullName })
     .select("id")
     .single();
+
+  // 23505 = unique_violation on email — profile exists under a different
+  // clerk_user_id (e.g. re-invited user signed up with a new Clerk account).
+  // Re-link the existing row to the current Clerk user.
+  if (insertError?.code === "23505") {
+    const { data: existing, error: lookupError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (lookupError || !existing) throw new Error(insertError.message);
+
+    await supabase
+      .from("profiles")
+      .update({ clerk_user_id: userId, full_name: fullName })
+      .eq("id", existing.id);
+
+    return {
+      clerkUserId: userId,
+      profileId: existing.id,
+      email,
+      fullName,
+      subscribed,
+      invitationCompanyId,
+      invitationRole,
+    };
+  }
 
   if (insertError) {
     throw new Error(insertError.message);
