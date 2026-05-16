@@ -233,23 +233,24 @@ export default function DocsPage() {
     <main className="min-h-screen bg-ud-page text-ud-ink">
       <PublicNav active="docs" />
 
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        {/* Header */}
-        <div className="rounded-[20px] border border-ud bg-ud-surface shadow-ud-raised p-8 md:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
-            UnifData Docs
-          </p>
-          <h1 className="mt-3 max-w-4xl text-[36px] font-semibold tracking-[-0.025em] leading-[1.15] md:text-[52px]">
-            Documentation for the business operating system.
-          </h1>
-          <p className="mt-5 max-w-3xl text-[15px] leading-[1.7] text-ud-muted">
-            UnifData helps local businesses organize relationships, opportunities, work, revenue, actions, imports, and AI summaries into one industry-aware workspace.
-          </p>
-        </div>
+      {/* Header */}
+      <div className="mx-auto max-w-7xl px-6 py-14">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ud-faint">
+          UnifData Docs
+        </p>
+        <h1 className="mt-3 max-w-4xl text-[38px] font-semibold leading-[1.1] tracking-tight md:text-[52px]">
+          Documentation for the business operating system.
+        </h1>
+        <p className="mt-5 max-w-3xl text-[15px] leading-[1.7] text-ud-muted">
+          UnifData helps local businesses organize relationships, opportunities, work, revenue, actions, imports, and AI summaries into one industry-aware workspace.
+        </p>
+      </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr]">
+      <div className="border-t border-ud">
+        <div className="mx-auto max-w-7xl px-6">
+        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
           {/* Sidebar */}
-          <aside className="h-fit rounded-[16px] border border-ud bg-ud-surface shadow-ud p-5 lg:sticky lg:top-[72px]">
+          <aside className="h-fit rounded-[14px] border border-ud bg-ud-surface shadow-ud p-5 py-6 lg:sticky lg:top-[72px] lg:mt-8">
             <p className="text-[12px] font-semibold text-ud-ink">Contents</p>
             <div className="mt-3 grid gap-0.5 text-[13px]">
               {navItems.map(([label, href]) => (
@@ -264,9 +265,9 @@ export default function DocsPage() {
             </div>
           </aside>
 
-          <div className="space-y-5">
+          <div className="divide-y divide-ud">
             {/* GETTING STARTED */}
-            <section id="start" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="start" className="py-10">
               <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
                 Quick start
               </p>
@@ -310,7 +311,7 @@ export default function DocsPage() {
             </section>
 
             {/* OVERVIEW */}
-            <section id="overview" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="overview" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Overview</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 UnifData is built for businesses that have important information scattered across spreadsheets, QuickBooks, old CRMs, texts, inboxes, and memory. The goal is to give business owners one clear place to see what needs attention, what work is active, what money is unpaid, and what data needs cleanup.
@@ -340,7 +341,7 @@ export default function DocsPage() {
             </section>
 
             {/* LIFECYCLE */}
-            <section id="lifecycle" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="lifecycle" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Core lifecycle</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 UnifData organizes every business around five layers. The labels change based on the company sector, but the structure stays the same across all industries.
@@ -366,7 +367,7 @@ export default function DocsPage() {
             </section>
 
             {/* PRODUCT PAGES */}
-            <section id="pages" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="pages" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Product pages</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 Each page in UnifData covers a specific part of the business operating layer. Pages are accessible from the main navigation after logging in.
@@ -393,7 +394,7 @@ export default function DocsPage() {
             </section>
 
             {/* INDUSTRY LANGUAGE */}
-            <section id="industries" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="industries" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Industry-aware language</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 The same five-layer lifecycle powers every workspace. What changes is the language. A dental office should see &quot;Patients&quot; and &quot;Appointments&quot; — not &quot;Customers&quot; and &quot;Jobs.&quot; UnifData adapts the workspace labels and priorities to the company&apos;s operating model during onboarding.
@@ -417,7 +418,7 @@ export default function DocsPage() {
             </section>
 
             {/* CONNECTED WORKFLOW */}
-            <section id="sync" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="sync" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Connected workflow</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 When an opportunity is marked accepted or won, UnifData can create the connected work record and expected revenue record. Payment status stays separate, so accepted business does not automatically mean the money has been collected.
@@ -448,7 +449,7 @@ export default function DocsPage() {
             </section>
 
             {/* INTEGRATIONS */}
-            <section id="integrations" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="integrations" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Integrations</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 UnifData connects to the tools local businesses already use. Integrations pull records into the workspace so you are not re-entering data from Jobber, QuickBooks, HubSpot, Square, or Google Sheets. Connect and manage integrations from{" "}
@@ -487,7 +488,7 @@ export default function DocsPage() {
             </section>
 
             {/* IMPORTS */}
-            <section id="imports" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="imports" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">Imports</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 The import flow supports customer CSV files. Each import is logged as a batch so you can track what was created and when. Records that already exist are not duplicated — the import creates new customer records only.
@@ -529,7 +530,7 @@ Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested
             </section>
 
             {/* AI ADVISOR */}
-            <section id="ai" className="rounded-[20px] border border-ud bg-ud-surface shadow-ud p-8">
+            <section id="ai" className="py-10">
               <h2 className="text-[24px] font-semibold tracking-[-0.02em]">AI Advisor</h2>
               <p className="mt-4 text-[13.5px] leading-[1.7] text-ud-muted">
                 The AI Advisor generates a plain-English business brief from the live data in the workspace. It reads the current state of customers, leads, jobs, sales, and follow-ups, then produces a structured summary with three sections: an overall snapshot, what needs attention, and recommended next actions.
@@ -589,28 +590,30 @@ Mike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested
               </div>
             </section>
 
-            {/* CTA */}
-            <section className="rounded-[20px] bg-ud-ink p-10 text-center text-white">
-              <h2 className="text-[26px] font-semibold tracking-[-0.02em]">Ready to build the workspace?</h2>
-              <p className="mt-3 text-[14px] leading-[1.7] text-white/50">
-                Create a company, pick the business sector, and start organizing the operating side of the business.
-              </p>
-              <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Link
-                  href="/waitlist"
-                  className="rounded-[10px] bg-white px-6 py-3 text-[14px] font-semibold text-ud-ink hover:bg-white/90 transition-opacity"
-                >
-                  Create workspace
-                </Link>
-                <Link
-                  href="/preview"
-                  className="rounded-[10px] border border-white/15 px-6 py-3 text-[14px] font-semibold text-white hover:bg-white/10 transition-colors"
-                >
-                  View preview
-                </Link>
-              </div>
-            </section>
           </div>
+        </div>
+      </div>
+      </div>
+
+      {/* CTA — full width dark band */}
+      <div className="bg-ud-ink px-6 py-16 text-center text-white">
+        <h2 className="text-[26px] font-semibold tracking-tight">Ready to build the workspace?</h2>
+        <p className="mt-3 text-[14px] leading-[1.7] text-white/50">
+          Create a company, pick the business sector, and start organizing the operating side of the business.
+        </p>
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href="/waitlist"
+            className="rounded-[10px] bg-white px-6 py-3 text-[14px] font-semibold text-ud-ink hover:bg-white/90"
+          >
+            Create workspace
+          </Link>
+          <Link
+            href="/preview"
+            className="rounded-[10px] border border-white/15 px-6 py-3 text-[14px] font-semibold text-white hover:bg-white/10"
+          >
+            View preview
+          </Link>
         </div>
       </div>
     </main>

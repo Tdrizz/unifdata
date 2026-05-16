@@ -82,10 +82,10 @@ export default function TermsPage() {
             <p className="mt-2 text-[13.5px] leading-7 text-ud-muted">
               Questions about these Terms can be sent to{" "}
               <a
-                href="mailto:tittanolson@gmail.com"
+                href="mailto:unifdata@gmail.com"
                 className="font-semibold text-ud-ink underline underline-offset-2"
               >
-                tittanolson@gmail.com
+                unifdata@gmail.com
               </a>
               .
             </p>
