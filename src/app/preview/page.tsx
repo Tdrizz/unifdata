@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ProductMark } from "@/components/ProductMark";
+import { PublicNav } from "@/components/PublicNav";
 
 export const metadata: Metadata = {
   title: "Product Preview",
@@ -122,40 +122,7 @@ const features = [
 export default function PreviewPage() {
   return (
     <main className="min-h-screen bg-ud-page text-ud-ink">
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b border-ud bg-ud-surface/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 h-14">
-          <Link href="/">
-            <ProductMark />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium text-ud-muted hover:bg-ud-surface-sunk hover:text-ud-ink transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              href="/docs"
-              className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium text-ud-muted hover:bg-ud-surface-sunk hover:text-ud-ink transition-colors"
-            >
-              Docs
-            </Link>
-            <Link
-              href="/sign-in"
-              className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium text-ud-muted hover:bg-ud-surface-sunk hover:text-ud-ink transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/waitlist"
-              className="rounded-[9px] bg-ud-ink px-4 py-1.5 text-[13px] font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNav active="preview" />
 
       <div className="mx-auto max-w-7xl px-6 py-10">
         {/* Header */}

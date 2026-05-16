@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ProductMark } from "@/components/ProductMark";
+import { PublicNav } from "@/components/PublicNav";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -51,20 +50,7 @@ const sections = [
 export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-ud-page text-ud-ink">
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b border-ud bg-ud-surface/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/">
-            <ProductMark />
-          </Link>
-          <Link
-            href="/"
-            className="rounded-[8px] px-3 py-1.5 text-[13px] font-medium text-ud-muted hover:bg-ud-surface-sunk hover:text-ud-ink"
-          >
-            ← Back to home
-          </Link>
-        </div>
-      </nav>
+      <PublicNav />
 
       <div className="mx-auto max-w-5xl px-6 py-12">
         {/* Header */}
