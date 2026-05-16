@@ -206,13 +206,7 @@ export default function PreviewPage() {
           <p className="mt-3 text-[15px] text-slate-300">
             Choose your industry, bring in your data, and see what needs attention today.
           </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/waitlist"
-              className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
-            >
-              Get started free
-            </Link>
+          <div className="mt-8 flex justify-center">
             <Link
               href="/docs"
               className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/8"
