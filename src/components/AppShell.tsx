@@ -43,11 +43,11 @@ export async function AppShell({
   return (
     <div className="flex min-h-screen bg-ud-page text-ud-text">
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-ud-hard" style={{ background: "var(--ud-sidebar)" }}>
+      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-ud bg-ud-page">
         {/* Brand block */}
         <div className="px-[18px] py-[18px] pb-[14px]">
           <Link href="/workspace">
-            <ProductMark companyName={companyName} inverse />
+            <ProductMark companyName={companyName} />
           </Link>
         </div>
 
@@ -90,7 +90,7 @@ export async function AppShell({
         />
 
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud-hard backdrop-blur-sm" style={{ background: "var(--ud-sidebar)" }}>
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud bg-ud-page/95 backdrop-blur-sm">
           <Link href="/workspace">
             <ProductMark companyName={companyName} />
           </Link>
