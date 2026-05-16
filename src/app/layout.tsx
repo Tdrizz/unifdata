@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { ToastHandler } from "@/components/ui/ToastHandler";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -104,6 +105,7 @@ export default function RootLayout({
           {children}
           <Toaster position="bottom-right" richColors />
           <ToastHandler />
+          <Analytics />
           <script
             dangerouslySetInnerHTML={{
               __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});}`,
