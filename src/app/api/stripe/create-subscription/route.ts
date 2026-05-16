@@ -28,22 +28,39 @@ export async function POST() {
       customerId = customer.id;
     }
 
-    // Create incomplete subscription — payment collected client-side via PaymentElement
-    // add_invoice_items charges the one-time setup fee on the first invoice only
-    const subscription = await stripe.subscriptions.create({
+    // Reuse any existing incomplete subscription so we don't create duplicates
+    const existingSubs = await stripe.subscriptions.list({
       customer: customerId,
-      items: [{ price: priceId }],
-      add_invoice_items: [{ price: setupPriceId }],
-      payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
-      metadata: { clerkUserId: user.clerkUserId, profileId: user.profileId },
+      status: "incomplete",
+      limit: 1,
+      expand: ["data.latest_invoice.payment_intent"],
     });
 
-    const invoice = subscription.latest_invoice as import("stripe").Stripe.Invoice & {
-      payment_intent: import("stripe").Stripe.PaymentIntent | null;
+    type ExpandedSubscription = import("stripe").Stripe.Subscription & {
+      latest_invoice: import("stripe").Stripe.Invoice & {
+        payment_intent: import("stripe").Stripe.PaymentIntent | null;
+      };
     };
-    const intent = invoice?.payment_intent;
+
+    let subscription: ExpandedSubscription;
+
+    if (existingSubs.data.length > 0) {
+      subscription = existingSubs.data[0] as ExpandedSubscription;
+    } else {
+      // Create incomplete subscription — payment collected client-side via PaymentElement
+      // add_invoice_items charges the one-time setup fee on the first invoice only
+      subscription = (await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }],
+        add_invoice_items: [{ price: setupPriceId }],
+        payment_behavior: "default_incomplete",
+        payment_settings: { save_default_payment_method: "on_subscription" },
+        expand: ["latest_invoice.payment_intent"],
+        metadata: { clerkUserId: user.clerkUserId, profileId: user.profileId },
+      })) as unknown as ExpandedSubscription;
+    }
+
+    const intent = subscription.latest_invoice?.payment_intent;
 
     if (!intent?.client_secret) {
       return NextResponse.json(
