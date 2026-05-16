@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicNav } from "@/components/PublicNav";
+import { SectorSelector } from "./SectorSelector";
 
 export const metadata: Metadata = {
   title: "Product Preview",
@@ -124,27 +125,33 @@ export default function PreviewPage() {
     <main className="min-h-screen bg-[#090e1a] text-white">
       <PublicNav dark active="preview" />
 
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         {/* Hero */}
-        <div className="flex flex-col gap-6 py-20 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
-              Product preview
-            </div>
-            <h1 className="mt-5 text-[38px] font-semibold leading-[1.05] tracking-tight sm:text-5xl">
-              One workspace.<br />Every business type.
-            </h1>
-            <p className="mt-4 text-[16px] leading-[1.7] text-slate-300">
-              UnifData adapts its language and priorities to the industry. A medical office, contractor, and home services crew don&apos;t get the same generic dashboard.
-            </p>
+        <div className="py-20 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
+            Product preview
           </div>
-          <Link
-            href="/waitlist"
-            className="shrink-0 rounded-xl bg-[#4A3FA8] px-6 py-3 text-center text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
-          >
-            Create workspace
-          </Link>
+          <h1 className="mx-auto mt-5 max-w-2xl text-[42px] font-semibold leading-[1.05] tracking-tight sm:text-5xl">
+            One workspace.<br />Every business type.
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-[16px] leading-[1.7] text-slate-300">
+            UnifData adapts its language and priorities to the industry. A medical office, contractor, and home services crew don&apos;t get the same generic dashboard.
+          </p>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/waitlist"
+              className="rounded-xl bg-[#4A3FA8] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
+            >
+              Create workspace
+            </Link>
+            <Link
+              href="/pricing"
+              className="rounded-xl border border-white/15 px-6 py-3 text-[14px] font-semibold text-slate-200 hover:bg-white/8"
+            >
+              See pricing
+            </Link>
+          </div>
         </div>
 
         {/* Industry workspaces */}
@@ -155,52 +162,12 @@ export default function PreviewPage() {
           <h2 className="mt-2 text-[24px] font-semibold tracking-tight">
             What you&apos;d see in each workspace
           </h2>
+          <p className="mt-2 text-[15px] text-slate-400">
+            Select your industry to see how the workspace is configured for it.
+          </p>
 
-          <div className="mt-8 grid gap-5 md:grid-cols-2">
-            {sectors.map((s) => (
-              <section
-                key={s.sector}
-                className="overflow-hidden rounded-[20px] border border-white/10 bg-white/4"
-              >
-                <div className="flex items-start justify-between gap-4 border-b border-white/8 p-5">
-                  <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      Industry workspace
-                    </p>
-                    <h3 className="mt-1.5 text-[18px] font-semibold">{s.sector}</h3>
-                    <p className="mt-1 text-[13px] text-slate-400">{s.focus}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-[#4A3FA8]/30 bg-[#4A3FA8]/15 px-3 py-1 text-[11px] font-semibold text-[#8B80E0]">
-                    Tailored
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 divide-x divide-y divide-white/6 border-b border-white/8">
-                  {s.metrics.map(([label, value]) => (
-                    <div key={label} className="p-4">
-                      <p className="text-[11.5px] font-medium text-slate-500">{label}</p>
-                      <p className="mt-1.5 text-[20px] font-semibold">{value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-4">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                    What the owner sees today
-                  </p>
-                  <div className="mt-3 grid gap-2">
-                    {s.insights.map((insight) => (
-                      <div
-                        key={insight}
-                        className="rounded-[10px] bg-white/5 px-4 py-3 text-[13px] text-slate-300"
-                      >
-                        {insight}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            ))}
+          <div className="mt-8">
+            <SectorSelector sectors={sectors} />
           </div>
         </div>
 
@@ -213,14 +180,17 @@ export default function PreviewPage() {
             Everything a business needs to operate clearly.
           </h2>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f, i) => (
               <div
                 key={f.title}
-                className="rounded-[14px] border border-white/10 bg-white/5 p-5"
+                className="rounded-[14px] border border-white/10 bg-white/4 p-5"
               >
+                <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-[8px] bg-[#4A3FA8]/20 text-[12px] font-bold text-[#8B80E0]">
+                  {String(i + 1).padStart(2, "0")}
+                </div>
                 <p className="text-[14px] font-semibold">{f.title}</p>
-                <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{f.description}</p>
+                <p className="mt-1.5 text-[13px] leading-[1.65] text-slate-400">{f.description}</p>
               </div>
             ))}
           </div>
@@ -255,7 +225,7 @@ export default function PreviewPage() {
 
       {/* Footer */}
       <footer className="border-t border-white/8 px-6 py-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
           <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-slate-300">Privacy</Link>
