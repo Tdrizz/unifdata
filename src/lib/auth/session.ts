@@ -99,13 +99,14 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
     };
   }
 
+  // Upsert on email — handles the case where a profile already exists from a
+  // previous Clerk account (e.g. re-invited user) with a different clerk_user_id.
   const { data: insertedProfile, error: insertError } = await supabase
     .from("profiles")
-    .insert({
-      clerk_user_id: userId,
-      email,
-      full_name: fullName,
-    })
+    .upsert(
+      { clerk_user_id: userId, email, full_name: fullName },
+      { onConflict: "email", ignoreDuplicates: false },
+    )
     .select("id")
     .single();
 
