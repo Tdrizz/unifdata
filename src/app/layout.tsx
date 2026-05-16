@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#1D2D3E",
+    "theme-color": "#090e1a",
   },
   icons: {
     icon: "/unifdata-mark.svg",
@@ -91,7 +91,7 @@ export default function RootLayout({
           {/* Apply dark class before first paint to prevent flash */}
           <script
             dangerouslySetInnerHTML={{
-              __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+              __html: `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark')}}catch(e){}})()`,
             }}
           />
           <script

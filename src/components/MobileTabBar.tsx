@@ -117,7 +117,7 @@ export function MobileTabBar({
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-ud backdrop-blur-[24px] saturate-[160%]"
       style={{
-        background: "rgba(247,246,243,0.88)",
+        background: "var(--ud-tabbar-bg)",
         paddingBottom: "env(safe-area-inset-bottom)",
         paddingLeft: 4,
         paddingRight: 4,
