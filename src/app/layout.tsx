@@ -84,8 +84,15 @@ export default function RootLayout({
       <html
         lang="en"
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+        suppressHydrationWarning
       >
         <head>
+          {/* Apply dark class before first paint to prevent flash */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            }}
+          />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{

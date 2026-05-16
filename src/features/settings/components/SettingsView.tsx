@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
-import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
@@ -15,8 +13,6 @@ interface Company {
   id: string;
   name: string;
   business_sector: string;
-  brand_color: string;
-  accent_color: string;
 }
 
 interface User {
@@ -107,24 +103,7 @@ export function SettingsView({
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"
-        description="Manage the business profile, appearance, connected tools, and account access."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/workspace"
-              className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
-            >
-              Home
-            </Link>
-
-            <Link
-              href="/imports"
-              className="rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
-            >
-              Import data
-            </Link>
-          </div>
-        }
+        description="Manage the business profile, connected tools, and account access."
       />
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
@@ -165,19 +144,6 @@ export function SettingsView({
                     Controls the language and priorities shown in dashboards.
                   </span>
                 </label>
-              </div>
-
-              <div className="rounded-[14px] border border-ud bg-ud-surface-soft p-[18px]">
-                <div className="mb-4">
-                  <p className="text-[14px] font-semibold text-ud-ink">Appearance</p>
-                  <p className="mt-1 text-[13px] leading-6 text-ud-muted">
-                    Pick the colors used for workspace branding and accents.
-                  </p>
-                </div>
-                <ColorPickers
-                  defaultBrandColor={company.brand_color}
-                  defaultAccentColor={company.accent_color}
-                />
               </div>
 
               <div className="flex justify-end">
@@ -356,50 +322,6 @@ export function SettingsView({
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Connected tools card */}
-      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
-        <div className="px-[22px] py-[18px] border-b border-ud">
-          <p className="text-[14.5px] font-semibold text-ud-ink">Connected tools</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">All external services connected to this workspace.</p>
-        </div>
-        <div>
-          {integrations.length === 0 ? (
-            <EmptyState
-              title="No connected tools"
-              description="Connect a data provider above to get started."
-            />
-          ) : (
-            <div className="divide-y divide-ud">
-              {integrations.map((integration) => (
-                <article
-                  key={integration.id}
-                  className="grid gap-3 p-[18px] md:grid-cols-[1fr_180px_130px] md:items-center"
-                >
-                  <div>
-                    <p className="text-[14px] font-semibold text-ud-ink">
-                      {getProviderLabel(integration.provider)}
-                    </p>
-                    <p className="mt-1 text-[13px] text-ud-muted">
-                      {integration.provider_account_name || "Connected account"}
-                    </p>
-                  </div>
-
-                  <p className="text-[13px] font-medium text-ud-muted">
-                    Added {formatTimestampDate(integration.created_at)}
-                  </p>
-
-                  <div className="md:text-right">
-                    <StatusBadge tone={getStatusTone(integration.status)}>
-                      {getStatusLabel(integration.status)}
-                    </StatusBadge>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 

@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { requireAppUser } from "@/lib/auth/session";
+import { getCurrentAppUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    // Must be logged in — link in the email sends you to sign-in first if needed
-    const user = await requireAppUser();
+    const { userId } = await auth();
+    if (!userId) {
+      // Redirect to sign-in preserving the full approve URL so Clerk bounces back here
+      const approveUrl = new URL(request.url).pathname + new URL(request.url).search;
+      return NextResponse.redirect(
+        new URL(`/sign-in?redirect_url=${encodeURIComponent(approveUrl)}`, request.url),
+      );
+    }
+
+    const user = await getCurrentAppUser();
+    if (!user) {
+      return new Response("Unauthorized", { status: 403 });
+    }
 
     // Only the owner email can approve
     if (!["tittanolson@gmail.com", "unifdata@gmail.com"].includes(user.email)) {

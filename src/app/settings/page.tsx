@@ -44,8 +44,6 @@ export default async function SettingsPage() {
           id: company.id,
           name: company.name,
           business_sector: company.business_sector,
-          brand_color: company.brand_color || "#1D2D3E",
-          accent_color: company.accent_color || "#4A3FA8",
         }}
         user={{ email: user.email || "" }}
         integrations={integrations}
