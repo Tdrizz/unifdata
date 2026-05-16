@@ -12,7 +12,7 @@ type Lead = CRMPageData["leads"][number];
 const STAGES: { name: string; color: string; keys: string[] }[] = [
   { name: "New", color: "#64748b", keys: ["new", "lead", "contact"] },
   { name: "Qualified", color: "#2563eb", keys: ["qualified", "interested"] },
-  { name: "Quoted", color: "#5C6F1A", keys: ["quoted", "proposal"] },
+  { name: "Quoted", color: "#4A3FA8", keys: ["quoted", "proposal"] },
   { name: "Accepted", color: "#3f7c3f", keys: ["accepted", "won", "confirmed"] },
   { name: "Lost", color: "#a09b91", keys: ["lost", "declined", "closed"] },
 ];

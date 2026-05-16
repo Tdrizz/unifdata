@@ -1,12 +1,12 @@
 const toneAccent: Record<string, string> = {
-  default: "bg-[#7A8C2A]",
+  default: "bg-[#4A3FA8]",
   subtle: "bg-[#a8b96a]",
   positive: "bg-emerald-500",
   warning: "bg-amber-500",
   danger: "bg-red-500",
   // backward-compatible aliases
   green: "bg-emerald-500",
-  blue: "bg-[#7A8C2A]",
+  blue: "bg-[#4A3FA8]",
   amber: "bg-amber-500",
   red: "bg-red-500",
 };

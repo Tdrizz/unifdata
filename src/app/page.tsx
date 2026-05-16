@@ -200,7 +200,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/waitlist"
-                className="rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
+                className="rounded-2xl bg-[#4A3FA8] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(74,63,168,0.35)] hover:bg-[#3D3494]"
               >
                 Get started
               </Link>
@@ -368,7 +368,7 @@ export default function HomePage() {
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/waitlist"
-                className="rounded-2xl bg-[#7A8C2A] px-6 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
+                className="rounded-2xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_24px_rgba(74,63,168,0.35)] hover:bg-[#3D3494]"
               >
                 Get started
               </Link>
@@ -433,7 +433,7 @@ export default function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/waitlist"
-                  className="flex-1 rounded-2xl bg-[#7A8C2A] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(122,140,42,0.35)] hover:bg-[#6b7c24]"
+                  className="flex-1 rounded-2xl bg-[#4A3FA8] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_24px_rgba(74,63,168,0.35)] hover:bg-[#3D3494]"
                 >
                   Get started
                 </Link>

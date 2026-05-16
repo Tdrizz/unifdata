@@ -14,7 +14,7 @@
   --color-ud-faint: rgb(160 155 145);
 
   /* ── Colors: brand ────────────────────────────────────────────────── */
-  --color-ud-accent:  rgb(92 111 26);
+  --color-ud-accent:  rgb(74 63 168);
   --color-ud-navy:    rgb(29 45 62);
 
   /* ── Colors: semantic ─────────────────────────────────────────────── */
@@ -67,9 +67,9 @@
   --ud-border-soft: rgba(23, 22, 20, 0.05);
   --ud-border-hard: rgba(23, 22, 20, 0.14);
 
-  --ud-accent:      #5C6F1A;
-  --ud-accent-soft: rgba(92, 111, 26, 0.10);
-  --ud-accent-tint: rgba(92, 111, 26, 0.06);
+  --ud-accent:      #4A3FA8;
+  --ud-accent-soft: rgba(74, 63, 168, 0.10);
+  --ud-accent-tint: rgba(74, 63, 168, 0.06);
   --ud-navy:        #1D2D3E;
 
   --ud-success:    #3f7c3f;
@@ -104,9 +104,9 @@
   --ud-border-soft: rgba(255, 253, 245, 0.05);
   --ud-border-hard: rgba(255, 253, 245, 0.14);
 
-  --ud-accent:      #8aab2e;
-  --ud-accent-soft: rgba(138, 171, 46, 0.12);
-  --ud-accent-tint: rgba(138, 171, 46, 0.07);
+  --ud-accent:      #8B80E0;
+  --ud-accent-soft: rgba(139, 128, 224, 0.12);
+  --ud-accent-tint: rgba(139, 128, 224, 0.07);
 
   --ud-success:    #5aab5a;
   --ud-success-bg: #1a2e1a;

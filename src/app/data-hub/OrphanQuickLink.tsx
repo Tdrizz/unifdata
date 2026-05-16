@@ -93,14 +93,14 @@ export function OrphanQuickLink({ groups }: { groups: OrphanGroup[] }) {
       </div>
 
       {message && (
-        <p className="mt-3 text-sm font-semibold text-[#7A8C2A]">{message}</p>
+        <p className="mt-3 text-sm font-semibold text-[#4A3FA8]">{message}</p>
       )}
 
       <div className="mt-4 divide-y divide-slate-100">
         {actionableGroups.slice(0, 5).map((group) => (
           <div key={group.customer_id} className="py-3">
             <p className="text-sm font-semibold text-slate-900">{group.customer_name}</p>
-            <p className="mt-0.5 text-xs text-[#7A8C2A] font-medium">
+            <p className="mt-0.5 text-xs text-[#4A3FA8] font-medium">
               {group.jobs.length} job{group.jobs.length !== 1 ? "s" : ""} → {group.suggested_lead!.service_requested ?? "Opportunity"}
             </p>
             <p className="mt-0.5 text-xs text-slate-500">These jobs and opportunities share the same customer — linking them connects your data automatically.</p>

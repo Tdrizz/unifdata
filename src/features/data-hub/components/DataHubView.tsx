@@ -608,7 +608,7 @@ export function DataHubView({
                     </span>
                     <Link
                       href={item.href}
-                      className="text-xs font-semibold text-[#7A8C2A] hover:underline"
+                      className="text-xs font-semibold text-[#4A3FA8] hover:underline"
                     >
                       Review →
                     </Link>

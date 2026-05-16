@@ -256,7 +256,7 @@ export function SubscribeForm({ userEmail }: { userEmail: string }) {
                   appearance: {
                     theme: "flat",
                     variables: {
-                      colorPrimary: "#5C6F1A",
+                      colorPrimary: "#4A3FA8",
                       colorBackground: "#ffffff",
                       colorText: "#171614",
                       colorDanger: "#a83232",
@@ -271,8 +271,8 @@ export function SubscribeForm({ userEmail }: { userEmail: string }) {
                         fontSize: "13.5px",
                       },
                       ".Input:focus": {
-                        border: "1.5px solid #5C6F1A",
-                        boxShadow: "0 0 0 3px rgba(92,111,26,0.12)",
+                        border: "1.5px solid #4A3FA8",
+                        boxShadow: "0 0 0 3px rgba(74,63,168,0.12)",
                       },
                       ".Label": {
                         fontSize: "12.5px",

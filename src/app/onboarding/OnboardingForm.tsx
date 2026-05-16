@@ -30,7 +30,7 @@ export function OnboardingForm() {
         <label className="text-sm font-medium text-slate-200">Company name</label>
         <input
           name="companyName"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#7A8C2A]/40"
+          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
           placeholder="Arctic Ridge Services"
           required
         />
@@ -53,7 +53,7 @@ export function OnboardingForm() {
                 onClick={() => setSelectedSector(option.value)}
                 className={`flex flex-col items-start gap-2 rounded-2xl border p-3.5 text-left transition-all ${
                   isActive
-                    ? "border-[#7A8C2A] bg-[rgba(122,140,42,0.15)] ring-1 ring-[#7A8C2A]"
+                    ? "border-[#4A3FA8] bg-[rgba(74,63,168,0.15)] ring-1 ring-[#4A3FA8]"
                     : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
                 }`}
               >
@@ -61,7 +61,7 @@ export function OnboardingForm() {
                   className="flex h-8 w-8 items-center justify-center rounded-xl text-lg"
                   style={
                     isActive
-                      ? { background: "rgba(122,140,42,0.3)" }
+                      ? { background: "rgba(74,63,168,0.3)" }
                       : { background: "rgba(255,255,255,0.08)" }
                   }
                 >
@@ -80,7 +80,7 @@ export function OnboardingForm() {
                   </p>
                 </div>
                 {isActive && (
-                  <span className="ml-auto self-end rounded-full bg-[#7A8C2A] px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="ml-auto self-end rounded-full bg-[#4A3FA8] px-2 py-0.5 text-[10px] font-bold text-white">
                     ✓
                   </span>
                 )}
@@ -98,14 +98,14 @@ export function OnboardingForm() {
         </label>
         <input
           name="industry"
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#7A8C2A]/40"
+          className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
           placeholder="Excavation, dental office, landscaping..."
         />
       </div>
 
       <button
         type="submit"
-        className="w-full rounded-2xl bg-[#7A8C2A] px-4 py-3.5 font-semibold text-white hover:bg-[#6b7c24]"
+        className="w-full rounded-2xl bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494]"
       >
         Create workspace →
       </button>

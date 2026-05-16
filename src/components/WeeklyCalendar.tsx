@@ -104,7 +104,7 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
             <div
               key={day.toISOString()}
               className={`border-b border-r border-slate-200 p-2 text-center text-xs font-medium ${
-                isToday ? "bg-[rgba(122,140,42,0.1)] text-[#7A8C2A]" : "bg-slate-50 text-slate-600"
+                isToday ? "bg-[rgba(74,63,168,0.1)] text-[#4A3FA8]" : "bg-slate-50 text-slate-600"
               }`}
             >
               <div>{day.toLocaleDateString("en-US", { weekday: "short" })}</div>

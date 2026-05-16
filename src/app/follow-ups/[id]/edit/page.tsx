@@ -38,7 +38,7 @@ export default async function EditFollowUpPage({
       companyName={company.name}
       userEmail={user.email || ""}
       brandColor={company.brand_color || "#1D2D3E"}
-      accentColor={company.accent_color || "#7A8C2A"}
+      accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
       <PageHeader eyebrow={profile.labels.followUpPlural} title="Edit follow-up" />

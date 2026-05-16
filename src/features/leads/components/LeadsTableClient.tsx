@@ -79,7 +79,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
           <button
             onClick={handleApply}
             disabled={isPending || !bulkStatus}
-            className="rounded-lg bg-[#7A8C2A] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#6b7c24] disabled:opacity-50"
+            className="rounded-lg bg-[#4A3FA8] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#3D3494] disabled:opacity-50"
           >
             {isPending
               ? "Applying…"

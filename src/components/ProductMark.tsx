@@ -35,13 +35,13 @@ export function ProductMark({
           {/* Inner circle mask */}
           <circle cx="256" cy="256" r="142" fill="#1D2D3E" />
 
-          {/* USB / circuit fork symbol in olive green */}
-          <line x1="256" y1="190" x2="256" y2="270" stroke="#7A8C2A" strokeWidth="20" strokeLinecap="round" />
-          <line x1="256" y1="222" x2="198" y2="222" stroke="#7A8C2A" strokeWidth="18" strokeLinecap="round" />
-          <line x1="256" y1="254" x2="314" y2="254" stroke="#7A8C2A" strokeWidth="18" strokeLinecap="round" />
-          <circle cx="194" cy="222" r="20" fill="none" stroke="#7A8C2A" strokeWidth="16" />
-          <rect x="300" y="238" width="32" height="32" rx="5" fill="none" stroke="#7A8C2A" strokeWidth="16" />
-          <circle cx="256" cy="316" r="24" fill="#7A8C2A" />
+          {/* USB / circuit fork symbol */}
+          <line x1="256" y1="190" x2="256" y2="270" stroke="#6B5FCC" strokeWidth="20" strokeLinecap="round" />
+          <line x1="256" y1="222" x2="198" y2="222" stroke="#6B5FCC" strokeWidth="18" strokeLinecap="round" />
+          <line x1="256" y1="254" x2="314" y2="254" stroke="#6B5FCC" strokeWidth="18" strokeLinecap="round" />
+          <circle cx="194" cy="222" r="20" fill="none" stroke="#6B5FCC" strokeWidth="16" />
+          <rect x="300" y="238" width="32" height="32" rx="5" fill="none" stroke="#6B5FCC" strokeWidth="16" />
+          <circle cx="256" cy="316" r="24" fill="#6B5FCC" />
         </svg>
       </div>
 
@@ -55,7 +55,7 @@ export function ProductMark({
             }
           >
             <span>UNIF</span>
-            <span className={inverse ? "text-[#7A8C2A]" : "text-[#7A8C2A]"}>DATA</span>
+            <span className={inverse ? "text-[#6B5FCC]" : "text-[#6B5FCC]"}>DATA</span>
           </p>
 
           {companyName && (

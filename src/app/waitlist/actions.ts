@@ -94,7 +94,7 @@ export async function submitWaitlistRequest(
             <p style="margin:0;font-size:13px;color:#2c2a26;line-height:1.6;">${parsed.data.useCase.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
           </div>
 
-          <a href="${approveUrl}" style="display:inline-block;background:#5C6F1A;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;font-size:14px;">
+          <a href="${approveUrl}" style="display:inline-block;background:#4A3FA8;color:#fff;text-decoration:none;padding:12px 24px;border-radius:10px;font-weight:600;font-size:14px;">
             Approve &amp; send invite →
           </a>
 

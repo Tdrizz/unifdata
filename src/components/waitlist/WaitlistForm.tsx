@@ -75,7 +75,7 @@ export function WaitlistForm() {
           <select
             name="companySize"
             required
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#7A8C2A]/40"
+            className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
             defaultValue=""
           >
             <option value="" disabled>
@@ -103,7 +103,7 @@ export function WaitlistForm() {
           name="useCase"
           required
           rows={5}
-          className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#7A8C2A]/40"
+          className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
           placeholder="Tell us what data is scattered, duplicated, or hard to act on today."
         />
         {state.fieldErrors?.useCase && (
@@ -122,7 +122,7 @@ export function WaitlistForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-2xl bg-[#7A8C2A] px-4 py-3.5 font-semibold text-white hover:bg-[#6b7c24] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-2xl bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Submitting..." : "Request beta access"}
       </button>
@@ -151,7 +151,7 @@ function Field({
         type={type}
         autoComplete={autoComplete}
         required
-        className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#7A8C2A]/40"
+        className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-slate-950 outline-none focus:ring-2 focus:ring-[#4A3FA8]/40"
       />
       {error && <p className="mt-2 text-sm text-red-200">{error}</p>}
     </div>

@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Stripe redirects here after 3DS auth with ?payment_intent=pi_xxx&payment_intent_client_secret=...
-export default function SubscribeCompletePage() {
+function SubscribeCompleteInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [status, setStatus] = useState<"loading" | "error">("loading");
@@ -63,5 +62,19 @@ export default function SubscribeCompletePage() {
     <div className="min-h-screen bg-ud-page flex items-center justify-center px-4">
       <p className="text-[14px] text-ud-muted">Confirming payment…</p>
     </div>
+  );
+}
+
+export default function SubscribeCompletePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-ud-page flex items-center justify-center px-4">
+          <p className="text-[14px] text-ud-muted">Loading…</p>
+        </div>
+      }
+    >
+      <SubscribeCompleteInner />
+    </Suspense>
   );
 }

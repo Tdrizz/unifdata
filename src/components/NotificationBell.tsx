@@ -81,7 +81,7 @@ export function NotificationBell({ companyId, initialNotifications, variant = "s
               <p className="px-4 py-6 text-center text-sm text-slate-500">No notifications</p>
             ) : (
               notifications.slice(0, 10).map((n) => (
-                <div key={n.id} className={`border-b border-slate-100 px-4 py-3 last:border-0 ${!n.read ? "bg-[rgba(122,140,42,0.06)]" : ""}`}>
+                <div key={n.id} className={`border-b border-slate-100 px-4 py-3 last:border-0 ${!n.read ? "bg-[rgba(74,63,168,0.06)]" : ""}`}>
                   <p className="text-sm font-medium text-slate-900">{n.title}</p>
                   {n.body && <p className="mt-0.5 text-xs text-slate-500">{n.body}</p>}
                   <p className="mt-1 text-xs text-slate-400">{new Date(n.created_at).toLocaleDateString()}</p>

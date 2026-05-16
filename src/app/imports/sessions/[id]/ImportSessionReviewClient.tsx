@@ -791,7 +791,7 @@ export function ImportSessionReviewClient({
                   <p className="truncate text-sm font-semibold text-slate-900">
                     {suggestion.record_label}
                   </p>
-                  <p className="mt-0.5 text-xs text-[#7A8C2A] font-medium">
+                  <p className="mt-0.5 text-xs text-[#4A3FA8] font-medium">
                     {suggestion.table === "jobs" ? "Job" : "Sale"} → {suggestion.suggested_label}
                     {suggestion.customer_name ? ` · ${suggestion.customer_name}` : ""}
                   </p>
