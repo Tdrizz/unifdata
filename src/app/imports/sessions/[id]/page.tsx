@@ -135,7 +135,7 @@ export default async function ImportSessionPage({
           actions={
             <Link
               href="/imports"
-              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-slate-50"
+              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Back to imports
             </Link>

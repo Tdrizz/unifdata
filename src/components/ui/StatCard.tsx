@@ -25,17 +25,17 @@ export function StatCard({
   const accent = toneAccent[tone] ?? toneAccent.default;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <div className="relative overflow-hidden rounded-[14px] border border-ud bg-ud-surface p-5 shadow-ud">
       <div className={`absolute left-0 top-0 h-full w-[3px] ${accent}`} />
 
-      <p className="text-[12px] font-medium text-slate-500">{label}</p>
+      <p className="text-[12px] font-medium text-ud-faint">{label}</p>
 
-      <p className="mt-1.5 text-[30px] font-bold tracking-[-0.025em] text-slate-950">
+      <p className="mt-1.5 text-[30px] font-bold tracking-[-0.025em] text-ud-ink">
         {value}
       </p>
 
       {helper && (
-        <p className="mt-1 text-[12px] font-medium text-slate-400">
+        <p className="mt-1 text-[12px] font-medium text-ud-faint">
           {helper}
         </p>
       )}

@@ -21,8 +21,8 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
           onClick={() => setView("list")}
           className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "list"
-              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              ? "border-ud-accent bg-ud-accent text-white"
+              : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"
           }`}
         >
           List
@@ -31,8 +31,8 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
           onClick={() => setView("calendar")}
           className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
             view === "calendar"
-              ? "border-[#1D2D3E] bg-[#1D2D3E] text-white"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              ? "border-ud-accent bg-ud-accent text-white"
+              : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"
           }`}
         >
           Calendar
@@ -42,9 +42,9 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
       {view === "list" ? (
         children
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-[10px] border border-ud bg-ud-surface p-4">
           {calendarEvents.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">
+            <p className="py-8 text-center text-sm text-ud-faint">
               No jobs with a start date to show on the calendar.
             </p>
           ) : (

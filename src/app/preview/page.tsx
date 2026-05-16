@@ -121,77 +121,78 @@ const features = [
 
 export default function PreviewPage() {
   return (
-    <main className="min-h-screen bg-ud-page text-ud-ink">
-      <PublicNav active="preview" />
+    <main className="min-h-screen bg-[#090e1a] text-white">
+      <PublicNav dark active="preview" />
 
       <div className="mx-auto max-w-7xl px-6">
         {/* Hero */}
-        <div className="flex flex-col gap-6 py-14 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-6 py-20 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ud-faint">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
               Product preview
-            </p>
-            <h1 className="mt-3 text-[38px] font-semibold leading-[1.1] tracking-tight md:text-[52px]">
+            </div>
+            <h1 className="mt-5 text-[38px] font-semibold leading-[1.05] tracking-tight sm:text-5xl">
               One workspace.<br />Every business type.
             </h1>
-            <p className="mt-4 text-[15px] leading-[1.7] text-ud-muted">
+            <p className="mt-4 text-[16px] leading-[1.7] text-slate-300">
               UnifData adapts its language and priorities to the industry. A medical office, contractor, and home services crew don&apos;t get the same generic dashboard.
             </p>
           </div>
           <Link
             href="/waitlist"
-            className="shrink-0 rounded-[10px] bg-ud-ink px-6 py-3 text-center text-[14px] font-semibold text-white hover:opacity-90"
+            className="shrink-0 rounded-xl bg-[#4A3FA8] px-6 py-3 text-center text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
           >
             Create workspace
           </Link>
         </div>
 
         {/* Industry workspaces */}
-        <div className="border-t border-ud pt-10 pb-14">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ud-faint">
+        <div className="border-t border-white/8 pt-14 pb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             Industry workspaces
           </p>
-          <h2 className="mt-2 text-[22px] font-semibold tracking-tight">
+          <h2 className="mt-2 text-[24px] font-semibold tracking-tight">
             What you&apos;d see in each workspace
           </h2>
 
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
             {sectors.map((s) => (
               <section
                 key={s.sector}
-                className="overflow-hidden rounded-[14px] border border-ud bg-ud-surface shadow-ud"
+                className="overflow-hidden rounded-[20px] border border-white/10 bg-white/4"
               >
-                <div className="flex items-start justify-between gap-4 border-b border-ud p-5">
+                <div className="flex items-start justify-between gap-4 border-b border-white/8 p-5">
                   <div>
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ud-faint">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                       Industry workspace
                     </p>
                     <h3 className="mt-1.5 text-[18px] font-semibold">{s.sector}</h3>
-                    <p className="mt-1 text-[13px] text-ud-muted">{s.focus}</p>
+                    <p className="mt-1 text-[13px] text-slate-400">{s.focus}</p>
                   </div>
-                  <span className="shrink-0 rounded-full border border-ud bg-ud-accent-soft px-3 py-1 text-[11px] font-semibold text-ud-accent">
+                  <span className="shrink-0 rounded-full border border-[#4A3FA8]/30 bg-[#4A3FA8]/15 px-3 py-1 text-[11px] font-semibold text-[#8B80E0]">
                     Tailored
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 divide-x divide-y divide-ud border-b border-ud">
+                <div className="grid grid-cols-2 divide-x divide-y divide-white/6 border-b border-white/8">
                   {s.metrics.map(([label, value]) => (
                     <div key={label} className="p-4">
-                      <p className="text-[11.5px] font-medium text-ud-muted">{label}</p>
+                      <p className="text-[11.5px] font-medium text-slate-500">{label}</p>
                       <p className="mt-1.5 text-[20px] font-semibold">{value}</p>
                     </div>
                   ))}
                 </div>
 
                 <div className="p-4">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ud-faint">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                     What the owner sees today
                   </p>
                   <div className="mt-3 grid gap-2">
                     {s.insights.map((insight) => (
                       <div
                         key={insight}
-                        className="rounded-[10px] bg-ud-surface-soft px-4 py-3 text-[13px] text-ud-muted"
+                        className="rounded-[10px] bg-white/5 px-4 py-3 text-[13px] text-slate-300"
                       >
                         {insight}
                       </div>
@@ -204,55 +205,65 @@ export default function PreviewPage() {
         </div>
 
         {/* What's inside */}
-        <div className="border-t border-ud pt-10 pb-14">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ud-faint">
+        <div className="border-t border-white/8 pt-14 pb-20">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             What&apos;s inside every workspace
           </p>
-          <h2 className="mt-2 text-[22px] font-semibold tracking-tight">
+          <h2 className="mt-2 text-[24px] font-semibold tracking-tight">
             Everything a business needs to operate clearly.
           </h2>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {features.map((f) => (
               <div
                 key={f.title}
-                className="rounded-[14px] border border-ud bg-ud-surface p-5 shadow-ud"
+                className="rounded-[14px] border border-white/10 bg-white/5 p-5"
               >
-                <p className="text-[14px] font-semibold text-ud-ink">{f.title}</p>
-                <p className="mt-2 text-[13px] leading-[1.65] text-ud-muted">{f.description}</p>
+                <p className="text-[14px] font-semibold">{f.title}</p>
+                <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{f.description}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* CTA — full width dark band */}
-      <div className="bg-ud-ink px-6 py-16 text-white">
-        <div className="mx-auto max-w-7xl flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-[28px] font-semibold tracking-tight">
-              Ready to build your workspace?
-            </h2>
-            <p className="mt-3 max-w-xl text-[14px] leading-[1.7] text-white/60">
-              Create an account, choose the business sector, and start organizing customers, leads, jobs, revenue, and follow-ups in one place. Takes about two minutes to set up.
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
+      {/* CTA */}
+      <div className="border-t border-white/8 px-6 py-20 text-center">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-[30px] font-semibold tracking-tight">
+            Ready to build your workspace?
+          </h2>
+          <p className="mt-3 text-[15px] text-slate-300">
+            Choose your industry, bring in your data, and see what needs attention today.
+          </p>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/waitlist"
-              className="rounded-[10px] bg-white px-6 py-3 text-center text-[14px] font-semibold text-ud-ink hover:bg-white/90"
+              className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
             >
-              Create workspace
+              Get started free
             </Link>
             <Link
               href="/docs"
-              className="rounded-[10px] border border-white/15 px-6 py-3 text-center text-[14px] font-semibold text-white hover:bg-white/10"
+              className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/8"
             >
               Read the docs
             </Link>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-white/8 px-6 py-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
+          <p>© 2026 UnifData. All rights reserved.</p>
+          <div className="flex gap-5">
+            <Link href="/privacy" className="hover:text-slate-300">Privacy</Link>
+            <Link href="/terms" className="hover:text-slate-300">Terms</Link>
+            <Link href="/docs" className="hover:text-slate-300">Docs</Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

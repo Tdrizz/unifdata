@@ -119,7 +119,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
         >
           <form action={formAction} className="space-y-5 p-5">
             {state?.error && (
-              <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                 {state.error}
               </p>
             )}
@@ -169,7 +169,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
             <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
               <Link
                 href="/follow-ups"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
               >
                 Cancel
               </Link>
@@ -184,23 +184,23 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
             description="How this follow-up is currently being interpreted."
           >
             <div className="space-y-4 p-5">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-medium text-slate-500">Next step</p>
-                <p className="mt-1 text-sm leading-6 text-slate-700">
+              <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+                <p className="text-sm font-medium text-ud-faint">Next step</p>
+                <p className="mt-1 text-sm leading-6 text-ud-muted">
                   {getActionNextStep(followUp)}
                 </p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Due</p>
+                <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+                  <p className="text-sm font-medium text-ud-faint">Due</p>
                   <div className="mt-2">
                     <StatusBadge tone={getDueTone(followUp)}>{getDueLabel(followUp)}</StatusBadge>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Status</p>
+                <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+                  <p className="text-sm font-medium text-ud-faint">Status</p>
                   <div className="mt-2">
                     <StatusBadge tone={getActionTone(followUp.status)}>
                       {followUp.status || "Open"}
@@ -234,15 +234,15 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
               {issues.map((issue) => (
                 <div
                   key={issue.label}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-                    <p className="text-sm font-medium text-slate-500">
+                    <p className="text-sm font-medium text-ud-faint">
                       {issue.label === "Looks clean" ? "No action needed" : "Needs update"}
                     </p>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{issue.detail}</p>
+                  <p className="mt-2 text-sm leading-6 text-ud-muted">{issue.detail}</p>
                 </div>
               ))}
             </div>

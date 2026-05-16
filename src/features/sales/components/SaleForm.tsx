@@ -85,7 +85,7 @@ export function SaleForm({ sale, customers }: Props) {
       >
         <form action={formAction} className="space-y-5 p-5">
           {state?.error && (
-            <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               {state.error}
             </p>
           )}
@@ -131,7 +131,7 @@ export function SaleForm({ sale, customers }: Props) {
           )}
 
           <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
-            <Link href="/sales" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
               Cancel
             </Link>
             <SubmitButton>Save revenue</SubmitButton>
@@ -142,15 +142,15 @@ export function SaleForm({ sale, customers }: Props) {
       <div className="space-y-5">
         <SectionCard title="Record summary" description="How this revenue record is currently being interpreted.">
           <div className="space-y-4 p-5">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-medium text-slate-500">Next step</p>
-              <p className="mt-1 text-sm leading-6 text-slate-700">{getRevenueNextStep(sale)}</p>
+            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+              <p className="text-sm font-medium text-ud-faint">Next step</p>
+              <p className="mt-1 text-sm leading-6 text-ud-muted">{getRevenueNextStep(sale)}</p>
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
               <SummaryCard label="Amount" value={formatCurrency(sale.amount)} />
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-medium text-slate-500">Payment</p>
+              <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+                <p className="text-sm font-medium text-ud-faint">Payment</p>
                 <div className="mt-2">
                   <StatusBadge tone={getRevenueTone(sale.payment_status)}>{sale.payment_status || "Not set"}</StatusBadge>
                 </div>
@@ -175,12 +175,12 @@ export function SaleForm({ sale, customers }: Props) {
         <SectionCard title="Cleanup" description="Issues affecting revenue, payment, and source reporting.">
           <div className="space-y-3 p-5">
             {issues.map((issue) => (
-              <div key={issue.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div key={issue.label} className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
                 <div className="flex items-center justify-between gap-3">
                   <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-                  <p className="text-sm font-medium text-slate-500">{issue.label === "Looks clean" ? "No action needed" : "Needs update"}</p>
+                  <p className="text-sm font-medium text-ud-faint">{issue.label === "Looks clean" ? "No action needed" : "Needs update"}</p>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{issue.detail}</p>
+                <p className="mt-2 text-sm leading-6 text-ud-muted">{issue.detail}</p>
               </div>
             ))}
           </div>

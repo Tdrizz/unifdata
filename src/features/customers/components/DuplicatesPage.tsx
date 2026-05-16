@@ -32,32 +32,32 @@ export function DuplicatesPage({ groups: initialGroups }: { groups: DuplicateGro
   };
 
   if (groups.length === 0) {
-    return <div className="py-16 text-center text-slate-500">No duplicate customers found.</div>;
+    return <div className="py-16 text-center text-ud-faint">No duplicate customers found.</div>;
   }
 
   return (
     <div className="space-y-6">
       {groups.map((group) => (
-        <div key={`${group.type}-${group.key}`} className="rounded-xl border border-slate-200 bg-white p-5">
-          <p className="mb-4 text-sm text-slate-500">
+        <div key={`${group.type}-${group.key}`} className="rounded-[12px] border border-ud bg-ud-surface p-5 shadow-ud">
+          <p className="mb-4 text-sm text-ud-muted">
             Duplicate <strong>{group.type}</strong>: <span className="font-mono">{group.key}</span>
           </p>
           <div className="space-y-3">
             {group.customers.map((customer, i) => (
-              <div key={customer.id} className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 p-3">
+              <div key={customer.id} className="flex items-center justify-between gap-4 rounded-[8px] bg-ud-surface-sunk p-3">
                 <div>
-                  <p className="font-semibold text-slate-950">{customer.name}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="font-semibold text-ud-ink">{customer.name}</p>
+                  <p className="text-xs text-ud-faint">
                     {customer.email ?? ""}{customer.phone ? ` · ${customer.phone}` : ""}
                   </p>
                 </div>
                 {i === 0 ? (
-                  <span className="shrink-0 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Keep</span>
+                  <span className="shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Keep</span>
                 ) : (
                   <button
                     onClick={() => handleMerge(group.customers[0].id, customer.id)}
                     disabled={isPending}
-                    className="shrink-0 rounded-lg bg-[#1D2D3E] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:opacity-50"
+                    className="shrink-0 rounded-[8px] bg-ud-accent px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
                     Merge into first
                   </button>

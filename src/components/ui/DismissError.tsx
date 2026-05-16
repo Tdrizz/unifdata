@@ -7,7 +7,7 @@ export function DismissError({ message }: { message: string }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+    <div className="flex items-start justify-between gap-3 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3">
       <p className="text-sm font-medium text-red-700">{message}</p>
       <button
         onClick={() => router.replace(pathname)}

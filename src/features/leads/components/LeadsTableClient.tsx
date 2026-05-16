@@ -62,12 +62,12 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
   return (
     <div>
       {selected.size > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
-          <span className="text-sm text-slate-600">{selected.size} selected</span>
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[8px] border border-ud bg-ud-surface p-3">
+          <span className="text-sm text-ud-muted">{selected.size} selected</span>
           <select
             value={bulkStatus}
             onChange={(e) => setBulkStatus(e.target.value)}
-            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+            className="rounded-[8px] border border-ud bg-ud-surface px-2 py-1.5 text-sm"
           >
             <option value="">Change status to…</option>
             {OPPORTUNITY_STATUSES.map((s) => (
@@ -88,7 +88,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
         </div>
       )}
 
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-ud">
         {/* Select-all header row */}
         <div className="flex items-center gap-3 px-4 py-2">
           <input
@@ -98,7 +98,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
             aria-label={`Select all ${sectionTitle}`}
             className="rounded"
           />
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-ud-faint">
             {allSelected ? "Deselect all" : "Select all"}
           </span>
         </div>
@@ -111,7 +111,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
           return (
             <div
               key={opportunity.id}
-              className="flex items-start gap-3 p-4 transition-colors hover:bg-slate-50"
+              className="flex items-start gap-3 p-4 transition-colors hover:bg-ud-surface-sunk"
             >
               <div className="pt-1">
                 <input
@@ -128,10 +128,10 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
               >
                 <div className="grid gap-4 md:grid-cols-[1fr_135px_165px] md:items-start">
                   <div>
-                    <p className="font-semibold text-slate-950">
+                    <p className="font-semibold text-ud-ink">
                       {opportunity.service_requested || "Untitled opportunity"}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-ud-faint">
                       {customer?.name ||
                         opportunity.source ||
                         "No person or source saved"}
@@ -139,18 +139,18 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-slate-500">Value</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                    <p className="text-xs font-medium text-ud-faint">Value</p>
+                    <p className="mt-1 text-sm font-semibold text-ud-muted">
                       {formatCurrency(opportunity.estimated_value)}
                     </p>
-                    <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                    <p className="mt-3 text-xs font-medium text-ud-faint">Source</p>
+                    <p className="mt-1 text-sm font-semibold text-ud-muted">
                       {opportunity.source || "Not set"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-slate-500">Next step</p>
+                    <p className="text-xs font-medium text-ud-faint">Next step</p>
                     <div className="mt-1">
                       <StatusBadge
                         tone={getFollowUpTone(opportunity.next_follow_up_date)}
@@ -158,7 +158,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
                         {getFollowUpText(opportunity.next_follow_up_date)}
                       </StatusBadge>
                     </div>
-                    <p className="mt-3 text-xs font-medium text-slate-500">Status</p>
+                    <p className="mt-3 text-xs font-medium text-ud-faint">Status</p>
                     <div className="mt-1">
                       <StatusBadge tone={getOpportunityTone(opportunity.status)}>
                         {opportunity.status || "Open"}
@@ -168,7 +168,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
                 </div>
 
                 {opportunity.notes && (
-                  <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 rounded-[10px] bg-ud-surface-sunk px-4 py-3 text-sm leading-6 text-ud-muted">
                     {opportunity.notes}
                   </p>
                 )}

@@ -145,15 +145,15 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
             <a
               href="/api/export/csv?table=sales"
               download
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-[8px] border border-ud bg-ud-surface px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
             >
               Export CSV
             </a>
 
-            <Link href="/jobs" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Link href="/jobs" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
               Work
             </Link>
-            <Link href="/imports" className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]">
+            <Link href="/imports" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
               Import data
             </Link>
           </div>
@@ -183,21 +183,21 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
           ) : (
             <>
               {(selectedStatus || selectedSource) && (
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-700">Filtered by: {selectedStatus || selectedSource}</p>
-                  <Link href="/sales" className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">Clear filter</Link>
+                <div className="flex items-center justify-between gap-3 border-b border-ud p-4">
+                  <p className="text-sm font-semibold text-ud-muted">Filtered by: {selectedStatus || selectedSource}</p>
+                  <Link href="/sales" className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">Clear filter</Link>
                 </div>
               )}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {visibleRevenue.map((record) => {
                   const issues = getRevenueIssues(record);
                   return (
-                    <Link key={record.id} href={`/sales/${record.id}/edit`} className="block p-4 transition-colors hover:bg-slate-50">
+                    <Link key={record.id} href={`/sales/${record.id}/edit`} className="block p-4 transition-colors hover:bg-ud-surface-sunk">
                       <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
                         <div>
-                          <p className="font-semibold text-slate-950">{record.service_type || "Revenue record"}</p>
-                          <p className="mt-1 text-sm text-slate-500">{record.source || "No source saved"}</p>
-                          <p className="mt-3 text-sm leading-6 text-slate-600">{getRevenueNextStep(record)}</p>
+                          <p className="font-semibold text-ud-ink">{record.service_type || "Revenue record"}</p>
+                          <p className="mt-1 text-sm text-ud-faint">{record.source || "No source saved"}</p>
+                          <p className="mt-3 text-sm leading-6 text-ud-muted">{getRevenueNextStep(record)}</p>
                           <div className="mt-3 flex flex-wrap gap-2">
                             {issues.slice(0, 3).map((issue) => (
                               <StatusBadge key={issue.label} tone={issue.tone}>{issue.label}</StatusBadge>
@@ -205,15 +205,15 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-slate-500">Amount</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">{formatCurrency(record.amount)}</p>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Source</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">{record.source || "Not set"}</p>
+                          <p className="text-xs font-medium text-ud-faint">Amount</p>
+                          <p className="mt-1 text-sm font-semibold text-ud-muted">{formatCurrency(record.amount)}</p>
+                          <p className="mt-3 text-xs font-medium text-ud-faint">Source</p>
+                          <p className="mt-1 text-sm font-semibold text-ud-muted">{record.source || "Not set"}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-slate-500">Date</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">{formatDateOnly(record.sale_date)}</p>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Payment</p>
+                          <p className="text-xs font-medium text-ud-faint">Date</p>
+                          <p className="mt-1 text-sm font-semibold text-ud-muted">{formatDateOnly(record.sale_date)}</p>
+                          <p className="mt-3 text-xs font-medium text-ud-faint">Payment</p>
                           <div className="mt-1">
                             <StatusBadge tone={getRevenueTone(record.payment_status)}>{record.payment_status || "Not set"}</StatusBadge>
                           </div>
@@ -232,19 +232,19 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
             {paymentGroups.length === 0 ? (
               <EmptyState title="No payment statuses yet" description="Payment statuses will appear here after revenue records are added." />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {paymentGroups.map((group) => (
                   <article key={group.status} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
                     <div>
                       <StatusBadge tone={getRevenueTone(group.status)}>{group.status}</StatusBadge>
-                      <p className="mt-2 font-semibold text-slate-950">{group.count} Found</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                      <p className="mt-2 font-semibold text-ud-ink">{group.count} Found</p>
+                      <p className="mt-1 text-sm leading-6 text-ud-faint">
                         {isUnpaid(group.status) ? "Revenue that still needs collection or review." : isPaid(group.status) ? "Revenue marked as collected." : "Revenue using this payment status."}
                       </p>
                     </div>
                     <div className="md:text-right">
-                      <p className="mb-2 text-xs font-medium text-slate-500">{formatCurrency(group.amount)}</p>
-                      <Link href={selectedStatus === group.status ? "/sales" : `/sales?status=${encodeURIComponent(group.status)}`} className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                      <p className="mb-2 text-xs font-medium text-ud-faint">{formatCurrency(group.amount)}</p>
+                      <Link href={selectedStatus === group.status ? "/sales" : `/sales?status=${encodeURIComponent(group.status)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">
                         {selectedStatus === group.status ? "Clear" : "Review"}
                       </Link>
                     </div>
@@ -258,15 +258,15 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
             {sourceGroups.length === 0 ? (
               <EmptyState title="No source data yet" description="Add sources to see which channels generate revenue." />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {sourceGroups.map((group) => (
                   <article key={group.source} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
                     <div>
-                      <p className="font-semibold text-slate-950">{group.source}</p>
-                      <p className="mt-1 text-sm text-slate-500">{group.count} records · {formatCurrency(group.amount)}</p>
+                      <p className="font-semibold text-ud-ink">{group.source}</p>
+                      <p className="mt-1 text-sm text-ud-faint">{group.count} records · {formatCurrency(group.amount)}</p>
                     </div>
                     <div className="md:text-right">
-                      <Link href={selectedSource === group.source ? "/sales" : `/sales?source=${encodeURIComponent(group.source)}`} className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                      <Link href={selectedSource === group.source ? "/sales" : `/sales?source=${encodeURIComponent(group.source)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">
                         {selectedSource === group.source ? "Clear" : "Review"}
                       </Link>
                     </div>
@@ -284,13 +284,13 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
         ) : (
           <div className="grid gap-4 p-4 md:grid-cols-3">
             {cleanupGroups.map((item) => (
-              <Link key={item.id} href={item.href} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white">
+              <Link key={item.id} href={item.href} className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4 hover:bg-ud-surface">
                 <div className="flex items-start justify-between gap-3">
                   <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{item.count}</span>
+                  <span className="rounded-full border border-ud bg-ud-surface px-3 py-1 text-xs font-semibold text-ud-muted">{item.count}</span>
                 </div>
-                <p className="mt-3 font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{item.detail}</p>
+                <p className="mt-3 font-semibold text-ud-ink">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
               </Link>
             ))}
           </div>

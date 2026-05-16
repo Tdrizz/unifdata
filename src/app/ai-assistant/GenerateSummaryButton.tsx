@@ -58,27 +58,27 @@ export function GenerateSummaryButton() {
 
   const messageClass =
     messageTone === "warning"
-      ? "mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800"
+      ? "mt-5 rounded-[10px] border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800"
       : messageTone === "error"
-        ? "mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
-        : "mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700";
+        ? "mt-5 rounded-[10px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        : "mt-5 rounded-[10px] border border-ud bg-ud-surface-sunk p-4 text-sm font-semibold text-ud-muted";
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+    <section className="rounded-[14px] border border-ud bg-ud-surface p-6 shadow-ud">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge tone="neutral">Gemini</StatusBadge>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ud-faint">
               Full workspace scan
             </p>
           </div>
 
-          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-ud-ink">
             Generate new brief
           </h2>
 
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-ud-muted">
             UnifData sends Gemini a compact view of your workspace data, then
             saves the operating brief here. One brief per 10 minutes.
           </p>
@@ -88,7 +88,7 @@ export function GenerateSummaryButton() {
           type="button"
           onClick={generateSummary}
           disabled={loading}
-          className="rounded-2xl bg-[#1D2D3E] px-5 py-3 text-sm font-semibold text-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60 md:min-w-40"
+          className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white shadow-ud hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-60 md:min-w-40"
         >
           {loading ? "Generating..." : "Generate brief"}
         </button>

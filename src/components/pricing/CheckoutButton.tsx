@@ -9,7 +9,7 @@ export function CheckoutButton() {
   return (
     <Link
       href={isSignedIn ? "/subscribe" : "/waitlist"}
-      className="block w-full rounded-2xl bg-white px-5 py-4 text-center text-lg font-semibold text-slate-950 transition-colors hover:bg-slate-200"
+      className="block w-full rounded-[10px] bg-[#4A3FA8] px-5 py-4 text-center text-lg font-semibold text-white transition-opacity hover:opacity-90"
     >
       {isSignedIn ? "Set up workspace" : "Request access"}
     </Link>

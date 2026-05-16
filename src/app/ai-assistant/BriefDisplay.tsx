@@ -60,8 +60,8 @@ export function BriefDisplay({ summary }: { summary: string }) {
               key={i}
               className={
                 i === 0
-                  ? "pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
-                  : "pt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+                  ? "pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint"
+                  : "pt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint"
               }
             >
               {line.text}
@@ -81,7 +81,7 @@ export function BriefDisplay({ summary }: { summary: string }) {
         if (line.type === "numbered") {
           return (
             <div key={i} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ud-surface-sunk text-[10px] font-bold text-ud-muted">
                 {line.n}
               </span>
               <span className="text-slate-700">{line.text}</span>

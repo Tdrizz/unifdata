@@ -73,7 +73,7 @@ export function AiChat() {
               key={q}
               type="button"
               onClick={() => sendMessage(q)}
-              className="rounded-xl bg-slate-100 border border-slate-100 px-3 py-2.5 text-left text-[12.5px] text-slate-700 hover:bg-slate-200"
+              className="rounded-[8px] bg-ud-surface-sunk border border-ud px-3 py-2.5 text-left text-[12.5px] text-ud-muted hover:bg-ud-surface-sunk"
             >
               {q}
             </button>
@@ -97,7 +97,7 @@ export function AiChat() {
                 className={
                   message.role === "user"
                     ? "max-w-[80%] bg-[#4A3FA8] text-white px-4 py-2.5 rounded-[18px] rounded-br-md text-[13.5px] leading-[1.55]"
-                    : "max-w-[85%] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13.5px] leading-[1.55] text-slate-700"
+                    : "max-w-[85%] rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-3 text-[13.5px] leading-[1.55] text-ud-muted"
                 }
               >
                 {message.text}
@@ -107,7 +107,7 @@ export function AiChat() {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-3">
                 <div className="flex gap-1">
                   <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:0ms]" />
                   <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]" />
@@ -122,7 +122,7 @@ export function AiChat() {
       )}
 
       {error && (
-        <div className="mx-5 mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mx-5 mb-3 rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -138,12 +138,12 @@ export function AiChat() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask anything about your workspace..."
           disabled={loading}
-          className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-[#4A3FA8]/40 focus:border-[#4A3FA8] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none placeholder:text-ud-faint focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-xl bg-[#4A3FA8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[8px] bg-[#4A3FA8] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-40"
         >
           Send
         </button>

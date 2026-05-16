@@ -33,10 +33,10 @@ export function SyncNowButton({ provider, label }: { provider: string; label: st
       type="button"
       onClick={handleSync}
       disabled={syncing}
-      className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="flex items-center gap-2 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-60"
     >
       {syncing && (
-        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-ud-faint border-t-transparent" />
       )}
       {syncing ? "Syncing…" : "Sync now"}
     </button>

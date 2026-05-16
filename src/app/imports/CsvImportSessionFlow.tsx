@@ -179,7 +179,7 @@ export function CsvImportSessionFlow() {
               ))}
             </select>
 
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="mt-2 text-sm leading-6 text-ud-muted">
               {selectedType?.description}
             </p>
 
@@ -195,7 +195,7 @@ export function CsvImportSessionFlow() {
             </p>
           </div>
 
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+          <div className="rounded-[14px] border border-dashed border-ud bg-ud-surface-sunk p-5">
             <label className="text-sm font-medium text-ud-muted">
               CSV or Excel file
             </label>
@@ -207,7 +207,7 @@ export function CsvImportSessionFlow() {
                 setFile(event.target.files?.[0] || null);
                 setMessage("");
               }}
-              className="mt-3 w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-muted outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-ud-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+              className="mt-3 w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-muted outline-none file:mr-4 file:rounded-[8px] file:border-0 file:bg-ud-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
             />
 
             {file && (
@@ -254,7 +254,7 @@ export function CsvImportSessionFlow() {
                       [header]: e.target.value,
                     }))
                   }
-                  className="w-1/2 rounded-xl border border-ud bg-ud-surface px-3 py-2 text-sm text-ud-ink outline-none"
+                  className="w-1/2 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-sm text-ud-ink outline-none"
                 >
                   <option value="">Don&apos;t import</option>
                   {getFieldOptions(recordType).map((f) => (
@@ -270,7 +270,7 @@ export function CsvImportSessionFlow() {
             <button
               type="button"
               onClick={() => setStep("upload")}
-              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-slate-50"
+              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Back
             </button>

@@ -30,7 +30,7 @@ export function OnboardingForm() {
         <label className="text-sm font-medium text-ud-ink">Company name</label>
         <input
           name="companyName"
-          className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
+          className="mt-2 w-full rounded-[10px] border border-white/10 bg-ud-surface px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
           placeholder="Arctic Ridge Services"
           required
         />
@@ -54,7 +54,7 @@ export function OnboardingForm() {
                 className={`flex flex-col items-start gap-2 rounded-[10px] border p-3.5 text-left transition-all ${
                   isActive
                     ? "border-ud-accent bg-[rgba(74,63,168,0.15)] ring-1 ring-ud-accent"
-                    : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                    : "border-white/10 bg-ud-surface/5 hover:border-white/20 hover:bg-white/10"
                 }`}
               >
                 <span
@@ -98,7 +98,7 @@ export function OnboardingForm() {
         </label>
         <input
           name="industry"
-          className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
+          className="mt-2 w-full rounded-[10px] border border-white/10 bg-ud-surface px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
           placeholder="Excavation, dental office, landscaping..."
         />
       </div>

@@ -212,20 +212,20 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
             <a
               href="/api/export/csv?table=jobs"
               download
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-ud bg-ud-surface px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
             >
               Export CSV
             </a>
 
             <Link
               href="/leads"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Opportunities
             </Link>
             <Link
               href="/imports"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
               Import data
             </Link>
@@ -288,36 +288,36 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
           ) : (
             <>
               {selectedStage && (
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-700">
+                <div className="flex items-center justify-between gap-3 border-b border-ud p-4">
+                  <p className="text-sm font-semibold text-ud-muted">
                     Filtered by stage: {selectedStage}
                   </p>
                   <Link
                     href="/jobs"
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    className="rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
                   >
                     Clear filter
                   </Link>
                 </div>
               )}
 
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {visibleWork.map((work) => {
                   const customer = work.customer_id ? customerById.get(work.customer_id) : null;
                   const lead = work.lead_id ? leadById.get(work.lead_id) : null;
                   const issues = getWorkIssues(work);
 
                   return (
-                    <Link key={work.id} href={`/jobs/${work.id}/edit`} className="block p-4 transition-colors hover:bg-slate-50">
+                    <Link key={work.id} href={`/jobs/${work.id}/edit`} className="block p-4 transition-colors hover:bg-ud-surface-sunk">
                       <div className="grid gap-4 md:grid-cols-[1fr_130px_160px] md:items-start">
                         <div>
-                          <p className="font-semibold text-slate-950">
+                          <p className="font-semibold text-ud-ink">
                             {work.service_type || "Untitled work"}
                           </p>
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 text-sm text-ud-faint">
                             {customer?.name || lead?.service_requested || "No person or opportunity linked"}
                           </p>
-                          <p className="mt-3 text-sm leading-6 text-slate-600">
+                          <p className="mt-3 text-sm leading-6 text-ud-muted">
                             {getWorkNextStep(work)}
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
@@ -330,11 +330,11 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                         </div>
 
                         <div>
-                          <p className="text-xs font-medium text-slate-500">Value</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
+                          <p className="text-xs font-medium text-ud-faint">Value</p>
+                          <p className="mt-1 text-sm font-semibold text-ud-muted">
                             {formatCurrency(work.job_value)}
                           </p>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Payment</p>
+                          <p className="mt-3 text-xs font-medium text-ud-faint">Payment</p>
                           <div className="mt-1">
                             <StatusBadge tone={getRevenueTone(work.paid_status)}>
                               {work.paid_status || "Not set"}
@@ -343,11 +343,11 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                         </div>
 
                         <div>
-                          <p className="text-xs font-medium text-slate-500">Start</p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
+                          <p className="text-xs font-medium text-ud-faint">Start</p>
+                          <p className="mt-1 text-sm font-semibold text-ud-muted">
                             {formatDateOnly(work.start_date)}
                           </p>
-                          <p className="mt-3 text-xs font-medium text-slate-500">Stage</p>
+                          <p className="mt-3 text-xs font-medium text-ud-faint">Stage</p>
                           <div className="mt-1">
                             <StatusBadge tone={getWorkTone(work.status)}>
                               {work.status || "Scheduled"}
@@ -373,7 +373,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
               description="Work stages will appear here after records are added."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ud">
               {stageGroups.map((group) => {
                 const explanation = getStageExplanation(group.status);
                 return (
@@ -385,8 +385,8 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                       <StatusBadge tone={getWorkTone(group.status)}>
                         {group.status}
                       </StatusBadge>
-                      <p className="mt-2 font-semibold text-slate-950">{group.count} Found</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">{explanation.meaning}</p>
+                      <p className="mt-2 font-semibold text-ud-ink">{group.count} Found</p>
+                      <p className="mt-1 text-sm leading-6 text-ud-faint">{explanation.meaning}</p>
                       {group.unpaidCount > 0 && (
                         <span className="mt-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
                           {group.unpaidCount} need payment review
@@ -400,7 +400,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                             ? "/jobs"
                             : `/jobs?stage=${encodeURIComponent(group.status)}`
                         }
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
                       >
                         {selectedStage === group.status ? "Clear" : "Review"}
                       </Link>
@@ -428,16 +428,16 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
               <Link
                 key={item.id}
                 href={item.href}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4 hover:bg-ud-surface"
               >
                 <div className="flex items-start justify-between gap-3">
                   <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                  <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                     {item.count}
                   </span>
                 </div>
-                <p className="mt-3 font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{item.detail}</p>
+                <p className="mt-3 font-semibold text-ud-ink">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
               </Link>
             ))}
           </div>

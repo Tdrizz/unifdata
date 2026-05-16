@@ -14,23 +14,23 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="min-h-screen bg-[#eef2f7] px-4 py-10 text-slate-950">
-      <div className="mx-auto max-w-2xl rounded-3xl border border-red-100 bg-white p-6 shadow-sm">
+    <main className="min-h-screen bg-[#eef2f7] px-4 py-10 text-ud-ink">
+      <div className="mx-auto max-w-2xl rounded-[14px] border border-red-200 bg-ud-surface p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">
           Something went wrong
         </p>
 
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ud-ink">
           UnifData could not load this page.
         </h1>
 
-        <p className="mt-3 text-sm leading-7 text-slate-600">
+        <p className="mt-3 text-sm leading-7 text-ud-muted">
           Try refreshing the page. If this keeps happening, go back home and
           reopen the record from there.
         </p>
 
         {error.digest && (
-          <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-500">
+          <p className="mt-4 rounded-[10px] border border-ud bg-ud-surface-sunk p-3 text-xs font-medium text-ud-faint">
             Error reference: {error.digest}
           </p>
         )}
@@ -39,14 +39,14 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+            className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
             Try again
           </button>
 
           <a
             href="/"
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
           >
             Back to Home
           </a>

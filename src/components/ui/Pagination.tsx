@@ -32,7 +32,7 @@ function PaginationInner({
         type="button"
         disabled={currentPage <= 1}
         onClick={() => goTo(currentPage - 1)}
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
       >
         Previous
       </button>
@@ -44,8 +44,8 @@ function PaginationInner({
           onClick={() => goTo(page)}
           className={
             page === currentPage
-              ? "rounded-xl bg-[#1D2D3E] px-3 py-2 text-xs font-semibold text-white"
-              : "rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              ? "rounded-[8px] bg-ud-accent px-3 py-2 text-xs font-semibold text-white"
+              : "rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
           }
         >
           {page}
@@ -56,7 +56,7 @@ function PaginationInner({
         type="button"
         disabled={currentPage >= totalPages}
         onClick={() => goTo(currentPage + 1)}
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
       >
         Next
       </button>

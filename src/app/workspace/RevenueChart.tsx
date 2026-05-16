@@ -84,7 +84,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
 
   return (
     <div>
-      <div className="mb-3 flex items-center gap-4 text-xs font-medium text-slate-500">
+      <div className="mb-3 flex items-center gap-4 text-xs font-medium text-ud-faint">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-0.5 w-4 rounded-full" style={{ backgroundColor: "#4A3FA8" }} />
           Collected
@@ -96,7 +96,7 @@ export function RevenueLineChart({ months }: { months: MonthSlot[] }) {
       </div>
 
       {!hasData ? (
-        <p className="py-8 text-center text-sm text-slate-400">
+        <p className="py-8 text-center text-sm text-ud-faint">
           No revenue data in the past 6 months.
         </p>
       ) : (

@@ -76,13 +76,13 @@ export function LeadForm({ lead, customers, profile }: Props) {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/leads"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Back to opportunities
             </Link>
             <Link
               href="/crm"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
               Pipeline
             </Link>
@@ -97,7 +97,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
         >
           <form action={formAction} className="space-y-5 p-5">
             {state?.error && (
-              <p className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                 {state.error}
               </p>
             )}
@@ -184,7 +184,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
             <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
               <Link
                 href="/leads"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
               >
                 Cancel
               </Link>
@@ -215,8 +215,8 @@ export function LeadForm({ lead, customers, profile }: Props) {
                   value={formatCurrency(lead.estimated_value)}
                 />
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-medium text-slate-500">Status</p>
+                <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+                  <p className="text-sm font-medium text-ud-faint">Status</p>
                   <div className="mt-2">
                     <StatusBadge tone={getOpportunityTone(lead.status)}>
                       {lead.status || "New"}
@@ -241,10 +241,10 @@ export function LeadForm({ lead, customers, profile }: Props) {
               {issues.map((issue) => (
                 <div
                   key={issue.label}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="flex items-center justify-between gap-3 rounded-[10px] border border-ud bg-ud-surface-sunk p-4"
                 >
                   <StatusBadge tone={issue.tone}>{issue.label}</StatusBadge>
-                  <p className="text-sm font-medium text-slate-500">
+                  <p className="text-sm font-medium text-ud-faint">
                     {issue.label === "Looks clean" ? "No action needed" : "Needs update"}
                   </p>
                 </div>

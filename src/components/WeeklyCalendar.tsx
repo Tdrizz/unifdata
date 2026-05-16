@@ -72,11 +72,11 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
       <div className="mb-3 flex items-center justify-between">
         <button
           onClick={prevWeek}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-lg border border-ud px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
         >
           ← Prev
         </button>
-        <span className="text-sm font-medium text-slate-700">
+        <span className="text-sm font-medium text-ud-muted">
           {days[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} –{" "}
           {days[6].toLocaleDateString("en-US", {
             month: "short",
@@ -86,29 +86,29 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
         </span>
         <button
           onClick={nextWeek}
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-lg border border-ud px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
         >
           Next →
         </button>
       </div>
 
       <div
-        className="grid min-w-[640px] border-l border-t border-slate-200"
+        className="grid min-w-[640px] border-l border-t border-ud"
         style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}
       >
         {/* Header row */}
-        <div className="border-b border-r border-slate-200 bg-slate-50 p-2" />
+        <div className="border-b border-r border-ud bg-ud-surface-sunk p-2" />
         {days.map((day) => {
           const isToday = toDateStr(day) === todayStr;
           return (
             <div
               key={day.toISOString()}
-              className={`border-b border-r border-slate-200 p-2 text-center text-xs font-medium ${
-                isToday ? "bg-[rgba(74,63,168,0.1)] text-[#4A3FA8]" : "bg-slate-50 text-slate-600"
+              className={`border-b border-r border-ud p-2 text-center text-xs font-medium ${
+                isToday ? "bg-[rgba(74,63,168,0.1)] text-[#4A3FA8]" : "bg-ud-surface-sunk text-ud-muted"
               }`}
             >
               <div>{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
-              <div className="mt-0.5 text-slate-500">
+              <div className="mt-0.5 text-ud-faint">
                 {day.toLocaleDateString("en-US", { month: "numeric", day: "numeric" })}
               </div>
             </div>
@@ -120,7 +120,7 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
           <>
             <div
               key={`label-${hour}`}
-              className="border-b border-r border-slate-200 bg-slate-50 p-1 text-right text-[11px] text-slate-400"
+              className="border-b border-r border-ud bg-ud-surface-sunk p-1 text-right text-[11px] text-ud-faint"
             >
               {hour % 12 === 0 ? 12 : hour % 12}
               {hour < 12 ? "am" : "pm"}
@@ -130,7 +130,7 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
               return (
                 <div
                   key={`${toDateStr(day)}-${hour}`}
-                  className="min-h-[44px] border-b border-r border-slate-200 p-0.5"
+                  className="min-h-[44px] border-b border-r border-ud p-0.5"
                 >
                   {cellEvents.map((event) => (
                     <a

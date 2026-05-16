@@ -130,20 +130,20 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
             <a
               href="/api/export/csv?table=leads"
               download
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-ud bg-ud-surface px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
             >
               Export CSV
             </a>
 
             <Link
               href="/crm"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Pipeline view
             </Link>
             <Link
               href="/imports"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
               Import data
             </Link>
@@ -215,7 +215,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                 description={`No missing ${profile.labels.customerSingular.toLowerCase()} links, sources, or estimates were found.`}
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {cleanupGroups.map((item) => (
                   <article
                     key={item.id}
@@ -223,10 +223,10 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                   >
                     <div>
                       <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                      <p className="mt-2 font-semibold text-slate-950">{item.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">{item.detail}</p>
+                      <p className="mt-2 font-semibold text-ud-ink">{item.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
                     </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                       {item.count}
                     </span>
                   </article>
@@ -245,19 +245,19 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                 description="Add sources to understand where opportunities come from."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {sourceGroups.map((group) => (
                   <article
                     key={group.source}
                     className="flex items-center justify-between gap-4 p-4"
                   >
                     <div>
-                      <p className="font-semibold text-slate-950">{group.source}</p>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="font-semibold text-ud-ink">{group.source}</p>
+                      <p className="mt-1 text-sm text-ud-faint">
                         {group.count} {profile.labels.leadPlural.toLowerCase()}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold text-slate-700">
+                    <p className="text-sm font-semibold text-ud-muted">
                       {formatCurrency(group.value)}
                     </p>
                   </article>
@@ -278,22 +278,22 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
             description={`Won or lost ${profile.labels.leadPlural.toLowerCase()} will appear here once statuses are updated.`}
           />
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-ud">
             {recentlyClosed.map((opportunity) => (
               <Link
                 key={opportunity.id}
                 href={`/leads/${opportunity.id}/edit`}
-                className="grid gap-3 p-4 transition-colors hover:bg-slate-50 md:grid-cols-[1fr_140px_120px] md:items-center"
+                className="grid gap-3 p-4 transition-colors hover:bg-ud-surface-sunk md:grid-cols-[1fr_140px_120px] md:items-center"
               >
                 <div>
-                  <p className="font-semibold text-slate-950">
+                  <p className="font-semibold text-ud-ink">
                     {opportunity.service_requested || "Untitled opportunity"}
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-ud-faint">
                     {opportunity.source || "No source saved"}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-slate-700">
+                <p className="text-sm font-semibold text-ud-muted">
                   {formatCurrency(opportunity.estimated_value)}
                 </p>
                 <StatusBadge tone={getOpportunityTone(opportunity.status)}>

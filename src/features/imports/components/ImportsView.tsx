@@ -144,14 +144,14 @@ export function ImportsView({
           <div className="flex flex-wrap gap-2">
             <Link
               href="/data-hub"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
               Data Hub
             </Link>
 
             <Link
               href="/workspace"
-              className="rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
               Home
             </Link>
@@ -194,11 +194,11 @@ export function ImportsView({
         description="Pick a source. UnifData stages everything for review before writing to the workspace."
       >
         <div className="grid gap-4 p-4 xl:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold text-slate-950">CSV upload</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p className="font-semibold text-ud-ink">CSV upload</p>
+                <p className="mt-1 text-sm leading-6 text-ud-muted">
                   Use exports from spreadsheets, old CRMs, or management
                   tools.
                 </p>
@@ -210,11 +210,11 @@ export function ImportsView({
             <CsvImportSessionFlow />
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <p className="font-semibold text-slate-950">Google Sheets</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p className="font-semibold text-ud-ink">Google Sheets</p>
+                <p className="mt-1 text-sm leading-6 text-ud-muted">
                   Choose a sheet, select a tab, and review rows before commit.
                 </p>
               </div>
@@ -228,7 +228,7 @@ export function ImportsView({
 
             {googleSheetsIntegration ? (
               <div className="space-y-3">
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
                     Connected account
                   </p>
@@ -241,17 +241,17 @@ export function ImportsView({
                 <GoogleSheetsImportFlow />
               </div>
             ) : (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-950">
+              <div className="rounded-[10px] border border-ud bg-ud-surface p-4">
+                <p className="text-sm font-semibold text-ud-ink">
                   Connect Google to import sheets.
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-ud-muted">
                   UnifData only imports sheets you choose.
                 </p>
 
                 <a
                   href="/api/integrations/google/start"
-                  className="mt-4 inline-flex rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57]"
+                  className="mt-4 inline-flex rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                 >
                   Connect Google
                 </a>
@@ -268,14 +268,14 @@ export function ImportsView({
             .map((integration) => (
               <div
                 key={integration.id}
-                className="rounded-3xl border border-slate-200 bg-slate-50 p-4"
+                className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4"
               >
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-slate-950">
+                    <p className="font-semibold text-ud-ink">
                       {getSourceLabel(integration.provider)}
                     </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 text-sm leading-6 text-ud-muted">
                       Sync your connected account data into UnifData for
                       review.
                     </p>
@@ -304,36 +304,36 @@ export function ImportsView({
               description="Upload a CSV or choose a Google Sheet to start a new import."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ud">
               {reviewSessions.map((session) => (
                 <article
                   key={session.id}
                   className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px] md:items-center"
                 >
                   <div>
-                    <p className="line-clamp-1 font-semibold text-slate-950">
+                    <p className="line-clamp-1 font-semibold text-ud-ink">
                       {session.file_name ||
                         session.source_name ||
                         "Import review"}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-ud-faint">
                       {getSourceLabel(session.source_type)} ·{" "}
                       {getRecordTypeLabel(session.record_type)}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-slate-500">Rows</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                    <p className="text-xs font-medium text-ud-faint">Rows</p>
+                    <p className="mt-1 text-sm font-semibold text-ud-muted">
                       {session.total_rows || 0}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-slate-500">
+                    <p className="text-xs font-medium text-ud-faint">
                       Review
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                    <p className="mt-1 text-sm font-semibold text-ud-muted">
                       {session.valid_rows || 0} ready ·{" "}
                       {session.duplicate_rows || 0} dupes ·{" "}
                       {session.error_rows || 0} errors
@@ -347,7 +347,7 @@ export function ImportsView({
 
                     <Link
                       href={`/imports/sessions/${session.id}`}
-                      className="w-fit rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="w-fit rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
                     >
                       Open review
                     </Link>
@@ -363,34 +363,34 @@ export function ImportsView({
           description={`Missing details across ${profile.labels.customerPlural.toLowerCase()}.`}
         >
           <div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-1">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-medium text-slate-500">
+            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+              <p className="text-xs font-medium text-ud-faint">
                 {profile.labels.customerPlural}
               </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">
+              <p className="mt-2 text-2xl font-semibold text-ud-ink">
                 {customers.length}
               </p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
+              <p className="mt-2 text-xs leading-5 text-ud-faint">
                 Total records in the workspace.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-medium text-slate-500">Incomplete contact</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">
+            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+              <p className="text-xs font-medium text-ud-faint">Incomplete contact</p>
+              <p className="mt-2 text-2xl font-semibold text-ud-ink">
                 {missingContact}
               </p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
+              <p className="mt-2 text-xs leading-5 text-ud-faint">
                 Missing phone or email.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-medium text-slate-500">No address</p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">
+            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
+              <p className="text-xs font-medium text-ud-faint">No address</p>
+              <p className="mt-2 text-2xl font-semibold text-ud-ink">
                 {missingAddress}
               </p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
+              <p className="mt-2 text-xs leading-5 text-ud-faint">
                 Missing address or location.
               </p>
             </div>
@@ -403,34 +403,34 @@ export function ImportsView({
           title="Committed imports"
           description="Imports that have been committed to the workspace. Use Revert to undo a specific import."
         >
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-ud">
             {committedSessions.map((session) => (
               <article
                 key={session.id}
                 className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_140px] md:items-center"
               >
                 <div>
-                  <p className="line-clamp-1 font-semibold text-slate-950">
+                  <p className="line-clamp-1 font-semibold text-ud-ink">
                     {session.file_name ||
                       session.source_name ||
                       "Import"}
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-ud-faint">
                     {getSourceLabel(session.source_type)} ·{" "}
                     {getRecordTypeLabel(session.record_type)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Records</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                  <p className="text-xs font-medium text-ud-faint">Records</p>
+                  <p className="mt-1 text-sm font-semibold text-ud-muted">
                     {Number(session.created_rows || 0) + Number(session.updated_rows || 0)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-slate-500">Committed</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-700">
+                  <p className="text-xs font-medium text-ud-faint">Committed</p>
+                  <p className="mt-1 text-sm font-semibold text-ud-muted">
                     {formatTimestamp(session.committed_at || session.created_at)}
                   </p>
                 </div>
@@ -444,7 +444,7 @@ export function ImportsView({
                     <button
                       type="submit"
                       disabled={session.status === "reverted"}
-                      className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                      className="rounded-lg border border-ud px-2 py-1 text-xs text-ud-muted hover:bg-ud-surface-sunk disabled:opacity-50"
                     >
                       {session.status === "reverted" ? "Reverted" : "Revert"}
                     </button>
@@ -462,27 +462,27 @@ export function ImportsView({
             title="Saved syncs"
             description="Connections configured for repeat syncing."
           >
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ud">
               {syncConnections.map((connection) => (
                 <article
                   key={connection.id}
                   className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px] md:items-center"
                 >
                   <div>
-                    <p className="font-semibold text-slate-950">
+                    <p className="font-semibold text-ud-ink">
                       {connection.name}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-ud-faint">
                       {connection.source_name ||
                         getSourceLabel(connection.source_type)}
                     </p>
                   </div>
 
-                  <p className="text-sm font-semibold text-slate-700">
+                  <p className="text-sm font-semibold text-ud-muted">
                     {getRecordTypeLabel(connection.record_type)}
                   </p>
 
-                  <p className="text-sm font-semibold text-slate-700">
+                  <p className="text-sm font-semibold text-ud-muted">
                     {connection.sync_frequency}
                   </p>
 
@@ -506,7 +506,7 @@ export function ImportsView({
                 description="Import and commit data to create history here."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-ud">
                 {syncRuns.map((run) => {
                   const metadata = run.metadata as {
                     source_type?: string;
@@ -520,12 +520,12 @@ export function ImportsView({
                       className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
                     >
                       <div>
-                        <p className="line-clamp-1 font-semibold text-slate-950">
+                        <p className="line-clamp-1 font-semibold text-ud-ink">
                           {metadata?.file_name ||
                             getSourceLabel(metadata?.source_type || null) ||
                             "Import run"}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-ud-faint">
                           {getRecordTypeLabel(
                             metadata?.record_type || "records",
                           )}
@@ -533,15 +533,15 @@ export function ImportsView({
                       </div>
 
                       <div>
-                        <p className="text-xs text-slate-500">Created</p>
-                        <p className="text-sm font-semibold text-slate-700">
+                        <p className="text-xs text-ud-faint">Created</p>
+                        <p className="text-sm font-semibold text-ud-muted">
                           {run.records_created || 0}
                         </p>
                       </div>
 
                       <div>
-                        <p className="text-xs text-slate-500">Updated</p>
-                        <p className="text-sm font-semibold text-slate-700">
+                        <p className="text-xs text-ud-faint">Updated</p>
+                        <p className="text-sm font-semibold text-ud-muted">
                           {run.records_updated || 0}
                         </p>
                       </div>
@@ -550,7 +550,7 @@ export function ImportsView({
                         <StatusBadge tone={getStatusTone(run.status)}>
                           {run.status}
                         </StatusBadge>
-                        <p className="mt-2 text-xs text-slate-500">
+                        <p className="mt-2 text-xs text-ud-faint">
                           {formatTimestamp(run.finished_at || run.started_at)}
                         </p>
                       </div>
@@ -572,7 +572,7 @@ export function ImportsView({
               description="Analyze and commit data to create activity history."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-ud">
               {syncRuns.map((run) => {
                 const metadata = run.metadata as {
                   source_type?: string;
@@ -586,12 +586,12 @@ export function ImportsView({
                     className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
                   >
                     <div>
-                      <p className="line-clamp-1 font-semibold text-slate-950">
+                      <p className="line-clamp-1 font-semibold text-ud-ink">
                         {metadata?.file_name ||
                           getSourceLabel(metadata?.source_type || null) ||
                           "Import run"}
                       </p>
-                      <p className="mt-1 text-sm text-slate-500">
+                      <p className="mt-1 text-sm text-ud-faint">
                         {getRecordTypeLabel(
                           metadata?.record_type || "records",
                         )}
@@ -599,15 +599,15 @@ export function ImportsView({
                     </div>
 
                     <div>
-                      <p className="text-xs text-slate-500">Created</p>
-                      <p className="text-sm font-semibold text-slate-700">
+                      <p className="text-xs text-ud-faint">Created</p>
+                      <p className="text-sm font-semibold text-ud-muted">
                         {run.records_created || 0}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-xs text-slate-500">Updated</p>
-                      <p className="text-sm font-semibold text-slate-700">
+                      <p className="text-xs text-ud-faint">Updated</p>
+                      <p className="text-sm font-semibold text-ud-muted">
                         {run.records_updated || 0}
                       </p>
                     </div>
@@ -616,7 +616,7 @@ export function ImportsView({
                       <StatusBadge tone={getStatusTone(run.status)}>
                         {run.status}
                       </StatusBadge>
-                      <p className="mt-2 text-xs text-slate-500">
+                      <p className="mt-2 text-xs text-ud-faint">
                         {formatTimestamp(run.finished_at || run.started_at)}
                       </p>
                     </div>
