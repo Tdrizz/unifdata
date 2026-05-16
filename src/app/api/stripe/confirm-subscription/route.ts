@@ -3,6 +3,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { requireAppUser } from "@/lib/auth/session";
 import { getStripe } from "@/lib/stripe/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const user = await requireAppUser();

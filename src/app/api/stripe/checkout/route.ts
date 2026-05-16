@@ -3,6 +3,8 @@ import { requireAppUser } from "@/lib/auth/session";
 import { getEnv } from "@/lib/env";
 import { getStripe } from "@/lib/stripe/client";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     const user = await requireAppUser();
