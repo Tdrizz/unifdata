@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
 import { StatStrip } from "@/components/ui/StatStrip";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
@@ -271,12 +270,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           <>Good morning, <em className="font-serif italic text-ud-accent">{firstName}</em>.</>
         }
         description={profile.dailyFocus}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm">This week</Button>
-            <Button variant="primary" size="sm">New ▾</Button>
-          </div>
-        }
       />
 
       <StatStrip

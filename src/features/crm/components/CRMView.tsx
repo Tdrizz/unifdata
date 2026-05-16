@@ -2,7 +2,6 @@
 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatStrip } from "@/components/ui/StatStrip";
-import { Button } from "@/components/ui/Button";
 import { KanbanColumn } from "./KanbanColumn";
 import { formatCurrency } from "@/lib/utils";
 import type { CRMPageData } from "../queries";
@@ -94,12 +93,6 @@ export function CRMView({ leads, customers }: Props) {
           </span>
         }
         description="Drag a card between stages to advance it. Lifecycle: Clients → Quotes → Visits → Payments."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm">This quarter</Button>
-            <Button variant="primary" size="sm">New quote</Button>
-          </div>
-        }
       />
 
       <StatStrip

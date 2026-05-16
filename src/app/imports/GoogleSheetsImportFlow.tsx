@@ -291,7 +291,7 @@ export function GoogleSheetsImportFlow() {
         type="button"
         onClick={openGooglePicker}
         disabled={loadingPicker || loadingTabs}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {(loadingPicker || loadingTabs) && (
           <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -304,26 +304,26 @@ export function GoogleSheetsImportFlow() {
       </button>
 
       {spreadsheetInput && (
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-          <p className="text-sm font-semibold text-slate-950">
+        <div className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3">
+          <p className="text-sm font-semibold text-ud-ink">
             {spreadsheetTitle || "Selected Google Sheet"}
           </p>
-          <p className="mt-1 break-all text-xs text-slate-500">
+          <p className="mt-1 break-all text-xs text-ud-muted">
             {spreadsheetInput}
           </p>
         </div>
       )}
 
       {tabs.length > 0 && (
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="space-y-3 rounded-[12px] border border-ud bg-ud-surface p-4">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-ud-muted">
               Sheet tab
             </label>
             <select
               value={sheetName}
               onChange={(event) => setSheetName(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+              className="mt-2 w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20 focus:border-ud-accent"
             >
               {tabs.map((tab) => (
                 <option key={tab.title} value={tab.title}>
@@ -335,7 +335,7 @@ export function GoogleSheetsImportFlow() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-ud-muted">
               Import as
             </label>
             <select
@@ -343,7 +343,7 @@ export function GoogleSheetsImportFlow() {
               onChange={(event) =>
                 setRecordType(event.target.value as RecordType)
               }
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+              className="mt-2 w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20 focus:border-ud-accent"
             >
               {recordTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -357,7 +357,7 @@ export function GoogleSheetsImportFlow() {
             type="button"
             onClick={analyzeSheet}
             disabled={analyzing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1D2D3E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2a3f57] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {analyzing && (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -368,12 +368,12 @@ export function GoogleSheetsImportFlow() {
       )}
 
       {message && (
-        <div className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-700">{message}</p>
+        <div className="flex items-start justify-between gap-3 rounded-[12px] border border-ud bg-ud-surface p-4">
+          <p className="text-sm font-semibold text-ud-muted">{message}</p>
           <button
             type="button"
             onClick={() => setMessage("")}
-            className="shrink-0 text-slate-400 hover:text-slate-600"
+            className="shrink-0 text-ud-faint hover:text-slate-600"
             aria-label="Dismiss"
           >
             ×

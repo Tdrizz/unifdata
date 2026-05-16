@@ -135,7 +135,7 @@ export default async function ImportSessionPage({
           actions={
             <Link
               href="/imports"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-slate-50"
             >
               Back to imports
             </Link>
@@ -148,28 +148,28 @@ export default async function ImportSessionPage({
         >
           <div className="grid gap-4 p-5 md:grid-cols-4">
             <div>
-              <p className="text-xs font-medium text-slate-500">Source</p>
-              <p className="mt-1 text-sm font-semibold text-slate-950">
+              <p className="text-xs font-medium text-ud-muted">Source</p>
+              <p className="mt-1 text-sm font-semibold text-ud-ink">
                 {session.source_type}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-medium text-slate-500">Record type</p>
-              <p className="mt-1 text-sm font-semibold text-slate-950">
+              <p className="text-xs font-medium text-ud-muted">Record type</p>
+              <p className="mt-1 text-sm font-semibold text-ud-ink">
                 {session.record_type}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-medium text-slate-500">Created</p>
-              <p className="mt-1 text-sm font-semibold text-slate-950">
+              <p className="text-xs font-medium text-ud-muted">Created</p>
+              <p className="mt-1 text-sm font-semibold text-ud-ink">
                 {formatDate(session.created_at)}
               </p>
             </div>
 
             <div className="md:text-right">
-              <p className="text-xs font-medium text-slate-500">Status</p>
+              <p className="text-xs font-medium text-ud-muted">Status</p>
               <div className="mt-1">
                 <StatusBadge tone={getStatusTone(session.status)}>
                   {session.status}
@@ -179,7 +179,7 @@ export default async function ImportSessionPage({
           </div>
 
           {session.error_message && (
-            <div className="mx-5 mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            <div className="mx-5 mb-5 rounded-[12px] border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
               {session.error_message}
             </div>
           )}

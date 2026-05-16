@@ -19,7 +19,7 @@ export function RefreshButton() {
       type="button"
       onClick={handleRefresh}
       disabled={refreshing}
-      className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+      className="rounded-[10px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-ink hover:bg-ud-surface-soft disabled:opacity-50 transition-colors"
     >
       {refreshing ? "Refreshing..." : "Refresh"}
     </button>
