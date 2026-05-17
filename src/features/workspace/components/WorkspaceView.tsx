@@ -5,10 +5,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { AiBriefCard } from "@/features/workspace/AiBriefCard";
-import { RevenueChartCard } from "@/features/workspace/RevenueChartCard";
 import {
   formatDateOnly,
-  formatTimestampDate,
   parseDateOnly,
   isOverdue,
   isDueToday,
@@ -77,14 +75,16 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     (sum, lead) => sum + Number(lead.estimated_value || 0),
     0,
   );
-  const activeWorkValue = activeWork.reduce(
-    (sum, work) => sum + Number(work.job_value || 0),
-    0,
-  );
   const unpaidRevenueValue = unpaidRevenue.reduce(
     (sum, record) => sum + Number(record.amount || 0),
     0,
   );
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const revenueMTD = sales
+    .filter((s) => new Date(s.created_at) >= startOfMonth)
+    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
@@ -164,51 +164,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     })
     .slice(0, 5);
 
-  const recentRecords = [
-    ...customers.map((customer) => ({
-      id: `customer-${customer.id}`,
-      type: profile.labels.customerSingular,
-      title: customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`,
-      detail: customer.email || customer.phone || "Incomplete contact saved",
-      date: customer.created_at,
-      href: `/customers/${customer.id}/edit`,
-    })),
-    ...leads.map((lead) => ({
-      id: `lead-${lead.id}`,
-      type: profile.labels.leadSingular,
-      title: lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`,
-      detail: lead.source || lead.status || "No source saved",
-      date: lead.created_at,
-      href: `/leads/${lead.id}/edit`,
-    })),
-    ...jobs.map((work) => ({
-      id: `work-${work.id}`,
-      type: profile.labels.jobSingular,
-      title: work.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`,
-      detail: work.status || "No stage saved",
-      date: work.created_at,
-      href: `/jobs/${work.id}/edit`,
-    })),
-    ...sales.map((record) => ({
-      id: `revenue-${record.id}`,
-      type: profile.labels.saleSingular,
-      title: formatCurrency(record.amount),
-      detail: record.service_type || record.payment_status || `${profile.labels.saleSingular} record`,
-      date: record.created_at,
-      href: `/sales/${record.id}/edit`,
-    })),
-    ...followUps.map((action) => ({
-      id: `follow-up-${action.id}`,
-      type: "Follow-up",
-      title: action.message || "Follow up",
-      detail: action.status || "Open",
-      date: action.created_at,
-      href: `/follow-ups/${action.id}/edit`,
-    })),
-  ]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 4);
-
   const leadPlural = profile.labels.leadPlural;
   const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
@@ -221,45 +176,84 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         eyebrow={`${dayLabel} · Operating brief`}
         title={<>Good morning, {companyName}.</>}
         description={profile.dailyFocus}
+        actions={
+          <div className="flex gap-2">
+            <Link href="/jobs" className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-2 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View calendar</Link>
+            <Link href="/customers" className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-4 py-2 text-[13px] font-semibold text-white hover:opacity-90">
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Quick add
+            </Link>
+          </div>
+        }
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Unpaid revenue" value={formatCurrency(unpaidRevenueValue)} helper={unpaidRevenueValue > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"} tone={unpaidRevenueValue > 0 ? "danger" : "default"} />
+      <AiBriefCard
+        eyebrow="UnifData · Daily focus"
+        body={profile.headline}
+        actions={[
+          { label: "Review follow-ups", href: "/follow-ups", variant: "primary" },
+          { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
+        ]}
+      />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <StatCard label="Follow-ups due" value={followUpSchedule.length} helper={followUpSchedule.length > 0 ? `${followUpSchedule.filter(i => i.priority === 0).length} overdue · ${followUpSchedule.filter(i => i.priority === 1).length} due today` : "All clear"} tone={followUpSchedule.length > 0 ? "warning" : "default"} />
+        <StatCard label={`${jobPlural} today`} value={activeWork.length} helper={activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"} tone="default" />
+        <StatCard label="Revenue MTD" value={formatCurrency(revenueMTD)} helper={revenueMTD > 0 ? `This month` : "No revenue yet"} tone={revenueMTD > 0 ? "positive" : "default"} />
         <StatCard label={`Open ${leadPlural}`} value={openLeads.length} helper={formatCurrency(openPipelineValue)} tone="default" />
-        <StatCard label={`Active ${jobPlural}`} value={activeWork.length} helper={formatCurrency(activeWorkValue)} tone="default" />
-        <StatCard label="Follow-ups due" value={followUpSchedule.length} helper="Manual + opportunity" tone={followUpSchedule.length > 0 ? "warning" : "default"} />
+        <StatCard label="Unpaid invoices" value={formatCurrency(unpaidRevenueValue)} helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"} tone={unpaidRevenueValue > 0 ? "danger" : "default"} />
       </div>
 
       {/* Two-column grid */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-[24px] items-start">
-        {/* Left column */}
-        <div className="space-y-5">
-          <AiBriefCard
-            eyebrow="UnifData · Daily focus"
-            body={profile.headline}
-            actions={[
-              { label: "Review follow-ups", href: "/follow-ups", variant: "primary" },
-              { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
-            ]}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-5 items-start">
+        {/* Left column — Priority queue */}
+        <Card padding={0} radius="md" className="overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
+            <div>
+              <p className="text-[13.5px] font-semibold text-ud-ink">Priority queue</p>
+              <p className="text-[12px] text-ud-muted mt-0.5">Overdue and due-today items</p>
+            </div>
+            <Link href="/follow-ups" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View all</Link>
+          </div>
+          {priorityQueue.length === 0 ? (
+            <p className="px-5 py-8 text-center text-[13px] text-ud-faint">Nothing needs attention right now.</p>
+          ) : (
+            <div>
+              {priorityQueue.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
+                >
+                  <div className={`h-2 w-2 shrink-0 rounded-full ${
+                    item.tone === "danger" ? "bg-[#e05050]" :
+                    item.tone === "warning" ? "bg-[#d97706]" :
+                    item.tone === "success" ? "bg-[#2a8c3c]" : "bg-[#c5bfb5]"
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
+                    <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
+                  </div>
+                  <span className={`text-[12px] font-semibold shrink-0 ${
+                    item.tone === "danger" ? "text-ud-danger" :
+                    item.tone === "warning" ? "text-ud-warning" : "text-ud-muted"
+                  }`}>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card>
 
-          {/* Today's visits card */}
+        {/* Right column */}
+        <div className="space-y-4">
+          {/* Today's jobs */}
           <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-ud-soft">
-              <p className="text-[13px] font-semibold text-ud-ink">
-                Today&apos;s {jobPlural.toLowerCase()}
-              </p>
-              <Link
-                href="/jobs"
-                className="text-[12px] font-semibold text-ud-accent hover:opacity-80"
-              >
-                See all →
-              </Link>
+            <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
+              <p className="text-[13.5px] font-semibold text-ud-ink">Today&apos;s {jobPlural.toLowerCase()}</p>
+              <Link href="/jobs" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">Calendar</Link>
             </div>
             {visitsToShow.length === 0 ? (
-              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
-                No active {jobPlural.toLowerCase()} right now.
-              </p>
+              <p className="px-5 py-6 text-center text-[13px] text-ud-faint">No active {jobPlural.toLowerCase()} right now.</p>
             ) : (
               <div>
                 {visitsToShow.map((job) => {
@@ -269,12 +263,12 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                     <Link
                       key={job.id}
                       href={`/jobs/${job.id}/edit`}
-                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                      className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
                     >
                       <div className={`h-2 w-2 shrink-0 rounded-full ${
-                        tone === "danger" ? "bg-red-500" :
-                        tone === "warning" ? "bg-amber-500" :
-                        tone === "success" ? "bg-emerald-500" : "bg-[#c5bfb5]"
+                        tone === "danger" ? "bg-[#e05050]" :
+                        tone === "warning" ? "bg-[#d97706]" :
+                        tone === "success" ? "bg-[#2a8c3c]" : "bg-[#c5bfb5]"
                       }`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13.5px] font-semibold text-ud-ink truncate">
@@ -285,7 +279,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                         </p>
                       </div>
                       {job.job_value != null && (
-                        <span className="udv2-num text-[12px] font-semibold text-[#4A3FA8] shrink-0">
+                        <span className="text-[12px] font-semibold text-[#4A3FA8] shrink-0">
                           {formatCurrency(job.job_value)}
                         </span>
                       )}
@@ -296,86 +290,60 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             )}
           </Card>
 
-          <RevenueChartCard sales={sales} />
-        </div>
-
-        {/* Right column — sticky */}
-        <div className="sticky top-[80px] space-y-5">
-          {/* Needs attention card */}
+          {/* Pipeline snapshot */}
           <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-ud-soft">
-              <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
-              {priorityQueue.length > 0 && (
-                <span className="text-[11px] font-semibold text-ud-muted">
-                  {priorityQueue.length} item{priorityQueue.length !== 1 ? "s" : ""}
-                </span>
-              )}
+            <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
+              <p className="text-[13.5px] font-semibold text-ud-ink">Pipeline snapshot</p>
+              <Link href="/leads" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View all</Link>
             </div>
-            {priorityQueue.length === 0 ? (
-              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
-                Nothing needs attention right now.
-              </p>
+            {openLeads.length === 0 ? (
+              <p className="px-5 py-6 text-center text-[13px] text-ud-faint">No open {profile.labels.leadPlural.toLowerCase()}.</p>
             ) : (
               <div>
-                {priorityQueue.map((item) => (
+                {openLeads.slice(0, 4).map((lead) => (
                   <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                    key={lead.id}
+                    href={`/leads/${lead.id}/edit`}
+                    className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
                   >
-                    <div className={`h-2 w-2 shrink-0 rounded-full ${
-                      item.tone === "danger" ? "bg-red-500" :
-                      item.tone === "warning" ? "bg-amber-500" :
-                      item.tone === "success" ? "bg-emerald-500" : "bg-[#c5bfb5]"
-                    }`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
-                      <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                        {lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+                      </p>
+                      <p className="text-[12px] text-ud-muted mt-0.5">
+                        {lead.source || lead.status || "No source"} · {formatCurrency(lead.estimated_value)}
+                      </p>
                     </div>
-                    <span className="text-[12px] font-semibold text-[#4A3FA8] shrink-0">Open →</span>
+                    <span className="inline-flex items-center rounded-[6px] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted shrink-0">
+                      {lead.status || "Lead"}
+                    </span>
                   </Link>
                 ))}
               </div>
             )}
           </Card>
 
-          {/* Recent activity card */}
+          {/* Quick actions */}
           <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="px-5 py-4 border-b border-ud-soft">
-              <p className="text-[13px] font-semibold text-ud-ink">Recent activity</p>
+            <div className="px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
+              <p className="text-[13.5px] font-semibold text-ud-ink">Quick actions</p>
             </div>
-            {recentRecords.length === 0 ? (
-              <p className="px-5 py-8 text-center text-[13px] text-ud-faint">
-                No recent records.
-              </p>
-            ) : (
-              <div className="px-5 py-4 space-y-4">
-                {recentRecords.map((record, i) => (
-                  <Link
-                    key={record.id}
-                    href={record.href}
-                    className="flex items-start gap-3 group"
-                  >
-                    {/* Timeline dot */}
-                    <div className="flex flex-col items-center shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-ud-accent mt-1.5" />
-                      {i < recentRecords.length - 1 && (
-                        <div className="w-px flex-1 bg-ud-surface-sunk mt-1 min-h-[20px]" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 pb-1">
-                      <p className="text-[10.5px] text-ud-faint uppercase tracking-[0.08em] mb-0.5">
-                        {record.type} · {formatTimestampDate(record.date)}
-                      </p>
-                      <p className="text-[13px] font-semibold text-ud-ink truncate group-hover:text-ud-accent transition-colors">
-                        {record.title}
-                      </p>
-                      <p className="text-[12px] text-ud-muted truncate">{record.detail}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="p-4 flex flex-wrap gap-2">
+              {[
+                { label: "New client", href: "/customers" },
+                { label: "Log a job", href: "/jobs" },
+                { label: "Add follow-up", href: "/follow-ups" },
+                { label: "Ask AI", href: "/ai-assistant" },
+              ].map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="flex items-center gap-1.5 px-[13px] py-2 rounded-[9px] bg-ud-surface border border-ud text-[12.5px] font-semibold text-ud-text shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.14)] hover:shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all"
+                >
+                  {action.label}
+                </Link>
+              ))}
+            </div>
           </Card>
         </div>
       </div>
