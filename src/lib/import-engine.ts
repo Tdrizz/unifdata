@@ -971,6 +971,66 @@ async function findSimpleDuplicate({
   return null;
 }
 
+/**
+ * Filter rows to only those that are new or changed relative to what's already
+ * committed in external_record_links. Rows must include an `external_id` field
+ * (the provider's native record ID). Rows without an external_id are always
+ * included (they can't be deduped by external identity).
+ */
+export async function filterFreshRows({
+  supabase,
+  companyId,
+  provider,
+  recordType,
+  rows,
+  mapping,
+}: {
+  supabase: SupabaseWriteClient;
+  companyId: string;
+  provider: string;
+  recordType: ImportRecordType;
+  rows: RawImportRow[];
+  mapping: ImportMapping;
+}): Promise<RawImportRow[]> {
+  const targetTable = getTargetTable(recordType);
+
+  // Collect rows that have an external_id so we can batch-fetch their links
+  const rowsWithId = rows.filter((r) => typeof r.external_id === "string" && r.external_id);
+  if (rowsWithId.length === 0) return rows; // nothing to filter
+
+  // Build a map: external_id → hash (of normalized data)
+  const idToHash = new Map<string, string>();
+  for (const row of rowsWithId) {
+    const { normalizedData } = normalizeImportRow({ recordType, row, mapping });
+    const hash = hashImportData(normalizedData);
+    idToHash.set(row.external_id as string, hash);
+  }
+
+  // Fetch existing committed links for this company + provider + table
+  const { data: existingLinks } = await supabase
+    .from("external_record_links")
+    .select("external_id, external_hash")
+    .eq("company_id", companyId)
+    .eq("provider", provider)
+    .eq("internal_table", targetTable)
+    .in("external_id", Array.from(idToHash.keys()));
+
+  // Build a set of external_ids that are unchanged (same hash as committed)
+  const unchangedIds = new Set<string>();
+  for (const link of existingLinks ?? []) {
+    const currentHash = idToHash.get(link.external_id);
+    if (currentHash && currentHash === link.external_hash) {
+      unchangedIds.add(link.external_id);
+    }
+  }
+
+  // Return rows that are new (no link) or changed (hash differs)
+  return rows.filter((r) => {
+    if (typeof r.external_id !== "string" || !r.external_id) return true;
+    return !unchangedIds.has(r.external_id);
+  });
+}
+
 export async function createImportSessionFromRows({
   supabase,
   companyId,

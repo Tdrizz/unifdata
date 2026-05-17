@@ -1,6 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
-import { createImportSessionFromRows } from "@/lib/import-engine";
+import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
@@ -32,16 +32,19 @@ const HubSpotSyncer: IntegrationSyncer = {
       "/crm/v3/objects/contacts?limit=100&properties=firstname,lastname,email,phone,company",
     );
     if (contacts.length > 0) {
-      const rows = contacts.map((c) => {
+      const allRows = contacts.map((c) => {
         const props = (c.properties ?? {}) as Record<string, string>;
         const name = [props.firstname, props.lastname].filter(Boolean).join(" ") || props.company || "Unknown";
-        return { name, email: props.email ?? "", phone: props.phone ?? "", customer_type: "contact" };
+        return { external_id: String(c.id ?? ""), name, email: props.email ?? "", phone: props.phone ?? "", customer_type: "contact" };
       });
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Contacts",
-        fileName: null, recordType: "relationships", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "hubspot", recordType: "relationships", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Contacts",
+          fileName: null, recordType: "relationships", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -51,9 +54,10 @@ const HubSpotSyncer: IntegrationSyncer = {
       "/crm/v3/objects/deals?limit=100&properties=dealname,amount,dealstage,lead_source,closedate",
     );
     if (deals.length > 0) {
-      const rows = deals.map((d) => {
+      const allRows = deals.map((d) => {
         const props = (d.properties ?? {}) as Record<string, string>;
         return {
+          external_id: String(d.id ?? ""),
           service_requested: props.dealname ?? "Deal",
           estimated_value: props.amount ?? "0",
           status: props.dealstage ?? "new",
@@ -61,11 +65,14 @@ const HubSpotSyncer: IntegrationSyncer = {
           next_follow_up_date: props.closedate ?? "",
         };
       });
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Deals",
-        fileName: null, recordType: "opportunities", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "hubspot", recordType: "opportunities", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Deals",
+          fileName: null, recordType: "opportunities", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -75,19 +82,23 @@ const HubSpotSyncer: IntegrationSyncer = {
       "/crm/v3/objects/notes?limit=100&properties=hs_note_body,hs_timestamp",
     );
     if (notes.length > 0) {
-      const rows = notes.map((n) => {
+      const allRows = notes.map((n) => {
         const props = (n.properties ?? {}) as Record<string, string>;
         return {
+          external_id: String(n.id ?? ""),
           message: props.hs_note_body ?? "HubSpot note",
           due_date: props.hs_timestamp ? props.hs_timestamp.split("T")[0] : "",
           status: "pending",
         };
       });
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Notes",
-        fileName: null, recordType: "actions", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "hubspot", recordType: "actions", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Notes",
+          fileName: null, recordType: "actions", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 

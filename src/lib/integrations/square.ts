@@ -1,6 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
-import { createImportSessionFromRows } from "@/lib/import-engine";
+import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
 import type { IntegrationSyncer, SyncResult } from "./types";
@@ -32,20 +32,24 @@ const SquareSyncer: IntegrationSyncer = {
     const customerData = await squareGet(accessToken, "/customers?limit=100");
     const customers = (customerData.customers ?? []) as Record<string, unknown>[];
     if (customers.length > 0) {
-      const rows = customers.map((c) => {
+      const allRows = customers.map((c) => {
         const addr = c.address as Record<string, string> | undefined;
         return {
+          external_id: String(c.id ?? ""),
           name: [c.given_name, c.family_name].filter(Boolean).join(" ") || String(c.company_name ?? "Customer"),
           email: String(c.email_address ?? ""),
           phone: String(c.phone_number ?? ""),
           address: addr ? [addr.address_line_1, addr.locality, addr.administrative_district_level_1, addr.postal_code].filter(Boolean).join(", ") : "",
         };
       });
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "square", sourceName: "Square Customers",
-        fileName: null, recordType: "relationships", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "square", recordType: "relationships", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "square", sourceName: "Square Customers",
+          fileName: null, recordType: "relationships", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -53,11 +57,12 @@ const SquareSyncer: IntegrationSyncer = {
     const paymentData = await squareGet(accessToken, "/payments?limit=100");
     const payments = (paymentData.payments ?? []) as Record<string, unknown>[];
     if (payments.length > 0) {
-      const rows = payments.map((p) => {
+      const allRows = payments.map((p) => {
         const money = p.amount_money as Record<string, number> | undefined;
         const amountCents = money?.amount ?? 0;
         const createdAt = String(p.created_at ?? "");
         return {
+          external_id: String(p.id ?? ""),
           amount: String(amountCents / 100),
           payment_status: p.status === "COMPLETED" ? "paid" : "unpaid",
           sale_date: createdAt ? createdAt.split("T")[0] : "",
@@ -65,11 +70,14 @@ const SquareSyncer: IntegrationSyncer = {
           source: "square",
         };
       });
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "square", sourceName: "Square Payments",
-        fileName: null, recordType: "revenue", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "square", recordType: "revenue", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "square", sourceName: "Square Payments",
+          fileName: null, recordType: "revenue", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 

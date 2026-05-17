@@ -1,5 +1,5 @@
 import { registerSyncer } from "./registry";
-import { createImportSessionFromRows } from "@/lib/import-engine";
+import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
@@ -260,7 +260,8 @@ const StripeSyncer: IntegrationSyncer = {
     const customerData = await stripeGet(secretKey, "/customers?limit=100");
     const customers = (customerData.data ?? []) as Record<string, unknown>[];
     if (customers.length > 0) {
-      const rows = customers.map((c) => ({
+      const allRows = customers.map((c) => ({
+        external_id: String(c.id ?? ""),
         name: String(c.name ?? c.email ?? "Stripe customer"),
         email: String(c.email ?? ""),
         phone: String(c.phone ?? ""),
@@ -270,11 +271,14 @@ const StripeSyncer: IntegrationSyncer = {
           return [addr.line1, addr.city, addr.state, addr.postal_code].filter(Boolean).join(", ");
         })(),
       }));
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "stripe", sourceName: "Stripe Customers",
-        fileName: null, recordType: "relationships", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "stripe", recordType: "relationships", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "stripe", sourceName: "Stripe Customers",
+          fileName: null, recordType: "relationships", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -282,7 +286,8 @@ const StripeSyncer: IntegrationSyncer = {
     const chargeData = await stripeGet(secretKey, "/charges?limit=100");
     const charges = (chargeData.data ?? []) as Record<string, unknown>[];
     if (charges.length > 0) {
-      const rows = charges.map((ch) => ({
+      const allRows = charges.map((ch) => ({
+        external_id: String(ch.id ?? ""),
         amount: String(Number(ch.amount ?? 0) / 100),
         payment_status: ch.paid ? "paid" : "unpaid",
         sale_date: ch.created
@@ -291,11 +296,14 @@ const StripeSyncer: IntegrationSyncer = {
         service_type: String(ch.description ?? "Stripe charge"),
         source: "stripe",
       }));
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "stripe", sourceName: "Stripe Charges",
-        fileName: null, recordType: "revenue", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "stripe", recordType: "revenue", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "stripe", sourceName: "Stripe Charges",
+          fileName: null, recordType: "revenue", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 

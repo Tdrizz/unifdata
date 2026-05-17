@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
-import { createImportSessionFromRows, type RawImportRow } from "@/lib/import-engine";
+import { createImportSessionFromRows, filterFreshRows, type RawImportRow } from "@/lib/import-engine";
 import type { IntegrationSyncer, SyncResult } from "./types";
 
 // ── QuickBooks API helpers ─────────────────────────────────────────────────────
@@ -120,7 +120,16 @@ const QuickBooksSyncer: IntegrationSyncer = {
     );
 
     if (customers.length > 0) {
-      const rows = customers.map((c) => ({
+      const mapping = {
+        name: "name",
+        email: "email",
+        phone: "phone",
+        address: "address",
+        customer_type: "customer_type",
+      };
+
+      const allRows = customers.map((c) => ({
+        external_id: c.Id,
         name:
           c.DisplayName ||
           `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim(),
@@ -137,25 +146,19 @@ const QuickBooksSyncer: IntegrationSyncer = {
         customer_type: c.CompanyName ? "business" : "individual",
       }));
 
-      const mapping = {
-        name: "name",
-        email: "email",
-        phone: "phone",
-        address: "address",
-        customer_type: "customer_type",
-      };
-
-      const { sessionId } = await createImportSessionFromRows({
-        supabase,
-        companyId,
-        recordType: "relationships",
-        sourceType: "quickbooks",
-        sourceName: "quickbooks-customers",
-        rows,
-        mapping,
-      });
-
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "quickbooks", recordType: "relationships", rows: allRows, mapping });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase,
+          companyId,
+          recordType: "relationships",
+          sourceType: "quickbooks",
+          sourceName: "quickbooks-customers",
+          rows,
+          mapping,
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -167,15 +170,6 @@ const QuickBooksSyncer: IntegrationSyncer = {
     );
 
     if (invoices.length > 0) {
-      const rows = invoices.map((inv) => ({
-        amount: String(inv.TotalAmt ?? 0),
-        payment_status: (inv.Balance ?? 0) === 0 ? "Paid" : "Unpaid",
-        sale_date: inv.TxnDate ?? "",
-        service_type: `Invoice ${inv.DocNumber ?? inv.Id}`,
-        customer_name: inv.CustomerRef?.name ?? "",
-        source: "quickbooks",
-      }));
-
       const mapping = {
         amount: "amount",
         payment_status: "payment_status",
@@ -185,17 +179,29 @@ const QuickBooksSyncer: IntegrationSyncer = {
         source: "source",
       };
 
-      const { sessionId } = await createImportSessionFromRows({
-        supabase,
-        companyId,
-        recordType: "revenue",
-        sourceType: "quickbooks",
-        sourceName: "quickbooks-invoices",
-        rows,
-        mapping,
-      });
+      const allRows = invoices.map((inv) => ({
+        external_id: inv.Id,
+        amount: String(inv.TotalAmt ?? 0),
+        payment_status: (inv.Balance ?? 0) === 0 ? "Paid" : "Unpaid",
+        sale_date: inv.TxnDate ?? "",
+        service_type: `Invoice ${inv.DocNumber ?? inv.Id}`,
+        customer_name: inv.CustomerRef?.name ?? "",
+        source: "quickbooks",
+      }));
 
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "quickbooks", recordType: "revenue", rows: allRows, mapping });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase,
+          companyId,
+          recordType: "revenue",
+          sourceType: "quickbooks",
+          sourceName: "quickbooks-invoices",
+          rows,
+          mapping,
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
@@ -207,7 +213,17 @@ const QuickBooksSyncer: IntegrationSyncer = {
     );
 
     if (estimates.length > 0) {
-      const rows = estimates.map((est) => ({
+      const mapping = {
+        service_requested: "service_requested",
+        estimated_value: "estimated_value",
+        status: "status",
+        customer_name: "customer_name",
+        next_follow_up_date: "next_follow_up_date",
+        source: "source",
+      };
+
+      const allRows = estimates.map((est) => ({
+        external_id: est.Id,
         service_requested:
           est.CustomerMemo?.value ??
           `Estimate ${est.DocNumber ?? est.Id}`,
@@ -218,26 +234,19 @@ const QuickBooksSyncer: IntegrationSyncer = {
         source: "quickbooks",
       }));
 
-      const mapping = {
-        service_requested: "service_requested",
-        estimated_value: "estimated_value",
-        status: "status",
-        customer_name: "customer_name",
-        next_follow_up_date: "next_follow_up_date",
-        source: "source",
-      };
-
-      const { sessionId } = await createImportSessionFromRows({
-        supabase,
-        companyId,
-        recordType: "opportunities",
-        sourceType: "quickbooks",
-        sourceName: "quickbooks-estimates",
-        rows,
-        mapping,
-      });
-
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "quickbooks", recordType: "opportunities", rows: allRows, mapping });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase,
+          companyId,
+          recordType: "opportunities",
+          sourceType: "quickbooks",
+          sourceName: "quickbooks-estimates",
+          rows,
+          mapping,
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 

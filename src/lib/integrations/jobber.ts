@@ -1,6 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
-import { createImportSessionFromRows } from "@/lib/import-engine";
+import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import type { IntegrationSyncer, SyncResult } from "./types";
@@ -37,13 +37,14 @@ const JobberSyncer: IntegrationSyncer = {
     // Clients → relationships
     const clientData = await jobberQuery(accessToken, `{
       clients(first: 100) {
-        nodes { name emails { address } phones { number } billingAddress { street city province postalCode } }
+        nodes { id name emails { address } phones { number } billingAddress { street city province postalCode } }
       }
     }`);
 
     const clients = ((clientData.clients as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
     if (clients.length > 0) {
-      const rows = clients.map((c) => ({
+      const allRows = clients.map((c) => ({
+        external_id: String(c.id ?? ""),
         name: String(c.name ?? ""),
         email: String(((c.emails as Record<string, unknown>[])?.[0]?.address) ?? ""),
         phone: String(((c.phones as Record<string, unknown>[])?.[0]?.number) ?? ""),
@@ -53,24 +54,28 @@ const JobberSyncer: IntegrationSyncer = {
           return [addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(", ");
         })(),
       }));
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Clients",
-        fileName: null, recordType: "relationships", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "jobber", recordType: "relationships", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "jobber", sourceName: "Jobber Clients",
+          fileName: null, recordType: "relationships", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
     // Jobs → work
     const jobData = await jobberQuery(accessToken, `{
       jobs(first: 100) {
-        nodes { title jobStatus total startAt completedAt invoiceStatus }
+        nodes { id title jobStatus total startAt completedAt invoiceStatus }
       }
     }`);
 
     const jobs = ((jobData.jobs as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
     if (jobs.length > 0) {
-      const rows = jobs.map((j) => ({
+      const allRows = jobs.map((j) => ({
+        external_id: String(j.id ?? ""),
         service_type: String(j.title ?? "Job"),
         status: String(j.jobStatus ?? "").toLowerCase(),
         job_value: String(j.total ?? "0"),
@@ -78,35 +83,42 @@ const JobberSyncer: IntegrationSyncer = {
         completed_date: j.completedAt ? String(j.completedAt).split("T")[0] : "",
         paid_status: j.invoiceStatus === "PAID" ? "paid" : "unpaid",
       }));
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Jobs",
-        fileName: null, recordType: "work", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "jobber", recordType: "work", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "jobber", sourceName: "Jobber Jobs",
+          fileName: null, recordType: "work", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
     // Invoices → revenue
     const invoiceData = await jobberQuery(accessToken, `{
       invoices(first: 100) {
-        nodes { invoiceNum total invoiceStatus issuedDate }
+        nodes { id invoiceNum total invoiceStatus issuedDate }
       }
     }`);
 
     const invoices = ((invoiceData.invoices as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
     if (invoices.length > 0) {
-      const rows = invoices.map((inv) => ({
+      const allRows = invoices.map((inv) => ({
+        external_id: String(inv.id ?? ""),
         amount: String(inv.total ?? "0"),
         payment_status: inv.invoiceStatus === "PAID" ? "paid" : "unpaid",
         sale_date: inv.issuedDate ? String(inv.issuedDate).split("T")[0] : "",
         service_type: `Invoice #${inv.invoiceNum ?? ""}`,
         source: "jobber",
       }));
-      const { sessionId } = await createImportSessionFromRows({
-        supabase, companyId, sourceType: "jobber", sourceName: "Jobber Invoices",
-        fileName: null, recordType: "revenue", rows, mapping: {},
-      });
-      result.sessionIds.push(sessionId);
+      const rows = await filterFreshRows({ supabase, companyId, provider: "jobber", recordType: "revenue", rows: allRows, mapping: {} });
+      if (rows.length > 0) {
+        const { sessionId } = await createImportSessionFromRows({
+          supabase, companyId, sourceType: "jobber", sourceName: "Jobber Invoices",
+          fileName: null, recordType: "revenue", rows, mapping: {},
+        });
+        result.sessionIds.push(sessionId);
+      }
       result.recordsStaged += rows.length;
     }
 
