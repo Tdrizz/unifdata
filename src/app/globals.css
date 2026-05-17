@@ -2,10 +2,10 @@
 
 @theme {
   /* ── Colors: surfaces ─────────────────────────────────────────────── */
-  --color-ud-page:         rgb(247 246 243);
+  --color-ud-page:         rgb(244 243 240);
   --color-ud-surface:      rgb(255 255 255);
-  --color-ud-surface-soft: rgb(250 249 246);
-  --color-ud-surface-sunk: rgb(241 239 233);
+  --color-ud-surface-soft: rgb(250 249 247);
+  --color-ud-surface-sunk: rgb(238 236 231);
 
   /* ── Colors: ink hierarchy ────────────────────────────────────────── */
   --color-ud-ink:   rgb(23 22 20);
@@ -53,10 +53,10 @@
 
 :root {
   /* ── v2 CSS vars (raw — used directly in var()) ───────────────────── */
-  --ud-page:         #f7f6f3;
+  --ud-page:         #f4f3f0;
   --ud-surface:      #ffffff;
-  --ud-surface-soft: #faf9f6;
-  --ud-surface-sunk: #f1efe9;
+  --ud-surface-soft: #faf9f7;
+  --ud-surface-sunk: #eeece7;
 
   --ud-ink:        #171614;
   --ud-text:       #2c2a26;
