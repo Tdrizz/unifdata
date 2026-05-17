@@ -1,9 +1,8 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { RefreshButton } from "./RefreshButton";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -483,6 +482,19 @@ export default async function WorkspacePage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 6);
 
+  const todayLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  function queueDotClass(tone: QueueItem["tone"]) {
+    if (tone === "danger") return "bg-red-500";
+    if (tone === "warning") return "bg-amber-500";
+    if (tone === "success") return "bg-emerald-500";
+    return "bg-[#c5bfb5]";
+  }
+
   return (
     <AppShell
       companyName={company.name}
@@ -493,23 +505,20 @@ export default async function WorkspacePage() {
     >
       <div className="space-y-5">
         <PageHeader
-          eyebrow="Home"
-          title={profile.headline}
+          eyebrow={`${todayLabel} · Operating brief`}
+          title={`Good morning, ${company.name}`}
           description={profile.dailyFocus}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <RefreshButton />
-
+            <div className="flex gap-2">
               <Link
                 href="/follow-ups"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink shadow-[0_1px_0_rgba(23,22,20,0.04)]"
               >
-                Review follow-ups
+                Follow-ups
               </Link>
-
               <Link
                 href="/imports"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
@@ -517,35 +526,39 @@ export default async function WorkspacePage() {
           }
         />
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            label="Priority items"
-            value={priorityQueue.length}
-            helper="Follow-ups, payments, and cleanup"
-            tone={priorityQueue.length > 0 ? "warning" : "positive"}
-          />
+        <div className="mb-6 rounded-[14px] border border-white/[0.06] bg-gradient-to-br from-[#0d1520] to-[#1a2540] p-6">
+          <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8B80E0]">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#6B5FCC]" />
+            AI Operating Brief
+          </p>
+          <p className="text-[14px] leading-[1.65] text-[#c2d4e4]">
+            {profile.dailyFocus}
+          </p>
+        </div>
 
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatCard
+            label="Priority Items"
+            value={priorityQueue.length}
+            tone={priorityQueue.length > 0 ? "warning" : "default"}
+          />
           <StatCard
             label={profile.priorityNames.pipeline}
             value={formatCurrency(openPipelineValue)}
-            helper={`${openLeads.length} open ${profile.labels.leadPlural.toLowerCase()}`}
             tone={openPipelineValue > 0 ? "positive" : "default"}
           />
-
           <StatCard
             label={profile.priorityNames.activeWork}
             value={activeWork.length}
             helper={`${formatCurrency(activeWorkValue)} active value`}
-            tone={activeWork.length > 0 ? "warning" : "default"}
+            tone="default"
           />
-
           <StatCard
             label={`${profile.labels.saleSingular} needed`}
             value={formatCurrency(unpaidRevenueValue)}
-            helper={`${unpaidRevenue.length} ${profile.labels.salePlural.toLowerCase()} need collection`}
-            tone={unpaidRevenue.length > 0 ? "danger" : "positive"}
+            tone={unpaidRevenueValue > 0 ? "danger" : "default"}
           />
-        </section>
+        </div>
 
         <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_0.8fr] items-start">
           <SectionCard
@@ -558,33 +571,22 @@ export default async function WorkspacePage() {
                 description="No open follow-ups, unpaid revenue, or important cleanup issues were found."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {priorityQueue.map((item) => (
-                  <article
+                  <div
                     key={item.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_120px] md:items-center"
+                    className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                   >
-                    <div>
-                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-
-                      <p className="mt-2 font-semibold text-slate-950">
-                        {item.title}
-                      </p>
-
-                      <p className="mt-1 text-sm leading-6 text-slate-500">
-                        {item.detail}
-                      </p>
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${queueDotClass(item.tone)}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
+                      <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
                     </div>
-
-                    <div className="md:text-right">
-                      <Link
-                        href={item.href}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Open
-                      </Link>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-[12px] font-semibold text-ud-muted">{item.label}</span>
+                      <Link href={item.href} className="text-[12px] font-semibold text-[#4A3FA8] hover:underline">Open →</Link>
                     </div>
-                  </article>
+                  </div>
                 ))}
               </div>
             )}
@@ -600,33 +602,22 @@ export default async function WorkspacePage() {
                 description={`Add a manual follow-up or set a next follow-up date on a ${profile.labels.leadSingular.toLowerCase()}.`}
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {followUpSchedule.map((item) => (
-                  <article
+                  <div
                     key={item.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                    className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                   >
-                    <div>
-                      <StatusBadge tone={item.tone}>{item.label}</StatusBadge>
-
-                      <p className="mt-2 font-semibold text-slate-950">
-                        {item.title}
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.detail}
-                      </p>
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${queueDotClass(item.tone)}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
+                      <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
                     </div>
-
-                    <div className="md:text-right">
-                      <Link
-                        href={item.href}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Open
-                      </Link>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-[12px] font-semibold text-ud-muted">{item.label}</span>
+                      <Link href={item.href} className="text-[12px] font-semibold text-[#4A3FA8] hover:underline">Open →</Link>
                     </div>
-                  </article>
+                  </div>
                 ))}
               </div>
             )}
@@ -637,6 +628,14 @@ export default async function WorkspacePage() {
           <SectionCard
             title={`Open ${profile.labels.leadPlural.toLowerCase()}`}
             description={`${profile.labels.leadPlural} sorted by follow-up need and estimated value.`}
+            actions={
+              <Link
+                href="/leads"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[12px] font-semibold text-ud-muted hover:text-ud-ink shadow-[0_1px_0_rgba(23,22,20,0.04)]"
+              >
+                Manage
+              </Link>
+            }
           >
             {prioritizedOpportunities.length === 0 ? (
               <EmptyState
@@ -645,82 +644,47 @@ export default async function WorkspacePage() {
               />
             ) : (
               <div>
-                <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-950">
-                      {opportunitiesNeedingFollowUp.length} {profile.labels.leadPlural.toLowerCase()} need follow-up
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Missing, due, or overdue follow-up dates.
+                {opportunitiesNeedingFollowUp.length > 0 && (
+                  <div className="flex items-center gap-2 px-5 py-3 border-b border-[rgba(23,22,20,0.05)] bg-ud-surface-soft">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <p className="text-[12px] font-semibold text-ud-muted">
+                      {opportunitiesNeedingFollowUp.length} {profile.labels.leadPlural.toLowerCase()} need follow-up — missing, due, or overdue dates.
                     </p>
                   </div>
+                )}
+                {prioritizedOpportunities.map((lead) => {
+                  const customer = lead.customer_id
+                    ? customerById.get(lead.customer_id)
+                    : null;
+                  const followUpTone = getFollowUpTone(lead.next_follow_up_date);
 
-                  <Link
-                    href="/leads"
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Manage
-                  </Link>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {prioritizedOpportunities.map((lead) => {
-                    const customer = lead.customer_id
-                      ? customerById.get(lead.customer_id)
-                      : null;
-
-                    return (
-                      <article
-                        key={lead.id}
-                        className="grid gap-3 p-4 md:grid-cols-[1fr_110px_135px_90px] md:items-center"
-                      >
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {lead.service_requested || "Untitled opportunity"}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {customer?.name ||
-                              lead.source ||
-                              `No ${profile.labels.customerSingular.toLowerCase()} linked`}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">
-                            Value
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
-                            {formatCurrency(lead.estimated_value)}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">
-                            Next step
-                          </p>
-                          <div className="mt-1">
-                            <StatusBadge
-                              tone={getFollowUpTone(lead.next_follow_up_date)}
-                            >
-                              {lead.next_follow_up_date
-                                ? getFollowUpLabel(lead.next_follow_up_date)
-                                : "Add follow-up"}
-                            </StatusBadge>
-                          </div>
-                        </div>
-
-                        <div className="md:text-right">
-                          <Link
-                            href={`/leads/${lead.id}/edit`}
-                            className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                          >
-                            Open
-                          </Link>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div
+                      key={lead.id}
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                    >
+                      <div className={`h-2 w-2 shrink-0 rounded-full ${queueDotClass(followUpTone)}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {lead.service_requested || "Untitled opportunity"}
+                        </p>
+                        <p className="text-[12px] text-ud-muted mt-0.5">
+                          {customer?.name || lead.source || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
+                          {" · "}
+                          {formatCurrency(lead.estimated_value)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-[12px] font-semibold text-ud-muted">
+                          {lead.next_follow_up_date
+                            ? getFollowUpLabel(lead.next_follow_up_date)
+                            : "No follow-up"}
+                        </span>
+                        <Link href={`/leads/${lead.id}/edit`} className="text-[12px] font-semibold text-[#4A3FA8] hover:underline">Open →</Link>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </SectionCard>
@@ -735,37 +699,38 @@ export default async function WorkspacePage() {
                 description={`Create or import ${profile.labels.jobPlural.toLowerCase()} to track delivery.`}
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {prioritizedWork.map((work) => {
                   const customer = work.customer_id
                     ? customerById.get(work.customer_id)
                     : null;
+                  const workTone = getWorkTone(work.status);
+                  const dotTone: QueueItem["tone"] =
+                    workTone === "success" ? "success" :
+                    workTone === "warning" ? "warning" :
+                    workTone === "danger" ? "danger" : "neutral";
 
                   return (
-                    <article
+                    <div
                       key={work.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_110px_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950">
+                      <div className={`h-2 w-2 shrink-0 rounded-full ${queueDotClass(dotTone)}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                           {work.service_type || "Untitled work"}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {customer?.name ||
-                            `Starts ${formatDateOnly(work.start_date)}`}
+                        <p className="text-[12px] text-ud-muted mt-0.5">
+                          {customer?.name || `Starts ${formatDateOnly(work.start_date)}`}
+                          {" · "}
+                          {formatCurrency(work.job_value)}
                         </p>
                       </div>
-
-                      <p className="text-sm font-semibold text-slate-700">
-                        {formatCurrency(work.job_value)}
-                      </p>
-
-                      <div className="md:text-right">
-                        <StatusBadge tone={getWorkTone(work.status)}>
-                          {work.status || "Scheduled"}
-                        </StatusBadge>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-[12px] font-semibold text-ud-muted">{work.status || "Scheduled"}</span>
+                        <Link href={`/jobs/${work.id}/edit`} className="text-[12px] font-semibold text-[#4A3FA8] hover:underline">Open →</Link>
                       </div>
-                    </article>
+                    </div>
                   );
                 })}
               </div>
@@ -783,38 +748,24 @@ export default async function WorkspacePage() {
               description="Add records manually or import data to start building the workspace."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div>
               {recentRecords.map((record) => (
-                <article
+                <div
                   key={record.id}
-                  className="grid gap-3 p-4 md:grid-cols-[120px_1fr_120px_90px] md:items-center"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div>
-                    <StatusBadge tone="neutral">{record.type}</StatusBadge>
+                  <div className="h-2 w-2 shrink-0 rounded-full bg-[#c5bfb5]" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">{record.title}</p>
+                    <p className="text-[12px] text-ud-muted mt-0.5">{record.detail}</p>
                   </div>
-
-                  <div>
-                    <p className="font-semibold text-slate-950">
-                      {record.title}
-                    </p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {record.detail}
-                    </p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[12px] font-semibold text-ud-muted">
+                      {record.type} · {formatTimestampDate(record.date)}
+                    </span>
+                    <Link href={record.href} className="text-[12px] font-semibold text-[#4A3FA8] hover:underline">Open →</Link>
                   </div>
-
-                  <p className="text-sm font-medium text-slate-500 md:text-right">
-                    {formatTimestampDate(record.date)}
-                  </p>
-
-                  <div className="md:text-right">
-                    <Link
-                      href={record.href}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Open
-                    </Link>
-                  </div>
-                </article>
+                </div>
               ))}
             </div>
           )}
