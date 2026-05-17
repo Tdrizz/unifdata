@@ -650,7 +650,7 @@ export function DataHubView({
                   <div className="md:text-right">
                     <Link
                       href={item.href}
-                      className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                      className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                     >
                       Review
                     </Link>
@@ -698,7 +698,7 @@ export function DataHubView({
                 <div className="md:text-right">
                   <Link
                     href={module.href}
-                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                    className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                   >
                     Open
                   </Link>
@@ -779,7 +779,7 @@ export function DataHubView({
                 <div className="md:text-right">
                   <Link
                     href={record.href}
-                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                    className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                   >
                     Open
                   </Link>

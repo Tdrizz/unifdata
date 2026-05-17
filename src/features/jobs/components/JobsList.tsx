@@ -402,7 +402,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                             ? "/jobs"
                             : `/jobs?stage=${encodeURIComponent(group.status)}`
                         }
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                        className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedStage === group.status ? "Clear" : "Review"}
                       </Link>

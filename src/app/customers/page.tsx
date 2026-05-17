@@ -74,7 +74,7 @@ export default async function CustomersPage({
             <div className="flex items-center gap-2">
               <Link
                 href="/imports"
-                className="rounded-xl border border-ud bg-ud-surface px-4 py-2 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink transition-colors"
               >
                 Import
               </Link>

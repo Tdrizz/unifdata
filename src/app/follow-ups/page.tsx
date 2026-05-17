@@ -43,8 +43,8 @@ export default async function FollowUpsPage({
           description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates are sorted by urgency and due date.`}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link href="/leads" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">Opportunities</Link>
-              <Link href="/imports" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">Import data</Link>
+              <Link href="/leads" className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink">Opportunities</Link>
+              <Link href="/imports" className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90">Import data</Link>
             </div>
           }
         />

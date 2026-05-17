@@ -5,6 +5,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { parseDateOnly, formatDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { isClosedOpportunity, getGenericTone } from "@/lib/status";
+import { cn } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { FollowUpRow, LeadRow, CustomerRow, FollowUpItem } from "../types";
 
@@ -261,6 +262,13 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
     },
   ].filter((group) => group.count > 0);
 
+  const filterTabs = [
+    { label: "All", href: "/follow-ups", value: "", count: actions.length },
+    { label: "Overdue", href: "/follow-ups?due=overdue", value: "overdue", count: overdueActions.length },
+    { label: "Due today", href: "/follow-ups?due=today", value: "today", count: dueTodayActions.length },
+    { label: "Upcoming", href: "/follow-ups?due=upcoming", value: "upcoming", count: upcomingActions.length },
+  ];
+
   return (
     <div className="space-y-5">
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -289,6 +297,24 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
           tone={upcomingActions.length > 0 ? "default" : "positive"}
         />
       </section>
+
+      <div className="flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[9px] p-[3px] w-fit">
+        {filterTabs.map((tab) => (
+          <Link
+            key={tab.value}
+            href={tab.href}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-[13px] py-[5px] rounded-[7px] text-[12.5px] font-semibold whitespace-nowrap transition-all",
+              selectedDue === tab.value
+                ? "bg-ud-surface text-ud-ink shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)]"
+                : "bg-transparent text-ud-muted hover:text-ud-ink"
+            )}
+          >
+            {tab.label}
+            <span className="text-[11px] font-bold text-ud-faint">{tab.count}</span>
+          </Link>
+        ))}
+      </div>
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
         <SectionCard
@@ -411,7 +437,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                     <div className="md:text-right">
                       <Link
                         href={group.href}
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                        className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedSource === group.id ? "Clear" : "Review"}
                       </Link>
@@ -450,7 +476,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                             ? "/follow-ups"
                             : `/follow-ups?due=${encodeURIComponent(group.id)}`
                         }
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
+                        className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedDue === group.id ? "Clear" : "Review"}
                       </Link>

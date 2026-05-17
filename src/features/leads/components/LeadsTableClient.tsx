@@ -100,9 +100,9 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
         </div>
       )}
 
-      <div className="divide-y divide-ud">
+      <div>
         {/* Select-all header row */}
-        <div className="flex items-center gap-3 px-4 py-2">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-[rgba(23,22,20,0.04)]">
           <input
             type="checkbox"
             checked={allSelected}
@@ -123,7 +123,7 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
           return (
             <div
               key={opportunity.id}
-              className="flex items-start gap-3 p-4 transition-colors hover:bg-ud-surface-sunk"
+              className="flex items-start gap-3 p-4 border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft"
             >
               <div className="pt-1">
                 <input

@@ -57,7 +57,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
       <div className="hidden md:flex items-center gap-2">
         <button
           onClick={() => setView("list")}
-          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`rounded-[9px] border px-4 py-2 text-sm font-semibold transition-colors ${
             view === "list"
               ? "border-ud-accent bg-ud-accent text-white"
               : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"
@@ -67,7 +67,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
         </button>
         <button
           onClick={() => setView("calendar")}
-          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`rounded-[9px] border px-4 py-2 text-sm font-semibold transition-colors ${
             view === "calendar"
               ? "border-ud-accent bg-ud-accent text-white"
               : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"

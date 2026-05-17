@@ -239,7 +239,7 @@ export function SettingsView({
             Connect your business tools. Once connected, UnifData syncs their data automatically every day — no CSV exports needed.
           </p>
         </div>
-        <div className="divide-y divide-ud">
+        <div>
           {[
             {
               provider: "quickbooks",
@@ -272,7 +272,7 @@ export function SettingsView({
           ].map(({ provider, label, description, integration, startHref }) => (
             <div
               key={label}
-              className="flex flex-wrap items-center justify-between gap-4 p-[18px]"
+              className="flex flex-wrap items-center justify-between gap-4 p-[18px] border-b border-[rgba(23,22,20,0.04)] last:border-0"
             >
               <div>
                 <p className="text-[14px] font-semibold text-ud-ink">{label}</p>
