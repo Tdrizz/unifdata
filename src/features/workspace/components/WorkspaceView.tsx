@@ -190,10 +190,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       <AiBriefCard
         eyebrow="UnifData · Daily focus"
         body={profile.headline}
-        actions={[
-          { label: "Review follow-ups", href: "/follow-ups", variant: "primary" },
-          { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
-        ]}
+        bullets={priorityQueue.slice(0, 3).map((item) =>
+          item.detail ? `${item.title} — ${item.detail}` : item.title
+        )}
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">

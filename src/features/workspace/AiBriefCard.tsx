@@ -11,20 +11,31 @@ type Action = {
 type Props = {
   eyebrow?: string;
   body: React.ReactNode;
+  bullets?: string[];
   actions?: Action[];
   className?: string;
 };
 
-export function AiBriefCard({ eyebrow = "AI Operating Brief", body, actions, className }: Props) {
+export function AiBriefCard({ eyebrow = "AI Operating Brief", body, bullets, actions, className }: Props) {
   return (
     <div className={cn("rounded-[14px] border border-white/[0.06] bg-gradient-to-br from-[#0d1520] to-[#1a2540] p-6", className)}>
-      <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8B80E0]">
+      <p className="mb-[8px] flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8B80E0]">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#6B5FCC]" />
         {eyebrow}
       </p>
       <div className="text-[14px] leading-[1.65] text-[#c2d4e4]">
         {body}
       </div>
+      {bullets && bullets.length > 0 && (
+        <ul className="mt-[14px] flex flex-col gap-[7px]">
+          {bullets.map((bullet, i) => (
+            <li key={i} className="flex items-start gap-2 text-[13px] text-[#96b0c4] leading-[1.5]">
+              <span className="font-bold text-[#6B5FCC] shrink-0">→</span>
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      )}
       {actions && actions.length > 0 && (
         <div className="mt-5 flex flex-wrap gap-2">
           {actions.map((action, i) => (
