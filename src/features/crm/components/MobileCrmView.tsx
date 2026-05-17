@@ -8,30 +8,9 @@ import { formatCurrency } from "@/lib/utils";
 import { formatDateOnly } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CRMPageData } from "../queries";
+import { STAGES, mapToStage, isOpenLead } from "../stages";
 
 type Lead = CRMPageData["leads"][number];
-
-const STAGES: { name: string; keys: string[] }[] = [
-  { name: "Lead",        keys: ["new", "lead", "contact", "qualified", "interested"] },
-  { name: "Quoted",      keys: ["quoted", "proposal"] },
-  { name: "In progress", keys: ["in progress", "in_progress", "accepted", "confirmed", "scheduled"] },
-  { name: "Won",         keys: ["won", "closed won", "completed"] },
-  { name: "Lost",        keys: ["lost", "declined", "closed"] },
-];
-
-function mapToStage(status: string | null): string {
-  const s = (status || "").toLowerCase().trim();
-  for (const stage of STAGES) {
-    if (stage.keys.some((k) => s.includes(k))) return stage.name;
-  }
-  return "Lead";
-}
-
-function isOpenLead(status: string | null): boolean {
-  const s = (status || "").toLowerCase().trim();
-  const closedKeys = ["lost", "closed", "won", "declined", "rejected"];
-  return !closedKeys.some((k) => s.includes(k));
-}
 
 type Props = CRMPageData & { profile: IndustryProfile };
 

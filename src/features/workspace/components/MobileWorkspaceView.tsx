@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkline } from "@/components/ui/Sparkline";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import {
   formatDateOnly,
   parseDateOnly,
-  isTodayOrPast,
   isOverdue,
   isDueToday,
 } from "@/lib/date-format";
@@ -18,7 +16,6 @@ import {
   isOpenFollowUp,
   isRecentActiveWork,
   getWorkTone,
-  computeHealthScore,
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
@@ -57,6 +54,13 @@ function getFollowUpTone(date: string | null) {
 function getDayLabel() {
   const now = new Date();
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
@@ -163,18 +167,11 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     })
     .slice(0, 5);
 
-  // Sparkline: last 8 sales amounts
-  const sparklineData = sales.slice(0, 8).map((s) => Number(s.amount || 0)).reverse();
-
-  // Recent unpaid delta: sum of unpaid in last 7 days
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const recentUnpaidDelta = unpaidRevenue
-    .filter((r) => r.sale_date && new Date(r.sale_date).getTime() >= sevenDaysAgo)
-    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
-
   const leadPlural = profile.labels.leadPlural;
   const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
+  const greeting = getGreeting();
+  const totalQueueCount = manualFollowUpItems.length + opportunityFollowUpItems.length + paymentAttentionItems.length + cleanupItems.length;
   const visitsToShow = activeWork.slice(0, 3);
 
   // Count overdue follow-ups
@@ -188,7 +185,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           {dayLabel}
         </p>
         <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
-          Good morning, {companyName}.
+          {greeting}, {companyName}.
         </p>
       </div>
 
@@ -244,7 +241,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
             <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
               <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
               <Link href="/follow-ups" className="text-[12px] font-semibold text-ud-accent">
-                All {priorityQueue.length} →
+                {totalQueueCount > priorityQueue.length ? `All ${totalQueueCount} →` : "View all →"}
               </Link>
             </div>
             {priorityQueue.map((item) => {
