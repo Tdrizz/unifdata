@@ -143,7 +143,7 @@ export function ImportsView({
           <div className="flex flex-wrap gap-2">
             <Link
               href="/data-hub"
-              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+              className="rounded-[9px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:text-ud-ink"
             >
               Data Hub
             </Link>
@@ -303,11 +303,11 @@ export function ImportsView({
               description="Upload a CSV or choose a Google Sheet to start a new import."
             />
           ) : (
-            <div className="divide-y divide-ud">
+            <div>
               {reviewSessions.map((session) => (
                 <article
                   key={session.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px] md:items-center"
+                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
                 >
                   <div>
                     <p className="line-clamp-1 font-semibold text-ud-ink">
@@ -346,7 +346,7 @@ export function ImportsView({
 
                     <Link
                       href={`/imports/sessions/${session.id}`}
-                      className="w-fit rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                      className="w-fit rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:text-ud-ink"
                     >
                       Open review
                     </Link>
@@ -402,11 +402,11 @@ export function ImportsView({
           title="Committed imports"
           description="Imports that have been committed to the workspace. Use Revert to undo a specific import."
         >
-          <div className="divide-y divide-ud">
+          <div>
             {committedSessions.map((session) => (
               <article
                 key={session.id}
-                className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_140px] md:items-center"
+                className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_140px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
               >
                 <div>
                   <p className="line-clamp-1 font-semibold text-ud-ink">
@@ -461,11 +461,11 @@ export function ImportsView({
             title="Saved syncs"
             description="Connections configured for repeat syncing."
           >
-            <div className="divide-y divide-ud">
+            <div>
               {syncConnections.map((connection) => (
                 <article
                   key={connection.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px] md:items-center"
+                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
                 >
                   <div>
                     <p className="font-semibold text-ud-ink">
@@ -505,7 +505,7 @@ export function ImportsView({
                 description="Import and commit data to create history here."
               />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {syncRuns.map((run) => {
                   const metadata = run.metadata as {
                     source_type?: string;
@@ -516,7 +516,7 @@ export function ImportsView({
                   return (
                     <article
                       key={run.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
+                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
                     >
                       <div>
                         <p className="line-clamp-1 font-semibold text-ud-ink">
@@ -571,7 +571,7 @@ export function ImportsView({
               description="Analyze and commit data to create activity history."
             />
           ) : (
-            <div className="divide-y divide-ud">
+            <div>
               {syncRuns.map((run) => {
                 const metadata = run.metadata as {
                   source_type?: string;
@@ -582,7 +582,7 @@ export function ImportsView({
                 return (
                   <article
                     key={run.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center"
+                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
                   >
                     <div>
                       <p className="line-clamp-1 font-semibold text-ud-ink">

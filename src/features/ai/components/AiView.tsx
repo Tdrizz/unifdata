@@ -124,9 +124,9 @@ export function AiView({ reports, profile }: AiViewProps) {
                 Previous briefs
               </p>
             </div>
-            <div className="divide-y divide-ud">
+            <div>
               {previousReports.map((report) => (
-                <details key={report.id} className="group">
+                <details key={report.id} className="group border-b border-[rgba(0,0,0,0.04)] last:border-0">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-[22px] py-[16px]">
                     <div>
                       <p className="text-[14px] font-semibold text-ud-ink">
