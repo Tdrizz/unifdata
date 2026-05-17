@@ -87,7 +87,7 @@ export function ApiKeyManager({
             onClick={() => setNewKey(null)}
             className="mt-3 text-[12px] text-green-600 underline"
           >
-            I've saved it, dismiss
+            I&apos;ve saved it, dismiss
           </button>
         </div>
       )}

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
@@ -32,7 +33,7 @@ export default async function CustomerDuplicatesPage() {
             <h1 className="text-2xl font-bold text-slate-950">Duplicate Customers</h1>
             <p className="mt-1 text-sm text-slate-500">{groups.length} duplicate group{groups.length !== 1 ? "s" : ""} found</p>
           </div>
-          <a href="/customers" className="text-sm text-slate-500 hover:underline">← Back to Customers</a>
+          <Link href="/customers" className="text-sm text-slate-500 hover:underline">← Back to Customers</Link>
         </div>
         <DuplicatesPage groups={groups} />
       </div>
