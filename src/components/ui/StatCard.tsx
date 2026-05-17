@@ -1,14 +1,42 @@
 const toneStyles = {
-  default:  "border-slate-200 bg-white text-slate-950",
-  subtle:   "border-slate-200 bg-slate-50 text-slate-950",
-  positive: "border-slate-200 bg-white text-slate-950",
-  warning:  "border-amber-200 bg-amber-50 text-amber-950",
-  danger:   "border-red-200 bg-red-50 text-red-950",
-  // backward-compatible aliases
-  green:    "border-slate-200 bg-white text-slate-950",
-  blue:     "border-slate-200 bg-white text-slate-950",
-  amber:    "border-amber-200 bg-amber-50 text-amber-950",
-  red:      "border-red-200 bg-red-50 text-red-950",
+  default: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-slate-300",
+  },
+  subtle: {
+    card: "border-slate-200 bg-slate-50 text-slate-950",
+    accent: "bg-slate-400",
+  },
+  positive: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-emerald-500",
+  },
+  warning: {
+    card: "border-amber-200 bg-amber-50 text-amber-950",
+    accent: "bg-amber-500",
+  },
+  danger: {
+    card: "border-red-200 bg-red-50 text-red-950",
+    accent: "bg-red-500",
+  },
+
+  // Backward-compatible aliases so older pages don't break
+  green: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-emerald-500",
+  },
+  blue: {
+    card: "border-slate-200 bg-white text-slate-950",
+    accent: "bg-slate-400",
+  },
+  amber: {
+    card: "border-amber-200 bg-amber-50 text-amber-950",
+    accent: "bg-amber-500",
+  },
+  red: {
+    card: "border-red-200 bg-red-50 text-red-950",
+    accent: "bg-red-500",
+  },
 };
 
 export function StatCard({
@@ -22,14 +50,20 @@ export function StatCard({
   helper?: string;
   tone?: keyof typeof toneStyles;
 }) {
+  const styles = toneStyles[tone];
+
   return (
-    <div className={`rounded-4xl border p-5 shadow-sm ${toneStyles[tone]}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight">
+    <div
+      className={`relative overflow-hidden rounded-3xl border p-5 shadow-sm ${styles.card}`}
+    >
+      <div className={`absolute left-0 top-0 h-full w-1 ${styles.accent}`} />
+
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
         {value}
       </p>
+
       {helper && (
         <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
           {helper}
