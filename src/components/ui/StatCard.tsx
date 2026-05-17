@@ -28,14 +28,14 @@ export function StatCard({
     <div className="relative overflow-hidden rounded-[12px] border border-ud bg-ud-surface p-4 shadow-ud">
       <div className={`absolute left-0 top-0 h-full w-[3px] ${accent}`} />
 
-      <p className="text-[11px] font-medium text-ud-faint">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint">{label}</p>
 
-      <p className="mt-1 text-[22px] font-bold tracking-[-0.025em] text-ud-ink md:text-[28px]">
+      <p className="mt-[5px] text-[27px] font-bold tracking-[-0.03em] leading-none text-ud-ink" style={{fontVariantNumeric:"tabular-nums"}}>
         {value}
       </p>
 
       {helper && (
-        <p className="mt-0.5 text-[11px] font-medium text-ud-faint">
+        <p className="mt-[5px] text-[11.5px] text-ud-muted">
           {helper}
         </p>
       )}

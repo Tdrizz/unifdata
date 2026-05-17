@@ -58,7 +58,7 @@ export function Topbar({ companyId, initialNotifications, className }: Props) {
 
   return (
     <header
-      className={`h-14 flex items-center justify-between px-8 border-b border-ud bg-ud-page ${className ?? ""}`}
+      className={`h-14 flex items-center justify-between px-8 border-b border-ud bg-ud-surface shadow-[0_1px_2px_rgba(0,0,0,0.04),0_1px_0_rgba(0,0,0,0.02)] ${className ?? ""}`}
     >
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-[13px]">
