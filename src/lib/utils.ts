@@ -1,3 +1,6 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function formatCurrency(value: number | string | null | undefined) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -29,4 +32,8 @@ export function compactText(
   fallback = "Not set",
 ) {
   return String(value || "").trim() || fallback;
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
