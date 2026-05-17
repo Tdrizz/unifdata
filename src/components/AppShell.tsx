@@ -43,11 +43,11 @@ export async function AppShell({
   return (
     <div className="flex min-h-screen bg-ud-page text-ud-text">
       {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-ud bg-ud-page">
+      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0c1117]">
         {/* Brand block */}
         <div className="px-[18px] py-[18px] pb-[14px]">
           <Link href="/workspace">
-            <ProductMark companyName={companyName} />
+            <ProductMark companyName={companyName} inverse />
           </Link>
         </div>
 
@@ -57,18 +57,18 @@ export async function AppShell({
         </div>
 
         {/* Account block */}
-        <div className="px-[14px] py-[12px] border-t border-ud">
+        <div className="px-[14px] py-[12px] border-t border-white/[0.07]">
           <div className="flex items-center gap-2.5 mb-2">
             <Avatar name={displayName} size={28} />
             <div className="min-w-0 flex-1">
-              <p className="text-[12.5px] font-semibold text-ud-ink truncate">
+              <p className="text-[12.5px] font-semibold text-[#d0dae6] truncate">
                 {companyName || "My Workspace"}
               </p>
-              <p className="text-[11px] text-ud-muted truncate">{userEmail}</p>
+              <p className="text-[11px] text-[#3d5166] truncate">{userEmail}</p>
             </div>
             <button
               type="button"
-              className="shrink-0 text-ud-faint hover:text-ud-text"
+              className="shrink-0 text-[#3d5166] hover:text-[#8b98a8]"
               aria-label="Account menu"
             >
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

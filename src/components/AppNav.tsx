@@ -155,20 +155,20 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
           onClick={() => {
             window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
           }}
-          className="flex w-full items-center gap-2 rounded-[8px] bg-ud-surface-sunk px-[10px] py-[7px] text-[12.5px] text-ud-faint hover:bg-ud-surface transition-colors"
+          className="flex w-full items-center gap-2 rounded-[8px] bg-white/[0.04] border border-white/[0.07] px-[10px] py-[7px] text-[12.5px] text-[#3d5166] hover:bg-white/[0.07] transition-colors"
         >
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <span className="flex-1 text-left">Search workspace…</span>
-          <kbd className="font-mono text-[10px] bg-ud-surface border border-ud rounded-[4px] px-[5px] py-[2px] text-ud-faint leading-none">⌘K</kbd>
+          <kbd className="font-mono text-[10px] bg-white/[0.06] border border-white/[0.08] rounded-[4px] px-[5px] py-[2px] text-[#3d5166] leading-none">⌘K</kbd>
         </button>
       </div>
 
       {/* Nav groups */}
       {groups.map((group) => (
         <div key={group.label} className="mb-2">
-          <p className="mb-1 px-[9px] text-[10px] font-bold uppercase tracking-eyebrow text-ud-faint">
+          <p className="mb-1 px-[9px] text-[10px] font-bold uppercase tracking-eyebrow text-[#3d5166]">
             {group.label}
           </p>
           <div className="space-y-0.5">
@@ -182,16 +182,16 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
                   className={cn(
                     "flex items-center gap-[9px] px-[9px] py-[7px] rounded-[8px] border transition-all text-[13px]",
                     active
-                      ? "bg-ud-surface text-ud-ink border-ud shadow-ud font-semibold"
+                      ? "bg-white/[0.08] text-[#f0f4f8] border-white/[0.07] font-semibold"
                       : cn(
-                          "border-transparent font-medium hover:bg-ud-surface-soft",
-                          item.accent ? "text-ud-accent" : "text-ud-text",
+                          "border-transparent font-medium hover:bg-white/[0.05]",
+                          item.accent ? "text-[#8B80E0]" : "text-[#8b98a8]",
                         ),
                   )}
                 >
                   <span className={cn(
                     "shrink-0",
-                    active ? "text-ud-ink" : item.accent ? "text-ud-accent" : "text-ud-muted",
+                    active ? "text-[#f0f4f8]" : item.accent ? "text-[#8B80E0]" : "text-[#3d5166]",
                   )}>
                     <Icon />
                   </span>
@@ -199,7 +199,7 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
                   {item.badge && (
                     <span className={cn(
                       "udv2-num text-[10.5px] font-bold rounded-[4px] px-[5px] py-[1px] leading-none",
-                      active ? "bg-ud-surface-sunk text-ud-muted" : "text-ud-faint",
+                      active ? "bg-white/[0.08] text-[#8b98a8]" : "text-[#3d5166]",
                     )}>
                       {item.badge}
                     </span>

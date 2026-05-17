@@ -24,7 +24,7 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="flex h-[32px] w-[32px] items-center justify-center rounded-[8px] border border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-soft hover:text-ud-ink transition-colors"
+      className="flex h-[32px] w-[32px] items-center justify-center rounded-[8px] border border-white/[0.08] bg-white/[0.04] text-[#8b98a8] hover:bg-white/[0.08] hover:text-[#d0dae6] transition-colors"
     >
       {dark ? (
         /* Sun icon */
