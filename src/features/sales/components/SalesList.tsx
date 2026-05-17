@@ -135,7 +135,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
     .slice(0, 8);
 
   return (
-    <div className="space-y-5 px-6 pt-5 pb-8">
+    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={profile.labels.salePlural}
         title={`Track ${profile.labels.salePlural.toLowerCase()} and collected work`}
@@ -160,7 +160,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard label="Total revenue" value={formatCurrency(totalRevenue)} helper={`${sales.length} revenue records`} tone={totalRevenue > 0 ? "positive" : "default"} />
         <StatCard label="Collected" value={formatCurrency(paidTotal)} helper={`${paidRevenue.length} paid records`} tone={paidTotal > 0 ? "positive" : "default"} />
         <StatCard label="Payment needed" value={formatCurrency(unpaidTotal)} helper={`${unpaidRevenue.length} unpaid or partial records`} tone={unpaidTotal > 0 ? "danger" : "positive"} />
@@ -197,7 +197,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
                         <div>
                           <p className="font-semibold text-ud-ink">{record.service_type || "Revenue record"}</p>
                           <p className="mt-1 text-sm text-ud-faint">{record.source || "No source saved"}</p>
-                          <p className="mt-3 text-sm leading-6 text-ud-muted">{getRevenueNextStep(record)}</p>
+                          <p className="hidden md:block mt-3 text-sm leading-6 text-ud-muted">{getRevenueNextStep(record)}</p>
                           <div className="mt-3 flex flex-wrap gap-2">
                             {issues.slice(0, 3).map((issue) => (
                               <StatusBadge key={issue.label} tone={issue.tone}>{issue.label}</StatusBadge>
@@ -227,7 +227,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
           )}
         </SectionCard>
 
-        <div className="space-y-5">
+        <div className="hidden md:block space-y-5">
           <SectionCard title="Payment status" description="Use this to filter revenue by collection state.">
             {paymentGroups.length === 0 ? (
               <EmptyState title="No payment statuses yet" description="Payment statuses will appear here after revenue records are added." />
@@ -278,6 +278,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
         </div>
       </section>
 
+      <div className="hidden md:block">
       <SectionCard title="Revenue health" description="Cleanup issues that make revenue reporting less reliable.">
         {cleanupGroups.length === 0 ? (
           <EmptyState title="Revenue records look clean" description="No missing source, amount, or date issues were found." />
@@ -296,6 +297,7 @@ export function SalesList({ sales, count, page, q, profile, selectedStatus, sele
           </div>
         )}
       </SectionCard>
+      </div>
 
       <Pagination count={count} pageSize={PAGE_SIZE} />
     </div>

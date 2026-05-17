@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCRMPageData } from "@/features/crm/queries";
 import { CRMView } from "@/features/crm/components/CRMView";
 import { MobileCrmView } from "@/features/crm/components/MobileCrmView";
@@ -19,6 +20,7 @@ export default async function PipelinePage() {
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
   const { leads, customers } = await getCRMPageData(supabase, company.id);
 
   return (
@@ -31,7 +33,7 @@ export default async function PipelinePage() {
     >
       <>
         <CRMView leads={leads} customers={customers} />
-        <MobileCrmView leads={leads} customers={customers} />
+        <MobileCrmView leads={leads} customers={customers} profile={profile} />
       </>
     </AppShell>
   );

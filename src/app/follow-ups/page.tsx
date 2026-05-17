@@ -36,7 +36,7 @@ export default async function FollowUpsPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5 px-6 pt-5 pb-8">
+      <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
         <PageHeader
           eyebrow={profile.labels.followUpPlural}
           title="Priority follow-up queue"

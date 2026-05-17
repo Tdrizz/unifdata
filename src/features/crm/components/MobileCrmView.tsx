@@ -2,21 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Display } from "@/components/ui/Display";
-import { FilterChip } from "@/components/ui/FilterChip";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { LeadCard } from "./LeadCard";
+import { Pill } from "@/components/ui/Pill";
 import { formatCurrency } from "@/lib/utils";
+import { formatDateOnly } from "@/lib/date-format";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CRMPageData } from "../queries";
 
 type Lead = CRMPageData["leads"][number];
 
 const STAGES: { name: string; keys: string[] }[] = [
-  { name: "New", keys: ["new", "lead", "contact"] },
-  { name: "Qualified", keys: ["qualified", "interested"] },
-  { name: "Quoted", keys: ["quoted", "proposal"] },
-  { name: "Accepted", keys: ["accepted", "won", "confirmed"] },
-  { name: "Lost", keys: ["lost", "declined", "closed"] },
+  { name: "Lead",        keys: ["new", "lead", "contact", "qualified", "interested"] },
+  { name: "Quoted",      keys: ["quoted", "proposal"] },
+  { name: "In progress", keys: ["in progress", "in_progress", "accepted", "confirmed", "scheduled"] },
+  { name: "Won",         keys: ["won", "closed won", "completed"] },
+  { name: "Lost",        keys: ["lost", "declined", "closed"] },
 ];
 
 function mapToStage(status: string | null): string {
@@ -24,7 +24,7 @@ function mapToStage(status: string | null): string {
   for (const stage of STAGES) {
     if (stage.keys.some((k) => s.includes(k))) return stage.name;
   }
-  return "New";
+  return "Lead";
 }
 
 function isOpenLead(status: string | null): boolean {
@@ -33,9 +33,9 @@ function isOpenLead(status: string | null): boolean {
   return !closedKeys.some((k) => s.includes(k));
 }
 
-type Props = CRMPageData;
+type Props = CRMPageData & { profile: IndustryProfile };
 
-export function MobileCrmView({ leads, customers }: Props) {
+export function MobileCrmView({ leads, customers, profile }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, { name: c.name }]));
 
   const openLeads = leads.filter((l) => isOpenLead(l.status));
@@ -44,7 +44,6 @@ export function MobileCrmView({ leads, customers }: Props) {
     0,
   );
 
-  // Group leads by stage
   const leadsByStage = new Map<string, Lead[]>();
   for (const stage of STAGES) {
     leadsByStage.set(stage.name, []);
@@ -56,66 +55,94 @@ export function MobileCrmView({ leads, customers }: Props) {
     leadsByStage.set(stageName, existing);
   }
 
-  // Default to first stage that has leads, or "New"
   const defaultStage =
-    STAGES.find((s) => (leadsByStage.get(s.name) ?? []).length > 0)?.name ?? "New";
+    STAGES.find((s) => (leadsByStage.get(s.name) ?? []).length > 0)?.name ?? "Lead";
 
   const [activeStage, setActiveStage] = useState(defaultStage);
 
   const activeStageLeads = leadsByStage.get(activeStage) ?? [];
+  const leadPlural = profile.labels.leadPlural;
 
   return (
-    <div className="block md:hidden">
-      {/* Title block */}
-      <div className="px-[18px] pt-[4px] pb-[14px]">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ud-muted mb-1">
-          Quotes pipeline
+    <div className="block md:hidden pb-[24px]">
+      {/* Header */}
+      <div className="px-[18px] pt-[18px] pb-[14px]">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
+          {leadPlural}
         </p>
-        <Display size={28}>
-          <span className="udv2-num">{formatCurrency(totalPipelineValue)}</span>
-          {" "}in {openLeads.length} open quotes
-        </Display>
+        <p className="mt-[4px] text-[22px] font-semibold leading-[1.2] tracking-[-0.02em] text-ud-ink">
+          {formatCurrency(totalPipelineValue)}{" "}
+          <span className="font-normal text-ud-muted">in {openLeads.length} open</span>
+        </p>
       </div>
 
       {/* Stage chips */}
-      <div className="px-[18px] pb-[14px] flex gap-[6px] overflow-x-auto no-scrollbar">
+      <div className="overflow-x-auto no-scrollbar flex gap-2 px-[18px] pb-[12px]">
         {STAGES.map((stage) => {
           const count = (leadsByStage.get(stage.name) ?? []).length;
+          const isActive = activeStage === stage.name;
           return (
-            <FilterChip
+            <button
               key={stage.name}
-              active={activeStage === stage.name}
+              type="button"
               onClick={() => setActiveStage(stage.name)}
+              className={[
+                "flex-shrink-0 rounded-full px-[14px] py-[6px] text-[12px] font-semibold transition-colors",
+                isActive
+                  ? "bg-ud-ink text-white"
+                  : "bg-ud-surface border border-ud text-ud-muted",
+              ].join(" ")}
             >
               {stage.name} {count}
-            </FilterChip>
+            </button>
           );
         })}
       </div>
 
       {/* Lead list */}
-      <div className="px-[14px] flex flex-col gap-[10px]">
-        {activeStageLeads.length === 0 ? (
+      {activeStageLeads.length === 0 ? (
+        <div className="px-[14px]">
           <EmptyState
-            title="No quotes in this stage"
-            description="Move an opportunity here when it's ready."
+            title={`No ${leadPlural.toLowerCase()} in this stage`}
+            description="Move a record here when it's ready."
           />
-        ) : (
-          activeStageLeads.map((lead) => {
+        </div>
+      ) : (
+        <div className="px-[14px] flex flex-col gap-[10px]">
+          {activeStageLeads.map((lead) => {
             const customer = lead.customer_id ? customerById.get(lead.customer_id) : undefined;
             return (
-              <Link key={lead.id} href={`/leads/${lead.id}/edit`}>
-                <LeadCard
-                  lead={lead}
-                  customerName={customer?.name}
-                  href={`/leads/${lead.id}/edit`}
-                  compact={false}
-                />
+              <Link
+                key={lead.id}
+                href={`/leads/${lead.id}/edit`}
+                className="bg-ud-surface rounded-[10px] border border-ud p-[14px] block active:bg-ud-surface-sunk"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-[14px] text-ud-ink leading-snug">
+                    {lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+                  </p>
+                  {lead.estimated_value != null && (
+                    <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
+                      {formatCurrency(lead.estimated_value)}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-[8px] flex flex-wrap items-center gap-[6px]">
+                  <Pill tone="neutral">{lead.status || activeStage}</Pill>
+                  {lead.next_follow_up_date && (
+                    <span className="text-[11px] text-ud-muted">
+                      Follow up {formatDateOnly(lead.next_follow_up_date)}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-[8px] text-[12px] text-ud-muted">
+                  {customer?.name || "No client linked"}
+                </p>
               </Link>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }

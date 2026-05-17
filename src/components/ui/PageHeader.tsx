@@ -15,23 +15,23 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("flex flex-col justify-between gap-4 md:flex-row md:items-start", className)}>
+    <header className={cn("flex flex-col justify-between gap-3 md:flex-row md:items-start", className)}>
       <div>
         {eyebrow && (
           <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink md:text-[32px]">
+        <h1 className="text-[24px] font-semibold leading-[1.2] tracking-[-0.02em] text-ud-ink md:text-[30px]">
           {title}
         </h1>
         {description && (
-          <p className="mt-1.5 max-w-2xl text-[13.5px] leading-[1.6] text-ud-muted">
+          <p className="hidden md:block mt-1.5 max-w-2xl text-[13.5px] leading-[1.6] text-ud-muted">
             {description}
           </p>
         )}
       </div>
-      {actions && <div className="shrink-0">{actions}</div>}
+      {actions && <div className="hidden md:flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
   );
 }

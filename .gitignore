@@ -48,3 +48,6 @@ remotion/package-lock.json
 
 # claude code worktrees
 .claude/worktrees/
+
+# clerk configuration (can include secrets)
+/.clerk/

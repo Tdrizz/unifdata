@@ -9,11 +9,11 @@ import type { CRMPageData } from "../queries";
 type Lead = CRMPageData["leads"][number];
 
 const STAGES: { name: string; color: string; keys: string[] }[] = [
-  { name: "New", color: "#64748b", keys: ["new", "lead", "contact"] },
-  { name: "Qualified", color: "#2563eb", keys: ["qualified", "interested"] },
-  { name: "Quoted", color: "#4A3FA8", keys: ["quoted", "proposal"] },
-  { name: "Accepted", color: "#3f7c3f", keys: ["accepted", "won", "confirmed"] },
-  { name: "Lost", color: "#a09b91", keys: ["lost", "declined", "closed"] },
+  { name: "Lead",        color: "#64748b", keys: ["new", "lead", "contact", "qualified", "interested"] },
+  { name: "Quoted",      color: "#2563eb", keys: ["quoted", "proposal"] },
+  { name: "In progress", color: "#4A3FA8", keys: ["in progress", "in_progress", "accepted", "confirmed", "scheduled"] },
+  { name: "Won",         color: "#3f7c3f", keys: ["won", "closed won", "completed"] },
+  { name: "Lost",        color: "#a09b91", keys: ["lost", "declined", "closed"] },
 ];
 
 function mapToStage(status: string | null): string {
@@ -21,8 +21,7 @@ function mapToStage(status: string | null): string {
   for (const stage of STAGES) {
     if (stage.keys.some((k) => s.includes(k))) return stage.name;
   }
-  // Default unmapped statuses to "New"
-  return "New";
+  return "Lead";
 }
 
 function isOpenLead(status: string | null): boolean {
@@ -48,7 +47,7 @@ export function CRMView({ leads, customers }: Props) {
   const wonThisMonth = leads
     .filter((l) => {
       const stage = mapToStage(l.status);
-      if (stage !== "Accepted") return false;
+      if (stage !== "Won") return false;
       const d = new Date(l.created_at);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     })
@@ -57,7 +56,7 @@ export function CRMView({ leads, customers }: Props) {
   // Avg close days for closed/won leads
   const closedLeads = leads.filter((l) => {
     const stage = mapToStage(l.status);
-    return stage === "Accepted" || stage === "Lost";
+    return stage === "Won" || stage === "Lost";
   });
 
   let avgCloseDays: string | number = "—";

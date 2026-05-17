@@ -110,20 +110,20 @@ function buildNavGroups(profile: ReturnType<typeof getIndustryProfile>): NavGrou
     {
       label: "Workspace",
       items: [
-        { href: "/workspace",  label: "Today",                               icon: IconHome },
-        { href: "/customers",  label: profile.labels.customerPlural,         icon: IconUsers },
-        { href: "/crm",        label: "Pipeline",                            icon: IconBriefcase },
-        { href: "/jobs",       label: profile.labels.jobPlural ?? "Visits",  icon: IconCalendar },
-        { href: "/sales",      label: profile.labels.salePlural ?? "Revenue",icon: IconDollar },
+        { href: "/workspace",  label: "Today",                                      icon: IconHome },
+        { href: "/customers",  label: profile.labels.customerPlural,                icon: IconUsers },
+        { href: "/crm",        label: "Pipeline",                                   icon: IconBriefcase },
+        { href: "/jobs",       label: profile.labels.jobPlural ?? "Visits",         icon: IconCalendar },
+        { href: "/sales",      label: profile.labels.salePlural ?? "Revenue",       icon: IconDollar },
+        { href: "/follow-ups", label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
       ],
     },
     {
       label: "Intelligence",
       items: [
-        { href: "/follow-ups",   label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
-        { href: "/ai-assistant", label: "AI Assistant",                                 icon: IconSparkles, accent: true },
-        { href: "/data-hub",     label: "Data Hub",                                     icon: IconBarChart },
-        { href: "/imports",      label: "Imports",                                       icon: IconUpload },
+        { href: "/ai-assistant", label: "AI Assistant", icon: IconSparkles },
+        { href: "/data-hub",     label: "Data Hub",     icon: IconBarChart },
+        { href: "/imports",      label: "Imports",      icon: IconUpload },
       ],
     },
     {

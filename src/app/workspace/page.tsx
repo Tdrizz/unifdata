@@ -32,8 +32,8 @@ export default async function WorkspacePage() {
       businessSector={company.business_sector}
     >
       <>
-        <WorkspaceView {...data} profile={profile} />
-        <MobileWorkspaceView {...data} profile={profile} />
+        <WorkspaceView {...data} profile={profile} companyName={company.name} />
+        <MobileWorkspaceView {...data} profile={profile} companyName={company.name} />
       </>
     </AppShell>
   );

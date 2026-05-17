@@ -263,7 +263,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
 
   return (
     <div className="space-y-5">
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard
           label="Open follow-ups"
           value={openActions.length}
@@ -346,7 +346,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
                           <p className="mt-1 text-sm text-ud-faint">
                             {person?.name || "No person linked"}
                           </p>
-                          <p className="mt-3 text-sm leading-6 text-ud-muted">
+                          <p className="hidden md:block mt-3 text-sm leading-6 text-ud-muted">
                             {getActionNextStep(action)}
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
@@ -386,7 +386,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
           )}
         </SectionCard>
 
-        <div className="space-y-5">
+        <div className="hidden md:block space-y-5">
           <SectionCard
             title="Follow-up source"
             description="Where follow-ups are coming from."
@@ -463,6 +463,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
         </div>
       </section>
 
+      <div className="hidden md:block">
       <SectionCard
         title="Follow-up health"
         description="Cleanup issues that make follow-up tracking less reliable."
@@ -493,6 +494,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
           </div>
         )}
       </SectionCard>
+      </div>
     </div>
   );
 }

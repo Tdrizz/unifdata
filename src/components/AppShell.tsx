@@ -81,7 +81,7 @@ export async function AppShell({
       </aside>
 
       {/* ── Main column ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 min-w-0 flex-col">
+      <div className="flex flex-1 min-w-0 flex-col overflow-x-hidden">
         {/* Desktop topbar */}
         <Topbar
           companyId={companyId}

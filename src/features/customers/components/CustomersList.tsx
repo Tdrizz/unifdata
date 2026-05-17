@@ -136,7 +136,7 @@ export function CustomersList({
   return (
     <div className="block md:hidden">
       {/* 1. Title block */}
-      <div className="px-[18px] pb-[12px]">
+      <div className="px-[18px] pt-[18px] pb-[12px]">
         <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
           Clients
         </p>

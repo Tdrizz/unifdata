@@ -46,7 +46,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobSingular: "Work item",
       jobPlural: "Work items",
       saleSingular: "Revenue record",
-      salePlural: "Revenue records",
+      salePlural: "Revenue",
       followUpPlural: "Actions",
     },
     priorityNames: {

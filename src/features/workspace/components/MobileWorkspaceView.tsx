@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
-import { AiBriefCard } from "@/features/workspace/AiBriefCard";
 import {
   formatDateOnly,
   parseDateOnly,
@@ -60,9 +59,9 @@ function getDayLabel() {
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-type Props = WorkspaceData & { profile: IndustryProfile };
+type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
 
-export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile }: Props) {
+export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -176,207 +175,147 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   const leadPlural = profile.labels.leadPlural;
   const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
-  const firstName = profile.headline.split(" ")[0];
-
   const visitsToShow = activeWork.slice(0, 3);
 
   // Count overdue follow-ups
   const overdueFollowUps = followUpSchedule.filter((f) => f.tone === "danger").length;
 
   return (
-    <div className="block md:hidden space-y-5 pb-8">
-      {/* 1. Greeting block */}
-      <div className="px-[18px] pt-[4px] pb-[18px]">
-        <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1.5">
-          {dayLabel} · Operating brief
+    <div className="block md:hidden pb-8">
+      {/* 1. Greeting */}
+      <div className="px-[18px] pt-5 pb-4">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">
+          {dayLabel}
         </p>
         <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
-          Good morning, {firstName}.
+          Good morning, {companyName}.
         </p>
-        {profile.dailyFocus && (
-          <p className="text-[14px] leading-[1.55] text-ud-muted mt-2">
-            {profile.dailyFocus}
-          </p>
-        )}
       </div>
 
-      {/* 2. AiBriefCard */}
-      <div className="px-[14px]">
-        <AiBriefCard
-          eyebrow="UnifData · Daily focus"
-          body={profile.headline}
-          actions={[
-            { label: "Review follow-ups", href: "/follow-ups", variant: "accent" },
-            { label: "Ask AI", href: "/ai-assistant", variant: "secondary" },
-          ]}
-        />
-      </div>
-
-      {/* 3. Hero KPI card — unpaid revenue */}
-      <div className="mx-[14px] bg-ud-surface border border-ud rounded-[12px] shadow-ud p-[14px_16px] flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-medium text-ud-muted">Unpaid revenue</p>
-          <p className="udv2-num text-[34px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
-            {formatCurrency(unpaidRevenueValue)}
-          </p>
-          {recentUnpaidDelta > 0 && (
-            <p className="text-[12.5px] text-ud-danger mt-0.5">
-              +{formatCurrency(recentUnpaidDelta)} this wk
-            </p>
-          )}
-          <p className="text-[11.5px] text-ud-faint mt-0.5">
-            {unpaidRevenue.length} invoice{unpaidRevenue.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        {sparklineData.length >= 2 && (
-          <div className="shrink-0 mt-1">
-            <Sparkline data={sparklineData} width={88} height={42} color="var(--ud-accent)" fill />
-          </div>
-        )}
-      </div>
-
-      {/* 4. Secondary KPI scroll strip */}
-      <div className="flex gap-[10px] overflow-x-auto px-[14px] no-scrollbar py-1">
-        {/* Open leads */}
-        <div className="min-w-[140px] flex-shrink-0 bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
+      {/* 2. 2×2 stat grid */}
+      <div className="px-[14px] grid grid-cols-2 gap-[10px] pb-[14px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
           <p className="text-[11px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
-          <p className="udv2-num text-[22px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
+          <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {openLeads.length}
           </p>
           <p className="text-[11px] text-ud-faint mt-0.5">{formatCurrency(openPipelineValue)}</p>
         </div>
 
-        {/* Active jobs */}
-        <div className="min-w-[140px] flex-shrink-0 bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
           <p className="text-[11px] font-medium text-ud-muted">Active {jobPlural.toLowerCase()}</p>
-          <p className="udv2-num text-[22px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
+          <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {activeWork.length}
           </p>
-          <p className="text-[11px] text-ud-faint mt-0.5">Next visit soon</p>
+          <p className="text-[11px] text-ud-faint mt-0.5">{formatCurrency(activeWorkValue)}</p>
         </div>
 
-        {/* Follow-ups */}
-        <div className="min-w-[140px] flex-shrink-0 bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
-          <p className="text-[11px] font-medium text-ud-muted">Follow-ups</p>
-          <p
-            className={cn(
-              "udv2-num text-[22px] font-semibold tracking-[-0.02em] mt-0.5",
-              followUpSchedule.length > 0 ? "text-ud-warning" : "text-ud-ink",
-            )}
-          >
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
+          <p className="text-[11px] font-medium text-ud-muted">Unpaid revenue</p>
+          <p className={cn(
+            "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
+            unpaidRevenueValue > 0 ? "text-ud-danger" : "text-ud-ink",
+          )}>
+            {formatCurrency(unpaidRevenueValue)}
+          </p>
+          <p className="text-[11px] text-ud-faint mt-0.5">
+            {unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
+          </p>
+        </div>
+
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
+          <p className="text-[11px] font-medium text-ud-muted">Follow-ups due</p>
+          <p className={cn(
+            "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
+            followUpSchedule.length > 0 ? "text-ud-warning" : "text-ud-ink",
+          )}>
             {followUpSchedule.length}
           </p>
           <p className={cn("text-[11px] mt-0.5", overdueFollowUps > 0 ? "text-ud-danger" : "text-ud-faint")}>
-            {overdueFollowUps > 0 ? `${overdueFollowUps} overdue` : "All on track"}
+            {overdueFollowUps > 0 ? `${overdueFollowUps} overdue` : "On track"}
           </p>
         </div>
       </div>
 
-      {/* 5. Today's visits card */}
-      <div className="mx-[14px]">
+      {/* 3. Needs attention */}
+      {priorityQueue.length > 0 && (
+        <div className="px-[14px] pb-[14px]">
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
+              <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
+              <Link href="/follow-ups" className="text-[12px] font-semibold text-ud-accent">
+                All {priorityQueue.length} →
+              </Link>
+            </div>
+            {priorityQueue.map((item) => {
+              const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
+                item.tone === "danger" ? "danger" :
+                item.tone === "warning" ? "warning" :
+                "neutral";
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="flex items-center gap-3 px-4 py-[11px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+                >
+                  <Pill tone={pillTone} className="shrink-0">{item.label}</Pill>
+                  <p className="text-[13px] font-semibold text-ud-ink truncate flex-1">{item.title}</p>
+                  <svg className="shrink-0 text-ud-faint" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </Link>
+              );
+            })}
+          </Card>
+        </div>
+      )}
+
+      {/* 4. Today's visits */}
+      <div className="px-[14px] pb-[14px]">
         <Card padding={0} radius="md" className="overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
             <p className="text-[13px] font-semibold text-ud-ink">
               Today&apos;s {jobPlural.toLowerCase()}
             </p>
-            <Link
-              href="/jobs"
-              className="text-[12.5px] font-semibold text-ud-accent hover:opacity-80"
-            >
+            <Link href="/jobs" className="text-[12px] font-semibold text-ud-accent">
               See all →
             </Link>
           </div>
           {visitsToShow.length === 0 ? (
-            <p className="px-4 py-6 text-center text-[13px] text-ud-faint">
+            <p className="px-4 py-8 text-center text-[13px] text-ud-faint">
               No active {jobPlural.toLowerCase()} right now.
             </p>
           ) : (
-            <div>
-              {visitsToShow.map((job) => {
-                const customer = job.customer_id ? customerById.get(job.customer_id) : null;
-                const tone = getWorkTone(job.status);
-                const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
-                  tone === "success" ? "success" :
-                  tone === "warning" ? "warning" :
-                  tone === "danger" ? "danger" :
-                  "neutral";
-                return (
-                  <Link
-                    key={job.id}
-                    href={`/jobs/${job.id}/edit`}
-                    className="flex items-start gap-3 px-4 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-[13px] font-semibold text-ud-ink truncate">
-                          {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
-                        </p>
-                        <Pill tone={pillTone}>{job.status || "Active"}</Pill>
-                      </div>
-                      <p className="text-[12px] text-ud-muted mt-0.5">
-                        {customer?.name || "No customer linked"}
+            visitsToShow.map((job) => {
+              const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+              const tone = getWorkTone(job.status);
+              const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
+                tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral";
+              return (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}/edit`}
+                  className="flex items-center gap-3 px-4 py-[11px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-ud-ink truncate">
+                      {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Pill tone={pillTone}>{job.status || "Active"}</Pill>
+                      <p className="text-[11.5px] text-ud-muted truncate">
+                        {customer?.name || "No client linked"}
                       </p>
                     </div>
-                    {job.job_value != null && (
-                      <span className="udv2-num text-[12.5px] font-semibold text-ud-ink shrink-0">
-                        {formatCurrency(job.job_value)}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* 6. Needs attention card */}
-      <div className="mx-[14px]">
-        <Card padding={0} radius="md" className="overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
-            <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
-            {priorityQueue.length > 0 && (
-              <Link
-                href="/follow-ups"
-                className="text-[12.5px] font-semibold text-ud-accent hover:opacity-80"
-              >
-                All {priorityQueue.length} →
-              </Link>
-            )}
-          </div>
-          {priorityQueue.length === 0 ? (
-            <p className="px-4 py-6 text-center text-[13px] text-ud-faint">
-              Nothing needs attention right now.
-            </p>
-          ) : (
-            <div>
-              {priorityQueue.map((item) => {
-                const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
-                  item.tone === "danger" ? "danger" :
-                  item.tone === "warning" ? "warning" :
-                  item.tone === "success" ? "success" :
-                  "neutral";
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex items-start gap-3 px-4 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
-                  >
-                    {/* Checkbox circle */}
-                    <div className="h-5 w-5 rounded-[6px] border border-ud-hard shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-ud-ink truncate">{item.title}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Pill tone={pillTone}>{item.label}</Pill>
-                        {item.tone === "danger" && (
-                          <span className="text-[11px] text-ud-danger">Overdue</span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+                  </div>
+                  {job.job_value != null && (
+                    <span className="udv2-num text-[13px] font-semibold text-ud-ink shrink-0">
+                      {formatCurrency(job.job_value)}
+                    </span>
+                  )}
+                </Link>
+              );
+            })
           )}
         </Card>
       </div>

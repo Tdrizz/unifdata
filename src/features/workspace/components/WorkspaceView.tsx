@@ -63,9 +63,9 @@ function getDayLabel() {
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-type Props = WorkspaceData & { profile: IndustryProfile };
+type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -258,7 +258,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const leadPlural = profile.labels.leadPlural;
   const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
-  const firstName = profile.headline.split(" ")[0];
 
   const visitsToShow = activeWork.slice(0, 5);
 
@@ -266,7 +265,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     <div className="hidden md:block space-y-6 px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={`${dayLabel} · Operating brief`}
-        title={<>Good morning, {firstName}.</>}
+        title={<>Good morning, {companyName}.</>}
         description={profile.dailyFocus}
       />
 

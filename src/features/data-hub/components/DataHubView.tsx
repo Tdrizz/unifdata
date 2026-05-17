@@ -544,7 +544,7 @@ export function DataHubView({
     .slice(0, 8);
 
   return (
-    <div className="space-y-5 px-6 pt-5 pb-8">
+    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
       <PageHeader
         eyebrow="Data Hub"
         title="Record quality"
@@ -647,7 +647,7 @@ export function DataHubView({
                     <p className="font-semibold text-ud-ink">
                       {item.title}
                     </p>
-                    <p className="mt-1 text-sm leading-6 text-ud-faint">
+                    <p className="hidden md:block mt-1 text-sm leading-6 text-ud-faint">
                       {item.detail}
                     </p>
                   </div>
@@ -673,6 +673,7 @@ export function DataHubView({
           )}
         </SectionCard>
 
+        <div className="hidden md:block">
         <SectionCard
           title="Modules"
           description="Record count and cleanup pressure by area."
@@ -718,8 +719,10 @@ export function DataHubView({
             ))}
           </div>
         </SectionCard>
+        </div>
       </section>
 
+      <div className="hidden md:block">
       <SectionCard
         title="Clean checks"
         description="Areas currently reporting no issues."
@@ -750,6 +753,7 @@ export function DataHubView({
           </div>
         )}
       </SectionCard>
+      </div>
 
       <SectionCard
         title="Recently added data"

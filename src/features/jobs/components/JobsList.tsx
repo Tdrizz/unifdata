@@ -202,7 +202,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
     });
 
   return (
-    <div className="space-y-5 px-6 pt-5 pb-8">
+    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
       <PageHeader
         eyebrow={profile.labels.jobPlural}
         title={`Track ${profile.labels.jobPlural.toLowerCase()} and active delivery`}
