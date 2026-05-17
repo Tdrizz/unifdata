@@ -23,27 +23,27 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
   const manualCalendarEvents: CalendarEvent[] = followUps
     .filter((fu) => Boolean(fu.due_date))
     .map((fu) => {
-      const date = new Date(fu.due_date!);
+      // Date-only strings parse as midnight UTC — default to 9am so events are visible
+      const hour = fu.due_date!.length === 10 ? 9 : new Date(fu.due_date!).getHours();
       return {
         id: `manual-${fu.id}`,
         title: fu.message || "Untitled follow-up",
         date: fu.due_date!,
-        hour: date.getHours(),
+        hour,
         color: "bg-amber-500",
         href: `/follow-ups/${fu.id}/edit`,
       };
     });
 
-  // Build calendar events from opportunity follow-ups with a next_follow_up_date
   const opportunityCalendarEvents: CalendarEvent[] = opportunities
     .filter((opp) => !isClosedOpportunity(opp.status) && Boolean(opp.next_follow_up_date))
     .map((opp) => {
-      const date = new Date(opp.next_follow_up_date!);
+      const hour = opp.next_follow_up_date!.length === 10 ? 9 : new Date(opp.next_follow_up_date!).getHours();
       return {
         id: `opportunity-${opp.id}`,
         title: opp.service_requested ? `Follow up: ${opp.service_requested}` : "Follow up on opportunity",
         date: opp.next_follow_up_date!,
-        hour: date.getHours(),
+        hour,
         color: "bg-blue-500",
         href: `/leads/${opp.id}/edit`,
       };
@@ -53,8 +53,8 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
 
   return (
     <div className="space-y-5">
-      {/* View toggle */}
-      <div className="flex items-center gap-2">
+      {/* View toggle — calendar hidden on mobile (grid requires 640px+) */}
+      <div className="hidden md:flex items-center gap-2">
         <button
           onClick={() => setView("list")}
           className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
@@ -86,7 +86,20 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
           profile={profile}
         />
       ) : (
-        <WeeklyCalendar events={calendarEvents} />
+        <>
+          <div className="hidden md:block">
+            <WeeklyCalendar events={calendarEvents} />
+          </div>
+          <div className="md:hidden">
+            <FollowUpList
+              followUps={followUps}
+              opportunities={opportunities}
+              people={people}
+              filters={filters}
+              profile={profile}
+            />
+          </div>
+        </>
       )}
     </div>
   );

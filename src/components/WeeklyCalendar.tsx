@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 
 export interface CalendarEvent {
   id: string;
@@ -117,11 +117,8 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
 
         {/* Hour rows */}
         {HOURS.map((hour) => (
-          <>
-            <div
-              key={`label-${hour}`}
-              className="border-b border-r border-ud bg-ud-surface-sunk p-1 text-right text-[11px] text-ud-faint"
-            >
+          <Fragment key={hour}>
+            <div className="border-b border-r border-ud bg-ud-surface-sunk p-1 text-right text-[11px] text-ud-faint">
               {hour % 12 === 0 ? 12 : hour % 12}
               {hour < 12 ? "am" : "pm"}
             </div>
@@ -146,7 +143,7 @@ export function WeeklyCalendar({ events }: WeeklyCalendarProps) {
                 </div>
               );
             })}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>

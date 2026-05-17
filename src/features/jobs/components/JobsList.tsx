@@ -191,11 +191,13 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
     .filter((job) => Boolean(job.start_date))
     .map((job) => {
       const date = new Date(job.start_date!);
+      // Date-only strings parse as midnight UTC — default to 9am so events are visible
+      const hour = job.start_date!.length === 10 ? 9 : date.getHours();
       return {
         id: job.id,
         title: job.service_type ?? job.id,
         date: job.start_date!,
-        hour: date.getHours(),
+        hour,
         color: "bg-blue-500",
         href: `/jobs/${job.id}/edit`,
       };
