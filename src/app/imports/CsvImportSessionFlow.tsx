@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { importFieldDefinitions } from "@/lib/import-engine";
+import { importFieldDefinitions } from "@/lib/import-engine-fields";
 
 type RecordType =
   | "relationships"
