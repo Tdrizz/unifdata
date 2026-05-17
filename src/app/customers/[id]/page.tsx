@@ -30,7 +30,7 @@ export default async function CustomerDetailPage({
   const { company } = currentCompany;
 
   const [
-    { data: customer },
+    { data: customer, error: customerError },
     { data: leads },
     { data: jobs },
     { data: sales },
@@ -40,7 +40,7 @@ export default async function CustomerDetailPage({
       .select("*")
       .eq("id", id)
       .eq("company_id", company.id)
-      .single(),
+      .maybeSingle(),
     supabase
       .from("leads")
       .select("*")
@@ -61,7 +61,7 @@ export default async function CustomerDetailPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  if (!customer) redirect("/customers");
+  if (customerError || !customer) redirect("/customers");
 
   return (
     <AppShell

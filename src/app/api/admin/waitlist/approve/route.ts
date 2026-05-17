@@ -22,8 +22,12 @@ export async function GET(request: Request) {
       return new Response("Unauthorized", { status: 403 });
     }
 
-    // Only the owner email can approve
-    if (!["tittanolson@gmail.com", "unifdata@gmail.com"].includes(user.email)) {
+    // Only admin emails can approve — configure via ADMIN_EMAILS env var (comma-separated)
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "tittanolson@gmail.com,unifdata@gmail.com")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+    if (!adminEmails.includes(user.email)) {
       return new Response("Unauthorized", { status: 403 });
     }
 

@@ -18,16 +18,22 @@ interface DuplicateGroup {
 
 export function DuplicatesPage({ groups: initialGroups }: { groups: DuplicateGroup[] }) {
   const [groups, setGroups] = useState(initialGroups);
+  const [mergeError, setMergeError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const handleMerge = (winnerId: string, loserId: string) => {
+    setMergeError("");
     startTransition(async () => {
-      await mergeCustomers(winnerId, loserId);
-      setGroups((prev) =>
-        prev
-          .map((g) => ({ ...g, customers: g.customers.filter((c) => c.id !== loserId) }))
-          .filter((g) => g.customers.length >= 2)
-      );
+      try {
+        await mergeCustomers(winnerId, loserId);
+        setGroups((prev) =>
+          prev
+            .map((g) => ({ ...g, customers: g.customers.filter((c) => c.id !== loserId) }))
+            .filter((g) => g.customers.length >= 2)
+        );
+      } catch (err) {
+        setMergeError(err instanceof Error ? err.message : "Merge failed. Please try again.");
+      }
     });
   };
 
@@ -37,6 +43,11 @@ export function DuplicatesPage({ groups: initialGroups }: { groups: DuplicateGro
 
   return (
     <div className="space-y-6">
+      {mergeError && (
+        <div className="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {mergeError}
+        </div>
+      )}
       {groups.map((group) => (
         <div key={`${group.type}-${group.key}`} className="rounded-[12px] border border-ud bg-ud-surface p-5 shadow-ud">
           <p className="mb-4 text-sm text-ud-muted">

@@ -66,12 +66,17 @@ export async function GET(request: Request) {
         .from("integrations")
         .select("*")
         .eq("id", integration.id)
-        .single();
+        .maybeSingle();
+
+      if (!freshIntegration) {
+        results.push({ companyId: integration.company_id, provider: integration.provider, status: "skipped", recordsSeen: 0, error: null });
+        continue;
+      }
 
       const result = await syncer.sync(
         supabase,
         integration.company_id,
-        freshIntegration!,
+        freshIntegration,
       );
 
       await supabase.from("sync_runs").insert({

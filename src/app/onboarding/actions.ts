@@ -18,6 +18,15 @@ export async function createCompanyAction(formData: FormData) {
 
   const supabase = await createClient();
 
+  // Guard against double-submit creating duplicate companies
+  const { data: existing } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.profileId)
+    .limit(1)
+    .maybeSingle();
+  if (existing) redirect("/workspace");
+
   const { data: company, error: companyError } = await supabase
     .from("companies")
     .insert({

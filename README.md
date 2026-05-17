@@ -8,7 +8,7 @@ Live at [unifdata.com](https://unifdata.com).
 
 ## Tech Stack
 
-- Next.js 15 (App Router)
+- Next.js 16 (App Router)
 - TypeScript
 - Tailwind CSS v4
 - Clerk (auth + invite-only waitlist)
@@ -58,6 +58,7 @@ Live at [unifdata.com](https://unifdata.com).
 /imports               CSV and Google Sheets import
 /imports/sessions/[id] Import session review
 /ai-assistant          AI Advisor chat
+/data-hub              Record quality and health overview
 /settings              Workspace and integration settings
 ```
 
@@ -69,38 +70,33 @@ Live at [unifdata.com](https://unifdata.com).
 npm install
 ```
 
-Create `.env.local`:
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+Required variables:
 
 ```env
-# Clerk
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
-
-# Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-
-# Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_PRICE_ID=
 STRIPE_PRICE_ID_SETUP=
 STRIPE_WEBHOOK_SECRET=
-
-# App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# AI
 GEMINI_API_KEY=
-
-# Email
 RESEND_API_KEY=
-
-# Google Sheets (optional — required for Sheets import)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+CRON_SECRET=
+LEAD_INGEST_SECRET=
 ```
+
+See `.env.example` for optional integration variables (Google Sheets, QuickBooks, Square, HubSpot, Jobber, Stripe Connect).
 
 Start the dev server:
 

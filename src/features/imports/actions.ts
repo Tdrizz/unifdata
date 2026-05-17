@@ -40,17 +40,19 @@ export async function revertImportSession(sessionId: string) {
     }
 
     for (const [table, ids] of Object.entries(byTable)) {
+      let deleteError: { message: string } | null = null;
       if (table === "customers") {
-        await supabase.from("customers").delete().in("id", ids).eq("company_id", company.id);
+        ({ error: deleteError } = await supabase.from("customers").delete().in("id", ids).eq("company_id", company.id));
       } else if (table === "leads") {
-        await supabase.from("leads").delete().in("id", ids).eq("company_id", company.id);
+        ({ error: deleteError } = await supabase.from("leads").delete().in("id", ids).eq("company_id", company.id));
       } else if (table === "jobs") {
-        await supabase.from("jobs").delete().in("id", ids).eq("company_id", company.id);
+        ({ error: deleteError } = await supabase.from("jobs").delete().in("id", ids).eq("company_id", company.id));
       } else if (table === "sales") {
-        await supabase.from("sales").delete().in("id", ids).eq("company_id", company.id);
+        ({ error: deleteError } = await supabase.from("sales").delete().in("id", ids).eq("company_id", company.id));
       } else if (table === "follow_ups") {
-        await supabase.from("follow_ups").delete().in("id", ids).eq("company_id", company.id);
+        ({ error: deleteError } = await supabase.from("follow_ups").delete().in("id", ids).eq("company_id", company.id));
       }
+      if (deleteError) throw new Error(`Failed to delete ${table}: ${deleteError.message}`);
     }
   }
 

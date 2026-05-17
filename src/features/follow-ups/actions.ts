@@ -64,6 +64,8 @@ export async function updateFollowUpAction(
 
   if (error) return { error: error.message };
   revalidatePath("/follow-ups");
+  revalidatePath(`/follow-ups/${id}`);
+  revalidatePath(`/follow-ups/${id}/edit`);
   revalidatePath("/workspace");
   redirect("/follow-ups?toast=Follow-up+updated");
 }

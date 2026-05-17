@@ -98,6 +98,8 @@ export async function updateJobAction(
   if (error) return { error: error.message };
 
   revalidatePath("/jobs");
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath(`/jobs/${id}/edit`);
   revalidatePath("/workspace");
   redirect("/jobs?toast=Job+updated");
 }

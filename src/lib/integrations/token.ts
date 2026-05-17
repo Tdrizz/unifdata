@@ -33,13 +33,15 @@ export async function refreshIntegrationToken(
 
   const { accessToken, expiresAt } = await refresher(integration);
 
-  await supabase
+  const { error: updateError } = await supabase
     .from("integrations")
     .update({
       access_token: accessToken,
       token_expires_at: expiresAt,
     })
     .eq("id", integration.id);
+
+  if (updateError) throw new Error(`Failed to save refreshed token: ${updateError.message}`);
 
   return accessToken;
 }

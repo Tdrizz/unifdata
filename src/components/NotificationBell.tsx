@@ -52,8 +52,12 @@ export function NotificationBell({ companyId, initialNotifications, variant = "s
     setOpen((prev) => !prev);
     if (!open && unreadCount > 0) {
       const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
-      await markNotificationsRead(unreadIds);
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      try {
+        await markNotificationsRead(unreadIds);
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      } catch {
+        // Best-effort — notification read status is cosmetic
+      }
     }
   };
 

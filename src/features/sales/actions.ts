@@ -87,6 +87,8 @@ export async function updateSaleAction(
 
   if (error) return { error: error.message };
   revalidatePath("/sales");
+  revalidatePath(`/sales/${id}`);
+  revalidatePath(`/sales/${id}/edit`);
   revalidatePath("/workspace");
   redirect("/sales?toast=Sale+updated");
 }

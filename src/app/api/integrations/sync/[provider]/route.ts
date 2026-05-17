@@ -66,13 +66,17 @@ export async function POST(
   try {
     await refreshIntegrationToken(supabase, integration);
 
-    const { data: freshIntegration } = await supabase
+    const { data: freshIntegration, error: freshError } = await supabase
       .from("integrations")
       .select("*")
       .eq("id", integration.id)
-      .single();
+      .maybeSingle();
 
-    const result = await syncer.sync(supabase, companyId, freshIntegration!);
+    if (freshError || !freshIntegration) {
+      return NextResponse.json({ error: "Integration no longer exists" }, { status: 400 });
+    }
+
+    const result = await syncer.sync(supabase, companyId, freshIntegration);
     await insertNotification(
       supabase,
       companyId,

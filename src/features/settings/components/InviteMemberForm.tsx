@@ -11,12 +11,16 @@ export function InviteMemberForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      const result = await inviteMember(email, role);
-      if ("error" in result) {
-        setMessage(`Error: ${result.error}`);
-      } else {
-        setMessage(`Invite sent to ${email}`);
-        setEmail("");
+      try {
+        const result = await inviteMember(email, role);
+        if ("error" in result) {
+          setMessage(`Error: ${(result as { error: string }).error}`);
+        } else {
+          setMessage(`Invite sent to ${email}`);
+          setEmail("");
+        }
+      } catch (err) {
+        setMessage(`Error: ${err instanceof Error ? err.message : "Failed to send invite."}`);
       }
     });
   };

@@ -74,6 +74,8 @@ export async function updateCustomerAction(
 
   if (error) return { error: error.message };
   revalidatePath("/customers");
+  revalidatePath(`/customers/${id}`);
+  revalidatePath(`/customers/${id}/edit`);
   revalidatePath("/workspace");
   redirect("/customers?toast=Customer+updated");
 }
@@ -122,7 +124,8 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     const { error: updateError } = await supabase
       .from(table as never)
       .update({ customer_id: winnerId, updated_at: new Date().toISOString() } as never)
-      .eq("customer_id" as never, loserId);
+      .eq("customer_id" as never, loserId)
+      .eq("company_id" as never, company.id);
     if (updateError) throw new Error(`Failed to re-parent ${table}: ${updateError.message}`);
   }
 

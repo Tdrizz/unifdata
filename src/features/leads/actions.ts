@@ -95,6 +95,8 @@ export async function updateLeadAction(
   if (error) return { error: error.message };
 
   revalidatePath("/leads");
+  revalidatePath(`/leads/${id}`);
+  revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
   revalidatePath("/workspace");
   redirect("/leads?toast=Opportunity+updated");

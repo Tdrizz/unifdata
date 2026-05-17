@@ -32,6 +32,7 @@ function getFollowUpTone(date: string | null) {
 export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState("");
+  const [bulkError, setBulkError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -52,15 +53,26 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
 
   const handleApply = () => {
     if (!bulkStatus) return;
+    setBulkError("");
     startTransition(async () => {
-      await bulkUpdateLeadsStatus(Array.from(selected), bulkStatus);
-      setSelected(new Set());
-      setBulkStatus("");
+      try {
+        await bulkUpdateLeadsStatus(Array.from(selected), bulkStatus);
+        setSelected(new Set());
+        setBulkStatus("");
+      } catch (err) {
+        setBulkError(err instanceof Error ? err.message : "Failed to update status.");
+      }
     });
   };
 
   return (
     <div>
+      {bulkError && (
+        <div className="mb-3 rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {bulkError}
+        </div>
+      )}
+
       {selected.size > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[8px] border border-ud bg-ud-surface p-3">
           <span className="text-sm text-ud-muted">{selected.size} selected</span>

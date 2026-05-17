@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function markNotificationsRead(ids: string[]) {
   if (ids.length === 0) return;
   const supabase = await createClient();
-  await supabase.from("notifications").update({ read: true }).in("id", ids);
+  const { error } = await supabase.from("notifications").update({ read: true }).in("id", ids);
+  if (error) console.error("[notifications] markNotificationsRead failed:", error.message);
 }
 
 export async function insertNotification(
@@ -16,5 +17,6 @@ export async function insertNotification(
   title: string,
   body?: string,
 ) {
-  await supabase.from("notifications").insert({ company_id: companyId, type, title, body: body ?? null });
+  const { error } = await supabase.from("notifications").insert({ company_id: companyId, type, title, body: body ?? null });
+  if (error) console.error("[notifications] insertNotification failed:", error.message);
 }

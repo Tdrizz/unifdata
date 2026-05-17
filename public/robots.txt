@@ -1,0 +1,17 @@
+User-agent: *
+Disallow: /api/
+Disallow: /workspace
+Disallow: /customers
+Disallow: /crm
+Disallow: /leads
+Disallow: /jobs
+Disallow: /sales
+Disallow: /follow-ups
+Disallow: /settings
+Disallow: /data-hub
+Disallow: /ai-assistant
+Disallow: /onboarding
+Disallow: /imports
+Disallow: /checkout
+Disallow: /admin
+Allow: /

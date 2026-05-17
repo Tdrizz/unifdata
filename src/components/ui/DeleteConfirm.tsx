@@ -10,6 +10,7 @@ export function DeleteConfirm({
   description?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [isPending, startTransition] = useTransition();
 
   if (!confirming) {
@@ -39,8 +40,13 @@ export function DeleteConfirm({
         <button
           type="button"
           onClick={() => {
+            setDeleteError("");
             startTransition(async () => {
-              await action();
+              try {
+                await action();
+              } catch (err) {
+                setDeleteError(err instanceof Error ? err.message : "Delete failed. Please try again.");
+              }
             });
           }}
           disabled={isPending}
@@ -52,6 +58,9 @@ export function DeleteConfirm({
           {isPending ? "Deleting..." : "Yes, delete"}
         </button>
       </div>
+      {deleteError && (
+        <p className="mt-3 text-sm text-red-700">{deleteError}</p>
+      )}
     </div>
   );
 }

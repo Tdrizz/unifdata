@@ -33,6 +33,26 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     let appliedCount = 0;
 
+    // Collect FK values to validate ownership before applying
+    const leadIds = new Set<string>();
+    const jobIds = new Set<string>();
+    for (const update of updates) {
+      if (update.table === "jobs" && update.field === "lead_id" && typeof update.value === "string") leadIds.add(update.value);
+      if (update.table === "sales" && update.field === "job_id" && typeof update.value === "string") jobIds.add(update.value);
+    }
+
+    // Batch-verify that FK targets belong to this company
+    const [leadsCheck, jobsCheck] = await Promise.all([
+      leadIds.size > 0
+        ? supabase.from("leads").select("id").eq("company_id", companyId).in("id", Array.from(leadIds))
+        : Promise.resolve({ data: [] }),
+      jobIds.size > 0
+        ? supabase.from("jobs").select("id").eq("company_id", companyId).in("id", Array.from(jobIds))
+        : Promise.resolve({ data: [] }),
+    ]);
+    const validLeadIds = new Set((leadsCheck.data ?? []).map((r) => r.id));
+    const validJobIds = new Set((jobsCheck.data ?? []).map((r) => r.id));
+
     for (const update of updates) {
       if (
         !ALLOWED_TABLES.has(update.table) ||
@@ -42,6 +62,10 @@ export async function POST(request: Request) {
       ) {
         continue;
       }
+
+      // Reject FK values that don't belong to this company
+      if (update.field === "lead_id" && !validLeadIds.has(update.value)) continue;
+      if (update.field === "job_id" && !validJobIds.has(update.value)) continue;
 
       const { error } =
         update.table === "jobs"
