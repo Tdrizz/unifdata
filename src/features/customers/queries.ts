@@ -26,7 +26,7 @@ export async function getCustomersPageData(
     query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%,phone.ilike.%${q}%`);
   }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, count } = await query.range(from, to);
 
   return { customers: (data ?? []) as CustomerRow[], count: count ?? 0 };
 }

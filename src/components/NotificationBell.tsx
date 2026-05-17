@@ -38,7 +38,7 @@ export function NotificationBell({ companyId, initialNotifications, variant = "s
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [companyId]);
+  }, [companyId, instanceId]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

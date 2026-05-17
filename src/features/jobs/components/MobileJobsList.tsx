@@ -32,7 +32,7 @@ function matchesFilter(status: string | null | undefined, filter: StageFilter): 
   return false;
 }
 
-export function MobileJobsList({ jobs, count, customers, leads, profile }: Props) {
+export function MobileJobsList({ jobs, count, customers, profile }: Props) {
   const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
 
   const customerById = new Map(customers.map((c) => [c.id, c]));

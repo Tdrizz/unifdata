@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhone, normalizeEmail, normalizeName } from "./normalize";
 export type { ImportRecordType, ImportFieldDefinition } from "./import-engine-fields";
 export { importFieldDefinitions } from "./import-engine-fields";
-import type { ImportRecordType, ImportFieldDefinition } from "./import-engine-fields";
+import type { ImportRecordType } from "./import-engine-fields";
 import { importFieldDefinitions } from "./import-engine-fields";
 
 export type ImportSourceType =

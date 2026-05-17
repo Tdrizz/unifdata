@@ -39,18 +39,6 @@ type RecentRecord = {
   href: string;
 };
 
-function getHealthTone(score: number) {
-  if (score >= 90) {
-    return "positive" as const;
-  }
-
-  if (score >= 70) {
-    return "warning" as const;
-  }
-
-  return "danger" as const;
-}
-
 function getIssueTone(count: number) {
   return count > 0 ? ("warning" as const) : ("success" as const);
 }

@@ -76,19 +76,6 @@ function getStatusLabel(status: string | null) {
   return titleCase(status) || "Not connected";
 }
 
-function getProviderLabel(provider: string | null) {
-  const labels: Record<string, string> = {
-    google_sheets: "Google Sheets",
-    google: "Google",
-    quickbooks: "QuickBooks",
-    square: "Square",
-    hubspot: "HubSpot",
-    jobber: "Jobber",
-  };
-
-  return labels[provider || ""] || titleCase(provider) || "Integration";
-}
-
 export function SettingsView({
   company,
   user,

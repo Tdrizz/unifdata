@@ -27,7 +27,7 @@ export async function getLeadsPageData(
     );
   }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, count } = await query.range(from, to);
 
   return { leads: (data ?? []) as LeadRow[], count: count ?? 0 };
 }
@@ -54,7 +54,7 @@ export async function getCustomersForLeadSelect(
   supabase: SupabaseClient,
   companyId: string,
 ) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("customers")
     .select("id, name, email, phone")
     .eq("company_id", companyId)

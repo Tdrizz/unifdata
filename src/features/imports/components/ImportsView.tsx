@@ -9,7 +9,6 @@ import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
-import type { Json } from "@/types/db";
 import { revertImportSession } from "../actions";
 
 function formatTimestamp(date: string | null) {

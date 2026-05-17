@@ -27,7 +27,7 @@ export async function getJobsPageData(
     );
   }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, count } = await query.range(from, to);
 
   return { jobs: (data ?? []) as JobListRow[], count: count ?? 0 };
 }
@@ -54,7 +54,7 @@ export async function getCustomersForJobSelect(
   supabase: SupabaseClient,
   companyId: string,
 ) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("customers")
     .select("id, name, email, phone")
     .eq("company_id", companyId)
@@ -68,7 +68,7 @@ export async function getLeadsForJobSelect(
   supabase: SupabaseClient,
   companyId: string,
 ) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("leads")
     .select("id, service_requested, status, estimated_value")
     .eq("company_id", companyId)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -34,7 +34,7 @@ function CheckIcon() {
 }
 
 function PaymentForm({
-  clientSecret,
+  clientSecret: _clientSecret,
   onSuccess,
 }: {
   clientSecret: string;

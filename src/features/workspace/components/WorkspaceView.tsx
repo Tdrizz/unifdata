@@ -11,7 +11,6 @@ import {
   formatDateOnly,
   formatTimestampDate,
   parseDateOnly,
-  isTodayOrPast,
   isOverdue,
   isDueToday,
 } from "@/lib/date-format";
@@ -22,7 +21,6 @@ import {
   isOpenFollowUp,
   isRecentActiveWork,
   getWorkTone,
-  computeHealthScore,
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
@@ -88,27 +86,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     (sum, record) => sum + Number(record.amount || 0),
     0,
   );
-
-  const totalRecords =
-    customers.length + leads.length + jobs.length + sales.length + followUps.length;
-
-  const criticalIssues =
-    openLeads.filter((l) => !l.customer_id).length +
-    activeWork.filter((w) => !w.customer_id).length +
-    sales.filter((r) => r.amount === null || r.amount === undefined).length;
-
-  const importantIssues =
-    openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
-    openLeads.filter((l) => !l.next_follow_up_date || new Date(l.next_follow_up_date) <= new Date()).length +
-    activeWork.filter((w) => w.job_value === null || w.job_value === undefined).length;
-
-  const cosmeticIssues =
-    customers.filter((c) => !c.phone || !c.email).length +
-    customers.filter((c) => !c.address).length +
-    openLeads.filter((l) => !l.source).length;
-
-  const dataHealthScore = computeHealthScore(criticalIssues, importantIssues, cosmeticIssues, totalRecords);
-  const customersWithContact = customers.filter((c) => c.name && (c.phone || c.email)).length;
 
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
@@ -185,28 +162,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     .sort((a, b) => {
       if (a.priority !== b.priority) return a.priority - b.priority;
       return getSortDate(a.due_date, "") - getSortDate(b.due_date, "");
-    })
-    .slice(0, 5);
-
-  const opportunitiesNeedingFollowUp = openLeads.filter(
-    (lead) => !lead.next_follow_up_date || isTodayOrPast(lead.next_follow_up_date),
-  );
-
-  const prioritizedOpportunities = [...openLeads]
-    .sort((a, b) => {
-      const aNeedsFollowUp = !a.next_follow_up_date || isTodayOrPast(a.next_follow_up_date);
-      const bNeedsFollowUp = !b.next_follow_up_date || isTodayOrPast(b.next_follow_up_date);
-      if (aNeedsFollowUp !== bNeedsFollowUp) return aNeedsFollowUp ? -1 : 1;
-      return Number(b.estimated_value || 0) - Number(a.estimated_value || 0);
-    })
-    .slice(0, 5);
-
-  const prioritizedWork = [...activeWork]
-    .sort((a, b) => {
-      const aUnpaid = isUnpaid(a.paid_status);
-      const bUnpaid = isUnpaid(b.paid_status);
-      if (aUnpaid !== bUnpaid) return aUnpaid ? -1 : 1;
-      return Number(b.job_value || 0) - Number(a.job_value || 0);
     })
     .slice(0, 5);
 

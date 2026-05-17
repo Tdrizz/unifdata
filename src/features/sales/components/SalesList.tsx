@@ -72,7 +72,7 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SalesList({ sales, count, page, q, profile, selectedStatus, selectedSource }: Props) {
+export function SalesList({ sales, count, profile, selectedStatus, selectedSource }: Props) {
   const paidRevenue = sales.filter((r) => isPaid(r.payment_status));
   const unpaidRevenue = sales.filter((r) => isUnpaid(r.payment_status));
   const missingSource = sales.filter((r) => !r.source);

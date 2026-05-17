@@ -146,7 +146,7 @@ function buildFollowUpItems(
   return { manualItems, opportunityItems };
 }
 
-export function FollowUpList({ followUps, opportunities, people, filters, profile }: Props) {
+export function FollowUpList({ followUps, opportunities, people, filters }: Props) {
   const selectedStatus = filters.status ? decodeURIComponent(filters.status) : "";
   const selectedDue = filters.due ? decodeURIComponent(filters.due) : "";
   const selectedSource = filters.source ? decodeURIComponent(filters.source) : "";
