@@ -5,7 +5,8 @@ import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
-import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
+import { LogoutButton } from "@/components/LogoutButton";
+import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
 import { ApiKeyManager } from "./ApiKeyManager";
@@ -176,14 +177,7 @@ export function SettingsView({
                 <p className="mt-1 text-[14px] font-semibold text-ud-ink">{company.name}</p>
               </div>
 
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="w-full rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
-                >
-                  Sign out
-                </button>
-              </form>
+              <LogoutButton />
             </div>
           </div>
 

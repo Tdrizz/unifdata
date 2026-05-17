@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@clerk/nextjs";
 
 export function ChangePasswordForm() {
+  const { user } = useUser();
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -31,44 +32,23 @@ export function ChangePasswordForm() {
       return;
     }
 
-    setLoading(true);
-
-    const supabase = createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user?.email) {
+    if (!user) {
       setError("Could not verify your session. Please sign in again.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await user.updatePassword({ currentPassword, newPassword: password });
+      setSuccess(true);
+      setCurrentPassword("");
+      setPassword("");
+      setConfirm("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update password.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
-
-    if (signInError) {
-      setError("Current password is incorrect.");
-      setLoading(false);
-      return;
-    }
-
-    const { error: updateError } = await supabase.auth.updateUser({ password });
-
-    setLoading(false);
-
-    if (updateError) {
-      setError(updateError.message);
-      return;
-    }
-
-    setSuccess(true);
-    setCurrentPassword("");
-    setPassword("");
-    setConfirm("");
   }
 
   return (
