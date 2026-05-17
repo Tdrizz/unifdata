@@ -583,7 +583,7 @@ export function DataHubView({
           {activeCleanupItems.length === 0 ? (
             <div className="px-5 py-8 text-center text-sm text-ud-faint">All records look clean.</div>
           ) : (
-            <div className="divide-y divide-ud">
+            <div>
               {activeCleanupItems.slice(0, 6).map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
@@ -621,7 +621,7 @@ export function DataHubView({
               description="No major cleanup issues were found across the workspace."
             />
           ) : (
-            <div className="divide-y divide-ud">
+            <div>
               {activeCleanupItems.map((item) => (
                 <article
                   key={item.id}
@@ -650,7 +650,7 @@ export function DataHubView({
                   <div className="md:text-right">
                     <Link
                       href={item.href}
-                      className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                      className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                     >
                       Review
                     </Link>
@@ -666,7 +666,7 @@ export function DataHubView({
           title="Modules"
           description="Record count and cleanup pressure by area."
         >
-          <div className="divide-y divide-ud">
+          <div>
             {moduleSummaries.map((module) => (
               <article
                 key={module.id}
@@ -698,7 +698,7 @@ export function DataHubView({
                 <div className="md:text-right">
                   <Link
                     href={module.href}
-                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                   >
                     Open
                   </Link>
@@ -753,7 +753,7 @@ export function DataHubView({
             description="Import data or add records manually to start building the workspace."
           />
         ) : (
-          <div className="divide-y divide-ud">
+          <div>
             {recentRecords.map((record) => (
               <article
                 key={record.id}
@@ -779,7 +779,7 @@ export function DataHubView({
                 <div className="md:text-right">
                   <Link
                     href={record.href}
-                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                    className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                   >
                     Open
                   </Link>

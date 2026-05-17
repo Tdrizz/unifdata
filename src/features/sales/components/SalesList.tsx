@@ -185,14 +185,14 @@ export function SalesList({ sales, count, profile, selectedStatus, selectedSourc
               {(selectedStatus || selectedSource) && (
                 <div className="flex items-center justify-between gap-3 border-b border-ud p-4">
                   <p className="text-sm font-semibold text-ud-muted">Filtered by: {selectedStatus || selectedSource}</p>
-                  <Link href="/sales" className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">Clear filter</Link>
+                  <Link href="/sales" className="rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink">Clear filter</Link>
                 </div>
               )}
-              <div className="divide-y divide-ud">
+              <div>
                 {visibleRevenue.map((record) => {
                   const issues = getRevenueIssues(record);
                   return (
-                    <Link key={record.id} href={`/sales/${record.id}/edit`} className="block p-4 transition-colors hover:bg-ud-surface-sunk">
+                    <Link key={record.id} href={`/sales/${record.id}/edit`} className="block px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft">
                       <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
                         <div>
                           <p className="font-semibold text-ud-ink">{record.service_type || "Revenue record"}</p>
@@ -232,7 +232,7 @@ export function SalesList({ sales, count, profile, selectedStatus, selectedSourc
             {paymentGroups.length === 0 ? (
               <EmptyState title="No payment statuses yet" description="Payment statuses will appear here after revenue records are added." />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {paymentGroups.map((group) => (
                   <article key={group.status} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
                     <div>
@@ -244,7 +244,7 @@ export function SalesList({ sales, count, profile, selectedStatus, selectedSourc
                     </div>
                     <div className="md:text-right">
                       <p className="mb-2 text-xs font-medium text-ud-faint">{formatCurrency(group.amount)}</p>
-                      <Link href={selectedStatus === group.status ? "/sales" : `/sales?status=${encodeURIComponent(group.status)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">
+                      <Link href={selectedStatus === group.status ? "/sales" : `/sales?status=${encodeURIComponent(group.status)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft">
                         {selectedStatus === group.status ? "Clear" : "Review"}
                       </Link>
                     </div>
@@ -258,7 +258,7 @@ export function SalesList({ sales, count, profile, selectedStatus, selectedSourc
             {sourceGroups.length === 0 ? (
               <EmptyState title="No source data yet" description="Add sources to see which channels generate revenue." />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {sourceGroups.map((group) => (
                   <article key={group.source} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
                     <div>
@@ -266,7 +266,7 @@ export function SalesList({ sales, count, profile, selectedStatus, selectedSourc
                       <p className="mt-1 text-sm text-ud-faint">{group.count} records · {formatCurrency(group.amount)}</p>
                     </div>
                     <div className="md:text-right">
-                      <Link href={selectedSource === group.source ? "/sales" : `/sales?source=${encodeURIComponent(group.source)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk">
+                      <Link href={selectedSource === group.source ? "/sales" : `/sales?source=${encodeURIComponent(group.source)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft">
                         {selectedSource === group.source ? "Clear" : "Review"}
                       </Link>
                     </div>

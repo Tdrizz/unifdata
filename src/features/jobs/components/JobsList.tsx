@@ -296,21 +296,21 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                   </p>
                   <Link
                     href="/jobs"
-                    className="rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                    className="rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink"
                   >
                     Clear filter
                   </Link>
                 </div>
               )}
 
-              <div className="divide-y divide-ud">
+              <div>
                 {visibleWork.map((work) => {
                   const customer = work.customer_id ? customerById.get(work.customer_id) : null;
                   const lead = work.lead_id ? leadById.get(work.lead_id) : null;
                   const issues = getWorkIssues(work);
 
                   return (
-                    <Link key={work.id} href={`/jobs/${work.id}/edit`} className="block p-4 transition-colors hover:bg-ud-surface-sunk">
+                    <Link key={work.id} href={`/jobs/${work.id}/edit`} className="block px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft">
                       <div className="grid gap-4 md:grid-cols-[1fr_130px_160px] md:items-start">
                         <div>
                           <p className="font-semibold text-ud-ink">
@@ -375,7 +375,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
               description="Work stages will appear here after records are added."
             />
           ) : (
-            <div className="divide-y divide-ud">
+            <div>
               {stageGroups.map((group) => {
                 const explanation = getStageExplanation(group.status);
                 return (
@@ -402,7 +402,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                             ? "/jobs"
                             : `/jobs?stage=${encodeURIComponent(group.status)}`
                         }
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedStage === group.status ? "Clear" : "Review"}
                       </Link>
@@ -434,7 +434,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
               >
                 <div className="flex items-start justify-between gap-3">
                   <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
+                  <span className="inline-flex items-center rounded-[6px] border border-[rgba(23,22,20,0.08)] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted">
                     {item.count}
                   </span>
                 </div>

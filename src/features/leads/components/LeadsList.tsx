@@ -215,7 +215,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                 description={`No missing ${profile.labels.customerSingular.toLowerCase()} links, sources, or estimates were found.`}
               />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {cleanupGroups.map((item) => (
                   <article
                     key={item.id}
@@ -226,7 +226,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                       <p className="mt-2 font-semibold text-ud-ink">{item.title}</p>
                       <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
                     </div>
-                    <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
+                    <span className="inline-flex items-center rounded-[6px] border border-[rgba(23,22,20,0.08)] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted">
                       {item.count}
                     </span>
                   </article>
@@ -245,7 +245,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
                 description="Add sources to understand where opportunities come from."
               />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {sourceGroups.map((group) => (
                   <article
                     key={group.source}
@@ -278,12 +278,12 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
             description={`Won or lost ${profile.labels.leadPlural.toLowerCase()} will appear here once statuses are updated.`}
           />
         ) : (
-          <div className="divide-y divide-ud">
+          <div>
             {recentlyClosed.map((opportunity) => (
               <Link
                 key={opportunity.id}
                 href={`/leads/${opportunity.id}/edit`}
-                className="grid gap-3 p-4 transition-colors hover:bg-ud-surface-sunk md:grid-cols-[1fr_140px_120px] md:items-center"
+                className="grid gap-3 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft md:grid-cols-[1fr_140px_120px] md:items-center"
               >
                 <div>
                   <p className="font-semibold text-ud-ink">

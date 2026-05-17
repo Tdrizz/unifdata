@@ -321,14 +321,14 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                   </p>
                   <Link
                     href="/follow-ups"
-                    className="rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                    className="rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink"
                   >
                     Clear filter
                   </Link>
                 </div>
               )}
 
-              <div className="divide-y divide-ud">
+              <div>
                 {visibleActions.map((action) => {
                   const issues = getActionIssues(action);
                   const person = action.customer_id
@@ -336,7 +336,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                     : null;
 
                   return (
-                    <Link key={action.id} href={action.href} className="block p-4 transition-colors hover:bg-ud-surface-sunk">
+                    <Link key={action.id} href={action.href} className="block px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft">
                       <div className="grid gap-4 md:grid-cols-[1fr_150px_120px] md:items-start">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
@@ -397,7 +397,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                 description="Manual and opportunity follow-ups will appear here."
               />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {sourceGroups.map((group) => (
                   <article
                     key={group.id}
@@ -411,7 +411,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                     <div className="md:text-right">
                       <Link
                         href={group.href}
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedSource === group.id ? "Clear" : "Review"}
                       </Link>
@@ -432,7 +432,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                 description="No overdue, due today, upcoming, or missing-date follow-ups were found."
               />
             ) : (
-              <div className="divide-y divide-ud">
+              <div>
                 {dueGroups.map((group) => (
                   <article
                     key={group.id}
@@ -450,7 +450,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
                             ? "/follow-ups"
                             : `/follow-ups?due=${encodeURIComponent(group.id)}`
                         }
-                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+                        className="inline-flex rounded-xl border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
                       >
                         {selectedDue === group.id ? "Clear" : "Review"}
                       </Link>
@@ -483,7 +483,7 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
               >
                 <div className="flex items-start justify-between gap-3">
                   <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
+                  <span className="inline-flex items-center rounded-[6px] border border-[rgba(23,22,20,0.08)] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted">
                     {item.count}
                   </span>
                 </div>
