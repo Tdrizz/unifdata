@@ -1,22 +1,19 @@
+import type { ReactNode } from "react";
+
 const badgeStyles = {
-  neutral: "border-slate-200 bg-slate-50 text-slate-700",
+  neutral: "border-[rgba(23,22,20,0.08)] bg-ud-surface-sunk text-ud-muted",
   success: "border-emerald-200 bg-emerald-50 text-emerald-700",
   warning: "border-amber-200 bg-amber-50 text-amber-700",
-  danger: "border-red-200 bg-red-50 text-red-700",
-  info: "border-blue-200 bg-blue-50 text-blue-700",
+  danger:  "border-red-200 bg-red-50 text-red-700",
+  info:    "border-blue-200 bg-blue-50 text-blue-700",
 };
 
-export function StatusBadge({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode;
+export function StatusBadge({ children, tone = "neutral" }: {
+  children: ReactNode;
   tone?: keyof typeof badgeStyles;
 }) {
   return (
-    <span
-      className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${badgeStyles[tone]}`}
-    >
+    <span className={`inline-flex items-center rounded-[6px] border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyles[tone]}`}>
       {children}
     </span>
   );

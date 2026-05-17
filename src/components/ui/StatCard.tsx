@@ -1,74 +1,28 @@
-const toneStyles = {
-  default: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-slate-300",
-  },
-  subtle: {
-    card: "border-slate-200 bg-slate-50 text-slate-950",
-    accent: "bg-slate-400",
-  },
-  positive: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-emerald-500",
-  },
-  warning: {
-    card: "border-amber-200 bg-amber-50 text-amber-950",
-    accent: "bg-amber-500",
-  },
-  danger: {
-    card: "border-red-200 bg-red-50 text-red-950",
-    accent: "bg-red-500",
-  },
-
-  // Backward-compatible aliases so older pages don't break
-  green: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-emerald-500",
-  },
-  blue: {
-    card: "border-slate-200 bg-white text-slate-950",
-    accent: "bg-slate-400",
-  },
-  amber: {
-    card: "border-amber-200 bg-amber-50 text-amber-950",
-    accent: "bg-amber-500",
-  },
-  red: {
-    card: "border-red-200 bg-red-50 text-red-950",
-    accent: "bg-red-500",
-  },
+const toneAccent: Record<string, string> = {
+  default:  "bg-[#4A3FA8]",
+  subtle:   "bg-slate-400",
+  positive: "bg-emerald-500",
+  warning:  "bg-amber-500",
+  danger:   "bg-red-500",
+  green:    "bg-emerald-500",
+  blue:     "bg-[#4A3FA8]",
+  amber:    "bg-amber-500",
+  red:      "bg-red-500",
 };
 
-export function StatCard({
-  label,
-  value,
-  helper,
-  tone = "default",
-}: {
+export function StatCard({ label, value, helper, tone = "default" }: {
   label: string;
   value: string | number;
   helper?: string;
-  tone?: keyof typeof toneStyles;
+  tone?: keyof typeof toneAccent;
 }) {
-  const styles = toneStyles[tone];
-
+  const accent = toneAccent[tone] ?? toneAccent.default;
   return (
-    <div
-      className={`relative overflow-hidden rounded-3xl border p-5 shadow-sm ${styles.card}`}
-    >
-      <div className={`absolute left-0 top-0 h-full w-1 ${styles.accent}`} />
-
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-        {value}
-      </p>
-
-      {helper && (
-        <p className="mt-2 text-xs font-medium leading-5 text-slate-500">
-          {helper}
-        </p>
-      )}
+    <div className="relative overflow-hidden rounded-[12px] border border-[rgba(23,22,20,0.08)] bg-ud-surface p-4 shadow-[0_1px_0_rgba(23,22,20,0.04),0_1px_2px_rgba(23,22,20,0.03)]">
+      <div className={`absolute left-0 top-0 h-full w-[3px] ${accent}`} />
+      <p className="text-[11px] font-medium text-ud-faint">{label}</p>
+      <p className="mt-1 text-[22px] font-bold tracking-[-0.025em] text-ud-ink md:text-[28px]">{value}</p>
+      {helper && <p className="mt-0.5 text-[11px] font-medium text-ud-faint">{helper}</p>}
     </div>
   );
 }
