@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
   const { company } = currentCompany;
 
-  if (!rateLimit(`ai:${company.id}`, 5)) {
+  if (!await rateLimit(`ai:${company.id}`, 5)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a moment." },
       { status: 429 },

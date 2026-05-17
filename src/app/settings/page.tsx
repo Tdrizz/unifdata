@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { getSettingsIntegrations, getTeamMembers } from "@/features/settings/queries";
+import { getSettingsIntegrations, getTeamMembers, getApiKeys } from "@/features/settings/queries";
 import { getCurrentUserRole } from "@/lib/current-company";
 import { SettingsView } from "@/features/settings/components/SettingsView";
 
@@ -26,9 +26,12 @@ export default async function SettingsPage() {
   }
 
   const { company } = currentCompany;
-  const integrations = await getSettingsIntegrations(supabase, company.id);
+  const [integrations, members, apiKeys] = await Promise.all([
+    getSettingsIntegrations(supabase, company.id),
+    getTeamMembers(company.id),
+    getApiKeys(company.id),
+  ]);
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
-  const members = await getTeamMembers(company.id);
   const currentUserRole = await getCurrentUserRole();
 
   return (
@@ -50,6 +53,7 @@ export default async function SettingsPage() {
         geminiEnabled={geminiEnabled}
         members={members}
         currentUserRole={currentUserRole}
+        apiKeys={apiKeys}
       />
     </AppShell>
   );

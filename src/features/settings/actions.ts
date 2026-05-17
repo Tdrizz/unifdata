@@ -179,6 +179,48 @@ export async function inviteMember(email: string, role: "owner" | "member" = "me
   return { ok: true as const };
 }
 
+export async function createApiKey(name: string): Promise<{ key: string; id: string }> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const role = await getCurrentUserRole();
+  if (role !== "owner" && role !== "admin") throw new Error("Only admins can create API keys");
+
+  const { randomBytes, createHash } = await import("crypto");
+  const rawKey = `fo_live_${randomBytes(24).toString("hex")}`;
+  const keyHash = createHash("sha256").update(rawKey).digest("hex");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("api_keys")
+    .insert({ company_id: currentCompany.company.id, key_hash: keyHash, name: name.trim() || "API Key" })
+    .select("id")
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? "Failed to create API key");
+
+  revalidatePath("/settings");
+  return { key: rawKey, id: (data as { id: string }).id };
+}
+
+export async function revokeApiKey(id: string): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const role = await getCurrentUserRole();
+  if (role !== "owner" && role !== "admin") throw new Error("Only admins can revoke API keys");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("api_keys")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("company_id", currentCompany.company.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
 export async function removeMember(targetUserId: string) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) throw new Error("Unauthorized");

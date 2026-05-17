@@ -8,6 +8,7 @@ import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
+import { ApiKeyManager } from "./ApiKeyManager";
 
 interface Company {
   id: string;
@@ -19,6 +20,14 @@ interface User {
   email: string;
 }
 
+interface ApiKey {
+  id: string;
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+  revoked_at: string | null;
+}
+
 interface SettingsViewProps {
   company: Company;
   user: User;
@@ -26,6 +35,7 @@ interface SettingsViewProps {
   geminiEnabled: boolean;
   members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
   currentUserRole: string | null;
+  apiKeys: ApiKey[];
 }
 
 function titleCase(value: string | null) {
@@ -86,6 +96,7 @@ export function SettingsView({
   geminiEnabled,
   members,
   currentUserRole,
+  apiKeys,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((integration) =>
     String(integration.provider || "")
@@ -358,6 +369,24 @@ export function SettingsView({
             ))}
           </div>
           {currentUserRole === "owner" && <InviteMemberForm />}
+        </div>
+      </div>
+
+      {/* API Keys card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">API Keys</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">
+            Use these keys to send leads programmatically via the{" "}
+            <code className="rounded px-1 py-0.5 bg-ud-surface-soft text-[12px]">POST /api/leads/ingest</code>{" "}
+            endpoint. Each key is scoped to this workspace.
+          </p>
+        </div>
+        <div className="p-[22px]">
+          <ApiKeyManager
+            apiKeys={apiKeys}
+            canManage={currentUserRole === "owner" || currentUserRole === "admin"}
+          />
         </div>
       </div>
     </div>

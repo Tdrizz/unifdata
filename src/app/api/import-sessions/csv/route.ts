@@ -104,7 +104,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!rateLimit(`import:${companyId}`, 20)) {
+    if (!await rateLimit(`import:${companyId}`, 20)) {
       return NextResponse.json(
         { error: "Too many requests. Try again in a moment." },
         { status: 429 },

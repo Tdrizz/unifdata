@@ -1,30 +1,29 @@
-const requests = new Map<string, number[]>();
+import { createServiceClient } from "@/lib/supabase/service";
 
-let lastPrune = Date.now();
-const PRUNE_INTERVAL = 5 * 60_000;
-
-export function rateLimit(
+export async function rateLimit(
   key: string,
   limit = 10,
   windowMs = 60_000,
-): boolean {
-  const now = Date.now();
+): Promise<boolean> {
+  const supabase = createServiceClient();
+  const windowStart = new Date(Date.now() - windowMs).toISOString();
 
-  if (now - lastPrune > PRUNE_INTERVAL) {
-    for (const [k, ts] of requests) {
-      if (ts.every((t) => now - t >= windowMs)) requests.delete(k);
-    }
-    lastPrune = now;
-  }
+  const { count } = await supabase
+    .from("rate_limit_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("key", key)
+    .gte("requested_at", windowStart);
 
-  const timestamps = (requests.get(key) ?? []).filter(
-    (t) => now - t < windowMs,
-  );
-  if (timestamps.length >= limit) {
-    requests.set(key, timestamps);
-    return false;
-  }
-  timestamps.push(now);
-  requests.set(key, timestamps);
+  if ((count ?? 0) >= limit) return false;
+
+  await supabase.from("rate_limit_requests").insert({ key });
+
+  // Fire-and-forget: delete rows older than 1 hour to keep the table small
+  supabase
+    .from("rate_limit_requests")
+    .delete()
+    .lt("requested_at", new Date(Date.now() - 60 * 60 * 1000).toISOString())
+    .then(() => {});
+
   return true;
 }

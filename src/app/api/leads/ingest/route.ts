@@ -1,12 +1,29 @@
+import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 
 export async function POST(req: NextRequest) {
-  const apiKey = req.headers.get("x-api-key");
+  const rawKey = req.headers.get("x-api-key");
 
-  if (!apiKey || apiKey !== process.env.LEAD_INGEST_SECRET) {
+  if (!rawKey) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const keyHash = createHash("sha256").update(rawKey).digest("hex");
+  const supabase = createServiceClient();
+
+  const { data: apiKey } = await supabase
+    .from("api_keys")
+    .select("id, company_id")
+    .eq("key_hash", keyHash)
+    .is("revoked_at", null)
+    .maybeSingle();
+
+  if (!apiKey) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { company_id, id: keyId } = apiKey;
 
   let body: Record<string, string | undefined>;
   try {
@@ -15,16 +32,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { company_id, name, email, phone, address, service_requested, notes, source } = body;
+  const { name, email, phone, address, service_requested, notes, source } = body;
 
-  if (!company_id || !name || !service_requested || !source) {
+  if (!name || !service_requested || !source) {
     return NextResponse.json(
-      { error: "Missing required fields: company_id, name, service_requested, source" },
+      { error: "Missing required fields: name, service_requested, source" },
       { status: 400 },
     );
   }
 
-  const supabase = createServiceClient();
+  // Update last_used_at (fire-and-forget)
+  supabase
+    .from("api_keys")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("id", keyId)
+    .then(() => {});
 
   let customerId: string | null = null;
 
@@ -36,9 +58,7 @@ export async function POST(req: NextRequest) {
       .eq("email", email)
       .maybeSingle();
 
-    if (existing) {
-      customerId = existing.id as string;
-    }
+    if (existing) customerId = existing.id as string;
   } else if (phone) {
     const { data: existing } = await supabase
       .from("customers")
@@ -47,9 +67,7 @@ export async function POST(req: NextRequest) {
       .eq("phone", phone)
       .maybeSingle();
 
-    if (existing) {
-      customerId = existing.id as string;
-    }
+    if (existing) customerId = existing.id as string;
   }
 
   if (!customerId) {

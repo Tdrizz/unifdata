@@ -34,7 +34,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!rateLimit(`sync:${companyId}`)) {
+  if (!await rateLimit(`sync:${companyId}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a moment." },
       { status: 429 },

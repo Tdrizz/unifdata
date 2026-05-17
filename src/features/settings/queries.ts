@@ -16,6 +16,22 @@ export async function getSettingsIntegrations(
   return (data ?? []) as SettingsIntegration[];
 }
 
+export async function getApiKeys(companyId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("api_keys")
+    .select("id, name, created_at, last_used_at, revoked_at")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+  return (data ?? []) as Array<{
+    id: string;
+    name: string;
+    created_at: string;
+    last_used_at: string | null;
+    revoked_at: string | null;
+  }>;
+}
+
 export async function getTeamMembers(companyId: string) {
   const supabase = await createClient();
   const { data } = await supabase

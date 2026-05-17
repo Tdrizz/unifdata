@@ -91,6 +91,44 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          key_hash: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          key_hash: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           accent_color: string
@@ -783,66 +821,21 @@ export type Database = {
         }
         Relationships: []
       }
-      stripe_events: {
+      rate_limit_requests: {
         Row: {
-          created_at: string
-          id: string
-          payload: Json
-          processed_at: string | null
-          processing_error: string | null
-          type: string
+          id: number
+          key: string
+          requested_at: string
         }
         Insert: {
-          created_at?: string
-          id: string
-          payload: Json
-          processed_at?: string | null
-          processing_error?: string | null
-          type: string
+          id?: number
+          key: string
+          requested_at?: string
         }
         Update: {
-          created_at?: string
-          id?: string
-          payload?: Json
-          processed_at?: string | null
-          processing_error?: string | null
-          type?: string
-        }
-        Relationships: []
-      }
-      waitlist_requests: {
-        Row: {
-          company: string
-          company_size: string
-          created_at: string
-          email: string
-          id: string
-          name: string
-          status: string
-          use_case: string
-          website: string | null
-        }
-        Insert: {
-          company: string
-          company_size: string
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          status?: string
-          use_case: string
-          website?: string | null
-        }
-        Update: {
-          company?: string
-          company_size?: string
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          status?: string
-          use_case?: string
-          website?: string | null
+          id?: number
+          key?: string
+          requested_at?: string
         }
         Relationships: []
       }
@@ -906,6 +899,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_events: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type?: string
+        }
+        Relationships: []
       }
       sync_connections: {
         Row: {
@@ -1029,6 +1049,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      waitlist_requests: {
+        Row: {
+          company: string
+          company_size: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          use_case: string
+          website: string | null
+        }
+        Insert: {
+          company: string
+          company_size: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          status?: string
+          use_case: string
+          website?: string | null
+        }
+        Update: {
+          company?: string
+          company_size?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          use_case?: string
+          website?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
