@@ -165,7 +165,8 @@ export function CustomersList({
       </div>
 
       {/* 2. Filter chips */}
-      <div className="px-[18px] pb-[14px] flex gap-[6px] overflow-x-auto no-scrollbar">
+      <div className="px-[18px] pb-[14px] overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[9px] p-[3px] w-fit mb-4">
         <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
           All {customers.length}
         </FilterChip>
@@ -178,6 +179,7 @@ export function CustomersList({
         <FilterChip active={filter === "top"} onClick={() => setFilter("top")}>
           Top revenue {topCount}
         </FilterChip>
+      </div>
       </div>
 
       {/* 3. Client list card */}

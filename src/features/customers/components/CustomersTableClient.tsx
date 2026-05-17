@@ -161,7 +161,7 @@ export function CustomersTableClient({
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-[14px] mb-[14px] flex-wrap">
         {/* Left: filter chips */}
-        <div className="flex gap-[6px] flex-wrap">
+        <div className="flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[9px] p-[3px] w-fit mb-4">
           <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
             All {customers.length}
           </FilterChip>

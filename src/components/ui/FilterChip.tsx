@@ -15,21 +15,16 @@ export function FilterChip({ children, active, count, onClick, className }: Prop
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1.5 px-[11px] py-[6px] rounded-full text-xs font-semibold border whitespace-nowrap transition-colors",
+        "inline-flex items-center gap-1.5 px-[13px] py-[5px] rounded-[7px] text-[12.5px] font-semibold whitespace-nowrap transition-all",
         active
-          ? "bg-ud-ink text-ud-surface border-ud-ink"
-          : "bg-ud-surface text-ud-text border-ud hover:border-ud-hard",
+          ? "bg-ud-surface text-ud-ink shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)]"
+          : "bg-transparent text-ud-muted hover:text-ud-ink",
         className,
       )}
     >
       {children}
       {count !== undefined && (
-        <span
-          className={cn(
-            "text-[10px] font-bold",
-            active ? "opacity-70" : "text-ud-faint",
-          )}
-        >
+        <span className={cn("text-[11px] font-bold", active ? "text-ud-faint" : "text-ud-faint")}>
           {count}
         </span>
       )}
