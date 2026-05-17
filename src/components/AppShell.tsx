@@ -1,20 +1,15 @@
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { AppNav } from "@/components/AppNav";
 import { LogoutButton } from "@/components/LogoutButton";
 import { ProductMark } from "@/components/ProductMark";
-
-type ThemeStyle = CSSProperties & {
-  "--fo-primary"?: string;
-  "--fo-accent"?: string;
-};
+import { Topbar } from "@/components/Topbar";
+import { Avatar } from "@/components/ui/Avatar";
 
 export function AppShell({
   children,
   companyName,
   userEmail,
-  brandColor = "#0f172a",
-  accentColor = "#2563eb",
   businessSector,
 }: {
   children: ReactNode;
@@ -24,68 +19,53 @@ export function AppShell({
   accentColor?: string;
   businessSector?: string | null;
 }) {
-  const themeStyle: ThemeStyle = {
-    "--fo-primary": brandColor,
-    "--fo-accent": accentColor,
-  };
+  const displayName = companyName || userEmail;
 
   return (
-    <div
-      style={themeStyle}
-      className="min-h-screen bg-[#eef2f7] text-slate-950"
-    >
-      <div className="flex min-h-screen">
-        <aside
-          className="hidden w-76 shrink-0 flex-col border-r border-white/10 p-4 text-white md:flex"
-          style={{ backgroundColor: "var(--fo-primary)" }}
-        >
-          <Link
-            href="/workspace"
-            className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-sm hover:bg-white/15"
-          >
+    <div className="flex min-h-screen bg-ud-page text-ud-text">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0c1117]">
+        <div className="px-[18px] py-[18px] pb-[14px] border-b border-white/[0.07]">
+          <Link href="/workspace">
             <ProductMark companyName={companyName} inverse />
           </Link>
-
-          <div className="mt-6 flex-1 overflow-y-auto pr-1">
-            <AppNav businessSector={businessSector} />
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55">
-              Signed in
-            </p>
-
-            <p className="mt-2 truncate text-sm font-medium text-white/80">
-              {userEmail}
-            </p>
-
-            <div className="mt-4">
-              <LogoutButton variant="sidebar" />
-            </div>
-          </div>
-        </aside>
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur md:hidden">
-            <div className="flex items-center justify-between gap-4">
-              <Link href="/workspace">
-                <ProductMark companyName={companyName} />
-              </Link>
-
-              <LogoutButton />
-            </div>
-
-            <div className="mt-3">
-              <AppNav mobile businessSector={businessSector} />
-            </div>
-          </header>
-
-          <main className="flex-1">
-            <div className="mx-auto w-full max-w-360 px-4 py-6 md:px-8 md:py-8">
-              {children}
-            </div>
-          </main>
         </div>
+
+        <div className="flex-1 overflow-y-auto px-[10px] pb-3 pt-2">
+          <AppNav businessSector={businessSector} />
+        </div>
+
+        <div className="px-[14px] py-[12px] border-t border-white/[0.07]">
+          <div className="flex items-center gap-2.5 mb-2">
+            <Avatar name={displayName} size={28} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[12.5px] font-semibold text-[#d0dae6] truncate">
+                {companyName || "My Workspace"}
+              </p>
+              <p className="text-[11px] text-[#3d5166] truncate">{userEmail}</p>
+            </div>
+          </div>
+          <LogoutButton variant="sidebar" />
+        </div>
+      </aside>
+
+      {/* Main column */}
+      <div className="flex flex-1 min-w-0 flex-col">
+        {/* Desktop topbar */}
+        <Topbar className="hidden md:flex" />
+
+        {/* Mobile header */}
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-[rgba(23,22,20,0.08)] bg-ud-page/95 backdrop-blur-sm">
+          <Link href="/workspace">
+            <ProductMark companyName={companyName} />
+          </Link>
+        </header>
+
+        <main className="flex-1">
+          <div className="mx-auto w-full max-w-[1440px] px-6 py-7 md:px-8 md:py-8">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
