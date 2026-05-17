@@ -119,14 +119,16 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
   // Re-parent all related records from loser to winner
   const tables = ["leads", "jobs", "follow_ups", "sales"] as const;
   for (const table of tables) {
-    await supabase
+    const { error: updateError } = await supabase
       .from(table as never)
       .update({ customer_id: winnerId, updated_at: new Date().toISOString() } as never)
       .eq("customer_id" as never, loserId);
+    if (updateError) throw new Error(`Failed to re-parent ${table}: ${updateError.message}`);
   }
 
   // Delete the loser
-  await supabase.from("customers").delete().eq("id", loserId);
+  const { error: deleteError } = await supabase.from("customers").delete().eq("id", loserId);
+  if (deleteError) throw new Error(`Failed to delete merged customer: ${deleteError.message}`);
 
   // Touch winner's updated_at
   await supabase

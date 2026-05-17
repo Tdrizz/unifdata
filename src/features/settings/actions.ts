@@ -190,11 +190,12 @@ export async function removeMember(targetUserId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (user?.id === targetUserId) throw new Error("Cannot remove yourself");
 
-  await supabase
+  const { error } = await supabase
     .from("company_members")
     .delete()
     .eq("user_id", targetUserId)
     .eq("company_id", companyId);
 
+  if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }

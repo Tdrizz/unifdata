@@ -97,12 +97,13 @@ export async function deleteSaleAction(id: string) {
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  await supabase
+  const { error } = await supabase
     .from("sales")
     .delete()
     .eq("id", id)
     .eq("company_id", company.id);
 
+  if (error) redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/sales");
   revalidatePath("/workspace");
   redirect("/sales?toast=Sale+deleted");

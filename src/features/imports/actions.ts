@@ -54,10 +54,11 @@ export async function revertImportSession(sessionId: string) {
     }
   }
 
-  await supabase
+  const { error: revertError } = await supabase
     .from("import_sessions")
     .update({ status: "reverted" })
     .eq("id", sessionId);
 
+  if (revertError) throw new Error(`Failed to mark session reverted: ${revertError.message}`);
   revalidatePath("/imports");
 }

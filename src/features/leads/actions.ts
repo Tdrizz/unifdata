@@ -127,11 +127,12 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
   if (!currentCompany) return;
   const { company } = currentCompany;
 
-  await supabase
+  const { error } = await supabase
     .from("leads")
     .update({ status })
     .in("id", ids)
     .eq("company_id", company.id);
 
+  if (error) throw new Error(error.message);
   revalidatePath("/leads");
 }

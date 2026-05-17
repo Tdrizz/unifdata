@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { AppShell } from "@/components/AppShell";
 import { MobileCustomerDetail } from "@/features/customers/MobileCustomerDetail";
 import type { Database } from "@/types/db";
 
@@ -63,7 +64,13 @@ export default async function CustomerDetailPage({
   if (!customer) redirect("/customers");
 
   return (
-    <>
+    <AppShell
+      companyName={company.name}
+      userEmail={user.email || ""}
+      brandColor={company.brand_color || "#1D2D3E"}
+      accentColor={company.accent_color || "#4A3FA8"}
+      businessSector={company.business_sector}
+    >
       {/* Mobile view */}
       <div className="block md:hidden">
         <MobileCustomerDetail
@@ -73,7 +80,7 @@ export default async function CustomerDetailPage({
           sales={(sales ?? []) as SaleRow[]}
         />
       </div>
-      {/* Desktop fallback */}
+      {/* Desktop: redirect to edit page which has full UI */}
       <div className="hidden md:block p-6">
         <a
           href={`/customers/${id}/edit`}
@@ -82,6 +89,6 @@ export default async function CustomerDetailPage({
           Edit customer →
         </a>
       </div>
-    </>
+    </AppShell>
   );
 }
