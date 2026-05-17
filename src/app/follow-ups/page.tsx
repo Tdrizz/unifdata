@@ -561,14 +561,14 @@ const overdueActions = actions.filter((action) =>
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/leads"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Opportunities
               </Link>
 
               <Link
                 href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
@@ -613,33 +613,33 @@ const overdueActions = actions.filter((action) =>
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
               <div>
-                <p className="font-semibold text-slate-950">Quick add</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-[13.5px] font-semibold text-ud-ink">Quick add</p>
+                <p className="mt-1 text-[13px] text-ud-muted">
                   Opportunity follow-up dates appear automatically from the
                   Opportunities page.
                 </p>
               </div>
 
-              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90 group-open:hidden">
                 Add follow-up
               </span>
 
-              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:inline-flex">
                 Close
               </span>
             </summary>
 
             <form
               action={createFollowUp}
-              className="border-t border-slate-100 p-5"
+              className="border-t border-[rgba(23,22,20,0.05)] p-5"
             >
               {errorParam && <DismissError message={errorParam} />}
 
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-ud-muted">
                 Link to person or business
                 <select
                   name="customer_id"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 >
                   <option value="">No linked person yet</option>
                   {people.map((person) => (
@@ -653,32 +653,32 @@ const overdueActions = actions.filter((action) =>
                 </select>
               </label>
 
-              <label className="mt-4 block text-sm font-medium text-slate-700">
+              <label className="mt-4 block text-sm font-medium text-ud-muted">
                 Follow-up action
                 <input
                   name="message"
                   required
                   placeholder="Call customer, send quote, check payment, schedule job..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Due date
                   <input
                     name="due_date"
                     type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Status
                   <select
                     name="status"
                     defaultValue="Open"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="Open">Open</option>
                     <option value="Pending">Pending</option>
@@ -691,7 +691,7 @@ const overdueActions = actions.filter((action) =>
               <div className="mt-5 flex justify-end">
                 <button
                   type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
                 >
                   Create follow-up
                 </button>
@@ -725,21 +725,21 @@ const overdueActions = actions.filter((action) =>
             ) : (
               <>
                 {(selectedDue || selectedSource) && (
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                    <p className="text-sm font-semibold text-slate-700">
+                  <div className="flex items-center justify-between gap-3 border-b border-[rgba(23,22,20,0.04)] p-4">
+                    <p className="text-[13.5px] font-semibold text-ud-ink">
                       Filtered by: {selectedDue || selectedSource}
                     </p>
 
                     <Link
                       href="/follow-ups"
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
                     >
                       Clear filter
                     </Link>
                   </div>
                 )}
 
-                <div className="divide-y divide-slate-100">
+                <div>
                   {visibleActions.map((action) => {
                     const issues = getActionIssues(action);
                     const person = action.customer_id
@@ -747,78 +747,40 @@ const overdueActions = actions.filter((action) =>
                       : null;
 
                     return (
-                      <article key={action.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_150px_120px_90px] md:items-start">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StatusBadge tone="neutral">
-                                {action.source_label}
-                              </StatusBadge>
-                            </div>
-
-                            <p className="mt-3 font-semibold text-slate-950">
-                              {action.title}
-                            </p>
-
-                            <p className="mt-1 text-sm text-slate-500">
-                              {person?.name || "No person linked"}
-                            </p>
-
-                            <p className="mt-3 text-sm leading-6 text-slate-600">
-                              {getActionNextStep(action)}
-                            </p>
-
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {issues.slice(0, 3).map((issue) => (
-                                <StatusBadge
-                                  key={issue.label}
-                                  tone={issue.tone}
-                                >
-                                  {issue.label}
-                                </StatusBadge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Due
-                            </p>
-                            <div className="mt-1">
-                              <StatusBadge tone={getDueTone(action)}>
-                                {getDueLabel(action)}
-                              </StatusBadge>
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Status
-                            </p>
-                            <div className="mt-1">
-                              <StatusBadge tone={getGenericTone(action.status)}>
-                                {action.status || "Not set"}
-                              </StatusBadge>
-                            </div>
-
-                            <p className="mt-3 text-xs font-medium text-slate-500">
-                              Added
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatDateOnly(action.created_at)}
-                            </p>
-                          </div>
-
-                          <div className="md:text-right">
-                            <Link
-                              href={action.href}
-                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open
-                            </Link>
-                          </div>
+                      <div
+                        key={action.id}
+                        className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                            {action.title}
+                          </p>
+                          <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                            {person?.name || "No person linked"}
+                            {" · "}
+                            {action.source_label}
+                          </p>
                         </div>
-                      </article>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatusBadge tone={getDueTone(action)}>
+                            {getDueLabel(action)}
+                          </StatusBadge>
+                          <StatusBadge tone={getGenericTone(action.status)}>
+                            {action.status || "Not set"}
+                          </StatusBadge>
+                          {issues[0] && issues[0].label !== "Looks clean" && (
+                            <StatusBadge tone={issues[0].tone}>
+                              {issues[0].label}
+                            </StatusBadge>
+                          )}
+                          <Link
+                            href={action.href}
+                            className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                          >
+                            Open →
+                          </Link>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -837,35 +799,29 @@ const overdueActions = actions.filter((action) =>
                   description="Manual and opportunity follow-ups will appear here."
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {sourceGroups.map((group) => (
-                    <article
+                    <div
                       key={group.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                           {group.label}
                         </p>
-
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          {group.description}
-                        </p>
-
-                        <p className="mt-2 text-sm font-semibold text-slate-700">
-                          {group.count} follow-ups
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                          {group.count} follow-ups · {group.description}
                         </p>
                       </div>
-
-                      <div className="md:text-right">
+                      <div className="flex items-center gap-3 shrink-0">
                         <Link
                           href={group.href}
-                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                         >
-                          {selectedSource === group.id ? "Clear" : "Review"}
+                          {selectedSource === group.id ? "Clear" : "Review →"}
                         </Link>
                       </div>
-                    </article>
+                    </div>
                   ))}
                 </div>
               )}
@@ -881,41 +837,36 @@ const overdueActions = actions.filter((action) =>
                   description="No overdue, due today, upcoming, or missing-date follow-ups were found."
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {dueGroups.map((group) => (
-                    <article
+                    <div
                       key={group.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
-                        <StatusBadge tone={group.tone}>
-                          {group.label}
-                        </StatusBadge>
-
-                        <p className="mt-2 font-semibold text-slate-950">
-                          {group.count} follow-ups
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {group.count} {group.label}
                         </p>
-
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                           {group.description}
                         </p>
                       </div>
-
-                      <div className="md:text-right">
+                      <div className="flex items-center gap-3 shrink-0">
+                        <StatusBadge tone={group.tone}>
+                          {group.label}
+                        </StatusBadge>
                         <Link
                           href={
                             selectedDue === group.id
                               ? "/follow-ups"
-                              : `/follow-ups?due=${encodeURIComponent(
-                                  group.id,
-                                )}`
+                              : `/follow-ups?due=${encodeURIComponent(group.id)}`
                           }
-                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                         >
-                          {selectedDue === group.id ? "Clear" : "Review"}
+                          {selectedDue === group.id ? "Clear" : "Review →"}
                         </Link>
                       </div>
-                    </article>
+                    </div>
                   ))}
                 </div>
               )}
@@ -933,27 +884,33 @@ const overdueActions = actions.filter((action) =>
               description="No missing person, due date, or status issues were found."
             />
           ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-3">
+            <div>
               {cleanupGroups.map((item) => (
-                <Link
+                <div
                   key={item.id}
-                  href={item.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                      {item.title}
+                    </p>
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                      {item.detail}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                       {item.count}
                     </span>
+                    <Link
+                      href={item.href}
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                    >
+                      Review →
+                    </Link>
                   </div>
-
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {item.title}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {item.detail}
-                  </p>
-                </Link>
+                </div>
               ))}
             </div>
           )}

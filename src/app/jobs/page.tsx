@@ -406,14 +406,14 @@ export default async function WorkPage({
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/leads"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Opportunities
               </Link>
 
               <Link
                 href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
@@ -458,30 +458,30 @@ export default async function WorkPage({
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
               <div>
-                <p className="font-semibold text-slate-950">Quick add</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-[13.5px] font-semibold text-ud-ink">Quick add</p>
+                <p className="mt-1 text-[13px] text-ud-muted">
                   Add a job, project, appointment, service visit, or order.
                 </p>
               </div>
 
-              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90 group-open:hidden">
                 Add work
               </span>
 
-              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:inline-flex">
                 Close
               </span>
             </summary>
 
-            <form action={createWork} className="border-t border-slate-100 p-5">
+            <form action={createWork} className="border-t border-[rgba(23,22,20,0.05)] p-5">
               {errorParam && <DismissError message={errorParam} />}
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Link to person or business
                   <select
                     name="customer_id"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="">No linked person yet</option>
                     {people.map((person) => (
@@ -495,11 +495,11 @@ export default async function WorkPage({
                   </select>
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Link to opportunity
                   <select
                     name="lead_id"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="">No linked opportunity yet</option>
                     {opportunities.map((opportunity) => (
@@ -513,17 +513,17 @@ export default async function WorkPage({
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Work name
                   <input
                     name="service_type"
                     required
                     placeholder="Flooring install, website build, service visit..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Work value
                   <input
                     name="job_value"
@@ -531,18 +531,18 @@ export default async function WorkPage({
                     step="0.01"
                     min="0"
                     placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Work stage
                   <select
                     name="status"
                     defaultValue="Scheduled"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="Scheduled">Scheduled</option>
                     <option value="Active">Active</option>
@@ -552,12 +552,12 @@ export default async function WorkPage({
                   </select>
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Payment status
                   <select
                     name="paid_status"
                     defaultValue="Unpaid"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="Unpaid">Unpaid</option>
                     <option value="Partial">Partial</option>
@@ -567,21 +567,21 @@ export default async function WorkPage({
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Start date
                   <input
                     name="start_date"
                     type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Completed date
                   <input
                     name="completed_date"
                     type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
@@ -589,7 +589,7 @@ export default async function WorkPage({
               <div className="mt-5 flex justify-end">
                 <button
                   type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
                 >
                   Create work
                 </button>
@@ -619,21 +619,21 @@ export default async function WorkPage({
             ) : (
               <>
                 {selectedStage && (
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                    <p className="text-sm font-semibold text-slate-700">
+                  <div className="flex items-center justify-between gap-3 border-b border-[rgba(23,22,20,0.04)] p-4">
+                    <p className="text-[13.5px] font-semibold text-ud-ink">
                       Filtered by stage: {selectedStage}
                     </p>
 
                     <Link
                       href="/jobs"
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
                     >
                       Clear filter
                     </Link>
                   </div>
                 )}
 
-                <div className="divide-y divide-slate-100">
+                <div>
                   {visibleWork.map((work) => {
                     const person = work.customer_id
                       ? personById.get(work.customer_id)
@@ -646,83 +646,43 @@ export default async function WorkPage({
                     const issues = getWorkIssues(work);
 
                     return (
-                      <article key={work.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_130px_160px_90px] md:items-start">
-                          <div>
-                            <p className="font-semibold text-slate-950">
-                              {work.service_type || "Untitled work"}
-                            </p>
-
-                            <p className="mt-1 text-sm text-slate-500">
-                              {person?.name ||
-                                opportunity?.service_requested ||
-                                "No person or opportunity linked"}
-                            </p>
-
-                            <p className="mt-3 text-sm leading-6 text-slate-600">
-                              {getWorkNextStep(work)}
-                            </p>
-
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {issues.slice(0, 3).map((issue) => (
-                                <StatusBadge
-                                  key={issue.label}
-                                  tone={issue.tone}
-                                >
-                                  {issue.label}
-                                </StatusBadge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Value
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatCurrency(work.job_value)}
-                            </p>
-
-                            <p className="mt-3 text-xs font-medium text-slate-500">
-                              Payment
-                            </p>
-                            <div className="mt-1">
-                              <StatusBadge
-                                tone={getRevenueTone(work.paid_status)}
-                              >
-                                {work.paid_status || "Not set"}
-                              </StatusBadge>
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Start
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatDateOnly(work.start_date)}
-                            </p>
-
-                            <p className="mt-3 text-xs font-medium text-slate-500">
-                              Stage
-                            </p>
-                            <div className="mt-1">
-                              <StatusBadge tone={getWorkTone(work.status)}>
-                                {work.status || "Scheduled"}
-                              </StatusBadge>
-                            </div>
-                          </div>
-
-                          <div className="md:text-right">
-                            <Link
-                              href={`/jobs/${work.id}/edit`}
-                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open
-                            </Link>
-                          </div>
+                      <div
+                        key={work.id}
+                        className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                            {work.service_type || "Untitled work"}
+                          </p>
+                          <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                            {person?.name ||
+                              opportunity?.service_requested ||
+                              "No person or opportunity linked"}
+                          </p>
                         </div>
-                      </article>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatusBadge tone={getWorkTone(work.status)}>
+                            {work.status || "Scheduled"}
+                          </StatusBadge>
+                          <StatusBadge tone={getRevenueTone(work.paid_status)}>
+                            {work.paid_status || "Not set"}
+                          </StatusBadge>
+                          {issues[0] && (
+                            <StatusBadge tone={issues[0].tone}>
+                              {issues[0].label}
+                            </StatusBadge>
+                          )}
+                          <span className="text-[12px] text-ud-muted hidden md:block">
+                            {formatCurrency(work.job_value)}
+                          </span>
+                          <Link
+                            href={`/jobs/${work.id}/edit`}
+                            className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                          >
+                            Open →
+                          </Link>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -740,50 +700,40 @@ export default async function WorkPage({
                 description="Work stages will appear here after records are added."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {stageGroups.map((group) => {
                   const explanation = getStageExplanation(group.status);
 
                   return (
-                    <article
+                    <div
                       key={group.status}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {group.count} {group.status}
+                        </p>
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                          {explanation.meaning}
+                          {group.unpaidCount > 0 ? ` · ${group.unpaidCount} need payment review` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
                         <StatusBadge tone={getWorkTone(group.status)}>
                           {group.status}
                         </StatusBadge>
-
-                        <p className="mt-2 font-semibold text-slate-950">
-                          {group.count} Found
-                        </p>
-
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          {explanation.meaning}
-                        </p>
-
-                        {group.unpaidCount > 0 && (
-                          <span className="mt-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                            {group.unpaidCount} need payment review
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="md:text-right">
                         <Link
                           href={
                             selectedStage === group.status
                               ? "/jobs"
-                              : `/jobs?stage=${encodeURIComponent(
-                                  group.status,
-                                )}`
+                              : `/jobs?stage=${encodeURIComponent(group.status)}`
                           }
-                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                         >
-                          {selectedStage === group.status ? "Clear" : "Review"}
+                          {selectedStage === group.status ? "Clear" : "Review →"}
                         </Link>
                       </div>
-                    </article>
+                    </div>
                   );
                 })}
               </div>
@@ -801,27 +751,33 @@ export default async function WorkPage({
               description="No missing people, opportunities, or values were found."
             />
           ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-3">
+            <div>
               {cleanupGroups.map((item) => (
-                <Link
+                <div
                   key={item.id}
-                  href={item.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                      {item.title}
+                    </p>
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                      {item.detail}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                       {item.count}
                     </span>
+                    <Link
+                      href={item.href}
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                    >
+                      Review →
+                    </Link>
                   </div>
-
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {item.title}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {item.detail}
-                  </p>
-                </Link>
+                </div>
               ))}
             </div>
           )}

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
@@ -351,14 +351,14 @@ export default async function OpportunitiesPage({
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/crm"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Pipeline view
               </Link>
 
               <Link
                 href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
@@ -403,33 +403,33 @@ export default async function OpportunitiesPage({
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
               <div>
-                <p className="font-semibold text-slate-950">Quick add</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-[13.5px] font-semibold text-ud-ink">Quick add</p>
+                <p className="mt-1 text-[13px] text-ud-muted">
                   Add a quote, request, estimate, deal, or potential job.
                 </p>
               </div>
 
-              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90 group-open:hidden">
                 Add {profile.labels.leadSingular.toLowerCase()}
               </span>
 
-              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:inline-flex">
                 Close
               </span>
             </summary>
 
             <form
               action={createOpportunity}
-              className="border-t border-slate-100 p-5"
+              className="border-t border-[rgba(23,22,20,0.05)] p-5"
             >
               {errorParam && <DismissError message={errorParam} />}
 
               <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Link to person or business
                   <select
                     name="customer_id"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="">No linked {profile.labels.customerSingular.toLowerCase()} yet</option>
                     {people.map((person) => (
@@ -443,12 +443,12 @@ export default async function OpportunitiesPage({
                   </select>
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Status
                   <select
                     name="status"
                     defaultValue="New"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="New">New</option>
                     <option value="Contacted">Contacted</option>
@@ -461,17 +461,17 @@ export default async function OpportunitiesPage({
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Opportunity name
                   <input
                     name="service_requested"
                     required
                     placeholder="Website redesign, flooring quote, monthly service plan..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Estimated value
                   <input
                     name="estimated_value"
@@ -479,45 +479,45 @@ export default async function OpportunitiesPage({
                     step="0.01"
                     min="0"
                     placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Source
                   <input
                     name="source"
                     placeholder="Referral, Google, Facebook, Website..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Next follow-up
                   <input
                     name="next_follow_up_date"
                     type="date"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
 
-              <label className="mt-4 block text-sm font-medium text-slate-700">
+              <label className="mt-4 block text-sm font-medium text-ud-muted">
                 Notes
                 <textarea
                   name="notes"
                   rows={3}
                   placeholder="Add quote notes, next steps, or context..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
 
               <div className="mt-5 flex justify-end">
                 <button
                   type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
                 >
                   Create {profile.labels.leadSingular.toLowerCase()}
                 </button>
@@ -537,7 +537,7 @@ export default async function OpportunitiesPage({
                 description={`Add or import ${profile.labels.leadPlural.toLowerCase()} to start building the pipeline.`}
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {prioritizedOpenOpportunities.map((opportunity) => {
                   const person = opportunity.customer_id
                     ? personById.get(opportunity.customer_id)
@@ -546,87 +546,40 @@ export default async function OpportunitiesPage({
                   const issues = getOpportunityIssues(opportunity);
 
                   return (
-                    <article key={opportunity.id} className="p-4">
-                      <div className="grid gap-4 md:grid-cols-[1fr_135px_165px_90px] md:items-start">
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {opportunity.service_requested ||
-                              "Untitled opportunity"}
-                          </p>
-
-                          <p className="mt-1 text-sm text-slate-500">
-                            {person?.name ||
-                              opportunity.source ||
-                              `No ${profile.labels.customerSingular.toLowerCase()} or source saved`}
-                          </p>
-
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {issues.slice(0, 3).map((issue) => (
-                              <StatusBadge key={issue.label} tone={issue.tone}>
-                                {issue.label}
-                              </StatusBadge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">
-                            Value
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
-                            {formatCurrency(opportunity.estimated_value)}
-                          </p>
-
-                          <p className="mt-3 text-xs font-medium text-slate-500">
-                            Source
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-slate-700">
-                            {opportunity.source || "Not set"}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-slate-500">
-                            Next step
-                          </p>
-                          <div className="mt-1">
-                            <StatusBadge
-                              tone={getFollowUpTone(
-                                opportunity.next_follow_up_date,
-                              )}
-                            >
-                              {getFollowUpText(opportunity.next_follow_up_date)}
-                            </StatusBadge>
-                          </div>
-
-                          <p className="mt-3 text-xs font-medium text-slate-500">
-                            Status
-                          </p>
-                          <div className="mt-1">
-                            <StatusBadge
-                              tone={getOpportunityTone(opportunity.status)}
-                            >
-                              {opportunity.status || "Open"}
-                            </StatusBadge>
-                          </div>
-                        </div>
-
-                        <div className="md:text-right">
-                          <Link
-                            href={`/leads/${opportunity.id}/edit`}
-                            className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                          >
-                            Open
-                          </Link>
-                        </div>
-                      </div>
-
-                      {opportunity.notes && (
-                        <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                          {opportunity.notes}
+                    <div
+                      key={opportunity.id}
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {opportunity.service_requested || "Untitled opportunity"}
                         </p>
-                      )}
-                    </article>
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                          {person?.name ||
+                            opportunity.source ||
+                            `No ${profile.labels.customerSingular.toLowerCase()} or source saved`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <StatusBadge
+                          tone={getFollowUpTone(opportunity.next_follow_up_date)}
+                        >
+                          {getFollowUpText(opportunity.next_follow_up_date)}
+                        </StatusBadge>
+                        <StatusBadge tone={issues[0].tone}>
+                          {issues[0].label}
+                        </StatusBadge>
+                        <span className="text-[12px] text-ud-muted hidden md:block">
+                          {formatCurrency(opportunity.estimated_value)}
+                        </span>
+                        <Link
+                          href={`/leads/${opportunity.id}/edit`}
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                        >
+                          Open →
+                        </Link>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -644,26 +597,27 @@ export default async function OpportunitiesPage({
                   description={`No missing ${profile.labels.customerSingular.toLowerCase()} links, sources, or estimates were found.`}
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {cleanupGroups.map((item) => (
-                    <article
+                    <div
                       key={item.id}
-                      className="flex items-start justify-between gap-4 p-4"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0"
                     >
-                      <div>
-                        <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                        <p className="mt-2 font-semibold text-slate-950">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                           {item.title}
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                           {item.detail}
                         </p>
                       </div>
-
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {item.count}
-                      </span>
-                    </article>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <StatusBadge tone="neutral">{item.label}</StatusBadge>
+                        <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
+                          {item.count}
+                        </span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -679,25 +633,26 @@ export default async function OpportunitiesPage({
                   description="Add sources to understand where opportunities come from."
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {sourceGroups.map((group) => (
-                    <article
+                    <div
                       key={group.source}
-                      className="flex items-center justify-between gap-4 p-4"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0"
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                           {group.source}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="text-[12px] text-ud-muted mt-0.5">
                           {group.count} {profile.labels.leadPlural.toLowerCase()}
                         </p>
                       </div>
-
-                      <p className="text-sm font-semibold text-slate-700">
-                        {formatCurrency(group.value)}
-                      </p>
-                    </article>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <p className="text-[13px] font-semibold text-ud-ink">
+                          {formatCurrency(group.value)}
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -715,38 +670,35 @@ export default async function OpportunitiesPage({
               description={`Won or lost ${profile.labels.leadPlural.toLowerCase()} will appear here once statuses are updated.`}
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div>
               {recentlyClosed.map((opportunity) => (
-                <article
+                <div
                   key={opportunity.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_140px_120px_100px] md:items-center"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-950">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                       {opportunity.service_requested || "Untitled opportunity"}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                       {opportunity.source || "No source saved"}
                     </p>
                   </div>
-
-                  <p className="text-sm font-semibold text-slate-700">
-                    {formatCurrency(opportunity.estimated_value)}
-                  </p>
-
-                  <StatusBadge tone={getOpportunityTone(opportunity.status)}>
-                    {opportunity.status || "Closed"}
-                  </StatusBadge>
-
-                  <div className="md:text-right">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[12px] text-ud-muted hidden sm:block">
+                      {formatCurrency(opportunity.estimated_value)}
+                    </span>
+                    <StatusBadge tone={getOpportunityTone(opportunity.status)}>
+                      {opportunity.status || "Closed"}
+                    </StatusBadge>
                     <Link
                       href={`/leads/${opportunity.id}/edit`}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                     >
-                      View
+                      Open →
                     </Link>
                   </div>
-                </article>
+                </div>
               ))}
             </div>
           )}
@@ -755,8 +707,3 @@ export default async function OpportunitiesPage({
     </AppShell>
   );
 }
-
-
-
-
-

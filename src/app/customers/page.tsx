@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AppShell } from "@/components/AppShell";
@@ -177,14 +177,14 @@ export default async function CustomersPage({
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/workspace"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Home
               </Link>
 
               <Link
                 href="/leads"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 {profile.labels.leadPlural}
               </Link>
@@ -192,18 +192,18 @@ export default async function CustomersPage({
           }
         />
 
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-[12px] border border-[rgba(23,22,20,0.08)] bg-ud-surface shadow-[0_1px_0_rgba(23,22,20,0.04),0_1px_2px_rgba(23,22,20,0.03)]">
           <div className="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ud-muted">
                 Directory overview
               </p>
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+              <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-ud-ink">
                 {customers.length} {profile.labels.customerPlural.toLowerCase()} in your workspace
               </h2>
 
-              <p className="mt-2 text-sm leading-6 text-slate-600">
+              <p className="mt-2 text-[13.5px] leading-[1.6] text-ud-muted">
                 {recordsNeedingCleanup > 0
                   ? `${recordsNeedingCleanup} record${recordsNeedingCleanup === 1 ? "" : "s"} need contact or address cleanup.`
                   : "All current records have complete contact and address details."}
@@ -233,7 +233,7 @@ export default async function CustomersPage({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-px border-t border-slate-200 bg-slate-200 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-px border-t border-[rgba(23,22,20,0.08)] bg-[rgba(23,22,20,0.06)] sm:grid-cols-4">
             {[
               {
                 label: profile.labels.customerPlural,
@@ -256,112 +256,112 @@ export default async function CustomersPage({
                 helper: "Missing address",
               },
             ].map((item) => (
-              <div key={item.label} className="bg-white p-4">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
+              <div key={item.label} className="bg-ud-surface p-4">
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-ud-muted">
                   {item.label}
                 </p>
 
-                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+                <p className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-ud-ink">
                   {item.value}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-500">{item.helper}</p>
+                <p className="mt-1 text-[13px] text-ud-muted">{item.helper}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <details className="group rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <details className="group rounded-[12px] border border-[rgba(23,22,20,0.08)] bg-ud-surface shadow-[0_1px_0_rgba(23,22,20,0.04),0_1px_2px_rgba(23,22,20,0.03)]">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
             <div>
-              <p className="text-sm font-semibold text-slate-950">
+              <p className="text-[13.5px] font-semibold text-ud-ink">
                 Add {profile.labels.customerSingular.toLowerCase()} or business
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-[13px] text-ud-muted">
                 Add a record manually without leaving the {profile.labels.customerPlural} page.
               </p>
             </div>
 
-            <span className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:hidden">
+            <span className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:hidden">
               Open
             </span>
 
-            <span className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 group-open:inline-flex">
+            <span className="hidden items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:inline-flex">
               Close
             </span>
           </summary>
 
           <form
             action={createCustomer}
-            className="space-y-4 border-t border-slate-100 p-5"
+            className="space-y-4 border-t border-[rgba(23,22,20,0.05)] p-5"
           >
             {errorParam && <DismissError message={errorParam} />}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-ud-muted">
                 Name
                 <input
                   name="name"
                   required
                   placeholder="John Smith, ABC Flooring, Ocean View Home..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
 
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-ud-muted">
                 Type
                 <input
                   name="customer_type"
                   placeholder="Customer, lead, residential, commercial..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-ud-muted">
                 Phone
                 <input
                   name="phone"
                   placeholder="808-555-1234"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
 
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-ud-muted">
                 Email
                 <input
                   name="email"
                   type="email"
                   placeholder="customer@example.com"
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                  className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                 />
               </label>
             </div>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-ud-muted">
               Address
               <input
                 name="address"
                 placeholder="Service address, city, or area"
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
               />
             </label>
 
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-ud-muted">
               Notes
               <textarea
                 name="notes"
                 rows={3}
                 placeholder="Preferences, project details, or follow-up context..."
-                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
               />
             </label>
 
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Add {profile.labels.customerSingular.toLowerCase()}
               </button>
@@ -379,69 +379,39 @@ export default async function CustomersPage({
               description={`Add a ${profile.labels.customerSingular.toLowerCase()} manually or import from CSV or Google Sheets.`}
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div>
               {customers.map((customer) => (
-                <article
+                <div
                   key={customer.id}
-                  className="grid gap-4 p-4 md:grid-cols-[1.25fr_0.8fr_0.7fr_90px] md:items-center"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-slate-950">
-                        {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
-                      </p>
-
-                      <StatusBadge tone={getContactTone(customer)}>
-                        {getContactIssue(customer)}
-                      </StatusBadge>
-                    </div>
-
-                    <p className="mt-1 text-sm text-slate-500">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                      {customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
+                    </p>
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                       {getPrimaryContact(customer)}
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {!customer.address && (
-                        <StatusBadge tone="neutral">
-                          Missing address
-                        </StatusBadge>
-                      )}
-
-                      {!customer.customer_type && (
-                        <StatusBadge tone="neutral">Missing type</StatusBadge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">
-                      Address
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-sm font-semibold text-slate-700">
-                      {customer.address || "No address saved"}
+                      {customer.address ? ` · ${customer.address}` : ""}
                     </p>
                   </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-slate-500">Type</p>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusBadge tone={getContactTone(customer)}>
+                      {getContactIssue(customer)}
+                    </StatusBadge>
+                    <span className="text-[12px] text-ud-muted hidden sm:block">
                       {getCustomerType(customer)}
-                    </p>
-
-                    <p className="mt-2 text-xs text-slate-500">
-                      Added {formatTimestampDate(customer.created_at)}
-                    </p>
-                  </div>
-
-                  <div className="md:text-right">
+                    </span>
+                    <span className="text-[11px] text-ud-muted hidden md:block">
+                      {formatTimestampDate(customer.created_at)}
+                    </span>
                     <Link
                       href={`/customers/${customer.id}/edit`}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                     >
-                      Open
+                      Open →
                     </Link>
                   </div>
-                </article>
+                </div>
               ))}
             </div>
           )}
@@ -450,4 +420,3 @@ export default async function CustomersPage({
     </AppShell>
   );
 }
-

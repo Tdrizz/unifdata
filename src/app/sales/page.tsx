@@ -335,14 +335,14 @@ export default async function RevenuePage({
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/jobs"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Work
               </Link>
 
               <Link
                 href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
@@ -387,30 +387,30 @@ export default async function RevenuePage({
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
               <div>
-                <p className="font-semibold text-slate-950">Quick add</p>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-[13.5px] font-semibold text-ud-ink">Quick add</p>
+                <p className="mt-1 text-[13px] text-ud-muted">
                   Add collected revenue, unpaid invoices, deposits, or partial
                   payments.
                 </p>
               </div>
 
-              <span className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white group-open:hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90 group-open:hidden">
                 Add revenue
               </span>
 
-              <span className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 group-open:inline-flex">
+              <span className="hidden items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink group-open:inline-flex">
                 Close
               </span>
             </summary>
 
             <form
               action={createRevenue}
-              className="border-t border-slate-100 p-5"
+              className="border-t border-[rgba(23,22,20,0.05)] p-5"
             >
               {errorParam && <DismissError message={errorParam} />}
 
               <div className="grid gap-4 md:grid-cols-[0.7fr_0.7fr_1fr]">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Amount
                   <input
                     name="amount"
@@ -419,16 +419,16 @@ export default async function RevenuePage({
                     min="0"
                     required
                     placeholder="2500"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Payment status
                   <select
                     name="payment_status"
                     defaultValue="Paid"
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   >
                     <option value="Paid">Paid</option>
                     <option value="Unpaid">Unpaid</option>
@@ -437,33 +437,33 @@ export default async function RevenuePage({
                   </select>
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Revenue date
                   <input
                     name="sale_date"
                     type="date"
                     defaultValue={getTodayString()}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Service or category
                   <input
                     name="service_type"
                     placeholder="Flooring install, website build, monthly service..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
 
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-ud-muted">
                   Source
                   <input
                     name="source"
                     placeholder="Referral, Google, Website, Facebook..."
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:ring-2 focus:ring-slate-300"
+                    className="mt-2 w-full rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-[#4A3FA8]/30"
                   />
                 </label>
               </div>
@@ -471,7 +471,7 @@ export default async function RevenuePage({
               <div className="mt-5 flex justify-end">
                 <button
                   type="submit"
-                  className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                  className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
                 >
                   Create revenue
                 </button>
@@ -505,98 +505,58 @@ export default async function RevenuePage({
             ) : (
               <>
                 {(selectedStatus || selectedSource) && (
-                  <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
-                    <p className="text-sm font-semibold text-slate-700">
+                  <div className="flex items-center justify-between gap-3 border-b border-[rgba(23,22,20,0.04)] p-4">
+                    <p className="text-[13.5px] font-semibold text-ud-ink">
                       Filtered by: {selectedStatus || selectedSource}
                     </p>
 
                     <Link
                       href="/sales"
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
                     >
                       Clear filter
                     </Link>
                   </div>
                 )}
 
-                <div className="divide-y divide-slate-100">
+                <div>
                   {visibleRevenue.map((record) => {
                     const issues = getRevenueIssues(record);
 
                     return (
-                      <article key={record.id} className="p-4">
-                        <div className="grid gap-4 md:grid-cols-[1fr_130px_150px_90px] md:items-start">
-                          <div>
-                            <p className="font-semibold text-slate-950">
-                              {record.service_type || "Revenue record"}
-                            </p>
-
-                            <p className="mt-1 text-sm text-slate-500">
-                              {record.source || "No source saved"}
-                            </p>
-
-                            <p className="mt-3 text-sm leading-6 text-slate-600">
-                              {getRevenueNextStep(record)}
-                            </p>
-
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {issues.slice(0, 3).map((issue) => (
-                                <StatusBadge
-                                  key={issue.label}
-                                  tone={issue.tone}
-                                >
-                                  {issue.label}
-                                </StatusBadge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Amount
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatCurrency(record.amount)}
-                            </p>
-
-                            <p className="mt-3 text-xs font-medium text-slate-500">
-                              Source
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {record.source || "Not set"}
-                            </p>
-                          </div>
-
-                          <div>
-                            <p className="text-xs font-medium text-slate-500">
-                              Date
-                            </p>
-                            <p className="mt-1 text-sm font-semibold text-slate-700">
-                              {formatDateOnly(record.sale_date)}
-                            </p>
-
-                            <p className="mt-3 text-xs font-medium text-slate-500">
-                              Payment
-                            </p>
-                            <div className="mt-1">
-                              <StatusBadge
-                                tone={getRevenueTone(record.payment_status)}
-                              >
-                                {record.payment_status || "Not set"}
-                              </StatusBadge>
-                            </div>
-                          </div>
-
-                          <div className="md:text-right">
-                            <Link
-                              href={`/sales/${record.id}/edit`}
-                              className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Open
-                            </Link>
-                          </div>
+                      <div
+                        key={record.id}
+                        className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                            {record.service_type || "Revenue record"}
+                          </p>
+                          <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                            {record.source || "No source saved"}
+                            {record.sale_date ? ` · ${formatDateOnly(record.sale_date)}` : ""}
+                          </p>
                         </div>
-                      </article>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatusBadge tone={getRevenueTone(record.payment_status)}>
+                            {record.payment_status || "Not set"}
+                          </StatusBadge>
+                          {issues[0] && (
+                            <StatusBadge tone={issues[0].tone}>
+                              {issues[0].label}
+                            </StatusBadge>
+                          )}
+                          <span className="text-[12px] text-ud-muted hidden md:block">
+                            {formatCurrency(record.amount)}
+                          </span>
+                          <Link
+                            href={`/sales/${record.id}/edit`}
+                            className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                          >
+                            Open →
+                          </Link>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -615,22 +575,17 @@ export default async function RevenuePage({
                   description="Payment statuses will appear here after revenue records are added."
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {paymentGroups.map((group) => (
-                    <article
+                    <div
                       key={group.status}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
-                        <StatusBadge tone={getRevenueTone(group.status)}>
-                          {group.status}
-                        </StatusBadge>
-
-                        <p className="mt-2 font-semibold text-slate-950">
-                          {group.count} Found
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {group.count} {group.status}
                         </p>
-
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
+                        <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                           {isUnpaid(group.status)
                             ? "Revenue that still needs collection or review."
                             : isPaid(group.status)
@@ -638,26 +593,25 @@ export default async function RevenuePage({
                               : "Revenue using this payment status."}
                         </p>
                       </div>
-
-                      <div className="md:text-right">
-                        <p className="mb-2 text-xs font-medium text-slate-500">
+                      <div className="flex items-center gap-3 shrink-0">
+                        <StatusBadge tone={getRevenueTone(group.status)}>
+                          {group.status}
+                        </StatusBadge>
+                        <span className="text-[12px] text-ud-muted hidden sm:block">
                           {formatCurrency(group.amount)}
-                        </p>
-
+                        </span>
                         <Link
                           href={
                             selectedStatus === group.status
                               ? "/sales"
-                              : `/sales?status=${encodeURIComponent(
-                                  group.status,
-                                )}`
+                              : `/sales?status=${encodeURIComponent(group.status)}`
                           }
-                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                         >
-                          {selectedStatus === group.status ? "Clear" : "Review"}
+                          {selectedStatus === group.status ? "Clear" : "Review →"}
                         </Link>
                       </div>
-                    </article>
+                    </div>
                   ))}
                 </div>
               )}
@@ -673,36 +627,33 @@ export default async function RevenuePage({
                   description="Add sources to see which channels generate revenue."
                 />
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div>
                   {sourceGroups.map((group) => (
-                    <article
+                    <div
                       key={group.source}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
-                      <div>
-                        <p className="font-semibold text-slate-950">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                           {group.source}
                         </p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {group.count} records Â· {formatCurrency(group.amount)}
+                        <p className="text-[12px] text-ud-muted mt-0.5">
+                          {group.count} records · {formatCurrency(group.amount)}
                         </p>
                       </div>
-
-                      <div className="md:text-right">
+                      <div className="flex items-center gap-3 shrink-0">
                         <Link
                           href={
                             selectedSource === group.source
                               ? "/sales"
-                              : `/sales?source=${encodeURIComponent(
-                                  group.source,
-                                )}`
+                              : `/sales?source=${encodeURIComponent(group.source)}`
                           }
-                          className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                         >
-                          {selectedSource === group.source ? "Clear" : "Review"}
+                          {selectedSource === group.source ? "Clear" : "Review →"}
                         </Link>
                       </div>
-                    </article>
+                    </div>
                   ))}
                 </div>
               )}
@@ -720,27 +671,33 @@ export default async function RevenuePage({
               description="No missing source, amount, or date issues were found."
             />
           ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-3">
+            <div>
               {cleanupGroups.map((item) => (
-                <Link
+                <div
                   key={item.id}
-                  href={item.href}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4 hover:bg-white"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                      {item.title}
+                    </p>
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
+                      {item.detail}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                       {item.count}
                     </span>
+                    <Link
+                      href={item.href}
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
+                    >
+                      Review →
+                    </Link>
                   </div>
-
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {item.title}
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {item.detail}
-                  </p>
-                </Link>
+                </div>
               ))}
             </div>
           )}

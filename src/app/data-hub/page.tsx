@@ -626,14 +626,14 @@ export default async function DataHubPage() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/imports"
-                className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
               >
                 Import data
               </Link>
 
               <Link
                 href="/workspace"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
               >
                 Home
               </Link>
@@ -682,41 +682,33 @@ export default async function DataHubPage() {
                 description="No major cleanup issues were found across the workspace."
               />
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
                 {activeCleanupItems.map((item) => (
-                  <article
+                  <div
                     key={item.id}
-                    className="grid gap-4 p-4 md:grid-cols-[130px_1fr_90px_90px] md:items-center"
+                    className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                   >
-                    <div>
-                      <StatusBadge tone={item.tone}>{item.area}</StatusBadge>
-                    </div>
-
-                    <div>
-                      <p className="font-semibold text-slate-950">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                      <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                         {item.detail}
                       </p>
                     </div>
-
-                    <div className="md:text-right">
-                      <p className="text-lg font-semibold text-slate-950">
+                    <div className="flex items-center gap-3 shrink-0">
+                      <StatusBadge tone={item.tone}>{item.area}</StatusBadge>
+                      <span className="rounded-full bg-ud-surface-sunk px-3 py-1 text-xs font-semibold text-ud-muted">
                         {item.count}
-                      </p>
-                      <p className="text-xs text-slate-500">records</p>
-                    </div>
-
-                    <div className="md:text-right">
+                      </span>
                       <Link
                         href={item.href}
-                        className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                       >
-                        Review
+                        Review →
                       </Link>
                     </div>
-                  </article>
+                  </div>
                 ))}
               </div>
             )}
@@ -726,44 +718,35 @@ export default async function DataHubPage() {
             title="Modules"
             description="Record count and cleanup pressure by area."
           >
-            <div className="divide-y divide-slate-100">
+            <div>
               {moduleSummaries.map((module) => (
-                <article
+                <div
                   key={module.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-950">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                       {module.title}
                     </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                       {module.detail}
                     </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <StatusBadge
-                        tone={module.count > 0 ? "success" : "neutral"}
-                      >
-                        {module.count} records
-                      </StatusBadge>
-
-                      <StatusBadge
-                        tone={module.issues > 0 ? "warning" : "success"}
-                      >
-                        {module.issues} issues
-                      </StatusBadge>
-                    </div>
                   </div>
-
-                  <div className="md:text-right">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusBadge tone={module.count > 0 ? "success" : "neutral"}>
+                      {module.count} records
+                    </StatusBadge>
+                    <StatusBadge tone={module.issues > 0 ? "warning" : "success"}>
+                      {module.issues} issues
+                    </StatusBadge>
                     <Link
                       href={module.href}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                     >
-                      Open
+                      Open →
                     </Link>
                   </div>
-                </article>
+                </div>
               ))}
             </div>
           </SectionCard>
@@ -779,21 +762,23 @@ export default async function DataHubPage() {
               description="Once issue groups reach zero, they will appear here."
             />
           ) : (
-            <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">
+            <div>
               {cleanCleanupItems.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0"
                 >
-                  <StatusBadge tone="success">{item.label}</StatusBadge>
-
-                  <p className="mt-3 font-semibold text-slate-950">
-                    {item.title}
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    No records currently need this cleanup.
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                      {item.title}
+                    </p>
+                    <p className="text-[12px] text-ud-muted mt-0.5">
+                      No records currently need this cleanup.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusBadge tone="success">{item.label}</StatusBadge>
+                  </div>
                 </div>
               ))}
             </div>
@@ -810,38 +795,33 @@ export default async function DataHubPage() {
               description="Import data or add records manually to start building the workspace."
             />
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div>
               {recentRecords.map((record) => (
-                <article
+                <div
                   key={record.id}
-                  className="grid gap-3 p-4 md:grid-cols-[120px_1fr_120px_90px] md:items-center"
+                  className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                 >
-                  <div>
-                    <StatusBadge tone="neutral">{record.type}</StatusBadge>
-                  </div>
-
-                  <div>
-                    <p className="font-semibold text-slate-950">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">
                       {record.title}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="text-[12px] text-ud-muted mt-0.5 truncate">
                       {record.detail}
                     </p>
                   </div>
-
-                  <p className="text-sm font-medium text-slate-500 md:text-right">
-                    {formatTimestampDate(record.date)}
-                  </p>
-
-                  <div className="md:text-right">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusBadge tone="neutral">{record.type}</StatusBadge>
+                    <span className="text-[12px] text-ud-muted hidden sm:block">
+                      {formatTimestampDate(record.date)}
+                    </span>
                     <Link
                       href={record.href}
-                      className="inline-flex rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="text-[12px] font-semibold text-[#4A3FA8] hover:underline"
                     >
-                      Open
+                      Open →
                     </Link>
                   </div>
-                </article>
+                </div>
               ))}
             </div>
           )}
