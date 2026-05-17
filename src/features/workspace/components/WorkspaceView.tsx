@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { StatStrip } from "@/components/ui/StatStrip";
-import { Pill } from "@/components/ui/Pill";
+import { StatCard } from "@/components/ui/StatCard";
 import { Card } from "@/components/ui/Card";
 import { AiBriefCard } from "@/features/workspace/AiBriefCard";
 import { RevenueChartCard } from "@/features/workspace/RevenueChartCard";
@@ -224,34 +223,12 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         description={profile.dailyFocus}
       />
 
-      <StatStrip
-        items={[
-          {
-            label: "Unpaid revenue",
-            value: formatCurrency(unpaidRevenueValue),
-            helper: unpaidRevenueValue > 0 ? `${unpaidRevenue.length} outstanding` : "All clear",
-            tone: unpaidRevenueValue > 0 ? "danger" : "default",
-          },
-          {
-            label: `Open ${leadPlural}`,
-            value: openLeads.length,
-            helper: formatCurrency(openPipelineValue),
-            tone: "default",
-          },
-          {
-            label: `Active ${jobPlural}`,
-            value: activeWork.length,
-            helper: formatCurrency(activeWorkValue),
-            tone: "default",
-          },
-          {
-            label: "Follow-ups due",
-            value: followUpSchedule.length,
-            helper: "Manual + opportunity",
-            tone: followUpSchedule.length > 0 ? "warning" : "default",
-          },
-        ]}
-      />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard label="Unpaid revenue" value={formatCurrency(unpaidRevenueValue)} helper={unpaidRevenueValue > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"} tone={unpaidRevenueValue > 0 ? "danger" : "default"} />
+        <StatCard label={`Open ${leadPlural}`} value={openLeads.length} helper={formatCurrency(openPipelineValue)} tone="default" />
+        <StatCard label={`Active ${jobPlural}`} value={activeWork.length} helper={formatCurrency(activeWorkValue)} tone="default" />
+        <StatCard label="Follow-ups due" value={followUpSchedule.length} helper="Manual + opportunity" tone={followUpSchedule.length > 0 ? "warning" : "default"} />
+      </div>
 
       {/* Two-column grid */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-[24px] items-start">
@@ -288,30 +265,27 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 {visitsToShow.map((job) => {
                   const customer = job.customer_id ? customerById.get(job.customer_id) : null;
                   const tone = getWorkTone(job.status);
-                  const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
-                    tone === "success" ? "success" :
-                    tone === "warning" ? "warning" :
-                    tone === "danger" ? "danger" :
-                    "neutral";
                   return (
                     <Link
                       key={job.id}
                       href={`/jobs/${job.id}/edit`}
-                      className="flex items-start gap-3 px-5 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
+                      className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
                     >
+                      <div className={`h-2 w-2 shrink-0 rounded-full ${
+                        tone === "danger" ? "bg-red-500" :
+                        tone === "warning" ? "bg-amber-500" :
+                        tone === "success" ? "bg-emerald-500" : "bg-[#c5bfb5]"
+                      }`} />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-[13px] font-semibold text-ud-ink truncate">
-                            {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
-                          </p>
-                          <Pill tone={pillTone}>{job.status || "Active"}</Pill>
-                        </div>
+                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
+                          {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
+                        </p>
                         <p className="text-[12px] text-ud-muted mt-0.5">
                           {customer?.name || "No customer linked"}
                         </p>
                       </div>
                       {job.job_value != null && (
-                        <span className="udv2-num text-[12.5px] font-semibold text-ud-ink shrink-0">
+                        <span className="udv2-num text-[12px] font-semibold text-[#4A3FA8] shrink-0">
                           {formatCurrency(job.job_value)}
                         </span>
                       )}
@@ -343,26 +317,24 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               </p>
             ) : (
               <div>
-                {priorityQueue.map((item) => {
-                  const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
-                    item.tone === "danger" ? "danger" :
-                    item.tone === "warning" ? "warning" :
-                    item.tone === "success" ? "success" :
-                    "neutral";
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className="flex items-start gap-3 px-5 py-3 border-b border-ud-soft last:border-0 hover:bg-ud-surface-soft transition-colors"
-                    >
-                      <Pill tone={pillTone} className="shrink-0 mt-0.5">{item.label}</Pill>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-ud-ink truncate">{item.title}</p>
-                        <p className="text-[11.5px] text-ud-muted mt-0.5">{item.detail}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
+                {priorityQueue.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-3.5 px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 hover:bg-ud-surface-soft transition-colors"
+                  >
+                    <div className={`h-2 w-2 shrink-0 rounded-full ${
+                      item.tone === "danger" ? "bg-red-500" :
+                      item.tone === "warning" ? "bg-amber-500" :
+                      item.tone === "success" ? "bg-emerald-500" : "bg-[#c5bfb5]"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
+                      <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
+                    </div>
+                    <span className="text-[12px] font-semibold text-[#4A3FA8] shrink-0">Open →</span>
+                  </Link>
+                ))}
               </div>
             )}
           </Card>
