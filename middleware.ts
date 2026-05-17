@@ -1,12 +1,34 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Runs on every request to attach Clerk auth context to headers.
-// Route-level protection is handled per-page via getCurrentCompany() / requireSubscription().
-export default clerkMiddleware();
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/signup(.*)",
+  "/login(.*)",
+  "/subscribe(.*)",
+  "/checkout(.*)",
+  "/pricing(.*)",
+  "/docs(.*)",
+  "/terms(.*)",
+  "/privacy(.*)",
+  "/preview(.*)",
+  "/waitlist(.*)",
+  "/forgot-password(.*)",
+  "/reset-password(.*)",
+  "/api/stripe/webhook(.*)",
+  "/api/leads/ingest(.*)",
+  "/api/cron/(.*)",
+]);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|css|woff|woff2|ttf|otf)$).*)",
   ],
 };
