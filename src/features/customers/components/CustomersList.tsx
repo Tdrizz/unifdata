@@ -9,7 +9,9 @@ import { Pill } from "@/components/ui/Pill";
 import { Display } from "@/components/ui/Display";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { cn, formatCurrency } from "@/lib/utils";
+import { CustomerCreateForm } from "./CustomerCreateForm";
 import type { CustomerRow } from "../types";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { Database } from "@/types/db";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -21,6 +23,7 @@ type Props = {
   jobs?: JobRow[];
   leads?: LeadRow[];
   sales?: SaleRow[];
+  profile?: IndustryProfile;
 };
 
 type Filter = "all" | "open" | "missing" | "top";
@@ -88,6 +91,7 @@ export function CustomersList({
   jobs = [],
   leads = [],
   sales = [],
+  profile,
 }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
@@ -262,23 +266,12 @@ export function CustomersList({
         )}
       </Card>
 
-      {/* 4. FAB */}
-      <Link
-        href="/customers"
-        className="fixed right-[16px] bottom-[100px] z-30 flex items-center justify-center w-[50px] h-[50px] rounded-[14px] bg-ud-ink shadow-[0_10px_24px_rgba(23,22,20,0.25)]"
-      >
-        <svg
-          width={20}
-          height={20}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth={2}
-          strokeLinecap="round"
-        >
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </Link>
+      {/* 4. Inline create form */}
+      {profile && (
+        <div className="px-[14px] pb-[16px]">
+          <CustomerCreateForm profile={profile} />
+        </div>
+      )}
     </div>
   );
 }

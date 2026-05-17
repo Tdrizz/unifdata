@@ -1,12 +1,14 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCustomersPageData } from "@/features/customers/queries";
 import { CustomersList } from "@/features/customers/components/CustomersList";
 import { CustomersTableClient } from "@/features/customers/components/CustomersTableClient";
+import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
 import type { Database } from "@/types/db";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -29,6 +31,7 @@ export default async function CustomersPage({
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
   const page = Number(params.page ?? 1);
 
   // Fetch customers + related data in parallel
@@ -69,14 +72,20 @@ export default async function CustomersPage({
           description="Everyone you've sold to. Click a row to see quotes, visits, and payments."
           actions={
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm">Import</Button>
-              <Button variant="primary" size="sm">New client</Button>
+              <Link
+                href="/imports"
+                className="rounded-xl border border-ud bg-ud-surface px-4 py-2 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors"
+              >
+                Import
+              </Link>
             </div>
           }
           className="pb-5"
         />
 
-        <div>
+        <CustomerCreateForm profile={profile} />
+
+        <div className="mt-5">
           <CustomersTableClient
             customers={customers}
             jobs={jobs}
@@ -92,6 +101,7 @@ export default async function CustomersPage({
         jobs={jobs}
         leads={leads}
         sales={sales}
+        profile={profile}
       />
     </AppShell>
   );
