@@ -7,7 +7,6 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
-import { ApiKeyManager } from "./ApiKeyManager";
 import { NotificationToggles } from "./NotificationToggles";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
@@ -21,14 +20,6 @@ interface User {
   email: string;
 }
 
-interface ApiKey {
-  id: string;
-  name: string;
-  created_at: string;
-  last_used_at: string | null;
-  revoked_at: string | null;
-}
-
 interface SettingsViewProps {
   company: Company;
   user: User;
@@ -36,7 +27,6 @@ interface SettingsViewProps {
   geminiEnabled: boolean;
   members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
   currentUserRole: string | null;
-  apiKeys: ApiKey[];
   notificationPrefs: Record<string, boolean>;
 }
 
@@ -52,7 +42,6 @@ export function SettingsView({
   geminiEnabled: _geminiEnabled,
   members,
   currentUserRole,
-  apiKeys,
   notificationPrefs,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((i) =>
@@ -257,24 +246,6 @@ export function SettingsView({
               <InviteMemberForm />
             </div>
           )}
-        </div>
-
-        {/* ── API Keys ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">API Keys</div>
-            <div className="setting-section-desc">
-              Use these keys to send leads programmatically via the{" "}
-              <code style={{ fontSize: "12px", background: "var(--surface-sunk)", padding: "1px 5px", borderRadius: "4px" }}>
-                POST /api/leads/ingest
-              </code>{" "}
-              endpoint.
-            </div>
-          </div>
-          <ApiKeyManager
-            apiKeys={apiKeys}
-            canManage={currentUserRole === "owner" || currentUserRole === "admin"}
-          />
         </div>
 
         {/* ── Danger zone ── */}
