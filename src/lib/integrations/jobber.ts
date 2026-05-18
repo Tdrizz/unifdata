@@ -1,6 +1,7 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
+import { upsertMasterCustomer } from "@/lib/conflict-resolver";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import type { IntegrationSyncer, SyncResult } from "./types";
@@ -54,6 +55,38 @@ const JobberSyncer: IntegrationSyncer = {
           return [addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(", ");
         })(),
       }));
+
+      // Mirror into master_customers with Jobber-precedence conflict resolution.
+      await Promise.allSettled(
+        clients.map((c) => {
+          const addr = c.billingAddress as Record<string, string> | undefined;
+          const emails = c.emails as Record<string, unknown>[] | undefined;
+          const phones = c.phones as Record<string, unknown>[] | undefined;
+          const nameParts = String(c.name ?? "").split(" ");
+          return upsertMasterCustomer({
+            supabase,
+            source: "jobber",
+            providerCustomerId: String(c.id ?? ""),
+            payload: {
+              organization_id: companyId,
+              first_name: nameParts[0] ?? null,
+              last_name: nameParts.slice(1).join(" ") || null,
+              primary_email: String(emails?.[0]?.address ?? "") || null,
+              primary_phone: String(phones?.[0]?.number ?? "") || null,
+              service_address: addr
+                ? {
+                    street: addr.street ?? "",
+                    city: addr.city ?? "",
+                    state: addr.province ?? "",
+                    postal_code: addr.postalCode ?? "",
+                  }
+                : null,
+              jobber_client_id: String(c.id ?? ""),
+            },
+          });
+        }),
+      );
+
       const rows = await filterFreshRows({ supabase, companyId, provider: "jobber", recordType: "relationships", rows: allRows, mapping: {} });
       if (rows.length > 0) {
         const { sessionId } = await createImportSessionFromRows({

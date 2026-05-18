@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
 import { createImportSessionFromRows, filterFreshRows, type RawImportRow } from "@/lib/import-engine";
+import { upsertMasterCustomer } from "@/lib/conflict-resolver";
 import type { IntegrationSyncer, SyncResult } from "./types";
 
 // ── QuickBooks API helpers ─────────────────────────────────────────────────────
@@ -145,6 +146,33 @@ const QuickBooksSyncer: IntegrationSyncer = {
           .join(", "),
         customer_type: c.CompanyName ? "business" : "individual",
       }));
+
+      // Mirror into master_customers with QB-precedence conflict resolution.
+      await Promise.allSettled(
+        customers.map((c) =>
+          upsertMasterCustomer({
+            supabase,
+            source: "quickbooks",
+            providerCustomerId: c.Id,
+            payload: {
+              organization_id: companyId,
+              first_name: c.GivenName ?? null,
+              last_name: c.FamilyName ?? null,
+              primary_email: c.PrimaryEmailAddr?.Address ?? null,
+              primary_phone: c.PrimaryPhone?.FreeFormNumber ?? null,
+              billing_address: c.BillAddr
+                ? {
+                    line1: c.BillAddr.Line1 ?? "",
+                    city: c.BillAddr.City ?? "",
+                    state: c.BillAddr.CountrySubDivisionCode ?? "",
+                    postal_code: c.BillAddr.PostalCode ?? "",
+                  }
+                : null,
+              quickbooks_customer_id: c.Id,
+            },
+          }),
+        ),
+      );
 
       const rows = await filterFreshRows({ supabase, companyId, provider: "quickbooks", recordType: "relationships", rows: allRows, mapping });
       if (rows.length > 0) {

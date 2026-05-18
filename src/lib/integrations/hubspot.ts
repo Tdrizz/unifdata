@@ -1,6 +1,7 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
+import { upsertMasterCustomer } from "@/lib/conflict-resolver";
 import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
@@ -37,6 +38,28 @@ const HubSpotSyncer: IntegrationSyncer = {
         const name = [props.firstname, props.lastname].filter(Boolean).join(" ") || props.company || "Unknown";
         return { external_id: String(c.id ?? ""), name, email: props.email ?? "", phone: props.phone ?? "", customer_type: "contact" };
       });
+
+      // Mirror into master_customers. HubSpot owns identity fields when it has
+      // the latest updated_at; QB owns billing; Jobber owns service address.
+      await Promise.allSettled(
+        contacts.map((c) => {
+          const props = (c.properties ?? {}) as Record<string, string>;
+          return upsertMasterCustomer({
+            supabase,
+            source: "hubspot",
+            providerCustomerId: String(c.id ?? ""),
+            payload: {
+              organization_id: companyId,
+              first_name: props.firstname ?? null,
+              last_name: props.lastname ?? null,
+              primary_email: props.email ?? null,
+              primary_phone: props.phone ?? null,
+              hubspot_contact_id: String(c.id ?? ""),
+            },
+          });
+        }),
+      );
+
       const rows = await filterFreshRows({ supabase, companyId, provider: "hubspot", recordType: "relationships", rows: allRows, mapping: {} });
       if (rows.length > 0) {
         const { sessionId } = await createImportSessionFromRows({
