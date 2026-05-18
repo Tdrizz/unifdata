@@ -1,21 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { Pagination } from "@/components/ui/Pagination";
-import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
-import { isCompleteWork, isCancelledWork, isUnpaid, getWorkTone, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
-import { JobCreateForm } from "./JobCreateForm";
-import { JobsCalendarToggle } from "./JobsCalendarToggle";
-import type { CalendarEvent } from "@/components/WeeklyCalendar";
-
-const PAGE_SIZE = 50;
 
 type Props = {
   jobs: JobListRow[];
@@ -26,428 +14,153 @@ type Props = {
   selectedStage: string;
 };
 
-function getStageExplanation(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("scheduled")) {
-    return { meaning: "Planned work that has not started yet." };
-  }
-
-  if (normalized.includes("active") || normalized.includes("progress")) {
-    return { meaning: "Work currently being delivered." };
-  }
-
-  if (
-    normalized.includes("complete") ||
-    normalized.includes("done") ||
-    normalized.includes("finished")
-  ) {
-    return { meaning: "Finished work that should be checked against payment." };
-  }
-
-  if (normalized.includes("cancel")) {
-    return { meaning: "Work that is no longer moving forward." };
-  }
-
-  return { meaning: "Work using a custom or imported stage." };
+function getWeekDays(today: Date): { name: string; num: number; date: Date }[] {
+  const dow = today.getDay(); // 0=Sun
+  const mondayOffset = dow === 0 ? -6 : 1 - dow;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+  const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  return names.map((name, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return { name, num: d.getDate(), date: d };
+  });
 }
 
-function getWorkNextStep(work: JobListRow) {
-  if (!work.customer_id) {
-    return "Link this work to the person or business it belongs to.";
-  }
-
-  if (work.job_value === null || work.job_value === undefined) {
-    return "Add a work value so this shows correctly in reporting.";
-  }
-
-  if (!work.start_date && !isCompleteWork(work.status)) {
-    return "Add a start date so the team knows when this work begins.";
-  }
-
-  if (isCompleteWork(work.status) && isUnpaid(work.paid_status)) {
-    return "Work is complete, but payment still needs attention.";
-  }
-
-  if (!work.lead_id) {
-    return "Link this work to the opportunity it came from if one exists.";
-  }
-
-  if (isCancelledWork(work.status)) {
-    return "This work is cancelled. Keep it out of active planning.";
-  }
-
-  if (isCompleteWork(work.status)) {
-    return "This work is complete. Confirm payment and reporting are correct.";
-  }
-
-  return "Keep this work updated as it moves toward completion.";
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-function getWorkIssues(work: JobListRow) {
-  const issues: { label: string; tone: "success" | "warning" | "danger" | "neutral" }[] = [];
-
-  if (!work.customer_id) {
-    issues.push({ label: "Link person", tone: "warning" });
-  }
-
-  if (!work.lead_id) {
-    issues.push({ label: "No opportunity", tone: "neutral" });
-  }
-
-  if (work.job_value === null || work.job_value === undefined) {
-    issues.push({ label: "Add value", tone: "neutral" });
-  }
-
-  if (!work.start_date && !isCompleteWork(work.status)) {
-    issues.push({ label: "Add start date", tone: "neutral" });
-  }
-
-  if (isCompleteWork(work.status) && isUnpaid(work.paid_status)) {
-    issues.push({ label: "Payment needed", tone: "danger" });
-  }
-
-  if (issues.length === 0) {
-    issues.push({ label: "Looks clean", tone: "success" });
-  }
-
-  return issues;
+function formatJobDate(startDate: string | null | undefined, today: Date): { label: string; isToday: boolean } {
+  if (!startDate) return { label: "—", isToday: false };
+  const d = new Date(startDate);
+  if (isSameDay(d, today)) return { label: "Today", isToday: true };
+  return {
+    label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    isToday: false,
+  };
 }
 
-export function JobsList({ jobs, count, customers, leads, profile, selectedStage }: Props) {
+function statusBadgeClass(status: string | null) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("progress") || s.includes("active")) return "badge badge-info";
+  if (s.includes("complete") || s.includes("done")) return "badge badge-success";
+  if (s.includes("cancel")) return "badge badge-neutral";
+  if (s.includes("quote") || s.includes("pending")) return "badge badge-warning";
+  return "badge badge-neutral";
+}
+
+export function JobsList({ jobs, count, customers, profile }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
-  const leadById = new Map(leads.map((l) => [l.id, l]));
+  const today = new Date();
+  const weekDays = getWeekDays(today);
 
-  const activeWork = jobs.filter(
-    (work) => !isCompleteWork(work.status) && !isCancelledWork(work.status),
+  const weekStart = weekDays[0].date;
+  const weekEnd = weekDays[6].date;
+  const weekLabel = `Week of ${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}–${weekEnd.getDate()}`;
+
+  const countsByDay = weekDays.map(({ date }) =>
+    jobs.filter((j) => j.start_date && isSameDay(new Date(j.start_date), date)).length
   );
-  const completedWork = jobs.filter((work) => isCompleteWork(work.status));
-  const unpaidWork = jobs.filter((work) => isUnpaid(work.paid_status));
-  const missingValue = jobs.filter((work) => work.job_value === null || work.job_value === undefined);
-  const missingPerson = jobs.filter((work) => !work.customer_id);
-  const missingOpportunity = jobs.filter((work) => !work.lead_id);
 
-  const activeValue = activeWork.reduce((sum, work) => sum + Number(work.job_value || 0), 0);
-  const completedValue = completedWork.reduce((sum, work) => sum + Number(work.job_value || 0), 0);
-  const unpaidValue = unpaidWork.reduce((sum, work) => sum + Number(work.job_value || 0), 0);
+  const todayCount = countsByDay[weekDays.findIndex((d) => isSameDay(d.date, today))] ?? 0;
+  const totalThisWeek = countsByDay.reduce((a, b) => a + b, 0);
 
-  const cleanupGroups = [
-    {
-      id: "missing-person",
-      label: "Link person",
-      title: "Work needs people or businesses",
-      detail: "Work records should usually connect to whoever the work is for.",
-      count: missingPerson.length,
-      href: "/jobs",
-    },
-    {
-      id: "missing-opportunity",
-      label: "Link opportunity",
-      title: "Work needs opportunity links",
-      detail: "Linking work to opportunities helps track the full lifecycle.",
-      count: missingOpportunity.length,
-      href: "/jobs",
-    },
-    {
-      id: "missing-value",
-      label: "Add value",
-      title: "Work records need values",
-      detail: "Work value helps reporting reflect active and completed work.",
-      count: missingValue.length,
-      href: "/jobs",
-    },
-  ].filter((item) => item.count > 0);
-
-  const prioritizedWork = [...jobs]
-    .sort((a, b) => {
-      const aActive = !isCompleteWork(a.status) && !isCancelledWork(a.status);
-      const bActive = !isCompleteWork(b.status) && !isCancelledWork(b.status);
-      if (aActive !== bActive) return aActive ? -1 : 1;
-      const aUnpaid = isUnpaid(a.paid_status);
-      const bUnpaid = isUnpaid(b.paid_status);
-      if (aUnpaid !== bUnpaid) return aUnpaid ? -1 : 1;
-      return Number(b.job_value || 0) - Number(a.job_value || 0);
-    })
-    .slice(0, 25);
-
-  const visibleWork = selectedStage
-    ? prioritizedWork.filter((work) => (work.status || "Scheduled") === selectedStage)
-    : prioritizedWork;
-
-  const stageGroups = Array.from(
-    jobs.reduce((map, work) => {
-      const status = work.status || "Scheduled";
-      const current = map.get(status) || { status, count: 0, unpaidCount: 0 };
-      current.count += 1;
-      if (isUnpaid(work.paid_status)) current.unpaidCount += 1;
-      map.set(status, current);
-      return map;
-    }, new Map<string, { status: string; count: number; unpaidCount: number }>()),
-  )
-    .map(([, group]) => group)
-    .sort((a, b) => b.count - a.count);
-
-  const calendarEvents: CalendarEvent[] = jobs
-    .filter((job) => Boolean(job.start_date))
-    .map((job) => {
-      const date = new Date(job.start_date!);
-      // Date-only strings parse as midnight UTC — default to 9am so events are visible
-      const hour = job.start_date!.length === 10 ? 9 : date.getHours();
-      return {
-        id: job.id,
-        title: job.service_type ?? job.id,
-        date: job.start_date!,
-        hour,
-        color: "bg-blue-500",
-        href: `/jobs/${job.id}/edit`,
-      };
-    });
+  const sorted = [...jobs].sort((a, b) => {
+    if (!a.start_date) return 1;
+    if (!b.start_date) return -1;
+    return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+  });
 
   return (
-    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
-      <PageHeader
-        eyebrow={profile.labels.jobPlural}
-        title={`Track ${profile.labels.jobPlural.toLowerCase()} and active delivery`}
-        description={`Use this page to see what ${profile.labels.jobPlural.toLowerCase()} are planned, active, complete, cancelled, or still need payment.`}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/api/export/csv?table=jobs"
-              download
-              className="inline-flex items-center gap-1 rounded-lg border border-ud bg-ud-surface px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
-            >
-              Export CSV
-            </a>
-
-            <Link
-              href="/leads"
-              className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
-            >
-              Opportunities
-            </Link>
-            <Link
-              href="/imports"
-              className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
-            >
-              Import data
-            </Link>
+    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <div className="page-eyebrow">Visits</div>
+          <div className="page-title">Scheduled visits</div>
+          <div className="page-desc">
+            {weekLabel} · {totalThisWeek} {totalThisWeek === 1 ? "visit" : "visits"} scheduled{todayCount > 0 ? ` · ${todayCount} today` : ""}
           </div>
-        }
-      />
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Active work"
-          value={activeWork.length}
-          helper={`${formatCurrency(activeValue)} still in progress or scheduled`}
-          tone={activeWork.length > 0 ? "warning" : "default"}
-        />
-        <StatCard
-          label="Completed work"
-          value={formatCurrency(completedValue)}
-          helper={`${completedWork.length} finished records`}
-          tone={completedValue > 0 ? "positive" : "default"}
-        />
-        <StatCard
-          label="Payment needed"
-          value={formatCurrency(unpaidValue)}
-          helper={`${unpaidWork.length} unpaid or partially paid records`}
-          tone={unpaidValue > 0 ? "danger" : "positive"}
-        />
-        <StatCard
-          label="Cleanup issues"
-          value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)}
-          helper="Missing person, opportunity, or work value"
-          tone={cleanupGroups.length > 0 ? "warning" : "positive"}
-        />
-      </section>
-
-      <JobCreateForm customers={customers} leads={leads} />
-
-      <div>
-        <SearchInput placeholder={`Search ${profile.labels.jobPlural.toLowerCase()}…`} />
+        </div>
+        <div className="page-actions">
+          <Link href="/jobs" className="btn btn-ghost">Month view</Link>
+          <Link href="/jobs" className="btn btn-primary">
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Log visit
+          </Link>
+        </div>
       </div>
 
-      <JobsCalendarToggle calendarEvents={calendarEvents}>
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
-        <SectionCard
-          title={selectedStage ? `${selectedStage} work` : "Work queue"}
-          description={
-            selectedStage
-              ? `Showing work records currently marked ${selectedStage}.`
-              : "The work that needs operational attention first."
-          }
-        >
-          {visibleWork.length === 0 ? (
-            <EmptyState
-              title={selectedStage ? "No work in this stage" : "No work yet"}
-              description={
-                selectedStage
-                  ? "No records match this selected work stage."
-                  : "Add work manually or import work records from CSV or Google Sheets."
-              }
-            />
-          ) : (
-            <>
-              {selectedStage && (
-                <div className="flex items-center justify-between gap-3 border-b border-ud p-4">
-                  <p className="text-sm font-semibold text-ud-muted">
-                    Filtered by stage: {selectedStage}
-                  </p>
-                  <Link
-                    href="/jobs"
-                    className="rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink"
-                  >
-                    Clear filter
-                  </Link>
-                </div>
+      {/* Week strip */}
+      <div className="week-strip">
+        {weekDays.map(({ name, num, date }, i) => {
+          const isToday = isSameDay(date, today);
+          const cnt = countsByDay[i];
+          return (
+            <div key={name} className={`week-day${isToday ? " today" : ""}`}>
+              <div className="week-day-name">{name}</div>
+              <div className="week-day-num">{num}</div>
+              {cnt > 0 ? (
+                <>
+                  <div className="week-day-count" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                    {cnt} {cnt === 1 ? "visit" : "visits"}
+                  </div>
+                  <div className="week-day-dot" />
+                </>
+              ) : (
+                <div className="week-day-count">—</div>
               )}
-
-              <div>
-                {visibleWork.map((work) => {
-                  const customer = work.customer_id ? customerById.get(work.customer_id) : null;
-                  const lead = work.lead_id ? leadById.get(work.lead_id) : null;
-                  const issues = getWorkIssues(work);
-
-                  return (
-                    <Link key={work.id} href={`/jobs/${work.id}/edit`} className="block px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft">
-                      <div className="grid gap-4 md:grid-cols-[1fr_130px_160px] md:items-start">
-                        <div>
-                          <p className="font-semibold text-ud-ink">
-                            {work.service_type || "Untitled work"}
-                          </p>
-                          <p className="mt-1 text-sm text-ud-faint">
-                            {customer?.name || lead?.service_requested || "No person or opportunity linked"}
-                          </p>
-                          <p className="mt-3 text-sm leading-6 text-ud-muted">
-                            {getWorkNextStep(work)}
-                          </p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {issues.slice(0, 3).map((issue) => (
-                              <StatusBadge key={issue.label} tone={issue.tone}>
-                                {issue.label}
-                              </StatusBadge>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-ud-faint">Value</p>
-                          <p className="mt-1 text-sm font-semibold text-ud-muted">
-                            {formatCurrency(work.job_value)}
-                          </p>
-                          <p className="mt-3 text-xs font-medium text-ud-faint">Payment</p>
-                          <div className="mt-1">
-                            <StatusBadge tone={getRevenueTone(work.paid_status)}>
-                              {work.paid_status || "Not set"}
-                            </StatusBadge>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-ud-faint">Start</p>
-                          <p className="mt-1 text-sm font-semibold text-ud-muted">
-                            {formatDateOnly(work.start_date)}
-                          </p>
-                          <p className="mt-3 text-xs font-medium text-ud-faint">Stage</p>
-                          <div className="mt-1">
-                            <StatusBadge tone={getWorkTone(work.status)}>
-                              {work.status || "Scheduled"}
-                            </StatusBadge>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Work stages"
-          description="Use this to filter the work queue by stage."
-        >
-          {stageGroups.length === 0 ? (
-            <EmptyState
-              title="No work stages yet"
-              description="Work stages will appear here after records are added."
-            />
-          ) : (
-            <div>
-              {stageGroups.map((group) => {
-                const explanation = getStageExplanation(group.status);
-                return (
-                  <article
-                    key={group.status}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center"
-                  >
-                    <div>
-                      <StatusBadge tone={getWorkTone(group.status)}>
-                        {group.status}
-                      </StatusBadge>
-                      <p className="mt-2 font-semibold text-ud-ink">{group.count} Found</p>
-                      <p className="mt-1 text-sm leading-6 text-ud-faint">{explanation.meaning}</p>
-                      {group.unpaidCount > 0 && (
-                        <span className="mt-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                          {group.unpaidCount} need payment review
-                        </span>
-                      )}
-                    </div>
-                    <div className="md:text-right">
-                      <Link
-                        href={
-                          selectedStage === group.status
-                            ? "/jobs"
-                            : `/jobs?stage=${encodeURIComponent(group.status)}`
-                        }
-                        className="inline-flex rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft"
-                      >
-                        {selectedStage === group.status ? "Clear" : "Review"}
-                      </Link>
-                    </div>
-                  </article>
-                );
-              })}
             </div>
-          )}
-        </SectionCard>
-      </section>
+          );
+        })}
+      </div>
 
-      <SectionCard
-        title="Work health"
-        description="Cleanup issues that make work reporting less reliable."
-      >
-        {cleanupGroups.length === 0 ? (
-          <EmptyState
-            title="Work records look clean"
-            description="No missing people, opportunities, or values were found."
-          />
-        ) : (
-          <div className="grid gap-4 p-4 md:grid-cols-3">
-            {cleanupGroups.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4 hover:bg-ud-surface"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="inline-flex items-center rounded-[6px] border border-[rgba(23,22,20,0.08)] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted">
-                    {item.count}
-                  </span>
-                </div>
-                <p className="mt-3 font-semibold text-ud-ink">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <Pagination count={count} pageSize={PAGE_SIZE} />
-      </JobsCalendarToggle>
+      {/* Table */}
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Service</th>
+              <th>Date &amp; time</th>
+              <th>Location</th>
+              <th>Assigned to</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                  No visits scheduled. <Link href="/jobs/new" className="td-link">Log a visit →</Link>
+                </td>
+              </tr>
+            ) : (
+              sorted.map((job) => {
+                const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+                const { label: dateLabel, isToday } = formatJobDate(job.start_date, today);
+                return (
+                  <tr key={job.id}>
+                    <td className="td-primary">{customer?.name || "No client"}</td>
+                    <td>{job.service_type || "—"}</td>
+                    <td style={isToday ? { fontWeight: 600, color: "var(--ink)" } : undefined} className={isToday ? undefined : "td-muted"}>
+                      {dateLabel}
+                    </td>
+                    <td className="td-muted">—</td>
+                    <td className="td-muted">—</td>
+                    <td><span className={statusBadgeClass(job.status)}>{job.status || "Scheduled"}</span></td>
+                    <td><Link href={`/jobs/${job.id}/edit`} className="td-link">View →</Link></td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

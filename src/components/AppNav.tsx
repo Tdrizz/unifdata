@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 // ── Icons (16px, strokeWidth 1.7) ──────────────────────────────────────────
 function IconHome() {
@@ -62,10 +61,9 @@ function IconSparkles() {
 function IconBarChart() {
   return (
     <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="20" x2="12" y2="10" />
-      <line x1="18" y1="20" x2="18" y2="4" />
-      <line x1="6" y1="20" x2="6" y2="16" />
-      <line x1="2" y1="20" x2="22" y2="20" />
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </svg>
   );
 }
@@ -110,11 +108,11 @@ function buildNavGroups(profile: ReturnType<typeof getIndustryProfile>): NavGrou
     {
       label: "Workspace",
       items: [
-        { href: "/workspace",  label: "Today",                                      icon: IconHome },
-        { href: "/customers",  label: profile.labels.customerPlural,                icon: IconUsers },
-        { href: "/crm",        label: "Pipeline",                                   icon: IconBriefcase },
-        { href: "/jobs",       label: profile.labels.jobPlural ?? "Visits",         icon: IconCalendar },
-        { href: "/sales",      label: profile.labels.salePlural ?? "Revenue",       icon: IconDollar },
+        { href: "/workspace",  label: "Today",                                       icon: IconHome },
+        { href: "/customers",  label: profile.labels.customerPlural,                 icon: IconUsers },
+        { href: "/crm",        label: "Pipeline",                                    icon: IconBriefcase },
+        { href: "/jobs",       label: profile.labels.jobPlural ?? "Visits",          icon: IconCalendar },
+        { href: "/sales",      label: profile.labels.salePlural ?? "Revenue",        icon: IconDollar },
         { href: "/follow-ups", label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
       ],
     },
@@ -147,74 +145,29 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
   const groups = buildNavGroups(profile);
 
   return (
-    <div className="flex flex-col">
-      {/* ⌘K search trigger */}
-      <div className="px-[14px] pb-[12px]">
-        <button
-          type="button"
-          onClick={() => {
-            window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
-          }}
-          className="flex w-full items-center gap-2 rounded-[8px] bg-white/[0.04] border border-white/[0.07] px-[10px] py-[7px] text-[12.5px] text-[#3d5166] hover:bg-white/[0.07] transition-colors"
-        >
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <span className="flex-1 text-left">Search workspace…</span>
-          <kbd className="font-mono text-[10px] bg-white/[0.06] border border-white/[0.08] rounded-[4px] px-[5px] py-[2px] text-[#3d5166] leading-none">⌘K</kbd>
-        </button>
-      </div>
-
-      {/* Nav groups */}
+    <>
       {groups.map((group) => (
-        <div key={group.label} className="mb-2">
-          <p className="mb-1 px-[9px] text-[10px] font-bold uppercase tracking-eyebrow text-[#3d5166]">
-            {group.label}
-          </p>
-          <div className="space-y-0.5">
-            {group.items.map((item) => {
-              const active = isActive(pathname, item.href);
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-[9px] px-[9px] py-[7px] rounded-[8px] border transition-all text-[13px]",
-                    active
-                      ? "bg-white/[0.08] text-[#f0f4f8] border-white/[0.07] font-semibold"
-                      : cn(
-                          "border-transparent font-medium hover:bg-white/[0.05]",
-                          item.accent ? "text-[#8B80E0]" : "text-[#8b98a8]",
-                        ),
-                  )}
-                >
-                  <span className={cn(
-                    "shrink-0",
-                    active ? "text-[#f0f4f8]" : item.accent ? "text-[#8B80E0]" : "text-[#3d5166]",
-                  )}>
-                    <Icon />
-                  </span>
-                  <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className={cn(
-                      "udv2-num text-[10.5px] font-bold rounded-[4px] px-[5px] py-[1px] leading-none",
-                      active ? "bg-white/[0.08] text-[#8b98a8]" : "text-[#3d5166]",
-                    )}>
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+        <div key={group.label} className="nav-group">
+          <div className="nav-group-label">{group.label}</div>
+          {group.items.map((item) => {
+            const active = isActive(pathname, item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn("nav-item", active && "active", item.accent && "accent")}
+              >
+                <span className="nav-icon"><Icon /></span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.badge && (
+                  <span className="nav-badge">{item.badge}</span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       ))}
-
-      {/* Theme toggle */}
-      <div className="mt-1 px-[9px]">
-        <ThemeToggle />
-      </div>
-    </div>
+    </>
   );
 }

@@ -1,10 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { StatCard } from "@/components/ui/StatCard";
-import { Card } from "@/components/ui/Card";
-import { AiBriefCard } from "@/features/workspace/AiBriefCard";
 import {
   formatDateOnly,
   parseDateOnly,
@@ -58,27 +54,30 @@ function getDayLabel() {
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
+function dotClass(tone: string) {
+  if (tone === "danger") return "queue-dot queue-dot-danger";
+  if (tone === "warning") return "queue-dot queue-dot-warning";
+  if (tone === "success") return "queue-dot queue-dot-success";
+  return "queue-dot queue-dot-neutral";
+}
+
+function dueClass(tone: string) {
+  if (tone === "danger") return "queue-due queue-due-danger";
+  if (tone === "warning") return "queue-due queue-due-warning";
+  return "queue-due queue-due-ok";
+}
+
 type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
 
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const activeWork = jobs.filter((work) =>
-    isRecentActiveWork(work.status, work.start_date),
-  );
-  const unpaidRevenue = sales.filter((record) =>
-    isUnpaid(record.payment_status),
-  );
+  const activeWork = jobs.filter((work) => isRecentActiveWork(work.status, work.start_date));
+  const unpaidRevenue = sales.filter((record) => isUnpaid(record.payment_status));
 
-  const openPipelineValue = openLeads.reduce(
-    (sum, lead) => sum + Number(lead.estimated_value || 0),
-    0,
-  );
-  const unpaidRevenueValue = unpaidRevenue.reduce(
-    (sum, record) => sum + Number(record.amount || 0),
-    0,
-  );
+  const openPipelineValue = openLeads.reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0);
+  const unpaidRevenueValue = unpaidRevenue.reduce((sum, record) => sum + Number(record.amount || 0), 0);
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -90,7 +89,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     .filter((action) => isOpenFollowUp(action.status))
     .map((action) => ({
       id: `manual-follow-up-${action.id}`,
-      label: "Manual follow-up",
+      label: getFollowUpLabel(action.due_date),
       title: action.message || "Follow up",
       detail: getFollowUpLabel(action.due_date),
       href: `/follow-ups/${action.id}/edit`,
@@ -103,7 +102,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     .filter((lead) => Boolean(lead.next_follow_up_date))
     .map((lead) => ({
       id: `opportunity-follow-up-${lead.id}`,
-      label: `${profile.labels.leadSingular} follow-up`,
+      label: getFollowUpLabel(lead.next_follow_up_date),
       title: lead.service_requested || "Follow up on opportunity",
       detail: getFollowUpLabel(lead.next_follow_up_date),
       href: `/leads/${lead.id}/edit`,
@@ -116,7 +115,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     id: `payment-${record.id}`,
     label: "Payment needed",
     title: record.service_type || formatCurrency(record.amount),
-    detail: `${formatCurrency(record.amount)} marked ${record.payment_status || "unpaid"}`,
+    detail: `${formatCurrency(record.amount)} unpaid`,
     href: `/sales/${record.id}/edit`,
     tone: "danger" as const,
     priority: 1,
@@ -132,17 +131,15 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
   const cleanupItems: QueueItem[] =
     dataIssueCount > 0
-      ? [
-          {
-            id: "data-cleanup-summary",
-            label: "Data cleanup",
-            title: `${dataIssueCount} records need attention`,
-            detail: "Missing contact info, values, or links. Review in Data Hub.",
-            href: "/data-hub",
-            tone: "neutral" as const,
-            priority: 5,
-          },
-        ]
+      ? [{
+          id: "data-cleanup-summary",
+          label: "Data cleanup",
+          title: `${dataIssueCount} records need attention`,
+          detail: "Missing contact info, values, or links.",
+          href: "/data-hub",
+          tone: "neutral" as const,
+          priority: 5,
+        }]
       : [];
 
   const priorityQueue = [
@@ -164,186 +161,192 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     })
     .slice(0, 5);
 
-  const leadPlural = profile.labels.leadPlural;
-  const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
+  const jobPlural = profile.labels.jobPlural;
+  const leadPlural = profile.labels.leadPlural;
 
-  const visitsToShow = activeWork.slice(0, 5);
+  const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
+  const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
   return (
-    <div className="hidden md:block space-y-6 px-6 pt-5 pb-8">
-      <PageHeader
-        eyebrow={`${dayLabel} · Operating brief`}
-        title={<>Good morning, {companyName}.</>}
-        description={profile.dailyFocus}
-        actions={
-          <div className="flex gap-2">
-            <Link href="/jobs" className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-4 py-2 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View calendar</Link>
-            <Link href="/customers" className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-4 py-2 text-[13px] font-semibold text-white hover:opacity-90">
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Quick add
-            </Link>
-          </div>
-        }
-      />
+    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <div className="page-eyebrow">{dayLabel} · Operating brief</div>
+          <div className="page-title">Good morning, {companyName}.</div>
+          <div className="page-desc">{profile.dailyFocus}</div>
+        </div>
+        <div className="page-actions">
+          <Link href="/jobs" className="btn btn-ghost">View calendar</Link>
+          <Link href="/customers" className="btn btn-primary">
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Quick add
+          </Link>
+        </div>
+      </div>
 
-      <AiBriefCard
-        eyebrow="UnifData · Daily focus"
-        body={profile.headline}
-        bullets={priorityQueue.slice(0, 3).map((item) =>
-          item.detail ? `${item.title} — ${item.detail}` : item.title
+      {/* Brief card */}
+      <div className="brief-card">
+        <div className="brief-eyebrow">AI Operating Brief</div>
+        <div className="brief-text">{profile.headline}</div>
+        {priorityQueue.length > 0 && (
+          <ul className="brief-bullets">
+            {priorityQueue.slice(0, 3).map((item) => (
+              <li key={item.id}>{item.title}{item.detail ? ` — ${item.detail}` : ""}</li>
+            ))}
+          </ul>
         )}
-      />
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatCard label="Follow-ups due" value={followUpSchedule.length} helper={followUpSchedule.length > 0 ? `${followUpSchedule.filter(i => i.priority === 0).length} overdue · ${followUpSchedule.filter(i => i.priority === 1).length} due today` : "All clear"} tone={followUpSchedule.length > 0 ? "warning" : "default"} />
-        <StatCard label={`${jobPlural} today`} value={activeWork.length} helper={activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"} tone="default" />
-        <StatCard label="Revenue MTD" value={formatCurrency(revenueMTD)} helper={revenueMTD > 0 ? `This month` : "No revenue yet"} tone={revenueMTD > 0 ? "positive" : "default"} />
-        <StatCard label={`Open ${leadPlural}`} value={openLeads.length} helper={formatCurrency(openPipelineValue)} tone="default" />
-        <StatCard label="Unpaid invoices" value={formatCurrency(unpaidRevenueValue)} helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"} tone={unpaidRevenueValue > 0 ? "danger" : "default"} />
+      {/* Stat row */}
+      <div className="stat-row stat-row-5">
+        <div className={`stat-card ${followUpSchedule.length > 0 ? "s-danger" : ""}`}>
+          <div className="stat-label">Follow-ups due</div>
+          <div className={`stat-value ${followUpSchedule.length > 0 ? "c-danger" : ""}`}>{followUpSchedule.length}</div>
+          <div className="stat-helper">{overdueCount} overdue · {dueTodayCount} due today</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">{jobPlural} today</div>
+          <div className="stat-value">{activeWork.length}</div>
+          <div className="stat-helper">{activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"}</div>
+        </div>
+        <div className={`stat-card ${revenueMTD > 0 ? "s-success" : ""}`}>
+          <div className="stat-label">Revenue MTD</div>
+          <div className={`stat-value ${revenueMTD > 0 ? "c-success" : ""}`}>{formatCurrency(revenueMTD)}</div>
+          <div className="stat-helper">This month</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Open pipeline</div>
+          <div className="stat-value">{formatCurrency(openPipelineValue)}</div>
+          <div className="stat-helper">{openLeads.length} active {leadPlural.toLowerCase()}</div>
+        </div>
+        <div className={`stat-card ${unpaidRevenueValue > 0 ? "s-danger" : ""}`}>
+          <div className="stat-label">Unpaid invoices</div>
+          <div className={`stat-value ${unpaidRevenueValue > 0 ? "c-danger" : ""}`}>{formatCurrency(unpaidRevenueValue)}</div>
+          <div className="stat-helper">{unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}</div>
+        </div>
       </div>
 
       {/* Two-column grid */}
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] gap-5 items-start">
-        {/* Left column — Priority queue */}
-        <Card padding={0} radius="md" className="overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
+      <div className="grid-2">
+        {/* Priority queue */}
+        <div className="card">
+          <div className="card-header">
             <div>
-              <p className="text-[13.5px] font-semibold text-ud-ink">Priority queue</p>
-              <p className="text-[12px] text-ud-muted mt-0.5">Overdue and due-today items</p>
+              <div className="card-title">Priority queue</div>
+              <div className="card-desc">Overdue and due-today items</div>
             </div>
-            <Link href="/follow-ups" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View all</Link>
+            <Link href="/follow-ups" className="btn btn-ghost btn-sm">View all</Link>
           </div>
           {priorityQueue.length === 0 ? (
-            <p className="px-5 py-8 text-center text-[13px] text-ud-faint">Nothing needs attention right now.</p>
-          ) : (
-            <div>
-              {priorityQueue.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.href}
-                  className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
-                >
-                  <div className={`h-2 w-2 shrink-0 rounded-full ${
-                    item.tone === "danger" ? "bg-[#e05050]" :
-                    item.tone === "warning" ? "bg-[#d97706]" :
-                    item.tone === "success" ? "bg-[#2a8c3c]" : "bg-[#c5bfb5]"
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
-                    <p className="text-[12px] text-ud-muted mt-0.5">{item.detail}</p>
-                  </div>
-                  <span className={`text-[12px] font-semibold shrink-0 ${
-                    item.tone === "danger" ? "text-ud-danger" :
-                    item.tone === "warning" ? "text-ud-warning" : "text-ud-muted"
-                  }`}>{item.label}</span>
-                </Link>
-              ))}
+            <div className="queue-item">
+              <div className="queue-body">
+                <div className="queue-meta" style={{ textAlign: "center", padding: "12px 0" }}>Nothing needs attention right now.</div>
+              </div>
             </div>
+          ) : (
+            priorityQueue.map((item) => (
+              <Link key={item.id} href={item.href} style={{ textDecoration: "none" }}>
+                <div className="queue-item">
+                  <div className={dotClass(item.tone)} />
+                  <div className="queue-body">
+                    <div className="queue-action">{item.title}</div>
+                    <div className="queue-meta">{item.detail}</div>
+                  </div>
+                  <div className={dueClass(item.tone)}>{item.label}</div>
+                </div>
+              </Link>
+            ))
           )}
-        </Card>
+        </div>
 
         {/* Right column */}
-        <div className="space-y-4">
-          {/* Today's jobs */}
-          <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
-              <p className="text-[13.5px] font-semibold text-ud-ink">Today&apos;s {jobPlural.toLowerCase()}</p>
-              <Link href="/jobs" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">Calendar</Link>
+        <div className="col-stack">
+          {/* Jobs today */}
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">Jobs today</div>
+              <Link href="/jobs" className="btn btn-ghost btn-sm">Calendar</Link>
             </div>
-            {visitsToShow.length === 0 ? (
-              <p className="px-5 py-6 text-center text-[13px] text-ud-faint">No active {jobPlural.toLowerCase()} right now.</p>
-            ) : (
-              <div>
-                {visitsToShow.map((job) => {
-                  const customer = job.customer_id ? customerById.get(job.customer_id) : null;
-                  const tone = getWorkTone(job.status);
-                  return (
-                    <Link
-                      key={job.id}
-                      href={`/jobs/${job.id}/edit`}
-                      className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
-                    >
-                      <div className={`h-2 w-2 shrink-0 rounded-full ${
-                        tone === "danger" ? "bg-[#e05050]" :
-                        tone === "warning" ? "bg-[#d97706]" :
-                        tone === "success" ? "bg-[#2a8c3c]" : "bg-[#c5bfb5]"
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13.5px] font-semibold text-ud-ink truncate">
-                          {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
-                        </p>
-                        <p className="text-[12px] text-ud-muted mt-0.5">
-                          {customer?.name || "No customer linked"}
-                        </p>
-                      </div>
-                      {job.job_value != null && (
-                        <span className="text-[12px] font-semibold text-[#4A3FA8] shrink-0">
-                          {formatCurrency(job.job_value)}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+            {activeWork.length === 0 ? (
+              <div className="queue-item">
+                <div className="queue-body">
+                  <div className="queue-meta">No active jobs right now.</div>
+                </div>
               </div>
+            ) : (
+              activeWork.slice(0, 5).map((job) => {
+                const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+                const tone = getWorkTone(job.status);
+                return (
+                  <Link key={job.id} href={`/jobs/${job.id}/edit`} style={{ textDecoration: "none" }}>
+                    <div className="queue-item">
+                      <div className={dotClass(tone)} />
+                      <div className="queue-body">
+                        <div className="queue-action">{job.service_type || "Untitled job"}</div>
+                        <div className="queue-meta">{customer?.name || "No customer"}</div>
+                      </div>
+                      <span className="badge badge-info">{job.status || "Active"}</span>
+                    </div>
+                  </Link>
+                );
+              })
             )}
-          </Card>
+          </div>
 
           {/* Pipeline snapshot */}
-          <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
-              <p className="text-[13.5px] font-semibold text-ud-ink">Pipeline snapshot</p>
-              <Link href="/leads" className="inline-flex items-center rounded-[7px] border border-ud bg-ud-surface px-[11px] py-[5px] text-[12px] font-semibold text-ud-muted hover:bg-ud-surface-sunk">View all</Link>
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">Pipeline snapshot</div>
+              <Link href="/crm" className="btn btn-ghost btn-sm">View all</Link>
             </div>
             {openLeads.length === 0 ? (
-              <p className="px-5 py-6 text-center text-[13px] text-ud-faint">No open {profile.labels.leadPlural.toLowerCase()}.</p>
+              <div className="queue-item">
+                <div className="queue-body">
+                  <div className="queue-meta">No open {leadPlural.toLowerCase()}.</div>
+                </div>
+              </div>
             ) : (
-              <div>
-                {openLeads.slice(0, 4).map((lead) => (
-                  <Link
-                    key={lead.id}
-                    href={`/leads/${lead.id}/edit`}
-                    className="flex items-center gap-[14px] px-5 py-[13px] border-b border-[rgba(0,0,0,0.04)] last:border-0 hover:bg-[rgba(0,0,0,0.012)] transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">
-                        {lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
-                      </p>
-                      <p className="text-[12px] text-ud-muted mt-0.5">
-                        {lead.source || lead.status || "No source"} · {formatCurrency(lead.estimated_value)}
-                      </p>
+              openLeads.slice(0, 4).map((lead) => (
+                <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
+                  <div className="queue-item">
+                    <div className="queue-body">
+                      <div className="queue-action">{lead.service_requested || "Untitled opportunity"}</div>
+                      <div className="queue-meta">{lead.status || "Lead"} · {formatCurrency(lead.estimated_value)}</div>
                     </div>
-                    <span className="inline-flex items-center rounded-[6px] bg-ud-surface-sunk px-2 py-0.5 text-[11px] font-semibold text-ud-muted shrink-0">
-                      {lead.status || "Lead"}
-                    </span>
+                    <span className="badge badge-neutral">{lead.status || "Lead"}</span>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+
+          {/* Quick actions */}
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">Quick actions</div>
+            </div>
+            <div className="card-body" style={{ padding: "16px" }}>
+              <div className="quick-actions">
+                {[
+                  { label: "New client", href: "/customers" },
+                  { label: "Log a job", href: "/jobs" },
+                  { label: "Add follow-up", href: "/follow-ups" },
+                  { label: "Ask AI", href: "/ai-assistant" },
+                ].map((action) => (
+                  <Link key={action.label} href={action.href} className="quick-action" style={{ textDecoration: "none" }}>
+                    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    {action.label}
                   </Link>
                 ))}
               </div>
-            )}
-          </Card>
-
-          {/* Quick actions */}
-          <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="px-5 py-[15px] border-b border-[rgba(0,0,0,0.045)]">
-              <p className="text-[13.5px] font-semibold text-ud-ink">Quick actions</p>
             </div>
-            <div className="p-4 flex flex-wrap gap-2">
-              {[
-                { label: "New client", href: "/customers" },
-                { label: "Log a job", href: "/jobs" },
-                { label: "Add follow-up", href: "/follow-ups" },
-                { label: "Ask AI", href: "/ai-assistant" },
-              ].map((action) => (
-                <Link
-                  key={action.label}
-                  href={action.href}
-                  className="flex items-center gap-1.5 px-[13px] py-2 rounded-[9px] bg-ud-surface border border-ud text-[12.5px] font-semibold text-ud-text shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.14)] hover:shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all"
-                >
-                  {action.label}
-                </Link>
-              ))}
-            </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>

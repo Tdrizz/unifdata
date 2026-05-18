@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getSalesPageData } from "@/features/sales/queries";
+import { getSalesPageData, getCustomersForSaleSelect } from "@/features/sales/queries";
 import { SalesList } from "@/features/sales/components/SalesList";
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +27,10 @@ export default async function RevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const { sales, count } = await getSalesPageData(supabase, company.id, { q: params.q, page });
+  const [{ sales, count }, customers] = await Promise.all([
+    getSalesPageData(supabase, company.id, { q: params.q, page }),
+    getCustomersForSaleSelect(supabase, company.id),
+  ]);
 
   return (
     <AppShell
@@ -45,6 +48,7 @@ export default async function RevenuePage({
         profile={profile}
         selectedStatus={selectedStatus}
         selectedSource={selectedSource}
+        customers={customers}
       />
     </AppShell>
   );

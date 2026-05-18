@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getFollowUpPageData } from "@/features/follow-ups/queries";
+import { FollowUpsView } from "@/features/follow-ups/components/FollowUpsView";
 import { FollowUpViewToggle } from "@/features/follow-ups/components/FollowUpViewToggle";
-import { FollowUpCreateForm } from "@/features/follow-ups/components/FollowUpCreateForm";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,21 +34,15 @@ export default async function FollowUpsPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
-        <PageHeader
-          eyebrow={profile.labels.followUpPlural}
-          title="Priority follow-up queue"
-          description={`Manual follow-ups and ${profile.labels.leadSingular.toLowerCase()} follow-up dates are sorted by urgency and due date.`}
-          actions={
-            <div className="flex flex-wrap gap-2">
-              <Link href="/leads" className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink">Opportunities</Link>
-              <Link href="/imports" className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90">Import data</Link>
-            </div>
-          }
-        />
-        <FollowUpCreateForm
-          people={data.people}
-        />
+      {/* Desktop view */}
+      <FollowUpsView
+        followUps={data.followUps}
+        opportunities={data.opportunities}
+        people={data.people}
+      />
+
+      {/* Mobile view */}
+      <div className="block md:hidden space-y-5 px-4 pt-5 pb-8">
         <FollowUpViewToggle
           followUps={data.followUps}
           opportunities={data.opportunities}

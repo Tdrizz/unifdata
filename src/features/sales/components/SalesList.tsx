@@ -1,17 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SearchInput } from "@/components/ui/SearchInput";
-import { Pagination } from "@/components/ui/Pagination";
-import { formatDateOnly } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
-import { isUnpaid, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { SaleRow } from "../types";
-import { SaleCreateForm } from "./SaleCreateForm";
+import type { SaleRow, CustomerRow } from "../types";
 
 const PAGE_SIZE = 50;
 
@@ -23,283 +16,302 @@ type Props = {
   profile: IndustryProfile;
   selectedStatus: string;
   selectedSource: string;
+  customers?: Pick<CustomerRow, "id" | "name">[];
 };
 
+type FilterType = "all" | "overdue" | "pending" | "paid";
+
 function isPaid(status: string | null) {
-  return String(status || "").toLowerCase() === "paid";
+  return (status || "").toLowerCase() === "paid";
 }
 
-function getRevenueNextStep(record: SaleRow) {
-  if (record.amount === null || record.amount === undefined) {
-    return "Add the amount so this revenue is included in reporting.";
-  }
-  if (!record.payment_status) {
-    return "Set the payment status so collected and uncollected revenue are clear.";
-  }
-  if (isUnpaid(record.payment_status)) {
-    return "This revenue still needs collection or payment follow-up.";
-  }
-  if (!record.source) {
-    return "Add a source so revenue can be tied back to what generated it.";
-  }
-  if (!record.sale_date) {
-    return "Add a revenue date so this appears in the right reporting period.";
-  }
-  return "Revenue looks good. Keep the source and payment status current.";
+function isOverdue(status: string | null) {
+  return (status || "").toLowerCase().includes("overdue");
 }
 
-function getRevenueIssues(record: SaleRow) {
-  const issues: { label: string; tone: "success" | "warning" | "danger" | "neutral" }[] = [];
-
-  if (record.amount === null || record.amount === undefined) {
-    issues.push({ label: "Add amount", tone: "warning" });
-  }
-  if (!record.payment_status) {
-    issues.push({ label: "Add status", tone: "neutral" });
-  } else if (isUnpaid(record.payment_status)) {
-    issues.push({ label: "Payment needed", tone: "danger" });
-  }
-  if (!record.source) {
-    issues.push({ label: "Add source", tone: "neutral" });
-  }
-  if (!record.sale_date) {
-    issues.push({ label: "Add date", tone: "neutral" });
-  }
-  if (issues.length === 0) {
-    issues.push({ label: "Looks clean", tone: "success" });
-  }
-
-  return issues;
+function isPending(status: string | null) {
+  const s = (status || "").toLowerCase();
+  return s === "pending" || s === "unpaid" || s === "partial" || (s !== "paid" && !s.includes("overdue"));
 }
 
-export function SalesList({ sales, count, profile, selectedStatus, selectedSource }: Props) {
-  const paidRevenue = sales.filter((r) => isPaid(r.payment_status));
-  const unpaidRevenue = sales.filter((r) => isUnpaid(r.payment_status));
-  const missingSource = sales.filter((r) => !r.source);
-  const missingAmount = sales.filter((r) => r.amount === null || r.amount === undefined);
-  const missingDate = sales.filter((r) => !r.sale_date);
+function statusBadgeClass(status: string | null) {
+  const s = (status || "").toLowerCase();
+  if (isPaid(status)) return "badge badge-success";
+  if (s.includes("overdue")) return "badge badge-danger";
+  if (s === "pending" || s === "unpaid") return "badge badge-warning";
+  return "badge badge-neutral";
+}
 
-  const totalRevenue = sales.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const paidTotal = paidRevenue.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const unpaidTotal = unpaidRevenue.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+function formatSaleDate(dateStr: string | null | undefined) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
-  const cleanupGroups = [
-    { id: "missing-source", label: "Add source", title: "Revenue needs sources", detail: "Source tracking helps show what generated paid work.", count: missingSource.length, href: "/sales" },
-    { id: "missing-amount", label: "Add amount", title: "Revenue needs amounts", detail: "Amounts are required for accurate revenue reporting.", count: missingAmount.length, href: "/sales" },
-    { id: "missing-date", label: "Add date", title: "Revenue needs dates", detail: "Revenue dates keep records in the right reporting period.", count: missingDate.length, href: "/sales" },
-  ].filter((item) => item.count > 0);
+function getLastNMonths(n: number, now: Date) {
+  const months = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleDateString("en-US", { month: "short" }) });
+  }
+  return months;
+}
 
-  const prioritizedRevenue = [...sales]
-    .sort((a, b) => {
-      const aUnpaid = isUnpaid(a.payment_status);
-      const bUnpaid = isUnpaid(b.payment_status);
-      if (aUnpaid !== bUnpaid) return aUnpaid ? -1 : 1;
-      const aMissingSource = !a.source;
-      const bMissingSource = !b.source;
-      if (aMissingSource !== bMissingSource) return aMissingSource ? -1 : 1;
-      return Number(b.amount || 0) - Number(a.amount || 0);
+function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
+  return sales
+    .filter((s) => {
+      const d = new Date(s.sale_date || s.created_at);
+      return d.getFullYear() === year && d.getMonth() === month;
     })
-    .slice(0, 25);
+    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+}
 
-  const visibleRevenue = prioritizedRevenue.filter((r) => {
-    if (selectedStatus && (r.payment_status || "Not set") !== selectedStatus) return false;
-    if (selectedSource && (r.source || "No source") !== selectedSource) return false;
+export function SalesList({ sales, count, customers = [], selectedStatus }: Props) {
+  const [filter, setFilter] = useState<FilterType>(
+    selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
+  );
+
+  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const revenueMTD = sales
+    .filter((s) => new Date(s.sale_date || s.created_at) >= startOfMonth)
+    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+
+  const outstanding = sales.filter((s) => !isPaid(s.payment_status));
+  const outstandingValue = outstanding.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+
+  const paidThisMonth = sales.filter((s) => {
+    const d = new Date(s.sale_date || s.created_at);
+    return d >= startOfMonth && isPaid(s.payment_status);
+  });
+  const paidThisMonthValue = paidThisMonth.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+
+  const avgOpenInvoice = outstanding.length > 0 ? outstandingValue / outstanding.length : 0;
+
+  const overdueCount = sales.filter((s) => isOverdue(s.payment_status)).length;
+  const pendingCount = sales.filter((s) => isPending(s.payment_status) && !isPaid(s.payment_status) && !isOverdue(s.payment_status)).length;
+  const paidCount = sales.filter((s) => isPaid(s.payment_status)).length;
+  const openCount = outstanding.length;
+
+  const filtered = sales.filter((s) => {
+    if (filter === "paid") return isPaid(s.payment_status);
+    if (filter === "overdue") return isOverdue(s.payment_status);
+    if (filter === "pending") return isPending(s.payment_status) && !isPaid(s.payment_status) && !isOverdue(s.payment_status);
     return true;
   });
 
-  const paymentGroups = Array.from(
-    sales.reduce((map, r) => {
-      const status = r.payment_status || "Not set";
-      const current = map.get(status) || { status, count: 0, amount: 0 };
-      current.count += 1;
-      current.amount += Number(r.amount || 0);
-      map.set(status, current);
-      return map;
-    }, new Map<string, { status: string; count: number; amount: number }>()),
-  )
-    .map(([, group]) => group)
-    .sort((a, b) => b.amount - a.amount);
+  // Chart data — last 6 months
+  const months = getLastNMonths(6, now);
+  const maxVal = Math.max(...months.map((m) => sumSalesForMonth(sales, m.year, m.month)), 1);
 
-  const sourceGroups = Array.from(
-    sales.reduce((map, r) => {
-      const source = r.source || "No source";
-      const current = map.get(source) || { source, count: 0, amount: 0 };
-      current.count += 1;
-      current.amount += Number(r.amount || 0);
-      map.set(source, current);
-      return map;
-    }, new Map<string, { source: string; count: number; amount: number }>()),
-  )
-    .map(([, group]) => group)
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 8);
+  const sixMonthTotal = months.reduce((sum, m) => sum + sumSalesForMonth(sales, m.year, m.month), 0);
 
   return (
-    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
-      <PageHeader
-        eyebrow={profile.labels.salePlural}
-        title={`Track ${profile.labels.salePlural.toLowerCase()} and collected work`}
-        description={`Use this page to see paid ${profile.labels.salePlural.toLowerCase()}, unpaid ${profile.labels.salePlural.toLowerCase()}, payment status, and what sources are generating money.`}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/api/export/csv?table=sales"
-              download
-              className="inline-flex items-center gap-1 rounded-[8px] border border-ud bg-ud-surface px-3 py-1.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
-            >
-              Export CSV
-            </a>
-
-            <Link href="/jobs" className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink">
-              Work
-            </Link>
-            <Link href="/imports" className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90">
-              Import data
-            </Link>
+    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <div className="page-eyebrow">Revenue</div>
+          <div className="page-title">Revenue &amp; invoices</div>
+          <div className="page-desc">
+            {formatCurrency(revenueMTD)} this month · {openCount} open {openCount === 1 ? "invoice" : "invoices"}
           </div>
-        }
-      />
-
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard label="Total revenue" value={formatCurrency(totalRevenue)} helper={`${sales.length} revenue records`} tone={totalRevenue > 0 ? "positive" : "default"} />
-        <StatCard label="Collected" value={formatCurrency(paidTotal)} helper={`${paidRevenue.length} paid records`} tone={paidTotal > 0 ? "positive" : "default"} />
-        <StatCard label="Payment needed" value={formatCurrency(unpaidTotal)} helper={`${unpaidRevenue.length} unpaid or partial records`} tone={unpaidTotal > 0 ? "danger" : "positive"} />
-        <StatCard label="Cleanup issues" value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)} helper="Missing source, amount, or date" tone={cleanupGroups.length > 0 ? "warning" : "positive"} />
-      </section>
-
-      <SaleCreateForm profile={profile} />
-
-      <div>
-        <SearchInput placeholder={`Search ${profile.labels.salePlural.toLowerCase()}…`} />
-      </div>
-
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.25fr_0.75fr] items-start">
-        <SectionCard
-          title={selectedStatus ? `${selectedStatus} revenue` : selectedSource ? `${selectedSource} revenue` : "Revenue queue"}
-          description={selectedStatus ? `Showing revenue records marked ${selectedStatus}.` : selectedSource ? `Showing revenue records from ${selectedSource}.` : "Revenue records prioritized by payment needs, missing source, and amount."}
-        >
-          {visibleRevenue.length === 0 ? (
-            <EmptyState title="No revenue records found" description="Add revenue manually or import revenue from CSV or Google Sheets." />
-          ) : (
-            <>
-              {(selectedStatus || selectedSource) && (
-                <div className="flex items-center justify-between gap-3 border-b border-ud p-4">
-                  <p className="text-sm font-semibold text-ud-muted">Filtered by: {selectedStatus || selectedSource}</p>
-                  <Link href="/sales" className="rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink">Clear filter</Link>
-                </div>
-              )}
-              <div>
-                {visibleRevenue.map((record) => {
-                  const issues = getRevenueIssues(record);
-                  return (
-                    <Link key={record.id} href={`/sales/${record.id}/edit`} className="block px-5 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 transition-colors hover:bg-ud-surface-soft">
-                      <div className="grid gap-4 md:grid-cols-[1fr_130px_150px] md:items-start">
-                        <div>
-                          <p className="font-semibold text-ud-ink">{record.service_type || "Revenue record"}</p>
-                          <p className="mt-1 text-sm text-ud-faint">{record.source || "No source saved"}</p>
-                          <p className="hidden md:block mt-3 text-sm leading-6 text-ud-muted">{getRevenueNextStep(record)}</p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {issues.slice(0, 3).map((issue) => (
-                              <StatusBadge key={issue.label} tone={issue.tone}>{issue.label}</StatusBadge>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-ud-faint">Amount</p>
-                          <p className="mt-1 text-sm font-semibold text-ud-muted">{formatCurrency(record.amount)}</p>
-                          <p className="mt-3 text-xs font-medium text-ud-faint">Source</p>
-                          <p className="mt-1 text-sm font-semibold text-ud-muted">{record.source || "Not set"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-ud-faint">Date</p>
-                          <p className="mt-1 text-sm font-semibold text-ud-muted">{formatDateOnly(record.sale_date)}</p>
-                          <p className="mt-3 text-xs font-medium text-ud-faint">Payment</p>
-                          <div className="mt-1">
-                            <StatusBadge tone={getRevenueTone(record.payment_status)}>{record.payment_status || "Not set"}</StatusBadge>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </SectionCard>
-
-        <div className="hidden md:block space-y-5">
-          <SectionCard title="Payment status" description="Use this to filter revenue by collection state.">
-            {paymentGroups.length === 0 ? (
-              <EmptyState title="No payment statuses yet" description="Payment statuses will appear here after revenue records are added." />
-            ) : (
-              <div>
-                {paymentGroups.map((group) => (
-                  <article key={group.status} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
-                    <div>
-                      <StatusBadge tone={getRevenueTone(group.status)}>{group.status}</StatusBadge>
-                      <p className="mt-2 font-semibold text-ud-ink">{group.count} Found</p>
-                      <p className="mt-1 text-sm leading-6 text-ud-faint">
-                        {isUnpaid(group.status) ? "Revenue that still needs collection or review." : isPaid(group.status) ? "Revenue marked as collected." : "Revenue using this payment status."}
-                      </p>
-                    </div>
-                    <div className="md:text-right">
-                      <p className="mb-2 text-xs font-medium text-ud-faint">{formatCurrency(group.amount)}</p>
-                      <Link href={selectedStatus === group.status ? "/sales" : `/sales?status=${encodeURIComponent(group.status)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft">
-                        {selectedStatus === group.status ? "Clear" : "Review"}
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title="Sources" description="Where revenue is coming from.">
-            {sourceGroups.length === 0 ? (
-              <EmptyState title="No source data yet" description="Add sources to see which channels generate revenue." />
-            ) : (
-              <div>
-                {sourceGroups.map((group) => (
-                  <article key={group.source} className="grid gap-3 p-4 md:grid-cols-[1fr_90px] md:items-center">
-                    <div>
-                      <p className="font-semibold text-ud-ink">{group.source}</p>
-                      <p className="mt-1 text-sm text-ud-faint">{group.count} records · {formatCurrency(group.amount)}</p>
-                    </div>
-                    <div className="md:text-right">
-                      <Link href={selectedSource === group.source ? "/sales" : `/sales?source=${encodeURIComponent(group.source)}`} className="inline-flex rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-soft">
-                        {selectedSource === group.source ? "Clear" : "Review"}
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
         </div>
-      </section>
-
-      <div className="hidden md:block">
-      <SectionCard title="Revenue health" description="Cleanup issues that make revenue reporting less reliable.">
-        {cleanupGroups.length === 0 ? (
-          <EmptyState title="Revenue records look clean" description="No missing source, amount, or date issues were found." />
-        ) : (
-          <div className="grid gap-4 p-4 md:grid-cols-3">
-            {cleanupGroups.map((item) => (
-              <Link key={item.id} href={item.href} className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4 hover:bg-ud-surface">
-                <div className="flex items-start justify-between gap-3">
-                  <StatusBadge tone="neutral">{item.label}</StatusBadge>
-                  <span className="rounded-full border border-ud bg-ud-surface px-3 py-1 text-xs font-semibold text-ud-muted">{item.count}</span>
-                </div>
-                <p className="mt-3 font-semibold text-ud-ink">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-ud-faint">{item.detail}</p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+        <div className="page-actions">
+          <Link href="/sales" className="btn btn-primary">
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New invoice
+          </Link>
+        </div>
       </div>
 
-      <Pagination count={count} pageSize={PAGE_SIZE} />
+      {/* Stat row */}
+      <div className="stat-row stat-row-4 mb-5">
+        <div className={`stat-card ${revenueMTD > 0 ? "s-success" : ""}`}>
+          <div className="stat-label">Month to date</div>
+          <div className={`stat-value ${revenueMTD > 0 ? "c-success" : ""}`}>{formatCurrency(revenueMTD)}</div>
+          <div className="stat-helper">This month</div>
+        </div>
+        <div className={`stat-card ${outstandingValue > 0 ? "s-danger" : ""}`}>
+          <div className="stat-label">Outstanding</div>
+          <div className={`stat-value ${outstandingValue > 0 ? "c-danger" : ""}`}>{formatCurrency(outstandingValue)}</div>
+          <div className="stat-helper">{overdueCount} overdue · {pendingCount} pending</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Paid this month</div>
+          <div className="stat-value">{formatCurrency(paidThisMonthValue)}</div>
+          <div className="stat-helper">{paidCount} invoices collected</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Avg open invoice</div>
+          <div className="stat-value">{formatCurrency(avgOpenInvoice)}</div>
+          <div className="stat-helper">{outstanding.length} outstanding</div>
+        </div>
+      </div>
+
+      {/* Revenue trend chart */}
+      <div className="card mb-5">
+        <div className="card-header">
+          <div>
+            <div className="card-title">Revenue trend</div>
+            <div className="card-desc">Last 6 months · MTD figures for {now.toLocaleDateString("en-US", { month: "long" })}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--muted)" }}>
+              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "var(--accent)" }} />
+              This year
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--muted)" }}>
+              <div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "var(--surface-sunk)", border: "1px solid var(--border)" }} />
+              Last year
+            </div>
+          </div>
+        </div>
+        <div className="card-body" style={{ padding: "20px 24px 18px" }}>
+          {/* Chart area */}
+          <div style={{ position: "relative", height: "120px", display: "flex", alignItems: "flex-end", gap: "10px", marginBottom: "6px" }}>
+            {/* Y-axis labels */}
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none" }}>
+              <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>{formatCurrency(maxVal)}</div>
+              <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>{formatCurrency(maxVal / 2)}</div>
+              <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>$0</div>
+            </div>
+            {/* Gridlines */}
+            <div style={{ position: "absolute", left: "28px", right: 0, top: 0, bottom: 0, pointerEvents: "none" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, borderTop: "1px dashed rgba(0,0,0,0.07)" }} />
+              <div style={{ position: "absolute", top: "50%", left: 0, right: 0, borderTop: "1px dashed rgba(0,0,0,0.07)" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, borderTop: "1px solid rgba(0,0,0,0.09)" }} />
+            </div>
+            {/* Bar groups */}
+            <div style={{ flex: 1, marginLeft: "28px", display: "flex", gap: "10px", alignItems: "flex-end", height: "100%" }}>
+              {months.map((m, i) => {
+                const val = sumSalesForMonth(sales, m.year, m.month);
+                const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
+                const lastYearVal = sumSalesForMonth(sales, m.year - 1, m.month);
+                const lastPct = maxVal > 0 ? Math.round((lastYearVal / maxVal) * 100) : 0;
+                const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
+                return (
+                  <div key={i} style={{ flex: 1, display: "flex", gap: "3px", alignItems: "flex-end", height: "100%", position: "relative" }}>
+                    <div
+                      style={{ flex: 1, background: "var(--surface-sunk)", border: "1px solid var(--border)", borderRadius: "4px 4px 0 0", height: `${Math.max(lastPct, 2)}%` }}
+                      title={`${m.label} ${m.year - 1} · ${formatCurrency(lastYearVal)}`}
+                    />
+                    <div
+                      style={{ flex: 1, background: "var(--accent)", borderRadius: "4px 4px 0 0", height: `${Math.max(pct, 2)}%`, opacity: isCurrentMonth ? 1 : 0.8, position: "relative" }}
+                      title={`${m.label} ${m.year}${isCurrentMonth ? " MTD" : ""} · ${formatCurrency(val)}`}
+                    >
+                      {isCurrentMonth && val > 0 && (
+                        <div style={{ position: "absolute", top: "-20px", left: "50%", transform: "translateX(-50%)", fontSize: "10px", fontWeight: 700, color: "var(--accent)", whiteSpace: "nowrap" }}>
+                          {val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : formatCurrency(val)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* X-axis labels */}
+          <div style={{ display: "flex", gap: "10px", marginLeft: "28px" }}>
+            {months.map((m, i) => {
+              const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
+              return (
+                <div key={i} style={{ flex: 1, textAlign: "center", fontSize: "10.5px", fontWeight: isCurrentMonth ? 700 : 600, color: isCurrentMonth ? "var(--accent)" : "var(--faint)" }}>
+                  {m.label}{isCurrentMonth ? " ✦" : ""}
+                </div>
+              );
+            })}
+          </div>
+          {/* Summary row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "1px", marginTop: "18px", background: "var(--border)", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--border)" }}>
+            <div style={{ background: "var(--surface)", padding: "11px 14px" }}>
+              <div style={{ fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--faint)", marginBottom: "3px" }}>6-month total</div>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.02em" }}>{formatCurrency(sixMonthTotal)}</div>
+            </div>
+            <div style={{ background: "var(--surface)", padding: "11px 14px" }}>
+              <div style={{ fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--faint)", marginBottom: "3px" }}>vs same period last yr</div>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--success)", letterSpacing: "-0.02em" }}>—</div>
+            </div>
+            <div style={{ background: "var(--surface)", padding: "11px 14px" }}>
+              <div style={{ fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--faint)", marginBottom: "3px" }}>Best month</div>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                {months.reduce((best, m) => {
+                  const v = sumSalesForMonth(sales, m.year, m.month);
+                  return v > best.v ? { label: m.label, v } : best;
+                }, { label: "—", v: 0 }).label}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="filter-tabs mb-4">
+        <button className={`filter-tab ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
+          All <span style={{ color: "var(--faint)", fontWeight: 500 }}>{count}</span>
+        </button>
+        <button className={`filter-tab ${filter === "overdue" ? "active" : ""}`} onClick={() => setFilter("overdue")}>
+          Overdue <span style={{ color: "var(--danger)", fontWeight: 600 }}>{overdueCount}</span>
+        </button>
+        <button className={`filter-tab ${filter === "pending" ? "active" : ""}`} onClick={() => setFilter("pending")}>
+          Pending <span style={{ color: "var(--faint)", fontWeight: 500 }}>{pendingCount}</span>
+        </button>
+        <button className={`filter-tab ${filter === "paid" ? "active" : ""}`} onClick={() => setFilter("paid")}>
+          Paid <span style={{ color: "var(--faint)", fontWeight: 500 }}>{paidCount}</span>
+        </button>
+      </div>
+
+      {/* Invoice table */}
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Client</th>
+              <th>Amount</th>
+              <th>Issued</th>
+              <th>Due</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                  No invoices found.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((sale, i) => {
+                const customer = sale.customer_id ? customerById.get(sale.customer_id) : null;
+                const isOver = isOverdue(sale.payment_status);
+                return (
+                  <tr key={sale.id}>
+                    <td className="td-primary">#{1000 + i + 1}</td>
+                    <td>{customer?.name || sale.service_type || "—"}</td>
+                    <td className="td-mono">{formatCurrency(sale.amount)}</td>
+                    <td className="td-muted">{formatSaleDate(sale.sale_date || sale.created_at)}</td>
+                    <td className={isOver ? "text-danger" : "td-muted"} style={isOver ? { fontWeight: 600 } : undefined}>—</td>
+                    <td><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
+                    <td>
+                      {isOver ? (
+                        <button className="btn btn-ghost btn-sm">Send reminder</button>
+                      ) : (
+                        <Link href={`/sales/${sale.id}/edit`} className="td-link">View</Link>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

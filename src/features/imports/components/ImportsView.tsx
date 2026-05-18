@@ -1,631 +1,216 @@
-import Link from "next/link";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { StatCard } from "@/components/ui/StatCard";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
-import { revertImportSession } from "../actions";
-
-function formatTimestamp(date: string | null) {
-  if (!date) {
-    return "—";
-  }
-
-  return new Date(date).toLocaleString();
-}
-
-function getStatusTone(status: string | null) {
-  if (status === "completed" || status === "active" || status === "committed") {
-    return "success" as const;
-  }
-
-  if (status === "failed" || status === "error") {
-    return "danger" as const;
-  }
-
-  if (
-    status === "pending" ||
-    status === "ready" ||
-    status === "analyzing" ||
-    status === "draft"
-  ) {
-    return "warning" as const;
-  }
-
-  if (status === "cancelled") {
-    return "neutral" as const;
-  }
-
-  return "neutral" as const;
-}
-
-function getRecordTypeLabel(recordType: string | null) {
-  const labels: Record<string, string> = {
-    relationships: "People",
-    opportunities: "Opportunities",
-    work: "Work",
-    revenue: "Revenue",
-    actions: "Follow-ups",
-  };
-
-  return labels[recordType || ""] || recordType || "Records";
-}
-
-function getSourceLabel(sourceType: string | null) {
-  const labels: Record<string, string> = {
-    csv: "CSV",
-    google_sheets: "Google Sheets",
-    quickbooks: "QuickBooks",
-    square: "Square",
-    hubspot: "HubSpot",
-    jobber: "Jobber",
-    stripe: "Stripe",
-  };
-
-  return labels[sourceType || ""] || sourceType || "Source";
-}
-
-function getStatusLabel(status: string | null) {
-  const text = String(status || "").replace(/_/g, " ").trim();
-  if (!text) return "Not connected";
-  return text.replace(/\b\w/g, (l) => l.toUpperCase());
-}
-
-function isReviewStatus(status: string | null) {
-  return (
-    status === "draft" ||
-    status === "analyzing" ||
-    status === "ready" ||
-    status === "failed"
-  );
-}
 
 type Props = ImportsPageData & { profile: IndustryProfile };
 
-export function ImportsView({
-  customers,
-  syncConnections,
-  syncRuns,
-  importSessions,
-  integrations,
-  profile,
-}: Props) {
-  const googleSheetsIntegration = integrations.find(
-    (integration) =>
-      integration.provider === "google_sheets" &&
-      integration.status === "active",
-  );
+function formatImportDate(date: string | null) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-  const reviewSessions = importSessions.filter((session) =>
-    isReviewStatus(session.status),
-  );
+function getRecordTypeLabel(rt: string | null) {
+  const map: Record<string, string> = {
+    relationships: "Clients",
+    opportunities: "Opportunities",
+    work: "Visits",
+    revenue: "Revenue",
+    actions: "Follow-ups",
+  };
+  return map[rt || ""] || rt || "Records";
+}
 
-  const committedSessions = importSessions.filter(
-    (session) => session.status === "committed" || session.status === "reverted",
-  );
+function sessionStatusBadge(status: string | null) {
+  const s = (status || "").toLowerCase();
+  if (s === "committed") return "badge badge-success";
+  if (s === "failed" || s === "error") return "badge badge-danger";
+  if (s === "ready" || s === "draft" || s === "analyzing") return "badge badge-warning";
+  return "badge badge-neutral";
+}
 
-  const completedImports = committedSessions.length;
+function sessionStatusLabel(session: ImportsPageData["importSessions"][number]) {
+  if (session.status === "committed") return "Complete";
+  if (session.status === "failed") return "Failed";
+  if (session.error_rows && session.error_rows > 0) return `${session.error_rows} errors`;
+  return session.status || "—";
+}
 
-  const totalImportedRecords = committedSessions.reduce(
-    (sum, session) =>
-      sum +
-      Number(session.created_rows || 0) +
-      Number(session.updated_rows || 0),
-    0,
-  );
+const INTEGRATIONS = [
+  {
+    id: "quickbooks",
+    name: "QuickBooks",
+    meta: "Sync customers, invoices, and revenue",
+    iconBg: "#fef3c7",
+    iconStroke: "#92400e",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth={1.8} strokeLinecap="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+    ),
+  },
+  {
+    id: "jobber",
+    name: "Jobber",
+    meta: "Sync jobs, quotes, and field schedules",
+    iconBg: "#e0e7ff",
+    iconStroke: "#3730a3",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3730a3" strokeWidth={1.8} strokeLinecap="round">
+        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 12h20"/>
+      </svg>
+    ),
+  },
+  {
+    id: "google-calendar",
+    name: "Google Calendar",
+    meta: "Pull scheduled appointments in as visits",
+    iconBg: "#f0fdf4",
+    iconStroke: "#166534",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth={1.8} strokeLinecap="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+    ),
+  },
+  {
+    id: "hubspot",
+    name: "HubSpot",
+    meta: "Sync contacts and deal activity",
+    iconBg: "#fff4ee",
+    iconStroke: "#c2410c",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" strokeWidth={1.8} strokeLinecap="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+  },
+  {
+    id: "square",
+    name: "Square",
+    meta: "Import payments, invoices, and customer records",
+    iconBg: "#f1f5f9",
+    iconStroke: "#334155",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth={1.8} strokeLinecap="round">
+        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+      </svg>
+    ),
+  },
+];
 
-  const openReviewSessions = reviewSessions.filter(
-    (session) => session.status === "ready" || session.status === "analyzing",
-  ).length;
-
-  const missingContact = customers.filter(
-    (customer) => !customer.phone || !customer.email,
-  ).length;
-
-  const missingAddress = customers.filter(
-    (customer) => !customer.address,
-  ).length;
-
-  const dataHealthIssues = missingContact + missingAddress;
+export function ImportsView({ importSessions, integrations }: Props) {
+  const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
 
   return (
-    <div className="space-y-5 px-4 md:px-6 pt-5 pb-8">
-      <PageHeader
-        eyebrow="Import"
-        title="Bring data into UnifData"
-        description="Upload CSV files or choose a Google Sheet, review the rows, fix issues, and commit clean records."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/data-hub"
-              className="rounded-[9px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:text-ud-ink"
-            >
-              Data Hub
-            </Link>
+    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <div className="page-eyebrow">Imports</div>
+          <div className="page-title">Import data</div>
+          <div className="page-desc">Bring in clients, jobs, or revenue from a CSV or Google Sheets.</div>
+        </div>
+      </div>
 
-            <Link
-              href="/workspace"
-              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              Home
-            </Link>
-          </div>
-        }
-      />
-
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard
-          label="Committed imports"
-          value={completedImports}
-          helper={`${totalImportedRecords} records created or updated`}
-          tone={completedImports > 0 ? "positive" : "default"}
-        />
-
-        <StatCard
-          label="Needs review"
-          value={openReviewSessions}
-          helper="Imports not yet committed"
-          tone={openReviewSessions > 0 ? "warning" : "default"}
-        />
-
-        <StatCard
-          label="Sources"
-          value={integrations.length}
-          helper={googleSheetsIntegration ? "Google connected" : "CSV only"}
-          tone={googleSheetsIntegration ? "positive" : "default"}
-        />
-
-        <StatCard
-          label="Data issues"
-          value={dataHealthIssues}
-          helper="Missing contact or address"
-          tone={dataHealthIssues > 0 ? "warning" : "default"}
-        />
-      </section>
-
-      <SectionCard
-        title="Add data"
-        description="Pick a source. UnifData stages everything for review before writing to the workspace."
-      >
-        <div className="grid gap-4 p-4 xl:grid-cols-2">
-          <div className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-ud-ink">CSV upload</p>
-                <p className="mt-1 text-sm leading-6 text-ud-muted">
-                  Use exports from spreadsheets, old CRMs, or management
-                  tools.
-                </p>
-              </div>
-
-              <StatusBadge tone="success">Ready</StatusBadge>
+      {/* Two import cards */}
+      <div className="grid-2-even mb-5">
+        {/* CSV card */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Upload a CSV</div>
+              <div className="card-desc">Drag a file or click to browse</div>
             </div>
-
+          </div>
+          <div className="card-body">
             <CsvImportSessionFlow />
           </div>
-
-          <div className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-ud-ink">Google Sheets</p>
-                <p className="mt-1 text-sm leading-6 text-ud-muted">
-                  Choose a sheet, select a tab, and review rows before commit.
-                </p>
-              </div>
-
-              <StatusBadge
-                tone={googleSheetsIntegration ? "success" : "warning"}
-              >
-                {googleSheetsIntegration ? "Connected" : "Connect"}
-              </StatusBadge>
-            </div>
-
-            {googleSheetsIntegration ? (
-              <div className="space-y-3">
-                <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                    Connected account
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-emerald-950">
-                    {googleSheetsIntegration.provider_account_name ||
-                      "Google account"}
-                  </p>
-                </div>
-
-                <GoogleSheetsImportFlow />
-              </div>
-            ) : (
-              <div className="rounded-[10px] border border-ud bg-ud-surface p-4">
-                <p className="text-sm font-semibold text-ud-ink">
-                  Connect Google to import sheets.
-                </p>
-                <p className="mt-2 text-sm leading-6 text-ud-muted">
-                  UnifData only imports sheets you choose.
-                </p>
-
-                <a
-                  href="/api/integrations/google/start"
-                  className="mt-4 inline-flex rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                >
-                  Connect Google
-                </a>
-              </div>
-            )}
-          </div>
-
-          {integrations
-            .filter((i) =>
-              ["quickbooks", "hubspot", "jobber", "square", "stripe"].includes(
-                i.provider ?? "",
-              ),
-            )
-            .map((integration) => (
-              <div
-                key={integration.id}
-                className="rounded-[14px] border border-ud bg-ud-surface-sunk p-4"
-              >
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-ud-ink">
-                      {getSourceLabel(integration.provider)}
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-ud-muted">
-                      Sync your connected account data into UnifData for
-                      review.
-                    </p>
-                  </div>
-                  <StatusBadge tone={getStatusTone(integration.status)}>
-                    {getStatusLabel(integration.status)}
-                  </StatusBadge>
-                </div>
-                <SyncNowButton
-                  provider={integration.provider!}
-                  label={getSourceLabel(integration.provider)}
-                />
-              </div>
-            ))}
         </div>
-      </SectionCard>
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
-        <SectionCard
-          title="Needs review"
-          description="Imports waiting for edits, duplicate decisions, or final commit."
-        >
-          {reviewSessions.length === 0 ? (
-            <EmptyState
-              title="Nothing waiting for review"
-              description="Upload a CSV or choose a Google Sheet to start a new import."
-            />
-          ) : (
+        {/* Google Sheets card */}
+        <div className="card">
+          <div className="card-header">
             <div>
-              {reviewSessions.map((session) => (
-                <article
-                  key={session.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_110px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
-                >
-                  <div>
-                    <p className="line-clamp-1 font-semibold text-ud-ink">
-                      {session.file_name ||
-                        session.source_name ||
-                        "Import review"}
-                    </p>
-                    <p className="mt-1 text-sm text-ud-faint">
-                      {getSourceLabel(session.source_type)} ·{" "}
-                      {getRecordTypeLabel(session.record_type)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-ud-faint">Rows</p>
-                    <p className="mt-1 text-sm font-semibold text-ud-muted">
-                      {session.total_rows || 0}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-ud-faint">
-                      Review
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-ud-muted">
-                      {session.valid_rows || 0} ready ·{" "}
-                      {session.duplicate_rows || 0} dupes ·{" "}
-                      {session.error_rows || 0} errors
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-2 md:items-end">
-                    <StatusBadge tone={getStatusTone(session.status)}>
-                      {session.status}
-                    </StatusBadge>
-
-                    <Link
-                      href={`/imports/sessions/${session.id}`}
-                      className="w-fit rounded-[9px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:text-ud-ink"
-                    >
-                      Open review
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Data quality"
-          description={`Missing details across ${profile.labels.customerPlural.toLowerCase()}.`}
-        >
-          <div className="grid gap-3 p-4 md:grid-cols-3 xl:grid-cols-1">
-            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
-              <p className="text-xs font-medium text-ud-faint">
-                {profile.labels.customerPlural}
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-ud-ink">
-                {customers.length}
-              </p>
-              <p className="mt-2 text-xs leading-5 text-ud-faint">
-                Total records in the workspace.
-              </p>
-            </div>
-
-            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
-              <p className="text-xs font-medium text-ud-faint">Incomplete contact</p>
-              <p className="mt-2 text-2xl font-semibold text-ud-ink">
-                {missingContact}
-              </p>
-              <p className="mt-2 text-xs leading-5 text-ud-faint">
-                Missing phone or email.
-              </p>
-            </div>
-
-            <div className="rounded-[10px] border border-ud bg-ud-surface-sunk p-4">
-              <p className="text-xs font-medium text-ud-faint">No address</p>
-              <p className="mt-2 text-2xl font-semibold text-ud-ink">
-                {missingAddress}
-              </p>
-              <p className="mt-2 text-xs leading-5 text-ud-faint">
-                Missing address or location.
-              </p>
+              <div className="card-title">Google Sheets</div>
+              <div className="card-desc">Import from a spreadsheet URL</div>
             </div>
           </div>
-        </SectionCard>
-      </section>
+          <div className="card-body">
+            <GoogleSheetsImportFlow />
+          </div>
+        </div>
+      </div>
 
-      {committedSessions.length > 0 && (
-        <SectionCard
-          title="Committed imports"
-          description="Imports that have been committed to the workspace. Use Revert to undo a specific import."
-        >
+      {/* Sync integrations */}
+      <div className="card mb-5">
+        <div className="card-header">
           <div>
-            {committedSessions.map((session) => (
-              <article
-                key={session.id}
-                className="grid gap-3 p-4 md:grid-cols-[1fr_120px_160px_140px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
-              >
-                <div>
-                  <p className="line-clamp-1 font-semibold text-ud-ink">
-                    {session.file_name ||
-                      session.source_name ||
-                      "Import"}
-                  </p>
-                  <p className="mt-1 text-sm text-ud-faint">
-                    {getSourceLabel(session.source_type)} ·{" "}
-                    {getRecordTypeLabel(session.record_type)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium text-ud-faint">Records</p>
-                  <p className="mt-1 text-sm font-semibold text-ud-muted">
-                    {Number(session.created_rows || 0) + Number(session.updated_rows || 0)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium text-ud-faint">Committed</p>
-                  <p className="mt-1 text-sm font-semibold text-ud-muted">
-                    {formatTimestamp(session.committed_at || session.created_at)}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2 md:items-end">
-                  <StatusBadge tone={getStatusTone(session.status)}>
-                    {session.status}
-                  </StatusBadge>
-
-                  <form action={revertImportSession.bind(null, session.id)}>
-                    <button
-                      type="submit"
-                      disabled={session.status === "reverted"}
-                      className="rounded-lg border border-ud px-2 py-1 text-xs text-ud-muted hover:bg-ud-surface-sunk disabled:opacity-50"
-                    >
-                      {session.status === "reverted" ? "Reverted" : "Revert"}
-                    </button>
-                  </form>
-                </div>
-              </article>
-            ))}
+            <div className="card-title">Sync from integrations</div>
+            <div className="card-desc">Pull data directly from connected tools — no file needed</div>
           </div>
-        </SectionCard>
-      )}
-
-      {syncConnections.length > 0 ? (
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[0.8fr_1.2fr] items-start">
-          <SectionCard
-            title="Saved syncs"
-            description="Connections configured for repeat syncing."
-          >
-            <div>
-              {syncConnections.map((connection) => (
-                <article
-                  key={connection.id}
-                  className="grid gap-3 p-4 md:grid-cols-[1fr_120px_120px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
-                >
-                  <div>
-                    <p className="font-semibold text-ud-ink">
-                      {connection.name}
-                    </p>
-                    <p className="mt-1 text-sm text-ud-faint">
-                      {connection.source_name ||
-                        getSourceLabel(connection.source_type)}
-                    </p>
-                  </div>
-
-                  <p className="text-sm font-semibold text-ud-muted">
-                    {getRecordTypeLabel(connection.record_type)}
-                  </p>
-
-                  <p className="text-sm font-semibold text-ud-muted">
-                    {connection.sync_frequency}
-                  </p>
-
-                  <div className="md:text-right">
-                    <StatusBadge tone={getStatusTone(connection.status)}>
-                      {connection.status}
-                    </StatusBadge>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Import history"
-            description="Committed imports and sync runs for this workspace."
-          >
-            {syncRuns.length === 0 ? (
-              <EmptyState
-                title="No committed imports yet"
-                description="Import and commit data to create history here."
-              />
-            ) : (
-              <div>
-                {syncRuns.map((run) => {
-                  const metadata = run.metadata as {
-                    source_type?: string;
-                    file_name?: string;
-                    record_type?: string;
-                  } | null;
-
-                  return (
-                    <article
-                      key={run.id}
-                      className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
-                    >
-                      <div>
-                        <p className="line-clamp-1 font-semibold text-ud-ink">
-                          {metadata?.file_name ||
-                            getSourceLabel(metadata?.source_type || null) ||
-                            "Import run"}
-                        </p>
-                        <p className="mt-1 text-sm text-ud-faint">
-                          {getRecordTypeLabel(
-                            metadata?.record_type || "records",
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-ud-faint">Created</p>
-                        <p className="text-sm font-semibold text-ud-muted">
-                          {run.records_created || 0}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-ud-faint">Updated</p>
-                        <p className="text-sm font-semibold text-ud-muted">
-                          {run.records_updated || 0}
-                        </p>
-                      </div>
-
-                      <div className="md:text-right">
-                        <StatusBadge tone={getStatusTone(run.status)}>
-                          {run.status}
-                        </StatusBadge>
-                        <p className="mt-2 text-xs text-ud-faint">
-                          {formatTimestamp(run.finished_at || run.started_at)}
-                        </p>
-                      </div>
-                    </article>
-                  );
-                })}
+        </div>
+        <div>
+          {INTEGRATIONS.map((integration) => {
+            const connected = connectedIds.has(integration.id);
+            return (
+              <div key={integration.id} className="queue-item">
+                <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: integration.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {integration.icon}
+                </div>
+                <div className="queue-body">
+                  <div className="queue-action">{integration.name}</div>
+                  <div className="queue-meta">{integration.meta}</div>
+                </div>
+                <span className={`badge ${connected ? "badge-success" : "badge-neutral"}`} style={{ marginRight: "12px" }}>
+                  {connected ? "Connected" : "Not connected"}
+                </span>
+                <button className="btn btn-ghost btn-sm">
+                  {connected ? "Disconnect" : "Connect"}
+                </button>
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent imports */}
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Recent imports</div>
+          <button className="btn btn-ghost btn-sm">View all</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Type</th>
+              <th>Records</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {importSessions.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                  No imports yet.
+                </td>
+              </tr>
+            ) : (
+              importSessions.slice(0, 10).map((session) => (
+                <tr key={session.id}>
+                  <td className="td-primary">{session.file_name || session.source_name || "—"}</td>
+                  <td className="td-muted">{getRecordTypeLabel(session.record_type)}</td>
+                  <td className="td-muted">{session.total_rows ?? "—"} records</td>
+                  <td className="td-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
+                  <td><span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span></td>
+                </tr>
+              ))
             )}
-          </SectionCard>
-        </section>
-      ) : (
-        <SectionCard
-          title="Recent activity"
-          description="Latest import and sync runs."
-        >
-          {syncRuns.length === 0 ? (
-            <EmptyState
-              title="No import activity yet"
-              description="Analyze and commit data to create activity history."
-            />
-          ) : (
-            <div>
-              {syncRuns.map((run) => {
-                const metadata = run.metadata as {
-                  source_type?: string;
-                  file_name?: string;
-                  record_type?: string;
-                } | null;
-
-                return (
-                  <article
-                    key={run.id}
-                    className="grid gap-3 p-4 md:grid-cols-[1fr_90px_90px_120px] md:items-center border-b border-[rgba(0,0,0,0.04)] last:border-0"
-                  >
-                    <div>
-                      <p className="line-clamp-1 font-semibold text-ud-ink">
-                        {metadata?.file_name ||
-                          getSourceLabel(metadata?.source_type || null) ||
-                          "Import run"}
-                      </p>
-                      <p className="mt-1 text-sm text-ud-faint">
-                        {getRecordTypeLabel(
-                          metadata?.record_type || "records",
-                        )}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-ud-faint">Created</p>
-                      <p className="text-sm font-semibold text-ud-muted">
-                        {run.records_created || 0}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-ud-faint">Updated</p>
-                      <p className="text-sm font-semibold text-ud-muted">
-                        {run.records_updated || 0}
-                      </p>
-                    </div>
-
-                    <div className="md:text-right">
-                      <StatusBadge tone={getStatusTone(run.status)}>
-                        {run.status}
-                      </StatusBadge>
-                      <p className="mt-2 text-xs text-ud-faint">
-                        {formatTimestamp(run.finished_at || run.started_at)}
-                      </p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </SectionCard>
-      )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

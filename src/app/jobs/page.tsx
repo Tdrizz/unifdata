@@ -48,16 +48,14 @@ export default async function WorkPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <div className="hidden md:block">
-        <JobsList
-          jobs={jobs}
-          count={count}
-          customers={customers}
-          leads={leads}
-          profile={profile}
-          selectedStage={selectedStage}
-        />
-      </div>
+      <JobsList
+        jobs={jobs}
+        count={count}
+        customers={customers}
+        leads={leads}
+        profile={profile}
+        selectedStage={selectedStage}
+      />
       <div className="block md:hidden">
         <MobileJobsList
           jobs={jobs}

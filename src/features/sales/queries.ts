@@ -14,7 +14,7 @@ export async function getSalesPageData(
 
   let query = supabase
     .from("sales")
-    .select("id, amount, payment_status, sale_date, service_type, source, created_at", { count: "exact" })
+    .select("id, customer_id, amount, payment_status, sale_date, service_type, source, created_at", { count: "exact" })
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 

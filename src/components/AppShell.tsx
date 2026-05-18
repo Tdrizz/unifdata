@@ -41,56 +41,82 @@ export async function AppShell({
   const displayName = userName || companyName || userEmail;
 
   return (
-    <div className="flex min-h-screen bg-ud-page text-ud-text">
-      {/* ── Desktop sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-[248px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0c1117]">
-        {/* Brand block */}
-        <div className="px-[18px] py-[18px] pb-[14px]">
-          <Link href="/workspace">
-            <ProductMark companyName={companyName} inverse />
-          </Link>
-        </div>
-
-        {/* Nav (includes ⌘K trigger) */}
-        <div className="flex-1 overflow-y-auto px-[10px] pb-3">
-          <AppNav businessSector={businessSector} />
-        </div>
-
-        {/* Account block */}
-        <div className="px-[14px] py-[12px] border-t border-white/[0.07]">
-          <div className="flex items-center gap-2.5 mb-2">
-            <Avatar name={displayName} size={28} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[12.5px] font-semibold text-[#d0dae6] truncate">
-                {companyName || "My Workspace"}
-              </p>
-              <p className="text-[11px] text-[#3d5166] truncate">{userEmail}</p>
-            </div>
-            <button
-              type="button"
-              className="shrink-0 text-[#3d5166] hover:text-[#8b98a8]"
-              aria-label="Account menu"
-            >
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
+    <>
+      {/* ── Desktop shell ─────────────────────────────────────────────────── */}
+      <div className="shell hidden md:flex">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {/* Brand */}
+          <div className="sidebar-brand">
+            <Link href="/workspace" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+              <div className="brand-mark">
+                <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "20px", height: "20px" }}>
+                  <circle cx="256" cy="256" r="170" fill="none" stroke="#E8EDF2" strokeWidth="26"/>
+                  <rect x="238" y="64" width="36" height="52" rx="8" fill="#E8EDF2"/>
+                  <rect x="238" y="396" width="36" height="52" rx="8" fill="#E8EDF2"/>
+                  <rect x="64" y="238" width="52" height="36" rx="8" fill="#E8EDF2"/>
+                  <rect x="396" y="238" width="52" height="36" rx="8" fill="#E8EDF2"/>
+                  <circle cx="256" cy="256" r="142" fill="#1D2D3E"/>
+                  <line x1="256" y1="190" x2="256" y2="270" stroke="#6B5FCC" strokeWidth="20" strokeLinecap="round"/>
+                  <line x1="256" y1="222" x2="198" y2="222" stroke="#6B5FCC" strokeWidth="18" strokeLinecap="round"/>
+                  <line x1="256" y1="254" x2="314" y2="254" stroke="#6B5FCC" strokeWidth="18" strokeLinecap="round"/>
+                  <circle cx="194" cy="222" r="20" fill="none" stroke="#6B5FCC" strokeWidth="16"/>
+                  <rect x="300" y="238" width="32" height="32" rx="5" fill="none" stroke="#6B5FCC" strokeWidth="16"/>
+                  <circle cx="256" cy="316" r="24" fill="#6B5FCC"/>
+                </svg>
+              </div>
+              <div className="brand-name"><span>UNIF</span><span>DATA</span></div>
+            </Link>
           </div>
-          <LogoutButton variant="sidebar" />
+
+          {/* Search */}
+          <button
+            type="button"
+            className="sidebar-search"
+            onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span>Search workspace…</span>
+            <kbd>⌘K</kbd>
+          </button>
+
+          {/* Nav */}
+          <nav className="sidebar-nav">
+            <AppNav businessSector={businessSector} />
+          </nav>
+
+          {/* Footer */}
+          <div className="sidebar-footer">
+            <div className="sidebar-user">
+              <div className="user-avatar">
+                {(companyName || userEmail || "U").charAt(0).toUpperCase()}
+              </div>
+              <div className="user-info">
+                <div className="user-name">{companyName || "My Workspace"}</div>
+                <div className="user-email">{userEmail}</div>
+              </div>
+            </div>
+            <LogoutButton variant="sidebar" />
+          </div>
+        </aside>
+
+        {/* Main */}
+        <div className="main">
+          <Topbar
+            companyId={companyId}
+            initialNotifications={initialNotifications ?? []}
+          />
+          <main className="content">
+            {children}
+          </main>
         </div>
-      </aside>
+      </div>
 
-      {/* ── Main column ─────────────────────────────────────────────────── */}
-      <div className="flex flex-1 min-w-0 flex-col overflow-x-hidden">
-        {/* Desktop topbar */}
-        <Topbar
-          companyId={companyId}
-          initialNotifications={initialNotifications ?? []}
-          className="hidden md:flex"
-        />
-
-        {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud bg-ud-page/95 backdrop-blur-sm">
+      {/* ── Mobile layout ─────────────────────────────────────────────────── */}
+      <div className="flex flex-col min-h-screen md:hidden bg-ud-page">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud bg-ud-page/95 backdrop-blur-sm">
           <Link href="/workspace">
             <ProductMark companyName={companyName} />
           </Link>
@@ -103,9 +129,7 @@ export async function AppShell({
             )}
           </div>
         </header>
-
-        {/* Content */}
-        <main className="flex-1 pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="flex-1 pb-[calc(80px+env(safe-area-inset-bottom))]">
           {children}
         </main>
       </div>
@@ -113,8 +137,8 @@ export async function AppShell({
       {/* Mobile tab bar */}
       <MobileTabBar businessSector={businessSector} />
 
-      {/* Command palette — overlays everything */}
+      {/* Command palette */}
       <CommandPalette />
-    </div>
+    </>
   );
 }

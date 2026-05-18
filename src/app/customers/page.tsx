@@ -64,36 +64,13 @@ export default async function CustomersPage({
       accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      {/* Desktop header — hidden on mobile (mobile header is inside CustomersList) */}
-      <div className="hidden md:block px-6 pt-5 pb-8">
-        <PageHeader
-          eyebrow="Clients"
-          title={`${count} clients`}
-          description="Everyone you've sold to. Click a row to see quotes, visits, and payments."
-          actions={
-            <div className="flex items-center gap-2">
-              <Link
-                href="/imports"
-                className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink transition-colors"
-              >
-                Import
-              </Link>
-            </div>
-          }
-          className="pb-5"
-        />
-
-        <CustomerCreateForm profile={profile} />
-
-        <div className="mt-5">
-          <CustomersTableClient
-            customers={customers}
-            jobs={jobs}
-            leads={leads}
-            sales={sales}
-          />
-        </div>
-      </div>
+      {/* Desktop view */}
+      <CustomersTableClient
+        customers={customers}
+        jobs={jobs}
+        leads={leads}
+        sales={sales}
+      />
 
       {/* Mobile view */}
       <CustomersList

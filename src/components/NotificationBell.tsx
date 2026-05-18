@@ -65,30 +65,28 @@ export function NotificationBell({ companyId, initialNotifications, variant = "s
     <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
-        className={`relative rounded-full p-2 ${variant === "sidebar" ? "hover:bg-white/10" : "hover:bg-ud-surface-sunk"}`}
+        className="topbar-btn"
+        title="Notifications"
         aria-label="Notifications"
       >
-        <svg className={`h-5 w-5 ${variant === "sidebar" ? "text-white" : "text-ud-muted"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
+        {unreadCount > 0 && <span className="notif-dot" />}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-80 max-w-[calc(100vw-1rem)] rounded-[12px] border border-ud bg-ud-surface shadow-ud">
-          <div className="border-b border-ud px-4 py-2 text-sm font-medium text-ud-ink">Notifications</div>
-          <div className="max-h-96 overflow-y-auto">
+        <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 50, width: "300px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "var(--shadow)" }}>
+          <div style={{ borderBottom: "1px solid var(--border)", padding: "10px 16px", fontSize: "13px", fontWeight: 600, color: "var(--ink)" }}>Notifications</div>
+          <div style={{ maxHeight: "360px", overflowY: "auto" }}>
             {notifications.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-ud-faint">No notifications</p>
+              <p style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: "var(--faint)" }}>No notifications</p>
             ) : (
               notifications.slice(0, 10).map((n) => (
-                <div key={n.id} className={`border-b border-ud px-4 py-3 last:border-0 ${!n.read ? "bg-ud-accent-soft" : ""}`}>
-                  <p className="text-sm font-medium text-ud-ink">{n.title}</p>
-                  {n.body && <p className="mt-0.5 text-xs text-ud-muted">{n.body}</p>}
-                  <p className="mt-1 text-xs text-ud-faint">{new Date(n.created_at).toLocaleDateString()}</p>
+                <div key={n.id} style={{ borderBottom: "1px solid var(--border)", padding: "12px 16px", background: !n.read ? "var(--accent-light)" : undefined }}>
+                  <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)", margin: 0 }}>{n.title}</p>
+                  {n.body && <p style={{ marginTop: "2px", fontSize: "12px", color: "var(--muted)", margin: "2px 0 0" }}>{n.body}</p>}
+                  <p style={{ marginTop: "4px", fontSize: "11px", color: "var(--faint)", margin: "4px 0 0" }}>{new Date(n.created_at).toLocaleDateString()}</p>
                 </div>
               ))
             )}
