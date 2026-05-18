@@ -1,17 +1,14 @@
-import Link from "next/link";
-import { ProductMark } from "@/components/ProductMark";
+import { PublicNav } from "@/components/PublicNav";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
 
 export default function WaitlistPage() {
   return (
-    <main className="min-h-screen bg-[#090e1a] px-6 py-10 text-white">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <section>
-          <Link href="/">
-            <ProductMark inverse />
-          </Link>
+    <main className="min-h-screen bg-[#090e1a] text-white">
+      <PublicNav active="waitlist" />
 
-          <div className="mt-12">
+      <div className="mx-auto grid min-h-[calc(100vh-56px)] w-full max-w-6xl items-center gap-8 px-6 py-10 lg:grid-cols-[0.9fr_1.1fr]">
+        <section>
+          <div className="mt-4">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
               Invite-only beta
             </p>

@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
-import { ProductMark } from "@/components/ProductMark";
+import { PublicNav } from "@/components/PublicNav";
 
 export default function SignInPage() {
   return (
-    <main className="min-h-screen bg-[#090e1a] px-6 py-10 text-white">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl flex-col justify-center">
-        <Link href="/" className="mb-10">
-          <ProductMark inverse />
-        </Link>
+    <main className="min-h-screen bg-[#090e1a] text-white">
+      <PublicNav active="login" />
 
+      <div className="mx-auto flex min-h-[calc(100vh-56px)] w-full max-w-6xl flex-col justify-center px-6 py-10">
         <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <section>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">

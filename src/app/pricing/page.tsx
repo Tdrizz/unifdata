@@ -45,7 +45,7 @@ const faqs = [
 export default function PricingPage() {
   return (
     <main className="min-h-screen bg-[#090e1a] text-white">
-      <PublicNav dark active="pricing" />
+      <PublicNav active="pricing" />
 
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 pb-10 pt-20 text-center">
@@ -173,7 +173,7 @@ export default function PricingPage() {
               href="/waitlist"
               className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
             >
-              Get started
+              Request access
             </Link>
             <Link
               href="/"

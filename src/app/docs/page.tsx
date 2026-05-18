@@ -231,7 +231,7 @@ const navItems = [
 export default function DocsPage() {
   return (
     <main className="min-h-screen bg-[#090e1a] text-white">
-      <PublicNav dark active="docs" />
+      <PublicNav active="docs" />
 
       {/* Header */}
       <div className="mx-auto max-w-7xl px-6 py-20">

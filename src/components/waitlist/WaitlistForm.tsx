@@ -69,7 +69,7 @@ export function WaitlistForm() {
           autoComplete="organization"
         />
         <div>
-          <label className="text-sm font-medium text-ud-ink">
+          <label className="text-sm font-medium text-slate-200">
             Company size
           </label>
           <select
@@ -96,7 +96,7 @@ export function WaitlistForm() {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-ud-ink">
+        <label className="text-sm font-medium text-slate-200">
           Use case or pain points
         </label>
         <textarea
@@ -145,7 +145,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-medium text-ud-ink">{label}</label>
+      <label className="text-sm font-medium text-slate-200">{label}</label>
       <input
         name={name}
         type={type}

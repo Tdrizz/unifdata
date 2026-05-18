@@ -123,7 +123,7 @@ const features = [
 export default function PreviewPage() {
   return (
     <main className="min-h-screen bg-[#090e1a] text-white">
-      <PublicNav dark active="preview" />
+      <PublicNav active="preview" />
 
       <div className="mx-auto max-w-6xl px-6">
         {/* Hero */}
