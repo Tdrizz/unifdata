@@ -16,6 +16,9 @@ const companySizes = [
   "100+ employees",
 ];
 
+const inputClass =
+  "mt-2 w-full rounded-[10px] border border-white/15 bg-white/8 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-white/30 focus:ring-2 focus:ring-[#4A3FA8]/40";
+
 export function WaitlistForm() {
   const [state, formAction, pending] = useActionState(
     submitWaitlistRequest,
@@ -75,20 +78,20 @@ export function WaitlistForm() {
           <select
             name="companySize"
             required
-            className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
+            className={inputClass + " cursor-pointer"}
             defaultValue=""
           >
-            <option value="" disabled>
+            <option value="" disabled className="bg-[#0d1423] text-slate-400">
               Select size
             </option>
             {companySizes.map((size) => (
-              <option key={size} value={size}>
+              <option key={size} value={size} className="bg-[#0d1423] text-white">
                 {size}
               </option>
             ))}
           </select>
           {state.fieldErrors?.companySize && (
-            <p className="mt-2 text-sm text-red-200">
+            <p className="mt-2 text-sm text-red-300">
               {state.fieldErrors.companySize}
             </p>
           )}
@@ -103,18 +106,18 @@ export function WaitlistForm() {
           name="useCase"
           required
           rows={5}
-          className="mt-2 w-full resize-none rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
+          className={inputClass + " resize-none"}
           placeholder="Tell us what data is scattered, duplicated, or hard to act on today."
         />
         {state.fieldErrors?.useCase && (
-          <p className="mt-2 text-sm text-red-200">
+          <p className="mt-2 text-sm text-red-300">
             {state.fieldErrors.useCase}
           </p>
         )}
       </div>
 
       {state.error && (
-        <div className="rounded-[10px] border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-100">
+        <div className="rounded-[10px] border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-200">
           {state.error}
         </div>
       )}
@@ -122,9 +125,9 @@ export function WaitlistForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-[10px] bg-ud-accent px-4 py-3.5 font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-[10px] bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? "Submitting..." : "Request beta access"}
+        {pending ? "Submitting..." : "Request access"}
       </button>
     </form>
   );
@@ -151,9 +154,9 @@ function Field({
         type={type}
         autoComplete={autoComplete}
         required
-        className="mt-2 w-full rounded-[10px] border border-white/10 bg-white px-4 py-3 text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40"
+        className={inputClass}
       />
-      {error && <p className="mt-2 text-sm text-red-200">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
     </div>
   );
 }
