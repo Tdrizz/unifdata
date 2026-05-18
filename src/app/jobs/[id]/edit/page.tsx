@@ -51,10 +51,10 @@ export default async function EditWorkPage({
           actions={
             <div className="flex flex-wrap gap-2">
               <Link href="/jobs" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
-                Back to Work
+                Back to {profile.labels.jobPlural}
               </Link>
               <Link href="/sales" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-                Revenue
+                {profile.labels.salePlural}
               </Link>
             </div>
           }

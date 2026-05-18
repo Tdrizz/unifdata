@@ -6,7 +6,10 @@ type Props = DataHubPageData & {
   profile: IndustryProfile;
 };
 
-export function DataHubView({ customers, workRecords, revenueRecords, followUps }: Props) {
+export function DataHubView({ customers, workRecords, revenueRecords, followUps, profile }: Props) {
+  const cust = profile.labels.customerSingular;
+  const custP = profile.labels.customerPlural;
+  const jobP = profile.labels.jobPlural;
   const missingEmails = customers.filter((c) => !c.email).length;
   const missingPhones = customers.filter((c) => !c.phone).length;
   const orphanJobs = workRecords.filter((w) => !w.customer_id).length;
@@ -33,8 +36,8 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
     ...(missingEmails > 0 ? [{
       id: "missing-emails",
       dot: "danger" as const,
-      title: `${missingEmails} clients are missing email addresses`,
-      meta: "Clients · High impact — prevents AI outreach and follow-up automation",
+      title: `${missingEmails} ${custP.toLowerCase()} are missing email addresses`,
+      meta: `${custP} · High impact — prevents AI outreach and follow-up automation`,
       count: missingEmails,
       primaryAction: `View ${missingEmails}`,
       primaryHref: "/customers",
@@ -44,8 +47,8 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
     ...(orphanJobs > 0 ? [{
       id: "orphan-jobs",
       dot: "neutral" as const,
-      title: `${orphanJobs} job records not linked to any client`,
-      meta: "Visits · Breaks lifetime value calculations and history",
+      title: `${orphanJobs} ${jobP.toLowerCase()} not linked to any ${cust.toLowerCase()}`,
+      meta: `${jobP} · Breaks lifetime value calculations and history`,
       count: orphanJobs,
       primaryAction: `View ${orphanJobs}`,
       primaryHref: "/jobs",
@@ -55,8 +58,8 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
     ...(missingPhones > 0 ? [{
       id: "missing-phones",
       dot: "warning" as const,
-      title: `${missingPhones} clients are missing phone numbers`,
-      meta: "Clients · Reduces ability to reach clients quickly",
+      title: `${missingPhones} ${custP.toLowerCase()} are missing phone numbers`,
+      meta: `${custP} · Reduces ability to reach ${custP.toLowerCase()} quickly`,
       count: missingPhones,
       primaryAction: `View ${missingPhones}`,
       primaryHref: "/customers",
@@ -89,7 +92,7 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
         <div className={`stat-card ${missingEmails > 0 ? "s-danger" : ""}`}>
           <div className="stat-label">Missing emails</div>
           <div className={`stat-value ${missingEmails > 0 ? "c-danger" : ""}`}>{missingEmails}</div>
-          <div className="stat-helper">Clients without email</div>
+          <div className="stat-helper">{custP} without email</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Duplicates</div>
@@ -99,7 +102,7 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
         <div className={`stat-card ${orphanJobs > 0 ? "" : ""}`}>
           <div className="stat-label">Orphan records</div>
           <div className="stat-value">{orphanJobs}</div>
-          <div className="stat-helper">Jobs with no client linked</div>
+          <div className="stat-helper">{jobP} with no {cust.toLowerCase()} linked</div>
         </div>
       </div>
 

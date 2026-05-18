@@ -163,7 +163,11 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
   const dayLabel = getDayLabel();
   const jobPlural = profile.labels.jobPlural;
+  const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
+  const salePlural = profile.labels.salePlural;
+  const customerSingular = profile.labels.customerSingular;
+  const followUpPlural = profile.labels.followUpPlural;
 
   const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
   const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
@@ -204,7 +208,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       {/* Stat row */}
       <div className="stat-row stat-row-5">
         <div className={`stat-card ${followUpSchedule.length > 0 ? "s-danger" : ""}`}>
-          <div className="stat-label">Follow-ups due</div>
+          <div className="stat-label">{followUpPlural} due</div>
           <div className={`stat-value ${followUpSchedule.length > 0 ? "c-danger" : ""}`}>{followUpSchedule.length}</div>
           <div className="stat-helper">{overdueCount} overdue · {dueTodayCount} due today</div>
         </div>
@@ -224,7 +228,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           <div className="stat-helper">{openLeads.length} active {leadPlural.toLowerCase()}</div>
         </div>
         <div className={`stat-card ${unpaidRevenueValue > 0 ? "s-danger" : ""}`}>
-          <div className="stat-label">Unpaid invoices</div>
+          <div className="stat-label">Unpaid {salePlural.toLowerCase()}</div>
           <div className={`stat-value ${unpaidRevenueValue > 0 ? "c-danger" : ""}`}>{formatCurrency(unpaidRevenueValue)}</div>
           <div className="stat-helper">{unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}</div>
         </div>
@@ -268,13 +272,13 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           {/* Jobs today */}
           <div className="card">
             <div className="card-header">
-              <div className="card-title">Jobs today</div>
+              <div className="card-title">{jobPlural} today</div>
               <Link href="/jobs" className="btn btn-ghost btn-sm">Calendar</Link>
             </div>
             {activeWork.length === 0 ? (
               <div className="queue-item">
                 <div className="queue-body">
-                  <div className="queue-meta">No active jobs right now.</div>
+                  <div className="queue-meta">No active {jobPlural.toLowerCase()} right now.</div>
                 </div>
               </div>
             ) : (
@@ -286,8 +290,8 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                     <div className="queue-item">
                       <div className={dotClass(tone)} />
                       <div className="queue-body">
-                        <div className="queue-action">{job.service_type || "Untitled job"}</div>
-                        <div className="queue-meta">{customer?.name || "No customer"}</div>
+                        <div className="queue-action">{job.service_type || `Untitled ${jobSingular.toLowerCase()}`}</div>
+                        <div className="queue-meta">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
                       </div>
                       <span className="badge badge-info">{job.status || "Active"}</span>
                     </div>
@@ -332,9 +336,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             <div className="card-body" style={{ padding: "16px" }}>
               <div className="quick-actions">
                 {[
-                  { label: "New client", href: "/customers" },
-                  { label: "Log a job", href: "/jobs" },
-                  { label: "Add follow-up", href: "/follow-ups" },
+                  { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
+                  { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
+                  { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
                   { label: "Ask AI", href: "/ai-assistant" },
                 ].map((action) => (
                   <Link key={action.label} href={action.href} className="quick-action" style={{ textDecoration: "none" }}>

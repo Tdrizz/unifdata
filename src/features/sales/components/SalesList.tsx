@@ -64,10 +64,12 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
     .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 }
 
-export function SalesList({ sales, count, customers = [], selectedStatus }: Props) {
+export function SalesList({ sales, count, customers = [], selectedStatus, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
   );
+  const saleSingular = profile?.labels.saleSingular ?? "Invoice";
+  const salePlural = profile?.labels.salePlural ?? "Invoices";
 
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const now = new Date();
@@ -112,9 +114,9 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
       <div className="page-header">
         <div>
           <div className="page-eyebrow">Revenue</div>
-          <div className="page-title">Revenue &amp; invoices</div>
+          <div className="page-title">Revenue &amp; {salePlural.toLowerCase()}</div>
           <div className="page-desc">
-            {formatCurrency(revenueMTD)} this month · {openCount} open {openCount === 1 ? "invoice" : "invoices"}
+            {formatCurrency(revenueMTD)} this month · {openCount} open {openCount === 1 ? saleSingular.toLowerCase() : salePlural.toLowerCase()}
           </div>
         </div>
         <div className="page-actions">
@@ -122,7 +124,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            New invoice
+            New {saleSingular.toLowerCase()}
           </Link>
         </div>
       </div>
@@ -142,10 +144,10 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
         <div className="stat-card">
           <div className="stat-label">Paid this month</div>
           <div className="stat-value">{formatCurrency(paidThisMonthValue)}</div>
-          <div className="stat-helper">{paidCount} invoices collected</div>
+          <div className="stat-helper">{paidCount} {salePlural.toLowerCase()} collected</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Avg open invoice</div>
+          <div className="stat-label">Avg open {saleSingular.toLowerCase()}</div>
           <div className="stat-value">{formatCurrency(avgOpenInvoice)}</div>
           <div className="stat-helper">{outstanding.length} outstanding</div>
         </div>
@@ -268,7 +270,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
         <table>
           <thead>
             <tr>
-              <th>Invoice</th>
+              <th>{saleSingular}</th>
               <th>Client</th>
               <th>Amount</th>
               <th>Issued</th>
@@ -281,7 +283,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
-                  No invoices found.
+                  No {salePlural.toLowerCase()} found.
                 </td>
               </tr>
             ) : (

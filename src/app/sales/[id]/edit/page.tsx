@@ -54,7 +54,7 @@ export default async function EditRevenuePage({
                 Back to Revenue
               </Link>
               <Link href="/jobs" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-                Work
+                {profile.labels.jobPlural}
               </Link>
             </div>
           }

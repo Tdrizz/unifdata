@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { CRMPageData } from "../queries";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 import { STAGES, mapToStage, isOpenLead } from "../stages";
 
 type Lead = CRMPageData["leads"][number];
-type Props = CRMPageData;
+type Props = CRMPageData & { profile?: IndustryProfile };
 
 function isUrgent(lead: Lead): boolean {
   if (!lead.next_follow_up_date) return false;
@@ -23,7 +24,10 @@ function dateLabel(lead: Lead): string | null {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export function CRMView({ leads, customers }: Props) {
+export function CRMView({ leads, customers, profile }: Props) {
+  const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
+  const leadPlural = profile?.labels.leadPlural ?? "Opportunities";
+  const customerSingular = profile?.labels.customerSingular ?? "Client";
   const customerById = new Map(customers.map((c) => [c.id, { name: c.name }]));
   const openLeads = leads.filter((l) => isOpenLead(l.status));
   const totalPipelineValue = openLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
@@ -53,9 +57,9 @@ export function CRMView({ leads, customers }: Props) {
       <div className="page-header">
         <div>
           <div className="page-eyebrow">Pipeline</div>
-          <div className="page-title">Sales pipeline</div>
+          <div className="page-title">{leadPlural} pipeline</div>
           <div className="page-desc">
-            {openLeads.length} active opportunities · {formatCurrency(totalPipelineValue)} · {wonThisMonth} won this month
+            {openLeads.length} active {leadPlural.toLowerCase()} · {formatCurrency(totalPipelineValue)} · {wonThisMonth} won this month
           </div>
         </div>
         <div className="page-actions">
@@ -67,7 +71,7 @@ export function CRMView({ leads, customers }: Props) {
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            New opportunity
+            New {leadSingular.toLowerCase()}
           </Link>
         </div>
       </div>
@@ -95,7 +99,7 @@ export function CRMView({ leads, customers }: Props) {
                   <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
                     <div className={`kanban-card ${urgent ? "urgent" : ""}`}>
                       <div className="kanban-card-name">{lead.service_requested || "Untitled"}</div>
-                      <div className="kanban-card-client">{customer?.name || "No client"}</div>
+                      <div className="kanban-card-client">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
                       <div className="kanban-card-footer">
                         <span className="badge badge-neutral">{formatCurrency(lead.estimated_value)}</span>
                         <span style={{

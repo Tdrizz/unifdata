@@ -142,11 +142,11 @@ export function CustomersList({
       {/* 1. Title block */}
       <div className="px-[18px] pt-[18px] pb-[12px]">
         <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
-          Clients
+          {profile?.labels.customerPlural ?? "Clients"}
         </p>
         <span className="flex items-baseline gap-2">
           <Display size={36}>{customers.length}</Display>
-          <span className="text-[20px] text-ud-muted font-medium">clients</span>
+          <span className="text-[20px] text-ud-muted font-medium">{(profile?.labels.customerPlural ?? "Clients").toLowerCase()}</span>
         </span>
 
         {/* Search */}
@@ -186,7 +186,7 @@ export function CustomersList({
       <Card padding={0}>
         {filteredCustomers.length === 0 ? (
           <EmptyState
-            title="No clients found"
+            title={`No ${(profile?.labels.customerPlural ?? "clients").toLowerCase()} found`}
             description="Try a different filter or search term."
           />
         ) : (
@@ -216,7 +216,7 @@ export function CustomersList({
                     {/* Top: name + open pill */}
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-[14px] text-ud-ink truncate flex-1">
-                        {customer.name || "Unnamed client"}
+                        {customer.name || `Unnamed ${(profile?.labels.customerSingular ?? "client").toLowerCase()}`}
                       </p>
                       {s.openCount > 0 && (
                         <Pill tone="accent">{s.openCount}</Pill>

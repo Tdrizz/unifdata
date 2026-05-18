@@ -32,7 +32,7 @@ export default async function PipelinePage() {
       businessSector={company.business_sector}
     >
       <>
-        <CRMView leads={leads} customers={customers} />
+        <CRMView leads={leads} customers={customers} profile={profile} />
         <MobileCrmView leads={leads} customers={customers} profile={profile} />
       </>
     </AppShell>
