@@ -73,7 +73,6 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
           <div className="page-desc">Identify and fix issues across your workspace.</div>
         </div>
         <div className="page-actions">
-          <button className="btn btn-ghost">Run scan</button>
         </div>
       </div>
 
@@ -111,7 +110,6 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps 
             <div className="card-title">Issues to resolve</div>
             <div className="card-desc">Last scanned today at {scanTime} · sorted by impact</div>
           </div>
-          <button className="btn btn-ghost btn-sm">Export report</button>
         </div>
         <div>
           {issues.length === 0 ? (

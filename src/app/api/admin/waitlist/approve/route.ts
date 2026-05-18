@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     }
 
     // Only admin emails can approve — configure via ADMIN_EMAILS env var (comma-separated)
-    const adminEmails = (process.env.ADMIN_EMAILS ?? "tittanolson@gmail.com,unifdata@gmail.com")
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "")
       .split(",")
       .map((e) => e.trim())
       .filter(Boolean);

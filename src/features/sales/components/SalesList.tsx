@@ -290,18 +290,16 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
                 const isOver = isOverdue(sale.payment_status);
                 return (
                   <tr key={sale.id}>
-                    <td className="td-primary">#{1000 + i + 1}</td>
+                    <td className="td-primary">#{sale.id.slice(-6).toUpperCase()}</td>
                     <td>{customer?.name || sale.service_type || "—"}</td>
                     <td className="td-mono">{formatCurrency(sale.amount)}</td>
                     <td className="td-muted">{formatSaleDate(sale.sale_date || sale.created_at)}</td>
                     <td className={isOver ? "text-danger" : "td-muted"} style={isOver ? { fontWeight: 600 } : undefined}>—</td>
                     <td><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
                     <td>
-                      {isOver ? (
-                        <button className="btn btn-ghost btn-sm">Send reminder</button>
-                      ) : (
-                        <Link href={`/sales/${sale.id}/edit`} className="td-link">View</Link>
-                      )}
+                      <Link href={`/sales/${sale.id}/edit`} className={isOver ? "btn btn-ghost btn-sm" : "td-link"}>
+                        {isOver ? "Send reminder" : "View"}
+                      </Link>
                     </td>
                   </tr>
                 );

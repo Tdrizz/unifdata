@@ -73,9 +73,16 @@ export async function submitWaitlistRequest(
     const approveUrl = `${appUrl}/api/admin/waitlist/approve?id=${id}`;
     const resend = new Resend(resendKey);
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? `noreply@${new URL(appUrl || "https://example.com").hostname}`;
+    const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    if (!adminEmail) {
+      console.warn("[waitlist.submit] ADMIN_EMAIL env var not set — skipping notification email");
+      return { ok: true };
+    }
+
     await resend.emails.send({
-      from: "UnifData <noreply@unifdata.com>",
-      to: "unifdata@gmail.com",
+      from: `UnifData <${fromEmail}>`,
+      to: adminEmail,
       subject: `New access request: ${parsed.data.name} — ${parsed.data.company}`,
       html: `
         <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;">

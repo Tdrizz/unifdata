@@ -221,6 +221,22 @@ export async function revokeApiKey(id: string): Promise<void> {
   revalidatePath("/settings");
 }
 
+export async function disconnectIntegrationAction(provider: string): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("integrations")
+    .delete()
+    .eq("company_id", currentCompany.company.id)
+    .eq("provider", provider);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+  revalidatePath("/imports");
+}
+
 export async function updateNotificationPreference(key: string, value: boolean): Promise<void> {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");

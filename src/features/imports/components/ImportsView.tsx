@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
+import { disconnectIntegrationAction } from "@/features/settings/actions";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
 
@@ -41,6 +43,7 @@ const INTEGRATIONS = [
     id: "quickbooks",
     name: "QuickBooks",
     meta: "Sync customers, invoices, and revenue",
+    startHref: "/api/integrations/quickbooks/start",
     iconBg: "#fef3c7",
     iconStroke: "#92400e",
     icon: (
@@ -53,6 +56,7 @@ const INTEGRATIONS = [
     id: "jobber",
     name: "Jobber",
     meta: "Sync jobs, quotes, and field schedules",
+    startHref: "/api/integrations/jobber/start",
     iconBg: "#e0e7ff",
     iconStroke: "#3730a3",
     icon: (
@@ -62,21 +66,10 @@ const INTEGRATIONS = [
     ),
   },
   {
-    id: "google-calendar",
-    name: "Google Calendar",
-    meta: "Pull scheduled appointments in as visits",
-    iconBg: "#f0fdf4",
-    iconStroke: "#166534",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth={1.8} strokeLinecap="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-      </svg>
-    ),
-  },
-  {
     id: "hubspot",
     name: "HubSpot",
     meta: "Sync contacts and deal activity",
+    startHref: "/api/integrations/hubspot/start",
     iconBg: "#fff4ee",
     iconStroke: "#c2410c",
     icon: (
@@ -89,6 +82,7 @@ const INTEGRATIONS = [
     id: "square",
     name: "Square",
     meta: "Import payments, invoices, and customer records",
+    startHref: "/api/integrations/square/start",
     iconBg: "#f1f5f9",
     iconStroke: "#334155",
     icon: (
@@ -165,9 +159,13 @@ export function ImportsView({ importSessions, integrations }: Props) {
                 <span className={`badge ${connected ? "badge-success" : "badge-neutral"}`} style={{ marginRight: "12px" }}>
                   {connected ? "Connected" : "Not connected"}
                 </span>
-                <button className="btn btn-ghost btn-sm">
-                  {connected ? "Disconnect" : "Connect"}
-                </button>
+                {connected ? (
+                  <form action={disconnectIntegrationAction.bind(null, integration.id)}>
+                    <button type="submit" className="btn btn-ghost btn-sm">Disconnect</button>
+                  </form>
+                ) : (
+                  <Link href={integration.startHref} className="btn btn-ghost btn-sm">Connect</Link>
+                )}
               </div>
             );
           })}
@@ -178,7 +176,6 @@ export function ImportsView({ importSessions, integrations }: Props) {
       <div className="card">
         <div className="card-header">
           <div className="card-title">Recent imports</div>
-          <button className="btn btn-ghost btn-sm">View all</button>
         </div>
         <table>
           <thead>
