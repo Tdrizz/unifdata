@@ -204,6 +204,66 @@ export type Database = {
           },
         ]
       }
+      communications_log: {
+        Row: {
+          channel: string
+          customer_id: string | null
+          direction: string
+          from_address: string | null
+          id: string
+          organization_id: string
+          payload: string
+          provider_message_id: string | null
+          status: string
+          subject: string | null
+          timestamp: string
+          to_address: string | null
+        }
+        Insert: {
+          channel: string
+          customer_id?: string | null
+          direction: string
+          from_address?: string | null
+          id?: string
+          organization_id: string
+          payload: string
+          provider_message_id?: string | null
+          status?: string
+          subject?: string | null
+          timestamp?: string
+          to_address?: string | null
+        }
+        Update: {
+          channel?: string
+          customer_id?: string | null
+          direction?: string
+          from_address?: string | null
+          id?: string
+          organization_id?: string
+          payload?: string
+          provider_message_id?: string | null
+          status?: string
+          subject?: string | null
+          timestamp?: string
+          to_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "master_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -755,6 +815,112 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_customer_audit_logs: {
+        Row: {
+          action: string
+          after_state: Json | null
+          before_state: Json | null
+          changed_by: string
+          customer_id: string | null
+          id: string
+          organization_id: string
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string
+          customer_id?: string | null
+          id?: string
+          organization_id: string
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          changed_by?: string
+          customer_id?: string | null
+          id?: string
+          organization_id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_customer_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_customers: {
+        Row: {
+          billing_address: Json | null
+          created_at: string
+          data_health_score: number
+          first_name: string | null
+          hubspot_contact_id: string | null
+          id: string
+          jobber_client_id: string | null
+          last_name: string | null
+          metadata: Json
+          organization_id: string
+          primary_email: string | null
+          primary_phone: string | null
+          quickbooks_customer_id: string | null
+          service_address: Json | null
+          sync_tokens: Json
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string
+          data_health_score?: number
+          first_name?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          jobber_client_id?: string | null
+          last_name?: string | null
+          metadata?: Json
+          organization_id: string
+          primary_email?: string | null
+          primary_phone?: string | null
+          quickbooks_customer_id?: string | null
+          service_address?: Json | null
+          sync_tokens?: Json
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string
+          data_health_score?: number
+          first_name?: string | null
+          hubspot_contact_id?: string | null
+          id?: string
+          jobber_client_id?: string | null
+          last_name?: string | null
+          metadata?: Json
+          organization_id?: string
+          primary_email?: string | null
+          primary_phone?: string | null
+          quickbooks_customer_id?: string | null
+          service_address?: Json | null
+          sync_tokens?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_customers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
