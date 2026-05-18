@@ -261,7 +261,7 @@ table {
 }
 
 /* ── Shell ── */
-.shell { display: flex; height: 100vh; overflow: hidden; }
+.shell { height: 100vh; overflow: hidden; }
 
 /* ── Sidebar ── */
 .sidebar { width: 236px; flex-shrink: 0; background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); display: flex; flex-direction: column; overflow: hidden; }
