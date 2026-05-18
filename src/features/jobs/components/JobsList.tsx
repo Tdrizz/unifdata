@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
+import type { IndustryProfile } from "@/lib/industry-profiles";
+import { JobCreateForm } from "./JobCreateForm";
 
 type Props = {
   jobs: JobListRow[];
   count: number;
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
-  profile?: unknown;
+  profile?: IndustryProfile;
   selectedStage: string;
 };
 
@@ -48,7 +50,9 @@ function statusBadgeClass(status: string | null) {
   return "badge badge-neutral";
 }
 
-export function JobsList({ jobs, customers }: Props) {
+export function JobsList({ jobs, customers, leads, profile }: Props) {
+  const jobPlural = profile?.labels.jobPlural ?? "Visits";
+  const jobSingular = profile?.labels.jobSingular ?? "Visit";
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const today = new Date();
   const weekDays = getWeekDays(today);
@@ -75,20 +79,19 @@ export function JobsList({ jobs, customers }: Props) {
       {/* Page header */}
       <div className="page-header">
         <div>
-          <div className="page-eyebrow">Visits</div>
-          <div className="page-title">Scheduled visits</div>
+          <div className="page-eyebrow">{jobPlural}</div>
+          <div className="page-title">Scheduled {jobPlural.toLowerCase()}</div>
           <div className="page-desc">
-            {weekLabel} · {totalThisWeek} {totalThisWeek === 1 ? "visit" : "visits"} scheduled{todayCount > 0 ? ` · ${todayCount} today` : ""}
+            {weekLabel} · {totalThisWeek} {totalThisWeek === 1 ? jobSingular.toLowerCase() : jobPlural.toLowerCase()} scheduled{todayCount > 0 ? ` · ${todayCount} today` : ""}
           </div>
         </div>
         <div className="page-actions">
-          <Link href="/jobs" className="btn btn-ghost">Month view</Link>
-          <Link href="/jobs" className="btn btn-primary">
+          <a href="#job-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Log visit
-          </Link>
+            Log {jobSingular.toLowerCase()}
+          </a>
         </div>
       </div>
 
@@ -104,7 +107,7 @@ export function JobsList({ jobs, customers }: Props) {
               {cnt > 0 ? (
                 <>
                   <div className="week-day-count" style={{ color: "var(--accent)", fontWeight: 600 }}>
-                    {cnt} {cnt === 1 ? "visit" : "visits"}
+                    {cnt} {cnt === 1 ? jobSingular.toLowerCase() : jobPlural.toLowerCase()}
                   </div>
                   <div className="week-day-dot" />
                 </>
@@ -134,7 +137,7 @@ export function JobsList({ jobs, customers }: Props) {
             {sorted.length === 0 ? (
               <tr>
                 <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
-                  No visits scheduled. <Link href="/jobs/new" className="td-link">Log a visit →</Link>
+                  No {jobPlural.toLowerCase()} scheduled. <a href="#job-quick-add" className="td-link">Add one →</a>
                 </td>
               </tr>
             ) : (
@@ -158,6 +161,11 @@ export function JobsList({ jobs, customers }: Props) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Quick add */}
+      <div id="job-quick-add" style={{ marginTop: "20px" }}>
+        <JobCreateForm customers={customers} leads={leads} />
       </div>
     </div>
   );

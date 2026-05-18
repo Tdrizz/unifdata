@@ -39,6 +39,7 @@ export default async function FollowUpsPage({
         followUps={data.followUps}
         opportunities={data.opportunities}
         people={data.people}
+        profile={profile}
       />
 
       {/* Mobile view */}

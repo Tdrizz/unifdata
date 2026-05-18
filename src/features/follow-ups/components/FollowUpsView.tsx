@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { parseDateOnly, getTodayDateOnly, formatDateOnly } from "@/lib/date-format";
 import { isClosedOpportunity } from "@/lib/status";
 import type { FollowUpRow, LeadRow, CustomerRow } from "../types";
+import type { IndustryProfile } from "@/lib/industry-profiles";
+import { markFollowUpCompleteAction } from "../actions";
+import { FollowUpCreateForm } from "./FollowUpCreateForm";
 
 type Props = {
   followUps: FollowUpRow[];
   opportunities: LeadRow[];
   people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  profile?: IndustryProfile;
 };
 
 type FilterType = "all" | "overdue" | "today" | "upcoming";
@@ -74,8 +78,9 @@ type QueueEntry = {
   priority: number;
 };
 
-export function FollowUpsView({ followUps, opportunities, people }: Props) {
+export function FollowUpsView({ followUps, opportunities, people, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
+  const [, startTransition] = useTransition();
 
   const personById = new Map(people.map((p) => [p.id, p]));
 
@@ -128,7 +133,7 @@ export function FollowUpsView({ followUps, opportunities, people }: Props) {
       {/* Page header */}
       <div className="page-header">
         <div>
-          <div className="page-eyebrow">Follow-ups</div>
+          <div className="page-eyebrow">{profile?.labels.followUpPlural ?? "Follow-ups"}</div>
           <div className="page-title">Priority queue</div>
           <div className="page-desc">
             {all.length} open · {overdueItems.length} overdue · {todayItems.length} due today
@@ -136,12 +141,12 @@ export function FollowUpsView({ followUps, opportunities, people }: Props) {
         </div>
         <div className="page-actions">
           <Link href="/crm" className="btn btn-ghost">Pipeline view</Link>
-          <Link href="/follow-ups" className="btn btn-primary">
+          <a href="#followup-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Add follow-up
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -179,23 +184,45 @@ export function FollowUpsView({ followUps, opportunities, people }: Props) {
               </div>
             </div>
           ) : (
-            filtered.map((item) => (
-              <Link key={item.id} href={item.href} style={{ textDecoration: "none" }}>
-                <div className="queue-item">
-                  <div className={getDotClass(item.due_date, item.status)} />
-                  <div className="queue-body">
-                    <div className="queue-action">{item.title}</div>
-                    <div className="queue-meta">{item.meta}</div>
+            filtered.map((item) => {
+              const isManual = item.id.startsWith("manual-");
+              const rawId = isManual ? item.id.replace("manual-", "") : null;
+              return (
+                <Link key={item.id} href={item.href} style={{ textDecoration: "none" }}>
+                  <div className="queue-item">
+                    <div className={getDotClass(item.due_date, item.status)} />
+                    <div className="queue-body">
+                      <div className="queue-action">{item.title}</div>
+                      <div className="queue-meta">{item.meta}</div>
+                    </div>
+                    <div className={getDueClass(item.due_date, item.status)} style={{ marginRight: "12px" }}>
+                      {getDueLabel(item.due_date, item.status)}
+                    </div>
+                    {isManual && rawId && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          startTransition(() => markFollowUpCompleteAction(rawId));
+                        }}
+                      >
+                        Done
+                      </button>
+                    )}
+                    {!isManual && (
+                      <span className="btn btn-ghost btn-sm">View →</span>
+                    )}
                   </div>
-                  <div className={getDueClass(item.due_date, item.status)} style={{ marginRight: "12px" }}>
-                    {getDueLabel(item.due_date, item.status)}
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={(e) => e.preventDefault()}>Done</button>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           )}
         </div>
+      </div>
+
+      {/* Quick add */}
+      <div id="followup-quick-add" style={{ marginTop: "20px" }}>
+        <FollowUpCreateForm people={people} />
       </div>
     </div>
   );

@@ -70,6 +70,23 @@ export async function updateFollowUpAction(
   redirect("/follow-ups?toast=Follow-up+updated");
 }
 
+export async function markFollowUpCompleteAction(id: string) {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) redirect("/onboarding");
+  const { company } = currentCompany;
+
+  const { error } = await supabase
+    .from("follow_ups")
+    .update({ status: "Complete" })
+    .eq("id", id)
+    .eq("company_id", company.id);
+
+  if (error) return;
+  revalidatePath("/follow-ups");
+  revalidatePath("/workspace");
+}
+
 export async function deleteFollowUpAction(id: string) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
