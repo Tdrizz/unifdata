@@ -22,11 +22,11 @@ export function PageHeader({
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[23px] font-bold leading-[1.15] tracking-[-0.025em] text-ud-ink">
+        <h1 className="text-[23px] font-bold leading-[1.15] tracking-[-0.025em] text-ud-ink [text-wrap:balance]">
           {title}
         </h1>
         {description && (
-          <p className="hidden md:block mt-1.5 max-w-2xl text-[13.5px] leading-[1.6] text-ud-muted">
+          <p className="hidden md:block mt-1.5 max-w-2xl text-[13.5px] leading-[1.6] text-ud-muted [text-wrap:pretty]">
             {description}
           </p>
         )}

@@ -99,7 +99,7 @@ export function LeadCard({ lead, customerName, compact = true }: Props) {
 
   // Desktop compact kanban card
   return (
-    <div className="bg-ud-surface border border-ud rounded-[10px] p-[10px_12px] shadow-ud cursor-grab hover:-translate-y-px hover:shadow-ud-raised transition-all">
+    <div className="bg-ud-surface border border-ud rounded-[10px] p-[10px_12px] shadow-ud cursor-grab hover:-translate-y-px hover:shadow-ud-raised transition-[box-shadow,transform] duration-[120ms] ease-out">
       {/* Top row */}
       <div className="flex items-center justify-between gap-2 mb-[6px]">
         <div className="flex items-center gap-[5px]">

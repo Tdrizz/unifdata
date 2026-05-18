@@ -8,7 +8,7 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-60"
+      className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-[opacity,transform] duration-[120ms] ease-out active:scale-[0.96] disabled:opacity-60"
     >
       {pending ? "Saving…" : children}
     </button>

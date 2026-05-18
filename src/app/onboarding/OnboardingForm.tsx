@@ -51,7 +51,7 @@ export function OnboardingForm() {
                 key={option.value}
                 type="button"
                 onClick={() => setSelectedSector(option.value)}
-                className={`flex flex-col items-start gap-2 rounded-[10px] border p-3.5 text-left transition-all ${
+                className={`flex flex-col items-start gap-2 rounded-[10px] border p-3.5 text-left transition-[border-color,background-color,box-shadow] duration-[120ms] ease-out active:scale-[0.98] ${
                   isActive
                     ? "border-ud-accent bg-[rgba(74,63,168,0.15)] ring-1 ring-ud-accent"
                     : "border-white/10 bg-ud-surface/5 hover:border-white/20 hover:bg-white/10"

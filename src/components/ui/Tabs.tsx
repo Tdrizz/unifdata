@@ -28,7 +28,7 @@ export function Tabs({ variant = "underline", value, onChange, options, classNam
               type="button"
               onClick={() => onChange(opt.id)}
               className={cn(
-                "px-3 py-1.5 rounded-[7px] text-xs font-semibold transition-all",
+                "px-3 py-1.5 rounded-[7px] text-xs font-semibold transition-[color,background-color,box-shadow] duration-[120ms] ease-out",
                 active
                   ? "bg-ud-surface text-ud-ink shadow-ud"
                   : "text-ud-muted hover:text-ud-text",

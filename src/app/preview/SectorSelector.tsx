@@ -22,7 +22,7 @@ export function SectorSelector({ sectors }: { sectors: Sector[] }) {
             key={sector.sector}
             type="button"
             onClick={() => setActive(i)}
-            className={`rounded-full px-4 py-2 text-[13px] font-medium transition-all ${
+            className={`rounded-full px-4 py-2 text-[13px] font-medium transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] ${
               i === active
                 ? "bg-white text-slate-950"
                 : "border border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/8 hover:text-white"

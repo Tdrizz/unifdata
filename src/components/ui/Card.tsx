@@ -27,7 +27,7 @@ export function Card({
         radius === "md" && "rounded-[12px]",
         radius === "lg" && "rounded-[14px]",
         raised ? "shadow-ud-raised" : "shadow-ud",
-        interactive && "cursor-pointer transition-all hover:border-ud-hard",
+        interactive && "cursor-pointer transition-[border-color,box-shadow] duration-[120ms] ease-out hover:border-ud-hard",
         className,
       )}
       style={{ padding, ...style }}

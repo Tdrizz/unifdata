@@ -227,7 +227,7 @@ export default function HomePage() {
                   <button
                     key={s.label}
                     onClick={() => setActiveSector(i)}
-                    className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                    className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] ${
                       activeSector === i
                         ? "border-white/40 bg-white text-slate-950"
                         : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/8 hover:text-white"

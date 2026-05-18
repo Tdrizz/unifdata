@@ -21,7 +21,7 @@ export function LifecycleTabs({ tabs, defaultTab }: { tabs: Tab[]; defaultTab?: 
             key={tab.key}
             type="button"
             onClick={() => setActive(tab.key)}
-            className={`flex-1 rounded-[8px] px-3 py-2 text-xs font-semibold transition-all ${
+            className={`flex-1 rounded-[8px] px-3 py-2 text-xs font-semibold transition-[color,background-color,box-shadow] duration-[120ms] ease-out ${
               active === tab.key
                 ? "bg-ud-surface text-ud-ink shadow-ud"
                 : "text-ud-faint hover:text-ud-muted"

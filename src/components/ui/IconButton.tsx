@@ -12,7 +12,7 @@ export function IconButton({ size = 34, active, children, className, ...rest }: 
     <button
       {...rest}
       className={cn(
-        "inline-flex items-center justify-center border border-ud rounded-[9px] text-ud-text transition-colors hover:bg-ud-surface-soft",
+        "inline-flex items-center justify-center border border-ud rounded-[9px] text-ud-text transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] hover:bg-ud-surface-soft",
         active ? "bg-ud-surface-sunk" : "bg-ud-surface",
         className,
       )}
