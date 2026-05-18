@@ -270,7 +270,7 @@ export function CustomersList({
 
       {/* 4. Inline create form */}
       {profile && (
-        <div className="px-[14px] pb-[16px]">
+        <div id="customer-quick-add" className="px-[14px] pb-[16px]">
           <CustomerCreateForm profile={profile} />
         </div>
       )}

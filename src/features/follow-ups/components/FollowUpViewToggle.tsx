@@ -4,6 +4,7 @@ import { useState } from "react";
 import { WeeklyCalendar } from "@/components/WeeklyCalendar";
 import type { CalendarEvent } from "@/components/WeeklyCalendar";
 import { FollowUpList } from "./FollowUpList";
+import { FollowUpCreateForm } from "./FollowUpCreateForm";
 import type { FollowUpRow, LeadRow, CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { isClosedOpportunity } from "@/lib/status";
@@ -101,6 +102,9 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
           </div>
         </>
       )}
+      <div id="followup-quick-add">
+        <FollowUpCreateForm people={people} />
+      </div>
     </div>
   );
 }

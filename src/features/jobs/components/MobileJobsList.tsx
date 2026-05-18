@@ -8,6 +8,7 @@ import { getWorkTone, getRevenueTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pill } from "@/components/ui/Pill";
+import { JobCreateForm } from "./JobCreateForm";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
 
 type Props = {
@@ -32,7 +33,7 @@ function matchesFilter(status: string | null | undefined, filter: StageFilter): 
   return false;
 }
 
-export function MobileJobsList({ jobs, count, customers, profile }: Props) {
+export function MobileJobsList({ jobs, count, customers, leads, profile }: Props) {
   const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
 
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -140,6 +141,9 @@ export function MobileJobsList({ jobs, count, customers, profile }: Props) {
           })}
         </div>
       )}
+      <div id="job-quick-add" className="px-[14px] mt-[20px]">
+        <JobCreateForm customers={customers} leads={leads} />
+      </div>
     </div>
   );
 }
