@@ -9,6 +9,7 @@ import { formatDateOnly } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CRMPageData } from "../queries";
 import { STAGES, mapToStage, isOpenLead } from "../stages";
+import { LeadCreateForm } from "@/features/leads/components/LeadCreateForm";
 
 type Lead = CRMPageData["leads"][number];
 
@@ -122,6 +123,11 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
           })}
         </div>
       )}
+
+      {/* Quick add */}
+      <div id="leads-quick-add" className="px-[14px] mt-[20px]">
+        <LeadCreateForm customers={customers} profile={profile} />
+      </div>
     </div>
   );
 }

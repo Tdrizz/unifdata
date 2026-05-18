@@ -189,7 +189,49 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         </p>
       </div>
 
-      {/* 2. 2×2 stat grid */}
+      {/* 2. Quick actions */}
+      <div className="overflow-x-auto no-scrollbar px-[14px] pb-[14px]">
+        <div className="flex gap-[8px]">
+          <Link
+            href="/customers#customer-quick-add"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+          >
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {profile.labels.customerSingular}
+          </Link>
+          <Link
+            href="/crm#leads-quick-add"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+          >
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {profile.labels.leadSingular}
+          </Link>
+          <Link
+            href="/jobs#job-quick-add"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+          >
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {profile.labels.jobSingular}
+          </Link>
+          <Link
+            href="/follow-ups#followup-quick-add"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+          >
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Follow-up
+          </Link>
+        </div>
+      </div>
+
+      {/* 3. 2×2 stat grid */}
       <div className="px-[14px] grid grid-cols-2 gap-[10px] pb-[14px]">
         <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
           <p className="text-[11px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
@@ -234,7 +276,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         </div>
       </div>
 
-      {/* 3. Needs attention */}
+      {/* 4. Needs attention */}
       {priorityQueue.length > 0 && (
         <div className="px-[14px] pb-[14px]">
           <Card padding={0} radius="md" className="overflow-hidden">
@@ -267,7 +309,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         </div>
       )}
 
-      {/* 4. Today's visits */}
+      {/* 5. Today's visits */}
       <div className="px-[14px] pb-[14px]">
         <Card padding={0} radius="md" className="overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
