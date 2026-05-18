@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-validation";
 import { checkAndDropEchoWebhook } from "@/lib/conflict-resolver";
 
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
 
   // Drop echo webhooks (messages we sent that bounced back).
   if (customer) {
+    await setOrgScope(supabase, customer.organization_id as string);
     const isEcho = await checkAndDropEchoWebhook({
       supabase,
       organizationId: customer.organization_id as string,

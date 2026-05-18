@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateMailgunSignature } from "@/lib/webhook-validation";
 import { normalizeEmail } from "@/lib/normalize";
 
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (customer) {
+    await setOrgScope(supabase, customer.organization_id as string);
     await supabase.from("communications_log").insert({
       organization_id: customer.organization_id,
       customer_id: customer.id,

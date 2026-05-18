@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 
 export type OverdueInvoiceJobData = {
   organizationId: string;
@@ -18,6 +19,8 @@ export async function processOverdueInvoice(
   supabase: SupabaseClient,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { organizationId, companyId, invoiceId, customerId } = data;
+
+  await setOrgScope(supabase, organizationId);
 
   // Re-verify: is this invoice still unpaid in the local sales table?
   const { data: sale } = await supabase

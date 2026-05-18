@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateQuickBooksSignature } from "@/lib/webhook-validation";
 import { getAutomationQueue, JOB_OVERDUE_INVOICE } from "@/lib/queue/client";
 import type { OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
     if (!integration) continue;
 
     const companyId = integration.company_id as string;
+    await setOrgScope(supabase, companyId);
 
     for (const entity of entities) {
       if (entity.name !== "Invoice" || entity.operation !== "Update") continue;

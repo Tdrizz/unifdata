@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 import { getAutomationQueue, JOB_LOST_QUOTE_EMAIL } from "@/lib/queue/client";
 import type { LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
 
@@ -108,6 +109,8 @@ export async function POST(request: Request) {
     console.warn("[jobber.webhook] No matching Jobber integration found", { accountId });
     return NextResponse.json({ received: true });
   }
+
+  await setOrgScope(supabase, companyId);
 
   // Look up master_customers by Jobber client ID.
   const jobberClientId = quote?.client?.id ?? "";

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAutomationQueue, JOB_LOST_QUOTE_SMS, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
+import { setOrgScope } from "@/lib/supabase/org-scope";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -21,6 +22,8 @@ export async function processLostQuoteEmail(
   supabase: SupabaseClient,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { organizationId, companyId, customerId } = data;
+
+  await setOrgScope(supabase, organizationId);
 
   // Verify the quote is still unconverted — if a job was created for this
   // customer after the quote was lost, do not send.
@@ -104,6 +107,8 @@ export async function processLostQuoteSms(
   supabase: SupabaseClient,
 ): Promise<{ sent: boolean; reason?: string }> {
   const { organizationId, companyId, customerId } = data;
+
+  await setOrgScope(supabase, organizationId);
 
   const converted = await checkIfConverted(supabase, companyId, customerId);
   if (converted) {
