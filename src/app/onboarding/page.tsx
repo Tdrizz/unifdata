@@ -30,13 +30,13 @@ export default async function OnboardingPage() {
             </p>
 
             <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight">
-              Choose the sector so the workspace knows what matters.
+              Tell us your industry and we&apos;ll set up the workspace around it.
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              A medical office, contractor, home services crew, and
-              professional services firm should not operate from the same
-              generic workspace.
+              A medical office, a contractor, and a home services crew each
+              need different language and priorities. Pick yours and the
+              workspace configures itself.
             </p>
           </div>
         </section>
@@ -56,8 +56,8 @@ export default async function OnboardingPage() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              This creates the company workspace and sets the dashboard language
-              for the business.
+              Takes about two minutes. You can update your company name and
+              industry any time from Settings.
             </p>
           </div>
 

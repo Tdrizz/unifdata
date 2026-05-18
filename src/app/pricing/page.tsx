@@ -22,7 +22,7 @@ const features = [
 const faqs = [
   {
     q: "What's included in the $300 setup fee?",
-    a: "A hands-on onboarding session where we configure your workspace, import your existing data, set up your industry profile, and make sure your team is ready to use UnifData on day one.",
+    a: "A hands-on session where we configure your workspace, import your existing data, set up your industry profile, and get your team using UnifData on day one. You're not left to figure it out yourself.",
   },
   {
     q: "When do I get charged?",
@@ -57,8 +57,8 @@ export default function PricingPage() {
           One price.<br />Everything included.
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-[17px] leading-8 text-slate-300">
-          No tiers, no feature gating, no surprises. Pay once to get set up,
-          then a flat monthly rate — that&apos;s it.
+          No tiers. No feature gating. Pay once to get set up, then a flat
+          $100 a month — cancel any time.
         </p>
       </section>
 
@@ -118,8 +118,8 @@ export default function PricingPage() {
             <div className="mt-8">
               <CheckoutButton />
               <p className="mt-3 text-center text-[12px] text-slate-500">
-                Invited users can subscribe immediately. New companies should
-                request beta access first.
+                Already invited? Subscribe now. New to UnifData?{" "}
+                <a href="/waitlist" className="underline hover:text-slate-400">Request access first.</a>
               </p>
             </div>
           </div>
@@ -163,10 +163,10 @@ export default function PricingPage() {
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-[30px] font-semibold tracking-tight">
-            Ready to get organized?
+            Stop running your business from memory.
           </h2>
           <p className="mt-3 text-slate-300">
-            One setup fee. One flat monthly rate. Everything included.
+            $300 setup. $100 a month. Every customer, job, and follow-up in one place.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link

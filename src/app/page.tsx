@@ -97,40 +97,40 @@ const whyItMatters = [
     num: "01",
     title: "Today's priorities, not yesterday's reports",
     description:
-      "See follow-ups due, unpaid work, stale opportunities, and data gaps — before they cost you revenue.",
+      "See follow-ups due, unpaid work, and stale opportunities every morning — before the day gets away from you.",
   },
   {
     num: "02",
-    title: "Industry-aware, not generic",
+    title: "Built for your industry, not a generic business",
     description:
       "The workspace adapts its language and priorities to your business type. A contractor and a dentist don't see the same dashboard.",
   },
   {
     num: "03",
-    title: "Clean data, not scattered data",
+    title: "Clean data means no lost customers",
     description:
-      "Fix missing fields, unlinked records, and incomplete contact info so no customer or deal falls through the cracks.",
+      "Fix missing fields, unlinked records, and incomplete contact info before they cost you a customer.",
   },
 ];
 
 const workflowCards = [
   {
     step: "01",
-    title: "Connect or import your data",
+    title: "Import your data or connect your tools",
     description:
-      "Bring in customers, leads, jobs, sales, and follow-ups from spreadsheets, or connect Jobber, QuickBooks, or HubSpot.",
+      "Bring in customers, leads, jobs, sales, and follow-ups from spreadsheets, or connect Jobber, QuickBooks, or HubSpot directly.",
   },
   {
     step: "02",
-    title: "UnifData organizes it",
+    title: "UnifData links everything together",
     description:
-      "Records are linked into one coherent view of your customers, open work, and revenue — no manual cleanup required.",
+      "Records link automatically into one view — customers, open work, and revenue — so you stop hunting across tabs.",
   },
   {
     step: "03",
     title: "Act on what needs attention today",
     description:
-      "Every morning you see exactly what's urgent: follow-ups due, money at risk, and records that are incomplete.",
+      "Every morning you see exactly what's urgent: follow-ups due, unpaid work, and records that are incomplete.",
   },
 ];
 
@@ -191,7 +191,7 @@ export default function HomePage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
               <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
-              CRM + Data Management for local businesses
+              Business CRM for local service businesses
             </div>
 
             <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-[68px]">
@@ -199,8 +199,8 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-300">
-              UnifData gives local businesses one industry-aware workspace for
-              customers, jobs, open quotes, and revenue — so nothing gets missed.
+              One workspace for your customers, jobs, open quotes, and revenue —
+              built to match your industry, so nothing falls through the cracks.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -319,12 +319,12 @@ export default function HomePage() {
               Why it matters
             </p>
             <h2 className="mt-3 text-[38px] font-semibold leading-[1.1] tracking-tight">
-              Most businesses don&apos;t have a revenue problem. They have a data problem.
+              Scattered data is where revenue goes to disappear.
             </h2>
             <p className="mt-4 text-[16px] leading-8 text-slate-300">
-              Customer info sits in spreadsheets. Follow-ups live in memory. Revenue
-              is tracked in a notebook. Jobs come in through texts. UnifData brings
-              it all together so owners can see what needs attention — and act on it.
+              Customer info lives in spreadsheets. Follow-ups exist only in memory.
+              Revenue gets tracked in a notebook. Jobs arrive by text. UnifData
+              pulls it together so you can see what needs attention — and act on it.
             </p>
           </div>
 
@@ -353,7 +353,7 @@ export default function HomePage() {
               How it works
             </p>
             <h2 className="mt-3 text-[38px] font-semibold tracking-tight">
-              Up and running in minutes
+              Set up in minutes, not months
             </h2>
           </div>
 
@@ -374,11 +374,11 @@ export default function HomePage() {
 
           <div className="mt-12 rounded-[24px] border border-white/10 bg-white/5 p-10 text-center">
             <h2 className="text-[30px] font-semibold tracking-tight">
-              Your business data shouldn&apos;t live in five different places.
+              Five spreadsheets and a notebook is not a system.
             </h2>
             <p className="mt-3 text-slate-300">
-              Set up your workspace in minutes. Choose your industry, bring in your
-              data, and see what needs attention today.
+              Set up in minutes. Pick your industry, bring in your data, and see
+              what needs attention — starting today.
             </p>
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link

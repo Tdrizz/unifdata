@@ -16,14 +16,14 @@ export default function WaitlistPage() {
               Invite-only beta
             </p>
             <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight">
-              Request access for your business data workspace.
+              One place for every customer, job, quote, and payment.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              UnifData is onboarding a small number of pilot companies that
-              need cleaner customer, job, follow-up, and revenue operations.
+              We&apos;re onboarding a small group of local service businesses.
+              Approved applicants get a personal setup session and full workspace access from day one.
             </p>
             <div className="mt-8 grid max-w-xl gap-3 text-sm text-slate-300 sm:grid-cols-3">
-              {["Reviewed manually", "Clerk invite only", "Paid beta access"].map(
+              {["Reviewed manually", "Invite-only access", "Paid beta access"].map(
                 (label) => (
                   <div
                     key={label}
@@ -43,10 +43,10 @@ export default function WaitlistPage() {
               Request access
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">
-              Tell us about the operation.
+              Tell us about your business.
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Approved leads receive a Clerk invitation and subscription link.
+              Approved applicants receive an invite link within 48 hours.
             </p>
           </div>
 

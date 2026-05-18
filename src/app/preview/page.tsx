@@ -89,34 +89,34 @@ const sectors = [
 
 const features = [
   {
-    title: "Today page",
+    title: "Daily priority queue",
     description:
-      "A daily brief showing follow-ups due, unpaid work, open opportunities, and data issues — before they turn into lost revenue.",
+      "Every morning: follow-ups due, unpaid work, open opportunities, and data gaps — before they become lost revenue.",
   },
   {
     title: "Industry-aware CRM",
     description:
-      "The workspace adapts its language and priorities to the business type chosen during onboarding.",
+      "The workspace adapts its language and priorities to your business type. Choose during onboarding; change any time.",
   },
   {
     title: "Data Hub",
     description:
-      "Tracks record completeness, flags missing fields, and shows a data health score across the whole workspace.",
+      "See record completeness across your whole workspace. Missing fields and unlinked records get flagged automatically.",
   },
   {
     title: "CSV imports",
     description:
-      "Bring in existing customer lists from spreadsheets. Records are validated and created as a logged import batch.",
+      "Bring in existing customer lists from spreadsheets. Records are validated, deduplicated, and logged on import.",
   },
   {
     title: "Connected workflow",
     description:
-      "Marking an opportunity won creates the linked work and revenue records automatically.",
+      "Mark an opportunity won and UnifData creates the linked job and revenue records automatically.",
   },
   {
     title: "AI Advisor",
     description:
-      "Generates a plain-English business brief with an overall summary, what needs attention, and three next actions.",
+      "Get a plain-English summary of your business: what's overdue, what's at risk, and three specific next actions.",
   },
 ];
 
@@ -136,14 +136,14 @@ export default function PreviewPage() {
             One workspace.<br />Every business type.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[16px] leading-[1.7] text-slate-300">
-            UnifData adapts its language and priorities to the industry. A medical office, contractor, and home services crew don&apos;t get the same generic dashboard.
+            UnifData adapts to your industry. A medical office, a contractor, and a home services crew each get a workspace configured for how they actually work.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/waitlist"
               className="rounded-xl bg-[#4A3FA8] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
             >
-              Create workspace
+              Request access
             </Link>
             <Link
               href="/pricing"
