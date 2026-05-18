@@ -336,7 +336,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             <div className="card-body" style={{ padding: "16px" }}>
               <div className="quick-actions">
                 {[
-                  { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
+                  { label: `New ${customerSingular.toLowerCase()}`, href: "/customers#customer-quick-add" },
                   { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
                   { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
                   { label: "Ask AI", href: "/ai-assistant" },

@@ -67,7 +67,7 @@ export function CRMView({ leads, customers, profile }: Props) {
             <Link href="/leads" className="btn btn-ghost" style={{ borderRadius: 0, borderRight: "1px solid var(--border)" }}>List</Link>
             <span className="btn btn-ghost" style={{ borderRadius: 0, background: "var(--surface-sunk)", fontWeight: 700, cursor: "default" }}>Board</span>
           </div>
-          <Link href="/leads" className="btn btn-primary">
+          <Link href="/leads#leads-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -115,7 +115,7 @@ export function CRMView({ leads, customers, profile }: Props) {
                 );
               })}
 
-              <Link href="/leads" className="kanban-add" style={{ textDecoration: "none" }}>
+              <Link href="/leads#leads-quick-add" className="kanban-add" style={{ textDecoration: "none" }}>
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>

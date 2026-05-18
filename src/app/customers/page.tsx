@@ -67,6 +67,7 @@ export default async function CustomersPage({
         jobs={jobs}
         leads={leads}
         sales={sales}
+        profile={profile}
       />
 
       {/* Mobile view */}

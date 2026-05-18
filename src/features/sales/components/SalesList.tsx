@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { SaleRow, CustomerRow } from "../types";
+import { SaleCreateForm } from "./SaleCreateForm";
 
 type Props = {
   sales: SaleRow[];
@@ -120,12 +121,12 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
           </div>
         </div>
         <div className="page-actions">
-          <Link href="/sales" className="btn btn-primary">
+          <a href="#sale-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             New {saleSingular.toLowerCase()}
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -309,6 +310,11 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Quick add */}
+      <div id="sale-quick-add" style={{ marginTop: "20px" }}>
+        <SaleCreateForm profile={profile} />
       </div>
     </div>
   );

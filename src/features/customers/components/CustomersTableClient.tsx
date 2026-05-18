@@ -5,6 +5,8 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { CustomerRow } from "../types";
 import type { Database } from "@/types/db";
+import type { IndustryProfile } from "@/lib/industry-profiles";
+import { CustomerCreateForm } from "./CustomerCreateForm";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -15,6 +17,7 @@ type Props = {
   jobs?: JobRow[];
   leads?: LeadRow[];
   sales?: SaleRow[];
+  profile?: IndustryProfile;
 };
 
 function computeLifetimeRevenue(customer: CustomerRow, sales: SaleRow[]): number {
@@ -79,7 +82,11 @@ export function CustomersTableClient({
   jobs = [],
   leads = [],
   sales = [],
+  profile,
 }: Props) {
+  const custPlural = profile?.labels.customerPlural ?? "Clients";
+  const custSingular = profile?.labels.customerSingular ?? "Client";
+  const jobPlural = profile?.labels.jobPlural ?? "Jobs";
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 
@@ -121,18 +128,18 @@ export function CustomersTableClient({
       {/* Page header */}
       <div className="page-header">
         <div>
-          <div className="page-eyebrow">Clients</div>
-          <div className="page-title">All clients</div>
-          <div className="page-desc">{customers.length} clients</div>
+          <div className="page-eyebrow">{custPlural}</div>
+          <div className="page-title">All {custPlural.toLowerCase()}</div>
+          <div className="page-desc">{customers.length} {custPlural.toLowerCase()}</div>
         </div>
         <div className="page-actions">
           <Link href="/imports" className="btn btn-ghost">Import</Link>
-          <Link href="/customers" className="btn btn-primary">
+          <a href="#customer-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Add client
-          </Link>
+            Add {custSingular.toLowerCase()}
+          </a>
         </div>
       </div>
 
@@ -175,38 +182,53 @@ export function CustomersTableClient({
             <tr>
               <th>Name</th>
               <th>Contact</th>
-              <th>Jobs</th>
+              <th>{jobPlural}</th>
               <th>Lifetime value</th>
-              <th>Last job</th>
+              <th>Last {jobPlural.toLowerCase().replace(/s$/, "")}</th>
               <th>Status</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((customer) => {
-              const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", badgeClass: "badge badge-neutral" } };
-              const initials = getInitials(customer.name);
-              const col = avatarColor(customer.name);
-              return (
-                <tr key={customer.id}>
-                  <td>
-                    <div className="cl-row">
-                      <div className="cl-avatar" style={{ background: col.bg, color: col.color }}>{initials}</div>
-                      <span className="td-primary">{customer.name || "Unnamed"}</span>
-                    </div>
-                  </td>
-                  <td className="td-muted">{customer.email || customer.phone || "—"}</td>
-                  <td className="td-muted">{s.jobCount}</td>
-                  <td className="td-mono">{s.lifetime > 0 ? formatCurrency(s.lifetime) : "—"}</td>
-                  <td className="td-muted">{s.lastJob || "—"}</td>
-                  <td><span className={s.status.badgeClass}>{s.status.label}</span></td>
-                  <td><Link href={`/customers/${customer.id}`} className="td-link">View →</Link></td>
-                </tr>
-              );
-            })}
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                  No {custPlural.toLowerCase()} match your filter.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((customer) => {
+                const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", badgeClass: "badge badge-neutral" } };
+                const initials = getInitials(customer.name);
+                const col = avatarColor(customer.name);
+                return (
+                  <tr key={customer.id}>
+                    <td>
+                      <div className="cl-row">
+                        <div className="cl-avatar" style={{ background: col.bg, color: col.color }}>{initials}</div>
+                        <span className="td-primary">{customer.name || `Unnamed ${custSingular.toLowerCase()}`}</span>
+                      </div>
+                    </td>
+                    <td className="td-muted">{customer.email || customer.phone || "—"}</td>
+                    <td className="td-muted">{s.jobCount}</td>
+                    <td className="td-mono">{s.lifetime > 0 ? formatCurrency(s.lifetime) : "—"}</td>
+                    <td className="td-muted">{s.lastJob || "—"}</td>
+                    <td><span className={s.status.badgeClass}>{s.status.label}</span></td>
+                    <td><Link href={`/customers/${customer.id}`} className="td-link">View →</Link></td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Quick add */}
+      {profile && (
+        <div id="customer-quick-add" style={{ marginTop: "20px" }}>
+          <CustomerCreateForm profile={profile} />
+        </div>
+      )}
     </div>
   );
 }

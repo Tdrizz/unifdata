@@ -184,7 +184,9 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
         />
       </section>
 
-      <LeadCreateForm customers={customers} profile={profile} />
+      <div id="leads-quick-add">
+        <LeadCreateForm customers={customers} profile={profile} />
+      </div>
 
       <div>
         <SearchInput placeholder={`Search ${profile.labels.leadPlural.toLowerCase()}…`} />
