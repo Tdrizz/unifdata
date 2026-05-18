@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { formatCurrency } from "@/lib/utils";
-import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
 
 type Props = {
@@ -10,7 +8,7 @@ type Props = {
   count: number;
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
-  profile: IndustryProfile;
+  profile?: unknown;
   selectedStage: string;
 };
 
@@ -50,7 +48,7 @@ function statusBadgeClass(status: string | null) {
   return "badge badge-neutral";
 }
 
-export function JobsList({ jobs, count, customers, profile }: Props) {
+export function JobsList({ jobs, customers }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const today = new Date();
   const weekDays = getWeekDays(today);

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
@@ -38,12 +37,6 @@ interface SettingsViewProps {
   apiKeys: ApiKey[];
 }
 
-function titleCase(value: string | null) {
-  const text = String(value || "").replace(/_/g, " ").trim();
-  if (!text) return "";
-  return text.replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function isConnected(integration: SettingsIntegration | undefined) {
   const s = String(integration?.status || "").toLowerCase();
   return s.includes("active") || s.includes("connected");
@@ -53,7 +46,7 @@ export function SettingsView({
   company,
   user,
   integrations,
-  geminiEnabled,
+  geminiEnabled: _geminiEnabled,
   members,
   currentUserRole,
   apiKeys,

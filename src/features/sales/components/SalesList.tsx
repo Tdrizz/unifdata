@@ -6,8 +6,6 @@ import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { SaleRow, CustomerRow } from "../types";
 
-const PAGE_SIZE = 50;
-
 type Props = {
   sales: SaleRow[];
   count: number;

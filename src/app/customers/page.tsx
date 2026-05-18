@@ -1,14 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getCustomersPageData } from "@/features/customers/queries";
 import { CustomersList } from "@/features/customers/components/CustomersList";
 import { CustomersTableClient } from "@/features/customers/components/CustomersTableClient";
-import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
 import type { Database } from "@/types/db";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -51,7 +48,7 @@ export default async function CustomersPage({
       .eq("company_id", company.id),
   ]);
 
-  const { customers, count } = customersResult;
+  const { customers } = customersResult;
   const jobs = (jobsResult.data ?? []) as JobRow[];
   const leads = (leadsResult.data ?? []) as LeadRow[];
   const sales = (salesResult.data ?? []) as SaleRow[];

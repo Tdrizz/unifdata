@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { isClosedOpportunity, isCompleteWork, isCancelledWork, isUnpaid } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { DataHubPageData } from "../queries";
 
@@ -7,12 +6,10 @@ type Props = DataHubPageData & {
   profile: IndustryProfile;
 };
 
-export function DataHubView({ customers, opportunities, workRecords, revenueRecords, followUps }: Props) {
+export function DataHubView({ customers, workRecords, revenueRecords, followUps }: Props) {
   const missingEmails = customers.filter((c) => !c.email).length;
   const missingPhones = customers.filter((c) => !c.phone).length;
   const orphanJobs = workRecords.filter((w) => !w.customer_id).length;
-  const orphanRevenue = revenueRecords.filter(() => false).length; // no customer_id in data hub sale type
-
   const totalIssues = missingEmails + orphanJobs;
   const totalRecords = customers.length + workRecords.length + revenueRecords.length + followUps.length;
   const healthPct = totalRecords === 0 ? 100 : Math.max(0, Math.min(100, Math.round(100 - (totalIssues / Math.max(totalRecords, 1)) * 100)));

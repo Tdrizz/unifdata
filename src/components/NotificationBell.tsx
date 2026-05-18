@@ -19,7 +19,7 @@ interface NotificationBellProps {
   variant?: "sidebar" | "header";
 }
 
-export function NotificationBell({ companyId, initialNotifications, variant = "sidebar" }: NotificationBellProps) {
+export function NotificationBell({ companyId, initialNotifications }: NotificationBellProps) {
   const instanceId = useId();
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [open, setOpen] = useState(false);

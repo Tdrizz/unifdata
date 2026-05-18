@@ -7,7 +7,6 @@ import { MobileTabBar } from "@/components/MobileTabBar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ProductMark } from "@/components/ProductMark";
 import { Topbar } from "@/components/Topbar";
-import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 
@@ -15,13 +14,13 @@ export async function AppShell({
   children,
   companyName,
   userEmail,
-  userName,
+  userName: _userName,
   businessSector,
 }: {
   children: ReactNode;
   companyName: string;
   userEmail: string;
-  userName?: string;
+  userName?: string; // kept for API compat
   businessSector?: string | null;
   // v1 compat — kept but no longer applied to sidebar bg
   brandColor?: string;
@@ -37,8 +36,6 @@ export async function AppShell({
         .order("created_at", { ascending: false })
         .limit(10)
     : { data: [] };
-
-  const displayName = userName || companyName || userEmail;
 
   return (
     <>
