@@ -138,6 +138,7 @@ export type Database = {
           id: string
           industry: string | null
           name: string
+          notification_preferences: Json
           plan: string
           status: string
         }
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           industry?: string | null
           name: string
+          notification_preferences?: Json
           plan?: string
           status?: string
         }
@@ -160,6 +162,7 @@ export type Database = {
           id?: string
           industry?: string | null
           name?: string
+          notification_preferences?: Json
           plan?: string
           status?: string
         }

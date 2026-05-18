@@ -221,6 +221,47 @@ export async function revokeApiKey(id: string): Promise<void> {
   revalidatePath("/settings");
 }
 
+export async function updateNotificationPreference(key: string, value: boolean): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const supabase = await createClient();
+
+  const { data: row } = await supabase
+    .from("companies")
+    .select("notification_preferences")
+    .eq("id", currentCompany.company.id)
+    .single();
+
+  const current = (row?.notification_preferences ?? {}) as Record<string, boolean>;
+  const { error } = await supabase
+    .from("companies")
+    .update({ notification_preferences: { ...current, [key]: value } })
+    .eq("id", currentCompany.company.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function deleteWorkspaceAction(): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const role = await getCurrentUserRole();
+  if (role !== "owner") throw new Error("Only the workspace owner can delete it");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("companies")
+    .update({ status: "deleted" })
+    .eq("id", currentCompany.company.id);
+
+  if (error) throw new Error(error.message);
+
+  await supabase.auth.signOut();
+  redirect("/login?workspace_deleted=1");
+}
+
 export async function removeMember(targetUserId: string) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) throw new Error("Unauthorized");

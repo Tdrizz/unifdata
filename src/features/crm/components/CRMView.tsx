@@ -59,7 +59,7 @@ export function CRMView({ leads, customers }: Props) {
           </div>
         </div>
         <div className="page-actions">
-          <Link href="/crm" className="btn btn-ghost">List view</Link>
+          <Link href="/leads" className="btn btn-ghost">List view</Link>
           <Link href="/leads" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -108,12 +108,12 @@ export function CRMView({ leads, customers }: Props) {
                 );
               })}
 
-              <div className="kanban-add">
+              <Link href="/leads" className="kanban-add" style={{ textDecoration: "none" }}>
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
                 Add {stage.name.toLowerCase()}
-              </div>
+              </Link>
             </div>
           );
         })}

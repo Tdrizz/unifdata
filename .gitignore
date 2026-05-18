@@ -51,3 +51,4 @@ remotion/package-lock.json
 
 # clerk configuration (can include secrets)
 /.clerk/
+.env*.local

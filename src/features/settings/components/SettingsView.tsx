@@ -8,6 +8,8 @@ import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
 import { ApiKeyManager } from "./ApiKeyManager";
+import { NotificationToggles } from "./NotificationToggles";
+import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 
 interface Company {
   id: string;
@@ -35,6 +37,7 @@ interface SettingsViewProps {
   members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
   currentUserRole: string | null;
   apiKeys: ApiKey[];
+  notificationPrefs: Record<string, boolean>;
 }
 
 function isConnected(integration: SettingsIntegration | undefined) {
@@ -50,6 +53,7 @@ export function SettingsView({
   members,
   currentUserRole,
   apiKeys,
+  notificationPrefs,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((i) =>
     String(i.provider || "").toLowerCase().includes("google"),
@@ -77,12 +81,6 @@ export function SettingsView({
       desc: "Sync jobs, quotes, and field schedules",
       integration: jobberIntegration,
       startHref: "/api/integrations/jobber/start",
-    },
-    {
-      label: "Google Calendar",
-      desc: "Pull appointments in as scheduled visits",
-      integration: undefined,
-      startHref: "/api/integrations/google-calendar/start",
     },
     {
       label: "HubSpot",
@@ -143,7 +141,7 @@ export function SettingsView({
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button type="button" className="btn btn-ghost">Cancel</button>
+              <button type="reset" className="btn btn-ghost">Cancel</button>
               <button type="submit" className="btn btn-ink">Save changes</button>
             </div>
           </form>
@@ -187,34 +185,7 @@ export function SettingsView({
             <div className="setting-section-title">Notifications</div>
             <div className="setting-section-desc">Control what triggers an in-app notification.</div>
           </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">Overdue follow-ups</div>
-              <div className="setting-row-desc">Alert when a follow-up passes its due date</div>
-            </div>
-            <div className="toggle toggle-on" />
-          </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">New pipeline activity</div>
-              <div className="setting-row-desc">Lead status changes and new opportunities</div>
-            </div>
-            <div className="toggle toggle-on" />
-          </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">Unpaid invoices</div>
-              <div className="setting-row-desc">Remind me when an invoice goes past due</div>
-            </div>
-            <div className="toggle toggle-off" />
-          </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">AI operating brief</div>
-              <div className="setting-row-desc">Daily morning summary from the AI assistant</div>
-            </div>
-            <div className="toggle toggle-on" />
-          </div>
+          <NotificationToggles initialPrefs={notificationPrefs} />
         </div>
 
         {/* ── Integrations ── */}
@@ -306,28 +277,6 @@ export function SettingsView({
           />
         </div>
 
-        {/* ── Billing & plan ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Billing & plan</div>
-            <div className="setting-section-desc">Your current plan and payment details.</div>
-          </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">Current plan</div>
-              <div className="setting-row-desc">Starter · $29/month · billed monthly</div>
-            </div>
-            <button className="btn btn-ghost btn-sm">Upgrade</button>
-          </div>
-          <div className="setting-row">
-            <div>
-              <div className="setting-row-label">Next billing date</div>
-              <div className="setting-row-desc">June 1, 2026 · Visa ending in 4242</div>
-            </div>
-            <button className="btn btn-ghost btn-sm">Manage</button>
-          </div>
-        </div>
-
         {/* ── Danger zone ── */}
         <div className="setting-section" style={{ paddingBottom: "8px" }}>
           <div className="setting-section-head">
@@ -339,9 +288,7 @@ export function SettingsView({
               <div style={{ fontSize: "13px", fontWeight: 600, color: "#dc2626" }}>Delete workspace</div>
               <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>Permanently deletes all data. Cannot be undone.</div>
             </div>
-            <button className="btn btn-sm" style={{ borderColor: "#fca5a5", color: "#dc2626", background: "transparent", flexShrink: 0 }}>
-              Delete workspace
-            </button>
+            <DeleteWorkspaceModal companyName={company.name} />
           </div>
         </div>
 

@@ -32,6 +32,21 @@ export async function getApiKeys(companyId: string) {
   }>;
 }
 
+export async function getNotificationPreferences(companyId: string): Promise<Record<string, boolean>> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("companies")
+    .select("notification_preferences")
+    .eq("id", companyId)
+    .single();
+  return (data?.notification_preferences ?? {
+    overdue_followups: true,
+    pipeline_activity: true,
+    unpaid_invoices: false,
+    ai_brief: true,
+  }) as Record<string, boolean>;
+}
+
 export async function getTeamMembers(companyId: string) {
   const supabase = await createClient();
   const { data } = await supabase
