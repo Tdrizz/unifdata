@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 import type { Database } from "@/types/db";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -22,10 +23,8 @@ type Props = {
   leads: LeadRow[];
   jobs: JobRow[];
   sales: SaleRow[];
+  profile?: IndustryProfile;
 };
-
-const TABS = ["Overview", "Quotes", "Visits", "Payments", "Activity"] as const;
-type Tab = (typeof TABS)[number];
 
 function formatDateShort(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
@@ -56,8 +55,13 @@ function QuickActionButton({ icon, label, href }: { icon: React.ReactNode; label
   );
 }
 
-export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
+export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: Props) {
+  const leadLabel = profile?.labels.leadPlural ?? "Quotes";
+  const jobLabel = profile?.labels.jobPlural ?? "Visits";
+  const saleLabel = profile?.labels.salePlural ?? "Payments";
+  const custLabel = profile?.labels.customerPlural ?? "Clients";
+  const TABS = ["Overview", leadLabel, jobLabel, saleLabel, "Activity"] as const;
+  const [activeTab, setActiveTab] = useState<string>("Overview");
 
   const lifetimeRevenue = sales.reduce((sum, s) => sum + Number(s.amount ?? 0), 0);
   const openLeads = leads.filter((l) => !["lost", "closed", "won", "declined"].includes((l.status ?? "").toLowerCase()));
@@ -93,7 +97,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
   );
 
   return (
-    <MobileShell back={{ href: "/customers", label: "Clients" }} trailing={trailing} companyName="">
+    <MobileShell back={{ href: "/customers", label: custLabel }} trailing={trailing} companyName="">
       {/* Identity block */}
       <div className="flex flex-col items-center px-[18px] pb-[16px] pt-[8px] text-center">
         <Avatar name={customer.name} size={56} />
@@ -161,7 +165,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
           items={[
             { label: "Lifetime", value: lifetimeRevenue > 0 ? formatCurrency(lifetimeRevenue) : "—" },
             { label: "Open", value: openCount },
-            { label: "Visits", value: jobs.filter((j) => j.status?.toLowerCase().includes("complet")).length },
+            { label: jobLabel, value: jobs.filter((j) => j.status?.toLowerCase().includes("complet")).length },
           ]}
         />
       </div>
@@ -169,7 +173,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
       {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-ud-soft no-scrollbar">
         {TABS.map((tab) => {
-          const count = tab === "Quotes" ? leads.length : tab === "Visits" ? jobs.length : tab === "Payments" ? sales.length : 0;
+          const count = tab === leadLabel ? leads.length : tab === jobLabel ? jobs.length : tab === saleLabel ? sales.length : 0;
           return (
             <button
               key={tab}
@@ -217,10 +221,10 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
           </div>
         )}
 
-        {activeTab === "Quotes" && (
+        {activeTab === leadLabel && (
           <div className="space-y-2">
             {leads.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-ud-faint">No quotes yet.</p>
+              <p className="py-8 text-center text-[13px] text-ud-faint">No {leadLabel.toLowerCase()} yet.</p>
             ) : leads.map((lead) => (
               <Link key={lead.id} href={`/leads/${lead.id}/edit`}>
                 <div className="flex items-center gap-3 rounded-[10px] border border-ud bg-ud-surface px-4 py-3 shadow-ud hover:bg-ud-surface-soft transition-colors">
@@ -238,16 +242,16 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
           </div>
         )}
 
-        {activeTab === "Visits" && (
+        {activeTab === jobLabel && (
           <div className="space-y-2">
             {jobs.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-ud-faint">No visits yet.</p>
+              <p className="py-8 text-center text-[13px] text-ud-faint">No {jobLabel.toLowerCase()} yet.</p>
             ) : jobs.map((job) => (
               <Link key={job.id} href={`/jobs/${job.id}/edit`}>
                 <div className="flex items-center gap-3 rounded-[10px] border border-ud bg-ud-surface px-4 py-3 shadow-ud hover:bg-ud-surface-soft transition-colors">
                   <span className={cn("w-2 h-2 rounded-full shrink-0", job.status === "completed" ? "bg-ud-success" : "bg-ud-accent")} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ud-ink truncate">{job.service_type || "Visit"}</p>
+                    <p className="text-[13px] font-semibold text-ud-ink truncate">{job.service_type || (profile?.labels.jobSingular ?? "Visit")}</p>
                     <p className="text-[11.5px] text-ud-muted">{job.status || "Scheduled"} · {formatRelativeDate(job.start_date)}</p>
                   </div>
                   {job.job_value && (
@@ -259,7 +263,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
           </div>
         )}
 
-        {activeTab === "Payments" && (
+        {activeTab === saleLabel && (
           <div className="space-y-2">
             {sales.length === 0 ? (
               <p className="py-8 text-center text-[13px] text-ud-faint">No payments yet.</p>
@@ -285,8 +289,8 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales }: Props) {
             {[...leads, ...jobs, ...sales].length === 0 ? (
               <p className="py-8 text-center text-[13px] text-ud-faint">No activity yet.</p>
             ) : (
-              [...leads.map((l) => ({ date: l.created_at, type: "Quote", note: l.service_requested || "Untitled" })),
-               ...jobs.map((j) => ({ date: j.created_at, type: "Visit", note: j.service_type || "Visit" })),
+              [...leads.map((l) => ({ date: l.created_at, type: profile?.labels.leadSingular ?? "Quote", note: l.service_requested || "Untitled" })),
+               ...jobs.map((j) => ({ date: j.created_at, type: profile?.labels.jobSingular ?? "Visit", note: j.service_type || (profile?.labels.jobSingular ?? "Visit") })),
                ...sales.map((s) => ({ date: s.created_at, type: "Payment", note: formatCurrency(s.amount) })),
               ]
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

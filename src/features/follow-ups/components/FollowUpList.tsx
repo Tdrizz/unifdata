@@ -113,6 +113,7 @@ function getSortDateTime(action: FollowUpItem) {
 function buildFollowUpItems(
   followUps: FollowUpRow[],
   opportunities: LeadRow[],
+  leadSingularLabel: string = "Opportunity",
 ): { manualItems: FollowUpItem[]; opportunityItems: FollowUpItem[] } {
   const manualItems: FollowUpItem[] = followUps.map((action) => ({
     id: `manual-${action.id}`,
@@ -133,11 +134,11 @@ function buildFollowUpItems(
     .map((opp) => ({
       id: `opportunity-${opp.id}`,
       source_type: "opportunity",
-      source_label: "Opportunity follow-up",
+      source_label: `${leadSingularLabel} follow-up`,
       customer_id: opp.customer_id,
       title: opp.service_requested
         ? `Follow up: ${opp.service_requested}`
-        : "Follow up on opportunity",
+        : `Follow up on ${leadSingularLabel.toLowerCase()}`,
       due_date: opp.next_follow_up_date,
       status: opp.status || "Open opportunity",
       created_at: opp.created_at,
@@ -147,12 +148,14 @@ function buildFollowUpItems(
   return { manualItems, opportunityItems };
 }
 
-export function FollowUpList({ followUps, opportunities, people, filters }: Props) {
+export function FollowUpList({ followUps, opportunities, people, filters, profile }: Props) {
+  const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
+  const leadPlural = profile?.labels.leadPlural ?? "Opportunities";
   const selectedStatus = filters.status ? decodeURIComponent(filters.status) : "";
   const selectedDue = filters.due ? decodeURIComponent(filters.due) : "";
   const selectedSource = filters.source ? decodeURIComponent(filters.source) : "";
 
-  const { manualItems, opportunityItems } = buildFollowUpItems(followUps, opportunities);
+  const { manualItems, opportunityItems } = buildFollowUpItems(followUps, opportunities, leadSingular);
   const actions = [...manualItems, ...opportunityItems];
 
   const openActions = actions.filter((a) => !isComplete(a.status));
@@ -255,8 +258,8 @@ export function FollowUpList({ followUps, opportunities, people, filters }: Prop
     },
     {
       id: "opportunity",
-      label: "Opportunity follow-ups",
-      description: "Follow-up dates coming from open opportunities.",
+      label: `${leadPlural} follow-ups`,
+      description: `Follow-up dates coming from open ${leadPlural.toLowerCase()}.`,
       count: opportunityItems.length,
       href: selectedSource === "opportunity" ? "/follow-ups" : "/follow-ups?source=opportunity",
     },

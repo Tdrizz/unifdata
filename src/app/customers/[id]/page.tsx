@@ -4,6 +4,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { AppShell } from "@/components/AppShell";
 import { DesktopRedirect } from "@/components/DesktopRedirect";
 import { MobileCustomerDetail } from "@/features/customers/MobileCustomerDetail";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { Database } from "@/types/db";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,7 @@ export default async function CustomerDetailPage({
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
+  const profile = getIndustryProfile(company.business_sector);
 
   const [
     { data: customer, error: customerError },
@@ -79,6 +81,7 @@ export default async function CustomerDetailPage({
           leads={(leads ?? []) as LeadRow[]}
           jobs={(jobs ?? []) as JobRow[]}
           sales={(sales ?? []) as SaleRow[]}
+          profile={profile}
         />
       </div>
       {/* Desktop: immediately redirect to edit page */}

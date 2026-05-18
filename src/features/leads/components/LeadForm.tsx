@@ -92,7 +92,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr] items-start">
         <SectionCard
-          title="Opportunity details"
+          title={`${profile.labels.leadSingular} details`}
           description="These fields control how this record appears in Pipeline, Follow-Ups, and Home."
         >
           <form action={formAction} className="space-y-5 p-5">
@@ -128,7 +128,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
               </FormField>
             </div>
 
-            <FormField label="Opportunity name">
+            <FormField label={`${profile.labels.leadSingular} name`}>
               <Input
                 name="service_requested"
                 required
