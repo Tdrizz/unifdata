@@ -135,12 +135,18 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
               Export CSV
             </a>
 
-            <Link
-              href="/crm"
-              className="inline-flex items-center gap-1.5 rounded-[9px] border border-[rgba(23,22,20,0.08)] bg-ud-surface px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink"
-            >
-              Pipeline view
-            </Link>
+            <div className="flex overflow-hidden rounded-[9px] border border-ud">
+              <span className="inline-flex items-center px-3 py-2 text-[13px] font-bold text-ud-ink bg-ud-surface-sunk cursor-default">
+                List
+              </span>
+              <Link
+                href="/crm"
+                className="inline-flex items-center border-l border-ud px-3 py-2 text-[13px] font-semibold text-ud-muted hover:text-ud-ink bg-ud-surface"
+              >
+                Board
+              </Link>
+            </div>
+
             <Link
               href="/imports"
               className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"

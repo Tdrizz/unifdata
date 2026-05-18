@@ -59,7 +59,10 @@ export function CRMView({ leads, customers }: Props) {
           </div>
         </div>
         <div className="page-actions">
-          <Link href="/leads" className="btn btn-ghost">List view</Link>
+          <div style={{ display: "flex", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
+            <Link href="/leads" className="btn btn-ghost" style={{ borderRadius: 0, borderRight: "1px solid var(--border)" }}>List</Link>
+            <span className="btn btn-ghost" style={{ borderRadius: 0, background: "var(--surface-sunk)", fontWeight: 700, cursor: "default" }}>Board</span>
+          </div>
           <Link href="/leads" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
