@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { AppShell } from "@/components/AppShell";
+import { DesktopRedirect } from "@/components/DesktopRedirect";
 import { MobileCustomerDetail } from "@/features/customers/MobileCustomerDetail";
 import type { Database } from "@/types/db";
 
@@ -80,15 +81,8 @@ export default async function CustomerDetailPage({
           sales={(sales ?? []) as SaleRow[]}
         />
       </div>
-      {/* Desktop: redirect to edit page which has full UI */}
-      <div className="hidden md:block p-6">
-        <a
-          href={`/customers/${id}/edit`}
-          className="text-ud-accent text-sm font-semibold"
-        >
-          Edit customer →
-        </a>
-      </div>
+      {/* Desktop: immediately redirect to edit page */}
+      <DesktopRedirect to={`/customers/${id}/edit`} />
     </AppShell>
   );
 }
