@@ -4,7 +4,7 @@ import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { LogoutButton } from "@/components/LogoutButton";
-import { updateWorkspaceAction, removeMember } from "../actions";
+import { updateWorkspaceAction, removeMember, disconnectIntegrationAction } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
 import { NotificationToggles } from "./NotificationToggles";
@@ -54,30 +54,35 @@ export function SettingsView({
 
   const integrationRows = [
     {
+      provider: "quickbooks",
       label: "QuickBooks",
       desc: "Sync customers, invoices, and revenue",
       integration: quickbooksIntegration,
       startHref: "/api/integrations/quickbooks/start",
     },
     {
+      provider: "google_sheets",
       label: "Google Sheets",
       desc: "Used for bulk imports via the Imports page",
       integration: googleIntegration,
       startHref: "/api/integrations/google/start",
     },
     {
+      provider: "jobber",
       label: "Jobber",
       desc: "Sync jobs, quotes, and field schedules",
       integration: jobberIntegration,
       startHref: "/api/integrations/jobber/start",
     },
     {
+      provider: "hubspot",
       label: "HubSpot",
       desc: "Sync contacts and deal activity",
       integration: hubspotIntegration,
       startHref: "/api/integrations/hubspot/start",
     },
     {
+      provider: "square",
       label: "Square",
       desc: "Import payments, invoices, and customer records",
       integration: squareIntegration,
@@ -183,7 +188,7 @@ export function SettingsView({
             <div className="setting-section-title">Integrations</div>
             <div className="setting-section-desc">Connect external tools to sync data automatically.</div>
           </div>
-          {integrationRows.map(({ label, desc, integration, startHref }) => {
+          {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
             const connected = isConnected(integration);
             return (
               <div key={label} className="setting-row">
@@ -206,14 +211,15 @@ export function SettingsView({
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                   {connected && integration?.status === "active" && (
-                    <SyncNowButton provider={integration.provider} label={label} />
+                    <SyncNowButton provider={provider} label={label} />
                   )}
-                  <Link
-                    href={startHref}
-                    className="btn btn-ghost btn-sm"
-                  >
-                    {connected ? "Disconnect" : "Connect"}
-                  </Link>
+                  {connected ? (
+                    <form action={disconnectIntegrationAction.bind(null, provider)}>
+                      <button type="submit" className="btn btn-ghost btn-sm">Disconnect</button>
+                    </form>
+                  ) : (
+                    <Link href={startHref} className="btn btn-ghost btn-sm">Connect</Link>
+                  )}
                 </div>
               </div>
             );

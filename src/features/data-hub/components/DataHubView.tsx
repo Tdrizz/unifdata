@@ -67,7 +67,7 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps,
   ];
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+    <div style={{ padding: "28px 28px 40px" }}>
       {/* Page header */}
       <div className="page-header">
         <div>

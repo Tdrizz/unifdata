@@ -97,7 +97,7 @@ export function ImportsView({ importSessions, integrations }: Props) {
   const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+    <div style={{ padding: "28px 28px 40px" }}>
       {/* Page header */}
       <div className="page-header">
         <div>

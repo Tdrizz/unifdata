@@ -101,7 +101,7 @@ export function MobileJobsList({ jobs, count, customers, profile }: Props) {
             return (
               <Link
                 key={job.id}
-                href={`/jobs/${job.id}`}
+                href={`/jobs/${job.id}/edit`}
                 className="bg-ud-surface rounded-[10px] border border-ud p-[14px] block"
               >
                 {/* Row 1: service type + value */}

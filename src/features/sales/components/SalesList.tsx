@@ -110,7 +110,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
   const sixMonthTotal = months.reduce((sum, m) => sum + sumSalesForMonth(sales, m.year, m.month), 0);
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
+    <div style={{ padding: "28px 28px 40px" }}>
       {/* Page header */}
       <div className="page-header">
         <div>
