@@ -285,7 +285,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus }: Prop
                 </td>
               </tr>
             ) : (
-              filtered.map((sale, i) => {
+              filtered.map((sale) => {
                 const customer = sale.customer_id ? customerById.get(sale.customer_id) : null;
                 const isOver = isOverdue(sale.payment_status);
                 return (
