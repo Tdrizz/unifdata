@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 // ── Per-tab SVG icons (21px, variable strokeWidth) ─────────────────────────
 function SvgHome({ active }: { active: boolean }) {
@@ -50,59 +51,58 @@ function SvgMore({ active }: { active: boolean }) {
   );
 }
 
-// ── Tab definitions ────────────────────────────────────────────────────────
-const TABS = [
-  {
-    href: "/workspace",
-    label: "Today",
-    Icon: SvgHome,
-    match: (p: string) => p === "/workspace",
-  },
-  {
-    href: "/customers",
-    label: "Clients",
-    Icon: SvgUsers,
-    match: (p: string) => p === "/customers" || p.startsWith("/customers/"),
-  },
-  {
-    href: "/crm",
-    label: "Pipeline",
-    Icon: SvgBriefcase,
-    match: (p: string) =>
-      p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
-  },
-  {
-    href: "/jobs",
-    label: "Visits",
-    Icon: SvgCalendar,
-    match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
-  },
-  {
-    href: "/settings",
-    label: "More",
-    Icon: SvgMore,
-    match: (p: string) =>
-      p === "/settings" ||
-      p.startsWith("/settings/") ||
-      p === "/imports" ||
-      p === "/sales" ||
-      p === "/ai-assistant" ||
-      p.startsWith("/ai-assistant/") ||
-      p === "/follow-ups" ||
-      p.startsWith("/follow-ups/") ||
-      p === "/data-hub",
-  },
-] as const;
-
 // ── Component ───────────────────────────────────────────────────────────────
 export function MobileTabBar({
-  businessSector: _businessSector,
+  businessSector,
 }: {
   businessSector?: string | null;
-  // v1 compat — no longer used
   accentColor?: string;
 }) {
   const pathname = usePathname();
+  const profile = getIndustryProfile(businessSector);
+
+  const tabs = [
+    {
+      href: "/workspace",
+      label: "Today",
+      Icon: SvgHome,
+      match: (p: string) => p === "/workspace",
+    },
+    {
+      href: "/customers",
+      label: profile.labels.customerPlural,
+      Icon: SvgUsers,
+      match: (p: string) => p === "/customers" || p.startsWith("/customers/"),
+    },
+    {
+      href: "/crm",
+      label: "Pipeline",
+      Icon: SvgBriefcase,
+      match: (p: string) =>
+        p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
+    },
+    {
+      href: "/jobs",
+      label: profile.labels.jobPlural ?? "Visits",
+      Icon: SvgCalendar,
+      match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
+    },
+    {
+      href: "/settings",
+      label: "More",
+      Icon: SvgMore,
+      match: (p: string) =>
+        p === "/settings" ||
+        p.startsWith("/settings/") ||
+        p === "/imports" ||
+        p === "/sales" ||
+        p === "/ai-assistant" ||
+        p.startsWith("/ai-assistant/") ||
+        p === "/follow-ups" ||
+        p.startsWith("/follow-ups/") ||
+        p === "/data-hub",
+    },
+  ];
 
   return (
     <nav
@@ -115,7 +115,7 @@ export function MobileTabBar({
         paddingTop: 9,
       }}
     >
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const active = tab.match(pathname);
         const Icon = tab.Icon;
         return (

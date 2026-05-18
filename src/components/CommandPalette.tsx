@@ -3,22 +3,27 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
-const COMMANDS = [
-  { id: "workspace", label: "Go to Workspace", href: "/workspace", group: "Navigate" },
-  { id: "customers", label: "Go to Clients", href: "/customers", group: "Navigate" },
-  { id: "crm", label: "Go to Pipeline", href: "/crm", group: "Navigate" },
-  { id: "jobs", label: "Go to Jobs", href: "/jobs", group: "Navigate" },
-  { id: "follow-ups", label: "Go to Follow-ups", href: "/follow-ups", group: "Navigate" },
-  { id: "sales", label: "Go to Sales", href: "/sales", group: "Navigate" },
-  { id: "ai", label: "Open AI Assistant", href: "/ai-assistant", group: "Navigate" },
-  { id: "settings", label: "Open Settings", href: "/settings", group: "Navigate" },
-  { id: "imports", label: "Import Data", href: "/imports", group: "Actions" },
-];
+function buildCommands(businessSector?: string | null) {
+  const profile = getIndustryProfile(businessSector);
+  return [
+    { id: "workspace", label: "Go to Workspace", href: "/workspace", group: "Navigate" },
+    { id: "customers", label: `Go to ${profile.labels.customerPlural}`, href: "/customers", group: "Navigate" },
+    { id: "crm", label: "Go to Pipeline", href: "/crm", group: "Navigate" },
+    { id: "jobs", label: `Go to ${profile.labels.jobPlural}`, href: "/jobs", group: "Navigate" },
+    { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },
+    { id: "sales", label: `Go to ${profile.labels.salePlural}`, href: "/sales", group: "Navigate" },
+    { id: "ai", label: "Open AI Assistant", href: "/ai-assistant", group: "Navigate" },
+    { id: "settings", label: "Open Settings", href: "/settings", group: "Navigate" },
+    { id: "imports", label: "Import Data", href: "/imports", group: "Actions" },
+  ];
+}
 
-export function CommandPalette() {
+export function CommandPalette({ businessSector }: { businessSector?: string | null }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const commands = buildCommands(businessSector);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -75,7 +80,7 @@ export function CommandPalette() {
             </Command.Empty>
 
             {["Navigate", "Actions"].map((group) => {
-              const items = COMMANDS.filter((c) => c.group === group);
+              const items = commands.filter((c) => c.group === group);
               return (
                 <Command.Group
                   key={group}

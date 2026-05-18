@@ -126,7 +126,7 @@ export async function AppShell({
       <MobileTabBar businessSector={businessSector} />
 
       {/* Command palette */}
-      <CommandPalette />
+      <CommandPalette businessSector={businessSector} />
     </>
   );
 }

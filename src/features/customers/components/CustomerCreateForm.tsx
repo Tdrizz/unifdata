@@ -15,27 +15,16 @@ export function CustomerCreateForm({ profile }: Props) {
   );
 
   return (
-    <details className="group rounded-[14px] border border-ud bg-ud-surface shadow-ud">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5">
-        <div>
-          <p className="text-sm font-semibold text-ud-ink">
-            Add {profile.labels.customerSingular.toLowerCase()} or business
-          </p>
-          <p className="mt-1 text-sm text-ud-muted">
-            Add a record manually without leaving the {profile.labels.customerPlural} page.
-          </p>
-        </div>
-
-        <span className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted group-open:hidden">
-          Open
-        </span>
-
-        <span className="hidden rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted group-open:inline-flex">
-          Close
-        </span>
-      </summary>
-
-      <form action={formAction} className="space-y-4 border-t border-ud p-5">
+    <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+      <div className="px-5 py-4 border-b border-ud-soft">
+        <p className="text-sm font-semibold text-ud-ink">
+          Add {profile.labels.customerSingular.toLowerCase()}
+        </p>
+        <p className="mt-0.5 text-xs text-ud-muted">
+          Fill in the details below and hit save.
+        </p>
+      </div>
+      <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
           <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {state.error}
@@ -45,11 +34,11 @@ export function CustomerCreateForm({ profile }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-medium text-ud-muted">
-              Name
+              Name *
               <input
                 name="name"
                 required
-                placeholder="John Smith, ABC Flooring, Ocean View Home..."
+                placeholder="John Smith, ABC Flooring…"
                 className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
               />
             </label>
@@ -57,12 +46,11 @@ export function CustomerCreateForm({ profile }: Props) {
               <p className="mt-1 text-sm text-red-600">{state.fieldErrors.name}</p>
             )}
           </div>
-
           <label className="text-sm font-medium text-ud-muted">
             Type
             <input
               name="customer_type"
-              placeholder="Customer, lead, residential, commercial..."
+              placeholder="Residential, commercial…"
               className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
             />
           </label>
@@ -79,7 +67,6 @@ export function CustomerCreateForm({ profile }: Props) {
               className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
             />
           </label>
-
           <div>
             <label className="text-sm font-medium text-ud-muted">
               Email
@@ -100,30 +87,20 @@ export function CustomerCreateForm({ profile }: Props) {
           Address
           <input
             name="address"
-            placeholder="Service address, city, or area"
+            placeholder="Service address or city"
             className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
           />
         </label>
 
-        <label className="block text-sm font-medium text-ud-muted">
-          Notes
-          <textarea
-            name="notes"
-            rows={3}
-            placeholder="Preferences, project details, or follow-up context..."
-            className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-          />
-        </label>
-
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <button
             type="submit"
-            className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity active:scale-[0.96]"
           >
-            Add {profile.labels.customerSingular.toLowerCase()}
+            Save {profile.labels.customerSingular.toLowerCase()}
           </button>
         </div>
       </form>
-    </details>
+    </div>
   );
 }
