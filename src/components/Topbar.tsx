@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/NotificationBell";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type Notification = {
   id: string;
@@ -12,38 +13,47 @@ type Notification = {
   created_at: string;
 };
 
-const BREADCRUMBS: Record<string, [string, string]> = {
-  "/workspace":    ["Workspace", "Today"],
-  "/customers":    ["Workspace", "Clients"],
-  "/crm":          ["Workspace", "Pipeline"],
-  "/leads":        ["Workspace", "Leads"],
-  "/jobs":         ["Workspace", "Visits"],
-  "/sales":        ["Workspace", "Revenue"],
-  "/follow-ups":   ["Workspace", "Follow-ups"],
-  "/ai-assistant": ["Intelligence", "AI Assistant"],
-  "/data-hub":     ["Intelligence", "Data Hub"],
-  "/imports":      ["Intelligence", "Imports"],
-  "/settings":     ["Account", "Settings"],
-  "/onboarding":   ["", "Onboarding"],
-};
+function buildBreadcrumbs(
+  profile: ReturnType<typeof getIndustryProfile>,
+): Record<string, [string, string]> {
+  return {
+    "/workspace":    ["Workspace", "Today"],
+    "/customers":    ["Workspace", profile.labels.customerPlural],
+    "/crm":          ["Workspace", "Pipeline"],
+    "/leads":        ["Workspace", profile.labels.leadPlural],
+    "/jobs":         ["Workspace", profile.labels.jobPlural],
+    "/sales":        ["Workspace", profile.labels.salePlural],
+    "/follow-ups":   ["Workspace", profile.labels.followUpPlural],
+    "/ai-assistant": ["Intelligence", "AI Assistant"],
+    "/data-hub":     ["Intelligence", "Data Hub"],
+    "/imports":      ["Intelligence", "Imports"],
+    "/settings":     ["Account", "Settings"],
+    "/onboarding":   ["", "Onboarding"],
+  };
+}
 
-function getBreadcrumb(pathname: string): [string, string] | null {
-  if (BREADCRUMBS[pathname]) return BREADCRUMBS[pathname];
-  // match prefix for nested routes
-  const prefix = Object.keys(BREADCRUMBS).find(
+function getBreadcrumb(
+  pathname: string,
+  breadcrumbs: Record<string, [string, string]>,
+): [string, string] | null {
+  if (breadcrumbs[pathname]) return breadcrumbs[pathname];
+  const prefix = Object.keys(breadcrumbs).find(
     (k) => k !== "/workspace" && pathname.startsWith(k + "/"),
   );
-  return prefix ? BREADCRUMBS[prefix] : null;
+  return prefix ? breadcrumbs[prefix] : null;
 }
 
 type Props = {
   companyId: string | null;
   initialNotifications: Notification[] | null;
+  businessSector?: string | null;
 };
 
-export function Topbar({ companyId, initialNotifications }: Props) {
+export function Topbar({ companyId, initialNotifications, businessSector }: Props) {
   const pathname = usePathname();
-  const breadcrumb = getBreadcrumb(pathname);
+  const profile = getIndustryProfile(businessSector);
+  const breadcrumbs = buildBreadcrumbs(profile);
+  const breadcrumb = getBreadcrumb(pathname, breadcrumbs);
 
   return (
     <header className="topbar">

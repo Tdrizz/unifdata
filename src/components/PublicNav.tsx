@@ -5,7 +5,7 @@ type ActivePage = "preview" | "docs" | "pricing" | "login" | "waitlist";
 
 export function PublicNav({ active }: { active?: ActivePage }) {
   const linkClass = (page: ActivePage) =>
-    `hidden rounded-full px-4 py-2 text-sm font-medium transition-colors sm:block ${
+    `rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:py-2 sm:text-sm ${
       active === page
         ? "text-white"
         : "text-slate-400 hover:bg-white/8 hover:text-white"

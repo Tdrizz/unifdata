@@ -57,8 +57,6 @@ export default async function CustomersPage({
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#1D2D3E"}
-      accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
       {/* Desktop view */}

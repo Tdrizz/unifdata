@@ -177,36 +177,38 @@ export function ImportsView({ importSessions, integrations }: Props) {
         <div className="card-header">
           <div className="card-title">Recent imports</div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>File</th>
-              <th>Type</th>
-              <th>Records</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {importSessions.length === 0 ? (
+        <div className="table-wrap" style={{ border: "none", borderRadius: 0, boxShadow: "none" }}>
+          <table>
+            <thead>
               <tr>
-                <td colSpan={5} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
-                  No imports yet.
-                </td>
+                <th>File</th>
+                <th>Type</th>
+                <th>Records</th>
+                <th>Date</th>
+                <th>Status</th>
               </tr>
-            ) : (
-              importSessions.slice(0, 10).map((session) => (
-                <tr key={session.id}>
-                  <td className="td-primary">{session.file_name || session.source_name || "—"}</td>
-                  <td className="td-muted">{getRecordTypeLabel(session.record_type)}</td>
-                  <td className="td-muted">{session.total_rows ?? "—"} records</td>
-                  <td className="td-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
-                  <td><span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span></td>
+            </thead>
+            <tbody>
+              {importSessions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                    No imports yet.
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                importSessions.slice(0, 10).map((session) => (
+                  <tr key={session.id}>
+                    <td className="td-primary">{session.file_name || session.source_name || "—"}</td>
+                    <td className="td-muted">{getRecordTypeLabel(session.record_type)}</td>
+                    <td className="td-muted">{session.total_rows ?? "—"} records</td>
+                    <td className="td-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
+                    <td><span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

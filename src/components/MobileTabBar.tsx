@@ -56,7 +56,6 @@ export function MobileTabBar({
   businessSector,
 }: {
   businessSector?: string | null;
-  accentColor?: string;
 }) {
   const pathname = usePathname();
   const profile = getIndustryProfile(businessSector);

@@ -23,9 +23,6 @@ export async function AppShell({
   userEmail: string;
   userName?: string; // kept for API compat
   businessSector?: string | null;
-  // v1 compat — kept but no longer applied to sidebar bg
-  brandColor?: string;
-  accentColor?: string;
 }) {
   const supabase = await createClient();
   const companyId = await getCurrentCompanyId();
@@ -95,6 +92,7 @@ export async function AppShell({
           <Topbar
             companyId={companyId}
             initialNotifications={initialNotifications ?? []}
+            businessSector={businessSector}
           />
           <main className="content">
             {children}

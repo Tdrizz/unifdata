@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getSettingsIntegrations, getTeamMembers, getNotificationPreferences } from "@/features/settings/queries";
 import { getCurrentUserRole } from "@/lib/current-company";
 import { SettingsView } from "@/features/settings/components/SettingsView";
+import { MobileSettingsView } from "@/features/settings/components/MobileSettingsView";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,23 +39,41 @@ export default async function SettingsPage() {
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#1D2D3E"}
-      accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
-      <SettingsView
-        company={{
-          id: company.id,
-          name: company.name,
-          business_sector: company.business_sector,
-        }}
-        user={{ email: user.email || "" }}
-        integrations={integrations}
-        geminiEnabled={geminiEnabled}
-        members={members}
-        currentUserRole={currentUserRole}
-        notificationPrefs={notificationPrefs}
-      />
+      <>
+        <div className="hidden md:block">
+          <SettingsView
+            company={{
+              id: company.id,
+              name: company.name,
+              business_sector: company.business_sector,
+            }}
+            user={{ email: user.email || "" }}
+            integrations={integrations}
+            geminiEnabled={geminiEnabled}
+            members={members}
+            currentUserRole={currentUserRole}
+            notificationPrefs={notificationPrefs}
+          />
+        </div>
+        <div className="block md:hidden">
+          <MobileSettingsView
+            company={{
+              id: company.id,
+              name: company.name,
+              business_sector: company.business_sector,
+              brand_color: company.brand_color || "#1D2D3E",
+              accent_color: company.accent_color || "#4A3FA8",
+            }}
+            user={{ email: user.email || "" }}
+            integrations={integrations}
+            geminiEnabled={geminiEnabled}
+            members={members}
+            currentUserRole={currentUserRole}
+          />
+        </div>
+      </>
     </AppShell>
   );
 }

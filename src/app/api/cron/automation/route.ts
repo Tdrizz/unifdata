@@ -19,7 +19,6 @@ export async function GET(request: Request) {
   }
 
   const worker = createAutomationWorker();
-  const results: { jobId: string; name: string; status: "completed" | "failed"; result?: unknown; error?: string }[] = [];
 
   try {
     await worker.run();
@@ -27,7 +26,7 @@ export async function GET(request: Request) {
     // run() processes all currently-available (non-delayed) jobs and resolves
     // when the queue is momentarily empty. Delayed jobs stay in Redis until
     // their delay elapses and will be picked up by the next cron invocation.
-    return NextResponse.json({ ok: true, processed: results.length, results });
+    return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[cron.automation] Worker run failed", message);

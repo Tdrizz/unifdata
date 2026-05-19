@@ -13,7 +13,7 @@ export function DataHubView({ customers, workRecords, revenueRecords, followUps,
   const missingEmails = customers.filter((c) => !c.email).length;
   const missingPhones = customers.filter((c) => !c.phone).length;
   const orphanJobs = workRecords.filter((w) => !w.customer_id).length;
-  const totalIssues = missingEmails + orphanJobs;
+  const totalIssues = missingEmails + orphanJobs + missingPhones;
   const totalRecords = customers.length + workRecords.length + revenueRecords.length + followUps.length;
   const healthPct = totalRecords === 0 ? 100 : Math.max(0, Math.min(100, Math.round(100 - (totalIssues / Math.max(totalRecords, 1)) * 100)));
 

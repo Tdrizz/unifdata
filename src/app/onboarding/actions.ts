@@ -4,8 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 import { requireSubscription } from "@/lib/auth/requireSubscription";
 import { redirect } from "next/navigation";
 
-export async function createCompanyAction(formData: FormData) {
-  const user = await requireSubscription();
+type ActionState = { error?: string };
+
+export async function createCompanyAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  let user;
+  try {
+    user = await requireSubscription();
+  } catch {
+    return { error: "Session expired. Please sign in again." };
+  }
+
   const companyName = String(formData.get("companyName") || "").trim();
   const industry = String(formData.get("industry") || "").trim();
   const businessSector = String(
@@ -13,7 +24,7 @@ export async function createCompanyAction(formData: FormData) {
   ).trim();
 
   if (!companyName) {
-    throw new Error("Company name is required");
+    return { error: "Company name is required." };
   }
 
   const supabase = await createClient();
@@ -38,7 +49,7 @@ export async function createCompanyAction(formData: FormData) {
     .single();
 
   if (companyError) {
-    throw new Error(companyError.message);
+    return { error: companyError.message };
   }
 
   const { error: memberError } = await supabase.from("company_members").insert({
@@ -48,7 +59,7 @@ export async function createCompanyAction(formData: FormData) {
   });
 
   if (memberError) {
-    throw new Error(memberError.message);
+    return { error: memberError.message };
   }
 
   redirect("/workspace");

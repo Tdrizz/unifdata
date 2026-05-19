@@ -33,7 +33,7 @@ export default function SignUpPage() {
               routing="path"
               path="/sign-up"
               signInUrl="/sign-in"
-              fallbackRedirectUrl="/pricing"
+              fallbackRedirectUrl="/workspace"
               appearance={{
                 elements: {
                   cardBox: "shadow-2xl",

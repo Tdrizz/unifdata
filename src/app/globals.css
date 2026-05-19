@@ -518,3 +518,13 @@ table {
 
 /* Page components manage their own padding */
 .content { padding: 0; }
+
+/* ── Mobile responsive layout ── */
+@media (max-width: 767px) {
+  .page-header { flex-wrap: wrap; }
+  .stat-row-5, .stat-row-4 { grid-template-columns: repeat(2, 1fr); }
+  .stat-row-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2-even { grid-template-columns: 1fr; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .filter-tabs { overflow-x: auto; max-width: 100%; }
+}

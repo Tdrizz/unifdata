@@ -146,7 +146,7 @@ export function JobsList({ jobs, customers, leads, profile }: Props) {
                 const { label: dateLabel, isToday } = formatJobDate(job.start_date, today);
                 return (
                   <tr key={job.id}>
-                    <td className="td-primary">{customer?.name || "No client"}</td>
+                    <td className="td-primary">{customer?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "client"}`}</td>
                     <td>{job.service_type || "—"}</td>
                     <td style={isToday ? { fontWeight: 600, color: "var(--ink)" } : undefined} className={isToday ? undefined : "td-muted"}>
                       {dateLabel}
