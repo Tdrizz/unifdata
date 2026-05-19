@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 
@@ -31,12 +32,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const savedState = request.headers
-    .get("cookie")
-    ?.split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith("frontierops_quickbooks_oauth_state="))
-    ?.slice("frontierops_quickbooks_oauth_state=".length);
+  const savedState = (await cookies()).get("frontierops_quickbooks_oauth_state")?.value;
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.redirect(

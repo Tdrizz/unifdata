@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 
@@ -33,12 +34,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const savedState = request.headers
-    .get("cookie")
-    ?.split(";")
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith("frontierops_google_oauth_state="))
-    ?.slice("frontierops_google_oauth_state=".length);
+  const savedState = (await cookies()).get("frontierops_google_oauth_state")?.value;
 
   if (!state || !savedState || state !== savedState) {
     return NextResponse.redirect(
