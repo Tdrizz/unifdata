@@ -54,6 +54,13 @@ function getDayLabel() {
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 function dotClass(tone: string) {
   if (tone === "danger") return "queue-dot queue-dot-danger";
   if (tone === "warning") return "queue-dot queue-dot-warning";
@@ -172,14 +179,24 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
   const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
+  const statusLine = (() => {
+    const parts: string[] = [];
+    if (overdueCount > 0) parts.push(`${overdueCount} overdue`);
+    if (dueTodayCount > 0) parts.push(`${dueTodayCount} due today`);
+    if (activeWork.length > 0) parts.push(`${activeWork.length} ${jobPlural.toLowerCase()} active`);
+    if (unpaidRevenueValue > 0) parts.push(`${formatCurrency(unpaidRevenueValue)} outstanding`);
+    if (parts.length === 0 && revenueMTD > 0) parts.push(`${formatCurrency(revenueMTD)} this month`);
+    return parts.length > 0 ? parts.join(" · ") : "Nothing urgent today";
+  })();
+
   return (
     <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
       {/* Page header */}
       <div className="page-header">
         <div>
-          <div className="page-eyebrow">{dayLabel} · Operating brief</div>
-          <div className="page-title">Good morning, {companyName}.</div>
-          <div className="page-desc">{profile.dailyFocus}</div>
+          <div className="page-eyebrow">{dayLabel}</div>
+          <div className="page-title">{getGreeting()}, {companyName}.</div>
+          <div className="page-desc">{statusLine}</div>
         </div>
         <div className="page-actions">
           <Link href="/jobs" className="btn btn-ghost">View calendar</Link>
@@ -190,19 +207,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             Quick add
           </Link>
         </div>
-      </div>
-
-      {/* Brief card */}
-      <div className="brief-card">
-        <div className="brief-eyebrow">AI Operating Brief</div>
-        <div className="brief-text">{profile.headline}</div>
-        {priorityQueue.length > 0 && (
-          <ul className="brief-bullets">
-            {priorityQueue.slice(0, 3).map((item) => (
-              <li key={item.id}>{item.title}{item.detail ? ` — ${item.detail}` : ""}</li>
-            ))}
-          </ul>
-        )}
       </div>
 
       {/* Stat row */}
@@ -239,10 +243,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         {/* Priority queue */}
         <div className="card">
           <div className="card-header">
-            <div>
-              <div className="card-title">Priority queue</div>
-              <div className="card-desc">Overdue and due-today items</div>
-            </div>
+            <div className="card-title">Priority queue</div>
             <Link href="/follow-ups" className="btn btn-ghost btn-sm">View all</Link>
           </div>
           {priorityQueue.length === 0 ? (

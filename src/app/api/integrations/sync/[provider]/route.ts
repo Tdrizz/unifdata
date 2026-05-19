@@ -76,7 +76,24 @@ export async function POST(
       return NextResponse.json({ error: "Integration no longer exists" }, { status: 400 });
     }
 
+    const startedAt = new Date().toISOString();
     const result = await syncer.sync(supabase, companyId, freshIntegration);
+    const finishedAt = new Date().toISOString();
+
+    await supabase.from("sync_runs").insert({
+      company_id: companyId,
+      sync_connection_id: null,
+      status: "success",
+      records_seen: result.recordsStaged,
+      records_created: result.customersCreated,
+      records_updated: result.customersUpdated,
+      records_failed: 0,
+      started_at: startedAt,
+      finished_at: finishedAt,
+      error_message: null,
+      metadata: { provider, session_ids: result.sessionIds },
+    });
+
     await insertNotification(
       supabase,
       companyId,

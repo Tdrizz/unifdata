@@ -7,9 +7,24 @@ import type { ImportsPageData } from "../queries";
 
 type Props = ImportsPageData & { profile: IndustryProfile };
 
+const SYNC_PROVIDER_NAMES: Record<string, string> = {
+  stripe: "Stripe",
+  hubspot: "HubSpot",
+  jobber: "Jobber",
+  quickbooks: "QuickBooks",
+  square: "Square",
+};
+
+const SYNC_SOURCE_TYPES = new Set(Object.keys(SYNC_PROVIDER_NAMES));
+
 function formatImportDate(date: string | null) {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatSyncTime(date: string | null) {
+  if (!date) return "—";
+  return new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function getRecordTypeLabel(rt: string | null) {
@@ -33,7 +48,9 @@ function sessionStatusBadge(status: string | null) {
 
 function sessionStatusLabel(session: ImportsPageData["importSessions"][number]) {
   if (session.status === "committed") return "Complete";
+  if (session.status === "cancelled") return "Cancelled";
   if (session.status === "failed") return "Failed";
+  if (session.status === "ready") return "Ready to review";
   if (session.error_rows && session.error_rows > 0) return `${session.error_rows} errors`;
   return session.status || "—";
 }
@@ -93,8 +110,17 @@ const INTEGRATIONS = [
   },
 ];
 
-export function ImportsView({ importSessions, integrations }: Props) {
+export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
   const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
+  const googleConnected = integrations.some((i) =>
+    String(i.provider ?? "").toLowerCase().includes("google"),
+  );
+
+  const syncSessions = importSessions.filter((s) => SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
+  const manualSessions = importSessions.filter((s) => !SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
+
+  // Build a map from session_id → session for quick lookup
+  const sessionById = new Map(syncSessions.map((s) => [s.id, s]));
 
   return (
     <div style={{ padding: "28px 28px 40px" }}>
@@ -127,11 +153,25 @@ export function ImportsView({ importSessions, integrations }: Props) {
           <div className="card-header">
             <div>
               <div className="card-title">Google Sheets</div>
-              <div className="card-desc">Import from a spreadsheet URL</div>
+              <div className="card-desc">Import from a spreadsheet</div>
             </div>
           </div>
           <div className="card-body">
-            <GoogleSheetsImportFlow />
+            {googleConnected ? (
+              <GoogleSheetsImportFlow />
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-ud-muted">
+                  Connect your Google account to pick a spreadsheet and import data directly.
+                </p>
+                <Link
+                  href="/api/integrations/google/start"
+                  className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90"
+                >
+                  Connect Google Sheets
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -172,7 +212,71 @@ export function ImportsView({ importSessions, integrations }: Props) {
         </div>
       </div>
 
-      {/* Recent imports */}
+      {/* Recent syncs */}
+      {syncRuns.length > 0 && (
+        <div className="card mb-5">
+          <div className="card-header">
+            <div className="card-title">Recent syncs</div>
+            <div className="card-desc">What was staged from your connected integrations</div>
+          </div>
+          <div>
+            {syncRuns.slice(0, 6).map((run) => {
+              const meta = (run.metadata ?? {}) as Record<string, unknown>;
+              const provider = typeof meta.provider === "string" ? meta.provider : "";
+              const providerName = SYNC_PROVIDER_NAMES[provider] ?? provider ?? "Integration";
+              const sessionIds = Array.isArray(meta.session_ids) ? (meta.session_ids as string[]) : [];
+              const linkedSessions = sessionIds.map((id) => sessionById.get(id)).filter(Boolean);
+              const isError = run.status === "error" || run.status === "failed";
+              const hasRecords = (run.records_seen ?? 0) > 0;
+
+              return (
+                <div key={run.id} className="queue-item" style={{ alignItems: "flex-start", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
+                    <div style={{ flex: 1 }}>
+                      <div className="queue-action">{providerName} sync</div>
+                      <div className="queue-meta">{formatSyncTime(run.started_at)}</div>
+                    </div>
+                    <span className={`badge ${isError ? "badge-danger" : hasRecords ? "badge-success" : "badge-neutral"}`}>
+                      {isError ? "Failed" : hasRecords ? `${run.records_seen} staged` : "Nothing new"}
+                    </span>
+                  </div>
+
+                  {isError && run.error_message && (
+                    <p style={{ fontSize: "12px", color: "var(--color-danger)", margin: 0 }}>{run.error_message}</p>
+                  )}
+
+                  {!isError && (
+                    <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--color-muted)" }}>
+                      {(run.records_created ?? 0) > 0 && (
+                        <span>{run.records_created} created</span>
+                      )}
+                      {(run.records_updated ?? 0) > 0 && (
+                        <span>{run.records_updated} updated</span>
+                      )}
+                      {linkedSessions.length > 0 && (
+                        <span style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          Review:
+                          {linkedSessions.map((session) => session && (
+                            <Link
+                              key={session.id}
+                              href={`/imports/sessions/${session.id}`}
+                              style={{ color: "var(--color-accent)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}
+                            >
+                              {getRecordTypeLabel(session.record_type)} ({session.total_rows ?? 0})
+                            </Link>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recent manual imports */}
       <div className="card">
         <div className="card-header">
           <div className="card-title">Recent imports</div>
@@ -189,20 +293,28 @@ export function ImportsView({ importSessions, integrations }: Props) {
               </tr>
             </thead>
             <tbody>
-              {importSessions.length === 0 ? (
+              {manualSessions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
                     No imports yet.
                   </td>
                 </tr>
               ) : (
-                importSessions.slice(0, 10).map((session) => (
-                  <tr key={session.id}>
-                    <td className="td-primary">{session.file_name || session.source_name || "—"}</td>
+                manualSessions.slice(0, 10).map((session) => (
+                  <tr key={session.id} style={{ cursor: "pointer" }}>
+                    <td className="td-primary">
+                      <Link href={`/imports/sessions/${session.id}`} style={{ display: "block" }}>
+                        {session.file_name || session.source_name || "—"}
+                      </Link>
+                    </td>
                     <td className="td-muted">{getRecordTypeLabel(session.record_type)}</td>
                     <td className="td-muted">{session.total_rows ?? "—"} records</td>
                     <td className="td-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
-                    <td><span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span></td>
+                    <td>
+                      <Link href={`/imports/sessions/${session.id}`}>
+                        <span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span>
+                      </Link>
+                    </td>
                   </tr>
                 ))
               )}

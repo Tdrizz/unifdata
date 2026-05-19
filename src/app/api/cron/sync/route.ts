@@ -90,7 +90,7 @@ export async function GET(request: Request) {
         started_at: startedAt,
         finished_at: new Date().toISOString(),
         error_message: null,
-        metadata: { provider: integration.provider },
+        metadata: { provider: integration.provider, session_ids: result.sessionIds },
       });
 
       results.push({

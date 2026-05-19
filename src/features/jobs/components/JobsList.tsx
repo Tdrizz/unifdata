@@ -50,7 +50,7 @@ function statusBadgeClass(status: string | null) {
   return "badge badge-neutral";
 }
 
-export function JobsList({ jobs, customers, leads, profile }: Props) {
+export function JobsList({ jobs, count, customers, leads, profile, selectedStage }: Props) {
   const jobPlural = profile?.labels.jobPlural ?? "Visits";
   const jobSingular = profile?.labels.jobSingular ?? "Visit";
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -68,11 +68,13 @@ export function JobsList({ jobs, customers, leads, profile }: Props) {
   const todayCount = countsByDay[weekDays.findIndex((d) => isSameDay(d.date, today))] ?? 0;
   const totalThisWeek = countsByDay.reduce((a, b) => a + b, 0);
 
-  const sorted = [...jobs].sort((a, b) => {
-    if (!a.start_date) return 1;
-    if (!b.start_date) return -1;
-    return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
-  });
+  const sorted = [...jobs]
+    .filter((j) => !selectedStage || (j.status ?? "").toLowerCase() === selectedStage.toLowerCase())
+    .sort((a, b) => {
+      if (!a.start_date) return 1;
+      if (!b.start_date) return -1;
+      return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+    });
 
   return (
     <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
@@ -82,7 +84,7 @@ export function JobsList({ jobs, customers, leads, profile }: Props) {
           <div className="page-eyebrow">{jobPlural}</div>
           <div className="page-title">Scheduled {jobPlural.toLowerCase()}</div>
           <div className="page-desc">
-            {weekLabel} · {totalThisWeek} {totalThisWeek === 1 ? jobSingular.toLowerCase() : jobPlural.toLowerCase()} scheduled{todayCount > 0 ? ` · ${todayCount} today` : ""}
+            {count} total · {weekLabel} · {totalThisWeek} scheduled this week{todayCount > 0 ? ` · ${todayCount} today` : ""}
           </div>
         </div>
         <div className="page-actions">

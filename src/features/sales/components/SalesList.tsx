@@ -65,7 +65,7 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
     .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 }
 
-export function SalesList({ sales, count, customers = [], selectedStatus, profile }: Props) {
+export function SalesList({ sales, count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
   );
@@ -97,6 +97,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
   const openCount = outstanding.length;
 
   const filtered = sales.filter((s) => {
+    if (selectedSource && (s.source ?? "").toLowerCase() !== selectedSource.toLowerCase()) return false;
     if (filter === "paid") return isPaid(s.payment_status);
     if (filter === "overdue") return isOverdue(s.payment_status);
     if (filter === "pending") return isPending(s.payment_status) && !isPaid(s.payment_status) && !isOverdue(s.payment_status);

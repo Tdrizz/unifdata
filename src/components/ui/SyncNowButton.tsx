@@ -20,7 +20,7 @@ export function SyncNowButton({ provider, label }: { provider: string; label: st
       }
 
       toast.success(`${label} sync complete — ${data.recordsStaged ?? 0} records staged for review`);
-      router.refresh();
+      router.push("/imports");
     } catch {
       toast.error(`Something went wrong syncing ${label}`);
     } finally {
