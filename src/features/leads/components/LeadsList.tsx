@@ -295,7 +295,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
               >
                 <div>
                   <p className="font-semibold text-ud-ink">
-                    {opportunity.service_requested || "Untitled opportunity"}
+                    {opportunity.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
                   </p>
                   <p className="mt-1 text-sm text-ud-faint">
                     {opportunity.source || "No source saved"}

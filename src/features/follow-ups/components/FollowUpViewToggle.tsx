@@ -28,7 +28,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
       const hour = fu.due_date!.length === 10 ? 9 : new Date(fu.due_date!).getHours();
       return {
         id: `manual-${fu.id}`,
-        title: fu.message || "Untitled follow-up",
+        title: fu.message || `Untitled ${profile?.labels.followUpSingular?.toLowerCase() ?? "follow-up"}`,
         date: fu.due_date!,
         hour,
         color: "bg-amber-500",

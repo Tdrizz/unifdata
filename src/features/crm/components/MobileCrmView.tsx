@@ -116,7 +116,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
                   )}
                 </div>
                 <p className="mt-[8px] text-[12px] text-ud-muted">
-                  {customer?.name || "No client linked"}
+                  {customer?.name || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
                 </p>
               </Link>
             );

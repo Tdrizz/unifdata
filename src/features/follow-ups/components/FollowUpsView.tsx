@@ -90,8 +90,8 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
       const person = f.customer_id ? personById.get(f.customer_id) : null;
       return {
         id: `manual-${f.id}`,
-        title: f.message || "Untitled follow-up",
-        meta: person?.name || "No contact linked",
+        title: f.message || `Untitled ${profile?.labels.followUpSingular?.toLowerCase() ?? "follow-up"}`,
+        meta: person?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "contact"} linked`,
         due_date: f.due_date,
         status: f.status,
         href: `/follow-ups/${f.id}/edit`,
@@ -106,7 +106,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
       return {
         id: `opportunity-${o.id}`,
         title: o.service_requested ? `Follow up: ${o.service_requested}` : "Follow up on opportunity",
-        meta: person?.name || "No contact linked",
+        meta: person?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "contact"} linked`,
         due_date: o.next_follow_up_date,
         status: o.status,
         href: `/leads/${o.id}/edit`,
@@ -179,7 +179,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
             <div className="queue-item">
               <div className="queue-body">
                 <div className="queue-meta" style={{ textAlign: "center", padding: "12px 0" }}>
-                  No follow-ups in this category.
+                  {`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} in this category.`}
                 </div>
               </div>
             </div>

@@ -13,7 +13,7 @@ import type { LeadRow, CustomerRow } from "../types";
 type Props = {
   leads: LeadRow[];
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
-  profile: { labels: { customerSingular: string } };
+  profile: { labels: { customerSingular: string; leadSingular: string } };
   sectionTitle: string;
 };
 
@@ -29,7 +29,7 @@ function getFollowUpTone(date: string | null) {
   return "neutral" as const;
 }
 
-export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
+export function LeadsTableClient({ leads, customers, profile, sectionTitle }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState("");
   const [bulkError, setBulkError] = useState("");
@@ -141,12 +141,12 @@ export function LeadsTableClient({ leads, customers, sectionTitle }: Props) {
                 <div className="grid gap-4 md:grid-cols-[1fr_135px_165px] md:items-start">
                   <div>
                     <p className="font-semibold text-ud-ink">
-                      {opportunity.service_requested || "Untitled opportunity"}
+                      {opportunity.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
                     </p>
                     <p className="mt-1 text-sm text-ud-faint">
                       {customer?.name ||
                         opportunity.source ||
-                        "No person or source saved"}
+                        `No ${profile.labels.customerSingular.toLowerCase()} or source saved`}
                     </p>
                   </div>
 

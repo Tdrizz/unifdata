@@ -107,7 +107,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     .map((lead) => ({
       id: `opportunity-follow-up-${lead.id}`,
       label: `${profile.labels.leadSingular} follow-up`,
-      title: lead.service_requested || "Follow up on opportunity",
+      title: lead.service_requested || `Follow up on ${profile.labels.leadSingular.toLowerCase()}`,
       detail: getFollowUpLabel(lead.next_follow_up_date),
       href: `/leads/${lead.id}/edit`,
       tone: getFollowUpTone(lead.next_follow_up_date),
@@ -139,7 +139,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           {
             id: "data-cleanup-summary",
             label: "Data cleanup",
-            title: `${dataIssueCount} records need attention`,
+            title: `${dataIssueCount} data issues to fix`,
             detail: "Missing contact info, values, or links. Review in Data Hub.",
             href: "/data-hub",
             tone: "neutral" as const,
@@ -202,7 +202,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
             {profile.labels.customerSingular}
           </Link>
           <Link
-            href="/crm#leads-quick-add"
+            href="/leads#leads-quick-add"
             className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
@@ -343,7 +343,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
                     <div className="flex items-center gap-2 mt-0.5">
                       <Pill tone={pillTone}>{job.status || "Active"}</Pill>
                       <p className="text-[11.5px] text-ud-muted truncate">
-                        {customer?.name || "No client linked"}
+                        {customer?.name || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
                       </p>
                     </div>
                   </div>

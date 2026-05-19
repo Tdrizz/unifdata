@@ -272,7 +272,7 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
           <thead>
             <tr>
               <th>{saleSingular}</th>
-              <th>Client</th>
+              <th>{profile?.labels.customerSingular ?? "Client"}</th>
               <th>Amount</th>
               <th>Issued</th>
               <th>Due</th>
@@ -300,8 +300,8 @@ export function SalesList({ sales, count, customers = [], selectedStatus, profil
                     <td className={isOver ? "text-danger" : "td-muted"} style={isOver ? { fontWeight: 600 } : undefined}>—</td>
                     <td><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
                     <td>
-                      <Link href={`/sales/${sale.id}/edit`} className={isOver ? "btn btn-ghost btn-sm" : "td-link"}>
-                        {isOver ? "Send reminder" : "View"}
+                      <Link href={`/sales/${sale.id}/edit`} className="td-link">
+                        View →
                       </Link>
                     </td>
                   </tr>

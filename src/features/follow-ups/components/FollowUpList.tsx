@@ -114,13 +114,14 @@ function buildFollowUpItems(
   followUps: FollowUpRow[],
   opportunities: LeadRow[],
   leadSingularLabel: string = "Opportunity",
+  followUpSingularLabel: string = "follow-up",
 ): { manualItems: FollowUpItem[]; opportunityItems: FollowUpItem[] } {
   const manualItems: FollowUpItem[] = followUps.map((action) => ({
     id: `manual-${action.id}`,
     source_type: "manual",
     source_label: "Manual follow-up",
     customer_id: action.customer_id,
-    title: action.message || "Untitled follow-up",
+    title: action.message || `Untitled ${followUpSingularLabel.toLowerCase()}`,
     due_date: action.due_date,
     status: action.status || "Open",
     created_at: action.created_at,
@@ -155,7 +156,8 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
   const selectedDue = filters.due ? decodeURIComponent(filters.due) : "";
   const selectedSource = filters.source ? decodeURIComponent(filters.source) : "";
 
-  const { manualItems, opportunityItems } = buildFollowUpItems(followUps, opportunities, leadSingular);
+  const followUpSingular = profile?.labels.followUpSingular ?? "follow-up";
+  const { manualItems, opportunityItems } = buildFollowUpItems(followUps, opportunities, leadSingular, followUpSingular);
   const actions = [...manualItems, ...opportunityItems];
 
   const openActions = actions.filter((a) => !isComplete(a.status));
@@ -338,7 +340,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
         >
           {visibleActions.length === 0 ? (
             <EmptyState
-              title="No follow-ups found"
+              title={`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} found`}
               description="Add a manual follow-up or set a next follow-up date on an opportunity."
             />
           ) : (
@@ -373,7 +375,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
                           </div>
                           <p className="mt-3 font-semibold text-ud-ink">{action.title}</p>
                           <p className="mt-1 text-sm text-ud-faint">
-                            {person?.name || "No person linked"}
+                            {person?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "person"} linked`}
                           </p>
                           <p className="hidden md:block mt-3 text-sm leading-6 text-ud-muted">
                             {getActionNextStep(action)}
@@ -422,7 +424,7 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
           >
             {sourceGroups.length === 0 ? (
               <EmptyState
-                title="No follow-up sources yet"
+                title={`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-up"} sources yet`}
                 description="Manual and opportunity follow-ups will appear here."
               />
             ) : (

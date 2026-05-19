@@ -82,7 +82,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const revenueMTD = sales
-    .filter((s) => new Date(s.created_at) >= startOfMonth)
+    .filter((s) => new Date(s.sale_date || s.created_at) >= startOfMonth)
     .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 
   const manualFollowUpItems: QueueItem[] = followUps
@@ -103,7 +103,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     .map((lead) => ({
       id: `opportunity-follow-up-${lead.id}`,
       label: getFollowUpLabel(lead.next_follow_up_date),
-      title: lead.service_requested || "Follow up on opportunity",
+      title: lead.service_requested || `Follow up on ${profile.labels.leadSingular.toLowerCase()}`,
       detail: getFollowUpLabel(lead.next_follow_up_date),
       href: `/leads/${lead.id}/edit`,
       tone: getFollowUpTone(lead.next_follow_up_date),
@@ -134,7 +134,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       ? [{
           id: "data-cleanup-summary",
           label: "Data cleanup",
-          title: `${dataIssueCount} records need attention`,
+          title: `${dataIssueCount} data issues to fix`,
           detail: "Missing contact info, values, or links.",
           href: "/data-hub",
           tone: "neutral" as const,
@@ -318,7 +318,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
                   <div className="queue-item">
                     <div className="queue-body">
-                      <div className="queue-action">{lead.service_requested || "Untitled opportunity"}</div>
+                      <div className="queue-action">{lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}</div>
                       <div className="queue-meta">{lead.status || "Lead"} · {formatCurrency(lead.estimated_value)}</div>
                     </div>
                     <span className="badge badge-neutral">{lead.status || "Lead"}</span>

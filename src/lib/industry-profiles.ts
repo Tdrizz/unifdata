@@ -19,6 +19,7 @@ export type IndustryProfile = {
     jobPlural: string;
     saleSingular: string;
     salePlural: string;
+    followUpSingular: string;
     followUpPlural: string;
   };
   priorityNames: {
@@ -47,6 +48,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Work items",
       saleSingular: "Revenue record",
       salePlural: "Revenue",
+      followUpSingular: "Action",
       followUpPlural: "Actions",
     },
     priorityNames: {
@@ -78,6 +80,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Appointments",
       saleSingular: "Collection",
       salePlural: "Collections",
+      followUpSingular: "Patient action",
       followUpPlural: "Patient actions",
     },
     priorityNames: {
@@ -109,6 +112,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Projects",
       saleSingular: "Payment",
       salePlural: "Payments",
+      followUpSingular: "Project action",
       followUpPlural: "Project actions",
     },
     priorityNames: {
@@ -140,6 +144,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Service visits",
       saleSingular: "Payment",
       salePlural: "Payments",
+      followUpSingular: "Client action",
       followUpPlural: "Client actions",
     },
     priorityNames: {
@@ -171,6 +176,7 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
       jobPlural: "Projects",
       saleSingular: "Invoice",
       salePlural: "Invoices",
+      followUpSingular: "Client action",
       followUpPlural: "Client actions",
     },
     priorityNames: {

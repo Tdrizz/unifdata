@@ -75,7 +75,7 @@ function avatarColor(name: string | null) {
   return AVATAR_COLORS[idx];
 }
 
-type Filter = "all" | "active" | "quote" | "followup" | "dormant";
+type Filter = "all" | "active" | "quote" | "dormant";
 
 export function CustomersTableClient({
   customers,
@@ -101,7 +101,6 @@ export function CustomersTableClient({
 
   const activeCount = stats.filter((s) => s.status.label === "Active").length;
   const quoteCount = stats.filter((s) => s.status.label === "Quote pending").length;
-  const followupCount = 0;
   const dormantCount = stats.filter((s) => s.status.label === "Dormant").length;
 
   const byFilter = customers.filter((c) => {
@@ -166,9 +165,6 @@ export function CustomersTableClient({
         </button>
         <button className={`filter-tab ${filter === "quote" ? "active" : ""}`} onClick={() => setFilter("quote")}>
           Quote pending <span style={{ color: "var(--faint)", fontWeight: 500 }}>{quoteCount}</span>
-        </button>
-        <button className={`filter-tab ${filter === "followup" ? "active" : ""}`} onClick={() => setFilter("followup")}>
-          Follow-up <span style={{ color: "var(--faint)", fontWeight: 500 }}>{followupCount}</span>
         </button>
         <button className={`filter-tab ${filter === "dormant" ? "active" : ""}`} onClick={() => setFilter("dormant")}>
           Dormant <span style={{ color: "var(--faint)", fontWeight: 500 }}>{dormantCount}</span>

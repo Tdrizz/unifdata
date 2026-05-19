@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import {
   ImportSessionReviewClient,
   type ImportRow,
@@ -123,8 +124,6 @@ export default async function ImportSessionPage({
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
-      brandColor={company.brand_color || "#1D2D3E"}
-      accentColor={company.accent_color || "#4A3FA8"}
       businessSector={company.business_sector}
     >
       <div className="space-y-6">
@@ -194,6 +193,7 @@ export default async function ImportSessionPage({
               <ImportSessionReviewClient
                 session={session}
                 rows={rows as unknown as ImportRow[]}
+                customerSingular={getIndustryProfile(company.business_sector).labels.customerSingular}
               />
             </div>
           ) : (

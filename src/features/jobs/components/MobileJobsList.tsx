@@ -58,7 +58,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
             {count} {profile.labels.jobPlural.toLowerCase()}
           </span>
         </h1>
-        <p className="mt-[4px] text-[13px] font-[variant-numeric:tabular-nums] text-ud-muted [font-variant-numeric:tabular-nums]">
+        <p className="mt-[4px] text-[13px] text-ud-muted [font-variant-numeric:tabular-nums]">
           {formatCurrency(totalValue)} total value
         </p>
       </div>
@@ -86,7 +86,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
       {filteredJobs.length === 0 ? (
         <div className="px-[14px]">
           <EmptyState
-            title={activeFilter === "All" ? "No jobs yet" : `No ${activeFilter.toLowerCase()} jobs`}
+            title={activeFilter === "All" ? `No ${profile.labels.jobPlural.toLowerCase()} yet` : `No ${activeFilter.toLowerCase()} ${profile.labels.jobPlural.toLowerCase()}`}
             description={
               activeFilter === "All"
                 ? "Add work manually or import records from CSV."
@@ -108,7 +108,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
                 {/* Row 1: service type + value */}
                 <div className="flex items-start justify-between gap-[8px]">
                   <p className="font-semibold text-[14px] text-ud-ink leading-snug">
-                    {job.service_type || "Untitled job"}
+                    {job.service_type || `Untitled ${profile?.labels.jobSingular?.toLowerCase() ?? "job"}`}
                   </p>
                   <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
                     {formatCurrency(job.job_value)}
@@ -134,7 +134,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
 
                 {/* Row 3: customer name */}
                 <p className="mt-[8px] text-[12px] text-ud-muted">
-                  {customer?.name || "No client linked"}
+                  {customer?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "client"} linked`}
                 </p>
               </Link>
             );

@@ -183,9 +183,11 @@ function getSecondaryRowLabel(
 export function ImportSessionReviewClient({
   session,
   rows,
+  customerSingular = "Customer",
 }: {
   session: ImportSession;
   rows: ImportRow[];
+  customerSingular?: string;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
@@ -663,10 +665,10 @@ export function ImportSessionReviewClient({
                 {!!row.normalized_data._customer_unlinked && (
                   <div className="mt-3 rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">
-                      Customer not matched
+                      {customerSingular} not matched
                     </p>
                     <p className="mt-1 text-sm text-amber-700">
-                      No customer named &ldquo;{String(row.normalized_data.customer_name ?? "")}&rdquo; was found. This record will import without a customer link.
+                      No {customerSingular.toLowerCase()} named &ldquo;{String(row.normalized_data.customer_name ?? "")}&rdquo; was found. This record will import without a {customerSingular.toLowerCase()} link.
                     </p>
                     <p className="mt-1.5 text-xs text-amber-600">
                       Edit the row to fix the name, or import anyway and link the customer later.

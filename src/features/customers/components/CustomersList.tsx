@@ -242,7 +242,7 @@ export function CustomersList({
                           )}
                         </span>
                       ) : (
-                        <Pill tone="info">New lead</Pill>
+                        <Pill tone="info">New {(profile?.labels.leadSingular ?? "lead").toLowerCase()}</Pill>
                       )}
                     </div>
                   </div>

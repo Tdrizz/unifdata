@@ -59,7 +59,9 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
   const leadLabel = profile?.labels.leadPlural ?? "Quotes";
   const jobLabel = profile?.labels.jobPlural ?? "Visits";
   const saleLabel = profile?.labels.salePlural ?? "Payments";
+  const saleSingular = profile?.labels.saleSingular ?? "Payment";
   const custLabel = profile?.labels.customerPlural ?? "Clients";
+  const custSingular = profile?.labels.customerSingular ?? "Client";
   const TABS = ["Overview", leadLabel, jobLabel, saleLabel, "Activity"] as const;
   const [activeTab, setActiveTab] = useState<string>("Overview");
 
@@ -110,7 +112,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
           </p>
         )}
         <p className="mt-0.5 text-[12px] text-ud-faint">
-          Client since {clientSince}
+          {custSingular} since {clientSince}
         </p>
         {customer.customer_type && (
           <div className="mt-2">
@@ -230,7 +232,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
                 <div className="flex items-center gap-3 rounded-[10px] border border-ud bg-ud-surface px-4 py-3 shadow-ud hover:bg-ud-surface-soft transition-colors">
                   <span className={cn("w-2 h-2 rounded-full shrink-0", lead.status === "won" || lead.status === "accepted" ? "bg-ud-success" : lead.status === "lost" ? "bg-ud-faint" : "bg-ud-accent")} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ud-ink truncate">{lead.service_requested || "Untitled"}</p>
+                    <p className="text-[13px] font-semibold text-ud-ink truncate">{lead.service_requested || `Untitled ${(profile?.labels.leadSingular ?? "lead").toLowerCase()}`}</p>
                     <p className="text-[11.5px] text-ud-muted">{lead.status || "Open"}</p>
                   </div>
                   {lead.estimated_value && (
@@ -266,13 +268,13 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
         {activeTab === saleLabel && (
           <div className="space-y-2">
             {sales.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-ud-faint">No payments yet.</p>
+              <p className="py-8 text-center text-[13px] text-ud-faint">No {saleLabel.toLowerCase()} yet.</p>
             ) : sales.map((sale) => (
               <Link key={sale.id} href={`/sales/${sale.id}/edit`}>
                 <div className="flex items-center gap-3 rounded-[10px] border border-ud bg-ud-surface px-4 py-3 shadow-ud hover:bg-ud-surface-soft transition-colors">
                   <span className={cn("w-2 h-2 rounded-full shrink-0", sale.payment_status === "paid" ? "bg-ud-success" : "bg-ud-warning")} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ud-ink truncate">{sale.service_type || "Payment"}</p>
+                    <p className="text-[13px] font-semibold text-ud-ink truncate">{sale.service_type || saleSingular}</p>
                     <p className={cn("text-[11.5px]", sale.payment_status === "paid" ? "text-ud-success" : "text-ud-warning")}>
                       {sale.payment_status || "Pending"}
                     </p>

@@ -9,9 +9,10 @@ type View = "list" | "calendar";
 interface JobsCalendarToggleProps {
   calendarEvents: CalendarEvent[];
   children: React.ReactNode;
+  jobPlural?: string;
 }
 
-export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarToggleProps) {
+export function JobsCalendarToggle({ calendarEvents, children, jobPlural = "Jobs" }: JobsCalendarToggleProps) {
   const [view, setView] = useState<View>("list");
 
   return (
@@ -45,7 +46,7 @@ export function JobsCalendarToggle({ calendarEvents, children }: JobsCalendarTog
         <div className="rounded-[10px] border border-ud bg-ud-surface p-4">
           {calendarEvents.length === 0 ? (
             <p className="py-8 text-center text-sm text-ud-faint">
-              No jobs with a start date to show on the calendar.
+              {`No ${jobPlural.toLowerCase()} with a start date to show on the calendar.`}
             </p>
           ) : (
             <WeeklyCalendar events={calendarEvents} />
