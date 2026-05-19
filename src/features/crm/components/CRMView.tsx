@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { getOpportunityTone } from "@/lib/status";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { CRMPageData } from "../queries";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { STAGES, mapToStage, isOpenLead } from "../stages";
@@ -25,6 +28,7 @@ function dateLabel(lead: Lead): string | null {
 }
 
 export function CRMView({ leads, customers, profile }: Props) {
+  const [view, setView] = useState<"board" | "list">("board");
   const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
   const leadPlural = profile?.labels.leadPlural ?? "Opportunities";
   const customerSingular = profile?.labels.customerSingular ?? "Client";
@@ -63,9 +67,9 @@ export function CRMView({ leads, customers, profile }: Props) {
           </div>
         </div>
         <div className="page-actions">
-          <div style={{ display: "flex", borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden", flexShrink: 0 }}>
-            <Link href="/leads" className="btn btn-ghost" style={{ borderRadius: 0, borderRight: "1px solid var(--border)" }}>List</Link>
-            <span className="btn btn-ghost" style={{ borderRadius: 0, background: "var(--surface-sunk)", fontWeight: 700, cursor: "default" }}>Board</span>
+          <div className="flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[10px] p-[3px]">
+            <button type="button" onClick={() => setView("list")} className={`px-4 py-[6px] rounded-[7px] text-[13px] font-semibold transition-colors ${view === "list" ? "bg-ud-surface text-ud-ink shadow-sm" : "text-ud-muted hover:text-ud-ink"}`}>List</button>
+            <button type="button" onClick={() => setView("board")} className={`px-4 py-[6px] rounded-[7px] text-[13px] font-semibold transition-colors ${view === "board" ? "bg-ud-surface text-ud-ink shadow-sm" : "text-ud-muted hover:text-ud-ink"}`}>Board</button>
           </div>
           <Link href="/leads#leads-quick-add" className="btn btn-primary">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
@@ -76,55 +80,104 @@ export function CRMView({ leads, customers, profile }: Props) {
         </div>
       </div>
 
-      {/* Kanban */}
-      <div className="kanban">
-        {STAGES.filter((s) => s.name !== "Lost").map((stage) => {
-          const stageLeads = leadsByStage.get(stage.name) ?? [];
-          const totalValue = stageLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
-          return (
-            <div key={stage.name} className="kanban-col">
-              <div className="kanban-col-header">
-                <div>
-                  <span className="kanban-col-title">{stage.name}</span>
-                  <span className="kanban-col-meta" style={{ fontSize: "10px", marginLeft: "5px" }}>{formatCurrency(totalValue)}</span>
+      {/* Board view */}
+      {view === "board" && (
+        <div className="kanban">
+          {STAGES.filter((s) => s.name !== "Lost").map((stage) => {
+            const stageLeads = leadsByStage.get(stage.name) ?? [];
+            const totalValue = stageLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
+            return (
+              <div key={stage.name} className="kanban-col">
+                <div className="kanban-col-header">
+                  <div>
+                    <span className="kanban-col-title">{stage.name}</span>
+                    <span className="kanban-col-meta" style={{ fontSize: "10px", marginLeft: "5px" }}>{formatCurrency(totalValue)}</span>
+                  </div>
+                  <span className="kanban-count">{stageLeads.length}</span>
                 </div>
-                <span className="kanban-count">{stageLeads.length}</span>
-              </div>
 
-              {stageLeads.map((lead) => {
-                const customer = lead.customer_id ? customerById.get(lead.customer_id) : null;
-                const urgent = isUrgent(lead);
-                const dl = dateLabel(lead);
-                return (
-                  <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
-                    <div className={`kanban-card ${urgent ? "urgent" : ""}`}>
-                      <div className="kanban-card-name">{lead.service_requested || "Untitled"}</div>
-                      <div className="kanban-card-client">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
-                      <div className="kanban-card-footer">
-                        <span className="badge badge-neutral">{formatCurrency(lead.estimated_value)}</span>
-                        <span style={{
-                          fontSize: "11px",
-                          color: urgent ? "var(--danger)" : "var(--faint)",
-                          fontWeight: urgent ? 600 : 400,
-                        }}>
-                          {urgent ? `${Math.floor((Date.now() - new Date(lead.next_follow_up_date!).getTime()) / 86400000)}d overdue` : dl}
-                        </span>
+                {stageLeads.map((lead) => {
+                  const customer = lead.customer_id ? customerById.get(lead.customer_id) : null;
+                  const urgent = isUrgent(lead);
+                  const dl = dateLabel(lead);
+                  return (
+                    <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
+                      <div className={`kanban-card ${urgent ? "urgent" : ""}`}>
+                        <div className="kanban-card-name">{lead.service_requested || "Untitled"}</div>
+                        <div className="kanban-card-client">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
+                        <div className="kanban-card-footer">
+                          <span className="badge badge-neutral">{formatCurrency(lead.estimated_value)}</span>
+                          <span style={{
+                            fontSize: "11px",
+                            color: urgent ? "var(--danger)" : "var(--faint)",
+                            fontWeight: urgent ? 600 : 400,
+                          }}>
+                            {urgent ? `${Math.floor((Date.now() - new Date(lead.next_follow_up_date!).getTime()) / 86400000)}d overdue` : dl}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                );
-              })}
+                    </Link>
+                  );
+                })}
 
-              <Link href="/leads#leads-quick-add" className="kanban-add" style={{ textDecoration: "none" }}>
-                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add {stage.name.toLowerCase()}
-              </Link>
-            </div>
-          );
-        })}
-      </div>
+                <Link href="#leads-quick-add" className="kanban-add" style={{ textDecoration: "none" }}>
+                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  Add {stage.name.toLowerCase()}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* List view */}
+      {view === "list" && (
+        <div className="card" style={{ marginTop: 0 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                {[leadSingular, customerSingular, "Status", "Value", "Follow-up"].map((h) => (
+                  <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: "11px", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {leads.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ padding: "32px 16px", textAlign: "center", color: "var(--faint)", fontSize: "13px" }}>
+                    No {leadPlural.toLowerCase()} yet
+                  </td>
+                </tr>
+              ) : (
+                leads.map((lead) => {
+                  const customer = lead.customer_id ? customerById.get(lead.customer_id) : null;
+                  return (
+                    <tr key={lead.id} style={{ borderBottom: "1px solid var(--border-soft)" }} className="queue-item" onClick={() => window.location.href = `/leads/${lead.id}/edit`} role="link" tabIndex={0}>
+                      <td style={{ padding: "12px 16px" }}>
+                        <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--ink)" }}>{lead.service_requested || `Untitled ${leadSingular.toLowerCase()}`}</span>
+                      </td>
+                      <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--muted)" }}>
+                        {customer?.name || `—`}
+                      </td>
+                      <td style={{ padding: "12px 16px" }}>
+                        <StatusBadge tone={getOpportunityTone(lead.status)}>{lead.status || "Lead"}</StatusBadge>
+                      </td>
+                      <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
+                        {lead.estimated_value != null ? formatCurrency(lead.estimated_value) : "—"}
+                      </td>
+                      <td style={{ padding: "12px 16px", fontSize: "13px", color: "var(--faint)" }}>
+                        {lead.next_follow_up_date ? new Date(lead.next_follow_up_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

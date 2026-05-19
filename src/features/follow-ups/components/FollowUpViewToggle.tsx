@@ -55,23 +55,23 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
   return (
     <div className="space-y-5">
       {/* View toggle — calendar hidden on mobile (grid requires 640px+) */}
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden md:flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[10px] p-[3px] w-fit">
         <button
           onClick={() => setView("list")}
-          className={`rounded-[9px] border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`px-4 py-[6px] rounded-[7px] text-[13px] font-semibold transition-colors ${
             view === "list"
-              ? "border-ud-accent bg-ud-accent text-white"
-              : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"
+              ? "bg-ud-surface text-ud-ink shadow-sm"
+              : "text-ud-muted hover:text-ud-ink"
           }`}
         >
           List
         </button>
         <button
           onClick={() => setView("calendar")}
-          className={`rounded-[9px] border px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`px-4 py-[6px] rounded-[7px] text-[13px] font-semibold transition-colors ${
             view === "calendar"
-              ? "border-ud-accent bg-ud-accent text-white"
-              : "border-ud bg-ud-surface text-ud-muted hover:bg-ud-surface-sunk"
+              ? "bg-ud-surface text-ud-ink shadow-sm"
+              : "text-ud-muted hover:text-ud-ink"
           }`}
         >
           Calendar
