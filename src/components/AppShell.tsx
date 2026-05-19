@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import { MobileTabBar } from "@/components/MobileTabBar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ProductMark } from "@/components/ProductMark";
+import { MobileSearchButton } from "@/components/MobileSearchButton";
 import { SidebarSearchButton } from "@/components/SidebarSearchButton";
 import { Topbar } from "@/components/Topbar";
 import { createClient } from "@/lib/supabase/server";
@@ -113,16 +114,7 @@ export async function AppShell({
                 initialNotifications={initialNotifications ?? []}
               />
             )}
-            <button
-              type="button"
-              aria-label="Search"
-              onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }))}
-              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-ud-muted hover:bg-ud-surface-sunk hover:text-ud-ink"
-            >
-              <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round">
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-              </svg>
-            </button>
+            <MobileSearchButton />
           </div>
         </header>
         <main className="flex-1 pb-[calc(80px+env(safe-area-inset-bottom))]">
