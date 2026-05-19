@@ -42,11 +42,6 @@ export function getProductNavigation(profile: IndustryProfile): ProductNavGroup[
           description: `${profile.labels.customerPlural} and contact records`,
         },
         {
-          href: "/leads",
-          label: profile.labels.leadPlural,
-          description: "Potential business",
-        },
-        {
           href: "/jobs",
           label: profile.labels.jobPlural,
           description: `Active ${profile.labels.jobPlural.toLowerCase()}`,

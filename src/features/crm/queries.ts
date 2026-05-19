@@ -2,12 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import type { LeadRow, CustomerRow } from "./types";
 
-type CRMLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "notes" | "created_at">;
-type CRMCustomer = Pick<CustomerRow, "id" | "name" | "email" | "phone">;
-
 export type CRMPageData = {
-  leads: CRMLead[];
-  customers: CRMCustomer[];
+  leads: LeadRow[];
+  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
 };
 
 export async function getCRMPageData(
@@ -17,9 +14,7 @@ export async function getCRMPageData(
   const [leadsResult, customersResult] = await Promise.all([
     supabase
       .from("leads")
-      .select(
-        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
-      )
+      .select("*")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
@@ -33,7 +28,7 @@ export async function getCRMPageData(
   ]);
 
   return {
-    leads: (leadsResult.data ?? []) as CRMLead[],
-    customers: (customersResult.data ?? []) as CRMCustomer[],
+    leads: (leadsResult.data ?? []) as LeadRow[],
+    customers: (customersResult.data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[],
   };
 }

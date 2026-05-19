@@ -10,8 +10,7 @@ function buildCommands(businessSector?: string | null) {
   return [
     { id: "workspace", label: "Go to Workspace", href: "/workspace", group: "Navigate" },
     { id: "customers", label: `Go to ${profile.labels.customerPlural}`, href: "/customers", group: "Navigate" },
-    { id: "crm", label: "Go to Pipeline", href: "/crm", group: "Navigate" },
-    { id: "leads", label: `Go to ${profile.labels.leadPlural}`, href: "/leads", group: "Navigate" },
+    { id: "crm", label: `Go to ${profile.labels.leadPlural} pipeline`, href: "/crm", group: "Navigate" },
     { id: "jobs", label: `Go to ${profile.labels.jobPlural}`, href: "/jobs", group: "Navigate" },
     { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },
     { id: "sales", label: `Go to ${profile.labels.salePlural}`, href: "/sales", group: "Navigate" },

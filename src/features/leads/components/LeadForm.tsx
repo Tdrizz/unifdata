@@ -75,16 +75,10 @@ export function LeadForm({ lead, customers, profile }: Props) {
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/leads"
+              href="/crm"
               className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
             >
-              Back to opportunities
-            </Link>
-            <Link
-              href="/crm"
-              className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              Pipeline
+              Back to pipeline
             </Link>
           </div>
         }
@@ -183,7 +177,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
 
             <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
               <Link
-                href="/leads"
+                href="/crm"
                 className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
               >
                 Cancel
