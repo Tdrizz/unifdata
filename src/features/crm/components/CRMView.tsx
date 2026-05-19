@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
-import { isTodayOrPast, formatDateOnly } from "@/lib/date-format";
+import { isTodayOrPast } from "@/lib/date-format";
 import { getOpportunityTone } from "@/lib/status";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
