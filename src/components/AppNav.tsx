@@ -156,10 +156,11 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
               <Link
                 key={item.href}
                 href={item.href}
+                title={item.label}
                 className={cn("nav-item", active && "active", item.accent && "accent")}
               >
                 <span className="nav-icon"><Icon /></span>
-                <span style={{ flex: 1 }}>{item.label}</span>
+                <span className="nav-label">{item.label}</span>
                 {item.badge && (
                   <span className="nav-badge">{item.badge}</span>
                 )}

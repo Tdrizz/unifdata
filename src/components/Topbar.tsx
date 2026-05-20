@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SidebarToggleButton } from "@/components/SidebarToggleButton";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
 type Notification = {
@@ -58,6 +59,7 @@ export function Topbar({ companyId, initialNotifications, businessSector }: Prop
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <SidebarToggleButton />
         <span className="topbar-breadcrumb">
           {breadcrumb ? breadcrumb[1] : "UnifData"}
         </span>
