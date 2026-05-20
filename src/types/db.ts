@@ -129,6 +129,66 @@ export type Database = {
           },
         ]
       }
+      communications_log: {
+        Row: {
+          channel: string
+          customer_id: string | null
+          direction: string
+          from_address: string | null
+          id: string
+          organization_id: string
+          payload: string
+          provider_message_id: string | null
+          status: string
+          subject: string | null
+          timestamp: string | null
+          to_address: string | null
+        }
+        Insert: {
+          channel: string
+          customer_id?: string | null
+          direction: string
+          from_address?: string | null
+          id?: string
+          organization_id: string
+          payload: string
+          provider_message_id?: string | null
+          status?: string
+          subject?: string | null
+          timestamp?: string | null
+          to_address?: string | null
+        }
+        Update: {
+          channel?: string
+          customer_id?: string | null
+          direction?: string
+          from_address?: string | null
+          id?: string
+          organization_id?: string
+          payload?: string
+          provider_message_id?: string | null
+          status?: string
+          subject?: string | null
+          timestamp?: string | null
+          to_address?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_log_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "master_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           accent_color: string
@@ -168,6 +228,47 @@ export type Database = {
         }
         Relationships: []
       }
+      company_invitations: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          role: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          role?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          role?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_members: {
         Row: {
           company_id: string
@@ -203,66 +304,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      communications_log: {
-        Row: {
-          channel: string
-          customer_id: string | null
-          direction: string
-          from_address: string | null
-          id: string
-          organization_id: string
-          payload: string
-          provider_message_id: string | null
-          status: string
-          subject: string | null
-          timestamp: string
-          to_address: string | null
-        }
-        Insert: {
-          channel: string
-          customer_id?: string | null
-          direction: string
-          from_address?: string | null
-          id?: string
-          organization_id: string
-          payload: string
-          provider_message_id?: string | null
-          status?: string
-          subject?: string | null
-          timestamp?: string
-          to_address?: string | null
-        }
-        Update: {
-          channel?: string
-          customer_id?: string | null
-          direction?: string
-          from_address?: string | null
-          id?: string
-          organization_id?: string
-          payload?: string
-          provider_message_id?: string | null
-          status?: string
-          subject?: string | null
-          timestamp?: string
-          to_address?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "communications_log_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "communications_log_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "master_customers"
             referencedColumns: ["id"]
           },
         ]
@@ -827,96 +868,88 @@ export type Database = {
           action: string
           after_state: Json | null
           before_state: Json | null
-          changed_by: string
+          changed_by: string | null
           customer_id: string | null
           id: string
           organization_id: string
-          timestamp: string
+          timestamp: string | null
         }
         Insert: {
           action: string
           after_state?: Json | null
           before_state?: Json | null
-          changed_by?: string
+          changed_by?: string | null
           customer_id?: string | null
           id?: string
           organization_id: string
-          timestamp?: string
+          timestamp?: string | null
         }
         Update: {
           action?: string
           after_state?: Json | null
           before_state?: Json | null
-          changed_by?: string
+          changed_by?: string | null
           customer_id?: string | null
           id?: string
           organization_id?: string
-          timestamp?: string
+          timestamp?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "master_customer_audit_logs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       master_customers: {
         Row: {
           billing_address: Json | null
-          created_at: string
-          data_health_score: number
+          created_at: string | null
+          data_health_score: number | null
           first_name: string | null
           hubspot_contact_id: string | null
           id: string
           jobber_client_id: string | null
           last_name: string | null
-          metadata: Json
+          metadata: Json | null
           organization_id: string
           primary_email: string | null
           primary_phone: string | null
           quickbooks_customer_id: string | null
           service_address: Json | null
-          sync_tokens: Json
-          updated_at: string
+          sync_tokens: Json | null
+          updated_at: string | null
         }
         Insert: {
           billing_address?: Json | null
-          created_at?: string
-          data_health_score?: number
+          created_at?: string | null
+          data_health_score?: number | null
           first_name?: string | null
           hubspot_contact_id?: string | null
           id?: string
           jobber_client_id?: string | null
           last_name?: string | null
-          metadata?: Json
+          metadata?: Json | null
           organization_id: string
           primary_email?: string | null
           primary_phone?: string | null
           quickbooks_customer_id?: string | null
           service_address?: Json | null
-          sync_tokens?: Json
-          updated_at?: string
+          sync_tokens?: Json | null
+          updated_at?: string | null
         }
         Update: {
           billing_address?: Json | null
-          created_at?: string
-          data_health_score?: number
+          created_at?: string | null
+          data_health_score?: number | null
           first_name?: string | null
           hubspot_contact_id?: string | null
           id?: string
           jobber_client_id?: string | null
           last_name?: string | null
-          metadata?: Json
+          metadata?: Json | null
           organization_id?: string
           primary_email?: string | null
           primary_phone?: string | null
           quickbooks_customer_id?: string | null
           service_address?: Json | null
-          sync_tokens?: Json
-          updated_at?: string
+          sync_tokens?: Json | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1270,6 +1303,7 @@ export type Database = {
       }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
+      set_org_scope: { Args: { p_org_id: string }; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }

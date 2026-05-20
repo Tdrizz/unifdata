@@ -1,6 +1,5 @@
 "use server";
 
-import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -159,23 +158,57 @@ export async function inviteMember(email: string, role: "owner" | "member" = "me
   const currentRole = await getCurrentUserRole();
   if (currentRole !== "owner") throw new Error("Only owners can invite members");
 
-  const client = await clerkClient();
+  const currentCompany = await getCurrentCompany();
+  const companyName = currentCompany?.company.name ?? "your team";
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  const normalizedEmail = email.toLowerCase().trim();
 
-  try {
-    await client.invitations.createInvitation({
-      emailAddress: email,
-      redirectUrl: `${appUrl}/invite/accept`,
-      notify: true,
-      ignoreExisting: true,
-      publicMetadata: {
-        company_id: companyId,
-        invited_role: role,
-      },
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const admin = createAdminClient();
+
+  const { error: insertError } = await admin
+    .from("company_invitations")
+    .insert({
+      company_id: companyId,
+      email: normalizedEmail,
+      role,
+      token,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Could not send invitation: ${msg}`);
+
+  if (insertError) throw new Error("Could not create invitation. Please try again.");
+
+  const { Resend } = await import("resend");
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const inviteUrl = `${appUrl}/invite/accept?token=${token}`;
+  const fromHost = appUrl ? new URL(appUrl).hostname : "unifdata.com";
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? `noreply@${fromHost}`;
+
+  const { error: emailError } = await resend.emails.send({
+    from: `UnifData <${fromEmail}>`,
+    to: normalizedEmail,
+    subject: `You've been invited to join ${companyName} on UnifData`,
+    html: `
+      <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#a09b91;">UnifData</p>
+        <h2 style="margin:0 0 8px;font-size:20px;color:#171614;">You've been invited</h2>
+        <p style="margin:0 0 24px;font-size:14px;color:#6b6760;line-height:1.6;">
+          You've been invited to join <strong style="color:#171614;">${companyName}</strong> on UnifData as a <strong style="color:#171614;">${role}</strong>.
+        </p>
+        <a href="${inviteUrl}" style="display:inline-block;background:#4A3FA8;color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:600;font-size:14px;">
+          Accept invitation →
+        </a>
+        <p style="margin:20px 0 0;font-size:12px;color:#a09b91;">
+          This link expires in 7 days. If you weren't expecting this, you can ignore it.
+        </p>
+      </div>
+    `,
+  });
+
+  if (emailError) {
+    await admin.from("company_invitations").delete().eq("token", token);
+    throw new Error("Could not send invitation email. Please try again.");
   }
 
   revalidatePath("/settings");
