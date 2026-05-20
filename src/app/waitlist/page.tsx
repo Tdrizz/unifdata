@@ -9,18 +9,19 @@ export default function WaitlistPage() {
       <div className="mx-auto grid min-h-[calc(100vh-56px)] w-full max-w-6xl items-center gap-8 px-6 py-10 lg:grid-cols-[0.9fr_1.1fr]">
         <section>
           <div className="mt-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+            <p className="animate-fade-up text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
               Invite-only beta
             </p>
-            <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight">
-              One place for every customer, job, quote, and payment.
+            <h1 className="animate-fade-up [animation-delay:80ms] mt-4 max-w-xl font-serif italic text-5xl leading-tight tracking-tight">
+              Your customers, jobs, and revenue — in one place.
             </h1>
-            <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              We&apos;re onboarding a small group of local service businesses.
-              Approved applicants get a personal setup session and full workspace access from day one.
+            <p className="animate-fade-up [animation-delay:160ms] mt-5 max-w-xl text-base leading-8 text-slate-300">
+              We&apos;re onboarding a small group of service businesses.
+              Approved applicants get a personal setup session and full workspace
+              access from day one.
             </p>
-            <div className="mt-8 grid max-w-xl gap-3 text-sm text-slate-300 sm:grid-cols-3">
-              {["Reviewed manually", "Invite-only access", "Paid beta access"].map(
+            <div className="animate-fade-up [animation-delay:240ms] mt-8 grid max-w-xl gap-3 text-sm text-slate-300 sm:grid-cols-3">
+              {["Reviewed manually", "Invite-only access", "Personal setup included"].map(
                 (label) => (
                   <div
                     key={label}
@@ -34,7 +35,7 @@ export default function WaitlistPage() {
           </div>
         </section>
 
-        <section className="rounded-4xl border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
+        <section className="animate-fade-up [animation-delay:120ms] rounded-4xl border border-white/10 bg-white/7 p-8 shadow-2xl backdrop-blur">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
               Request access

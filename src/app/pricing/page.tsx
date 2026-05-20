@@ -15,14 +15,14 @@ const features = [
   "Data health scoring & cleanup tools",
   "CSV import with smart deduplication",
   "QuickBooks, Square, Jobber, HubSpot sync",
-  "AI-generated operating briefs",
+  "AI-generated daily operating briefs",
   "Secure, isolated company workspace",
 ];
 
 const faqs = [
   {
     q: "What's included in the $300 setup fee?",
-    a: "A hands-on session where we configure your workspace, import your existing data, set up your industry profile, and get your team using UnifData on day one. You're not left to figure it out yourself.",
+    a: "A hands-on onboarding session where we configure your workspace, import your existing data, set up your industry profile, and get your team running on day one. You're not left to figure it out yourself.",
   },
   {
     q: "When do I get charged?",
@@ -33,8 +33,8 @@ const faqs = [
     a: "Yes — cancel any time. Your workspace stays active until the end of the billing period you've already paid for.",
   },
   {
-    q: "Is there a contract or commitment?",
-    a: "No long-term contract. Month to month after the initial setup. You own your data and can export it any time.",
+    q: "Is there a contract or long-term commitment?",
+    a: "No contract. Month to month after the initial setup. You own your data and can export it at any time.",
   },
   {
     q: "What happens to my data if I cancel?",
@@ -49,14 +49,14 @@ export default function PricingPage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 pb-10 pt-20 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
+        <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
           <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
           Simple, transparent pricing
         </div>
-        <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
+        <h1 className="animate-fade-up [animation-delay:80ms] mt-6 font-serif italic text-5xl tracking-tight sm:text-6xl">
           One price.<br />Everything included.
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-[17px] leading-8 text-slate-300">
+        <p className="animate-fade-up [animation-delay:160ms] mx-auto mt-5 max-w-xl text-[17px] leading-8 text-slate-300">
           No tiers. No feature gating. Pay once to get set up, then a flat
           $100 a month — cancel any time.
         </p>
@@ -72,7 +72,7 @@ export default function PricingPage() {
                   One-time setup
                 </p>
                 <div className="mt-4 flex items-end justify-center gap-1">
-                  <span className="text-[60px] font-semibold leading-none">$300</span>
+                  <span className="text-[60px] font-semibold leading-none tabular-nums">$300</span>
                 </div>
                 <p className="mt-2 text-[13px] text-slate-300">
                   Paid once — covers onboarding &amp; data setup
@@ -83,7 +83,7 @@ export default function PricingPage() {
                   Then monthly
                 </p>
                 <div className="mt-4 flex items-end justify-center gap-1">
-                  <span className="text-[60px] font-semibold leading-none">$100</span>
+                  <span className="text-[60px] font-semibold leading-none tabular-nums">$100</span>
                   <span className="mb-2 text-slate-400">/mo</span>
                 </div>
                 <p className="mt-2 text-[13px] text-slate-300">
@@ -134,7 +134,7 @@ export default function PricingPage() {
                 key={label}
                 className="rounded-[14px] border border-white/10 bg-white/5 px-4 py-3"
               >
-                <p className="text-[14px] font-semibold">{value}</p>
+                <p className="text-[14px] font-semibold tabular-nums">{value}</p>
                 <p className="mt-1 text-[12px] text-slate-400">{label}</p>
               </div>
             ))}
@@ -146,7 +146,7 @@ export default function PricingPage() {
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-2xl">
           <h2 className="text-center text-[30px] font-semibold tracking-tight">
-            Frequently asked questions
+            Questions
           </h2>
           <div className="mt-10 divide-y divide-white/8">
             {faqs.map((faq) => (
@@ -162,7 +162,7 @@ export default function PricingPage() {
       {/* CTA */}
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-[30px] font-semibold tracking-tight">
+          <h2 className="font-serif italic text-[34px] tracking-tight">
             Stop running your business from memory.
           </h2>
           <p className="mt-3 text-slate-300">
@@ -171,13 +171,13 @@ export default function PricingPage() {
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/waitlist"
-              className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
+              className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
             >
               Request access
             </Link>
             <Link
               href="/"
-              className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/8"
+              className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 transition-colors hover:bg-white/8"
             >
               Back to home
             </Link>

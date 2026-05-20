@@ -17,7 +17,7 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentCompany = await getCurrentCompany();

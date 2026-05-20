@@ -101,15 +101,15 @@ const whyItMatters = [
   },
   {
     num: "02",
-    title: "Built for your industry, not a generic business",
+    title: "Built for your type of business, not someone else's",
     description:
       "The workspace adapts its language and priorities to your business type. A contractor and a dentist don't see the same dashboard.",
   },
   {
     num: "03",
-    title: "Clean data means no lost customers",
+    title: "Incomplete records are where customers go missing",
     description:
-      "Fix missing fields, unlinked records, and incomplete contact info before they cost you a customer.",
+      "Fix missing fields, unlinked records, and incomplete contact info before they cost you a relationship.",
   },
 ];
 
@@ -145,112 +145,120 @@ export default function HomePage() {
       <PublicNav />
 
       {/* Hero */}
-      <section className="mx-auto w-full max-w-7xl px-6 pb-10 pt-20">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-          {/* Left: headline + CTAs + sector pills */}
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
-              Business CRM for local service businesses
-            </div>
+      <div className="relative overflow-hidden">
+        {/* Ambient glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 left-[-8%] h-[640px] w-[640px] rounded-full bg-[#4A3FA8] opacity-[0.11] blur-[140px]"
+        />
 
-            <h1 className="mt-6 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-[68px]">
-              Stop losing revenue to scattered data.
-            </h1>
+        <section className="mx-auto w-full max-w-7xl px-6 pb-10 pt-20">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+            {/* Left: headline + CTAs + sector pills */}
+            <div>
+              <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
+                Built for service businesses
+              </div>
 
-            <p className="mt-5 max-w-lg text-[17px] leading-8 text-slate-300">
-              One workspace for your customers, jobs, open quotes, and revenue —
-              built to match your industry, so nothing falls through the cracks.
-            </p>
+              <h1 className="animate-fade-up [animation-delay:80ms] mt-6 font-serif italic text-5xl leading-[1.08] tracking-tight sm:text-6xl lg:text-[68px]">
+                Stop losing revenue to scattered data.
+              </h1>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/waitlist"
-                className="rounded-xl bg-[#4A3FA8] px-6 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
-              >
-                Request access
-              </Link>
-              <Link
-                href="/preview"
-                className="rounded-xl border border-white/15 px-6 py-3 text-center font-semibold text-slate-200 hover:bg-white/8"
-              >
-                See how it works
-              </Link>
-            </div>
-
-            <div className="mt-10">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
-                Pick your industry
+              <p className="animate-fade-up [animation-delay:160ms] mt-5 max-w-lg text-[17px] leading-8 text-slate-300">
+                Your customers, active work, and revenue in one place — with a
+                daily brief that shows exactly what needs attention.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {sectors.map((s, i) => (
-                  <button
-                    key={s.label}
-                    onClick={() => setActiveSector(i)}
-                    className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] ${
-                      activeSector === i
-                        ? "border-white/40 bg-white text-slate-950"
-                        : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/8 hover:text-white"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Right: dashboard card */}
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/40">
-            <div className="rounded-[20px] bg-[#f7f6f3] p-5 text-slate-950">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
-                    Today&apos;s brief
-                  </p>
-                  <h2 className="mt-1 text-[22px] font-semibold tracking-tight">
-                    {sector.title}
-                  </h2>
-                </div>
-                <span className="rounded-full border border-[#4A3FA8]/20 bg-[#4A3FA8]/10 px-3 py-1 text-[11px] font-semibold text-[#4A3FA8]">
-                  Needs attention
-                </span>
+              <div className="animate-fade-up [animation-delay:240ms] mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/waitlist"
+                  className="rounded-xl bg-[#4A3FA8] px-6 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
+                >
+                  Request access
+                </Link>
+                <Link
+                  href="/preview"
+                  className="rounded-xl border border-white/15 px-6 py-3 text-center font-semibold text-slate-200 transition-colors hover:bg-white/8"
+                >
+                  See how it works
+                </Link>
               </div>
 
-              <div className="mt-4 rounded-[14px] border border-slate-200 bg-white p-4">
-                <p className="text-[12px] font-medium text-slate-500">Focus today</p>
-                <p className="mt-1.5 text-[14px] font-semibold leading-6">{sector.focus}</p>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-2.5">
-                {sector.stats.map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="rounded-[12px] border border-slate-200 bg-white p-3.5"
-                  >
-                    <p className="text-[11px] font-medium text-slate-500">{label}</p>
-                    <p className="mt-1.5 text-[22px] font-semibold">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-3 rounded-[14px] border border-slate-200 bg-white p-4">
-                <p className="text-[13px] font-semibold">What you&apos;d see today</p>
-                <div className="mt-3 space-y-2">
-                  {sector.insights.map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-[10px] bg-slate-50 px-3.5 py-2.5 text-[12.5px] text-slate-600"
+              <div className="animate-fade-up [animation-delay:320ms] mt-10">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+                  Pick your industry
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sectors.map((s, i) => (
+                    <button
+                      key={s.label}
+                      onClick={() => setActiveSector(i)}
+                      className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] ${
+                        activeSector === i
+                          ? "border-white/40 bg-white text-slate-950"
+                          : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/8 hover:text-white"
+                      }`}
                     >
-                      {item}
-                    </div>
+                      {s.label}
+                    </button>
                   ))}
                 </div>
               </div>
             </div>
+
+            {/* Right: dashboard card */}
+            <div className="animate-fade-up [animation-delay:200ms] rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/40">
+              <div className="rounded-[20px] bg-[#f7f6f3] p-5 text-slate-950">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
+                      Today&apos;s brief
+                    </p>
+                    <h2 className="mt-1 text-[22px] font-semibold tracking-tight">
+                      {sector.title}
+                    </h2>
+                  </div>
+                  <span className="rounded-full border border-[#4A3FA8]/20 bg-[#4A3FA8]/10 px-3 py-1 text-[11px] font-semibold text-[#4A3FA8]">
+                    Needs attention
+                  </span>
+                </div>
+
+                <div className="mt-4 rounded-[14px] border border-slate-200 bg-white p-4">
+                  <p className="text-[12px] font-medium text-slate-500">Focus today</p>
+                  <p className="mt-1.5 text-[14px] font-semibold leading-6">{sector.focus}</p>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2.5">
+                  {sector.stats.map(([label, value]) => (
+                    <div
+                      key={label}
+                      className="rounded-[12px] border border-slate-200 bg-white p-3.5"
+                    >
+                      <p className="text-[11px] font-medium text-slate-500">{label}</p>
+                      <p className="mt-1.5 text-[22px] font-semibold tabular-nums">{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 rounded-[14px] border border-slate-200 bg-white p-4">
+                  <p className="text-[13px] font-semibold">What you&apos;d see today</p>
+                  <div className="mt-3 space-y-2">
+                    {sector.insights.map((item) => (
+                      <div
+                        key={item}
+                        className="rounded-[10px] bg-slate-50 px-3.5 py-2.5 text-[12.5px] text-slate-600"
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* Integration bar */}
       <section className="border-t border-white/8 px-6 py-8">
@@ -292,7 +300,7 @@ export default function HomePage() {
             {whyItMatters.map((point) => (
               <div
                 key={point.num}
-                className="rounded-[20px] border border-white/10 bg-white/5 p-7"
+                className="rounded-[20px] border border-white/10 bg-white/5 p-7 transition-colors duration-200 hover:bg-white/[0.07]"
               >
                 <p className="text-[13px] font-semibold tabular-nums text-[#8B80E0]">
                   {point.num}
@@ -313,7 +321,7 @@ export default function HomePage() {
               How it works
             </p>
             <h2 className="mt-3 text-[38px] font-semibold tracking-tight">
-              Set up in minutes, not months
+              Your data, organized and ready to act on
             </h2>
           </div>
 
@@ -333,23 +341,23 @@ export default function HomePage() {
           </div>
 
           <div className="mt-12 rounded-[24px] border border-white/10 bg-white/5 p-10 text-center">
-            <h2 className="text-[30px] font-semibold tracking-tight">
+            <h2 className="font-serif italic text-[32px] tracking-tight">
               Five spreadsheets and a notebook is not a system.
             </h2>
             <p className="mt-3 text-slate-300">
-              Set up in minutes. Pick your industry, bring in your data, and see
-              what needs attention — starting today.
+              Pick your industry, bring in your data, and start your first day
+              with a clear view of what needs attention.
             </p>
             <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/waitlist"
-                className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
+                className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
               >
                 Request access
               </Link>
               <Link
                 href="/preview"
-                className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 hover:bg-white/8"
+                className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 transition-colors hover:bg-white/8"
               >
                 See how it works
               </Link>
@@ -381,7 +389,7 @@ export default function HomePage() {
                     One-time setup
                   </p>
                   <div className="mt-3 flex items-end justify-center gap-1">
-                    <span className="text-[60px] font-semibold leading-none">$300</span>
+                    <span className="text-[60px] font-semibold leading-none tabular-nums">$300</span>
                   </div>
                   <p className="mt-2 text-[13px] text-slate-300">
                     Onboarding &amp; data setup — paid once
@@ -392,7 +400,7 @@ export default function HomePage() {
                     Then monthly
                   </p>
                   <div className="mt-3 flex items-end justify-center gap-1">
-                    <span className="text-[60px] font-semibold leading-none">$100</span>
+                    <span className="text-[60px] font-semibold leading-none tabular-nums">$100</span>
                     <span className="mb-2 text-slate-400">/mo</span>
                   </div>
                   <p className="mt-2 text-[13px] text-slate-300">Cancel any time — no contracts</p>
@@ -432,13 +440,13 @@ export default function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/waitlist"
-                  className="flex-1 rounded-xl bg-[#4A3FA8] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] hover:bg-[#3D3494]"
+                  className="flex-1 rounded-xl bg-[#4A3FA8] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
                 >
                   Request access
                 </Link>
                 <Link
                   href="/pricing"
-                  className="flex-1 rounded-xl border border-white/15 px-5 py-3 text-center font-semibold text-slate-200 hover:bg-white/8"
+                  className="flex-1 rounded-xl border border-white/15 px-5 py-3 text-center font-semibold text-slate-200 transition-colors hover:bg-white/8"
                 >
                   See full pricing details
                 </Link>

@@ -138,23 +138,33 @@ export async function GET(request: Request) {
     .not("status", "in", '("completed","cancelled")')
     .limit(100);
 
-  for (const followUp of overdueFollowUps ?? []) {
-    const { count } = await supabase
+  const followUpsList = overdueFollowUps ?? [];
+  if (followUpsList.length > 0) {
+    const { data: recentNotifications } = await supabase
       .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", followUp.company_id)
+      .select("body")
       .eq("type", "follow_up_overdue")
-      .like("body", `%${followUp.id}%`)
       .gte("created_at", oneDayAgoStr);
 
-    if ((count ?? 0) === 0) {
-      await supabase.from("notifications").insert({
-        company_id: followUp.company_id,
-        type: "follow_up_overdue",
-        title: "Overdue follow-up",
-        body: `"${followUp.message ?? "Follow-up"}" is past its due date. ID: ${followUp.id}`,
-      });
-    }
+    const notifiedIds = new Set(
+      (recentNotifications ?? []).flatMap((n) => {
+        const match = n.body?.match(/ID: ([a-f0-9-]{36})$/);
+        return match ? [match[1]] : [];
+      }),
+    );
+
+    await Promise.all(
+      followUpsList
+        .filter((f) => !notifiedIds.has(f.id))
+        .map((followUp) =>
+          supabase.from("notifications").insert({
+            company_id: followUp.company_id,
+            type: "follow_up_overdue",
+            title: "Overdue follow-up",
+            body: `"${followUp.message ?? "Follow-up"}" is past its due date. ID: ${followUp.id}`,
+          }),
+        ),
+    );
   }
 
   return NextResponse.json({ ok: true, results });

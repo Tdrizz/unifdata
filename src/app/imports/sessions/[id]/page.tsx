@@ -53,7 +53,7 @@ export default async function ImportSessionPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentCompany = await getCurrentCompany();

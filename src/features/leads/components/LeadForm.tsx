@@ -38,7 +38,7 @@ function getOpportunityIssues(lead: LeadRow) {
     issues.push({ label: "Add source", tone: "neutral" });
   }
   if (lead.estimated_value === null || lead.estimated_value === undefined) {
-    issues.push({ label: "Add estimate", tone: "neutral" });
+    issues.push({ label: "Add value", tone: "neutral" });
   }
   if (!lead.next_follow_up_date) {
     issues.push({ label: "Add follow-up", tone: "warning" });

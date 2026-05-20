@@ -15,7 +15,7 @@ export default async function AiAssistantPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentCompany = await getCurrentCompany();

@@ -1395,23 +1395,17 @@ export async function commitImportSession({
     return resolved;
   }
 
+  const skippedIds: string[] = [];
+  const committedRowUpdates: Array<{ id: string; target_id: string }> = [];
+  const errorRowUpdates: Array<{ id: string; errors: string[] }> = [];
+
   for (const row of stagedSessionRows) {
     if (
       row.status !== "valid" ||
       (row.action !== "create" && row.action !== "update")
     ) {
       skippedRows += 1;
-
-      const { error: skipError } = await supabase
-        .from("import_session_rows")
-        .update({ status: "skipped" })
-        .eq("id", row.id)
-        .eq("company_id", companyId);
-
-      if (skipError) {
-        throw new Error(skipError.message);
-      }
-
+      skippedIds.push(row.id);
       continue;
     }
 
@@ -1502,19 +1496,7 @@ export async function commitImportSession({
         }
       }
 
-      const { error: rowUpdateError } = await supabase
-        .from("import_session_rows")
-        .update({
-          status: "committed",
-          target_table: targetTable,
-          target_id: internalId,
-        })
-        .eq("id", row.id)
-        .eq("company_id", companyId);
-
-      if (rowUpdateError) {
-        throw new Error(rowUpdateError.message);
-      }
+      committedRowUpdates.push({ id: row.id, target_id: internalId });
 
       if (row.external_id) {
         const { error: externalLinkError } = await supabase
@@ -1542,23 +1524,50 @@ export async function commitImportSession({
     } catch (error) {
       failedRows += 1;
 
-      const { error: rowError } = await supabase
-        .from("import_session_rows")
-        .update({
-          status: "error",
-          action: "error",
-          validation_errors: [
-            error instanceof Error ? error.message : "Failed to commit row.",
-          ],
-        })
-        .eq("id", row.id)
-        .eq("company_id", companyId);
-
-      if (rowError) {
-        throw new Error(rowError.message);
-      }
+      errorRowUpdates.push({
+        id: row.id,
+        errors: [error instanceof Error ? error.message : "Failed to commit row."],
+      });
     }
   }
+
+  // Flush all import_session_rows status updates — skipped as one batch, committed/errors in parallel
+  const flushPromises: PromiseLike<void>[] = [];
+
+  if (skippedIds.length > 0) {
+    flushPromises.push(
+      supabase
+        .from("import_session_rows")
+        .update({ status: "skipped" })
+        .in("id", skippedIds)
+        .eq("company_id", companyId)
+        .then(({ error }) => { if (error) throw new Error(error.message); }),
+    );
+  }
+
+  for (const { id, target_id } of committedRowUpdates) {
+    flushPromises.push(
+      supabase
+        .from("import_session_rows")
+        .update({ status: "committed", target_table: targetTable, target_id })
+        .eq("id", id)
+        .eq("company_id", companyId)
+        .then(({ error }) => { if (error) throw new Error(error.message); }),
+    );
+  }
+
+  for (const { id, errors } of errorRowUpdates) {
+    flushPromises.push(
+      supabase
+        .from("import_session_rows")
+        .update({ status: "error", action: "error", validation_errors: errors })
+        .eq("id", id)
+        .eq("company_id", companyId)
+        .then(({ error }) => { if (error) throw new Error(error.message); }),
+    );
+  }
+
+  await Promise.all(flushPromises);
 
   const { error: importHistoryError } = await supabase.from("imports").insert({
     company_id: companyId,

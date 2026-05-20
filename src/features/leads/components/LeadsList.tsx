@@ -80,7 +80,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
     },
     {
       id: "missing-estimate",
-      label: "Add estimate",
+      label: "Add value",
       title: `${profile.labels.leadPlural} need estimated values`,
       detail: `Estimated value helps prioritize important ${profile.labels.leadPlural.toLowerCase()}.`,
       count: missingEstimate.length,
@@ -179,7 +179,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
         <StatCard
           label="Cleanup issues"
           value={cleanupGroups.reduce((sum, item) => sum + item.count, 0)}
-          helper="Missing person, source, or estimate"
+          helper="Missing person, source, or value"
           tone={cleanupGroups.length > 0 ? "warning" : "positive"}
         />
       </section>

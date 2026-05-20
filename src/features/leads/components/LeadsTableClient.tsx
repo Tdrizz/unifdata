@@ -10,8 +10,13 @@ import { OPPORTUNITY_STATUSES } from "@/lib/constants";
 import { bulkUpdateLeadsStatus } from "../actions";
 import type { LeadRow, CustomerRow } from "../types";
 
+type LeadItem = Pick<
+  LeadRow,
+  "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "next_follow_up_date" | "source"
+> & { notes?: string | null };
+
 type Props = {
-  leads: LeadRow[];
+  leads: LeadItem[];
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   profile: { labels: { customerSingular: string; leadSingular: string } };
   sectionTitle: string;

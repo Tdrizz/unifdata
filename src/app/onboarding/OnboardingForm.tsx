@@ -42,7 +42,6 @@ export function OnboardingForm() {
         <p className="mt-1 text-xs leading-5 text-ud-faint">
           This controls the language and priorities shown across your workspace.
         </p>
-        <input type="hidden" name="businessSector" value="general" />
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {businessSectorOptions.map((option) => (
             <label

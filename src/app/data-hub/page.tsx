@@ -16,7 +16,7 @@ export default async function DataHubPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentCompany = await getCurrentCompany();

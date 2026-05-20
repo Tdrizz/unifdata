@@ -29,9 +29,9 @@ export const metadata: Metadata = {
     template: "%s | UnifData",
   },
   description:
-    "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, medical offices, and local businesses.",
+    "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, medical offices, and service businesses.",
   keywords: [
-    "CRM for local business",
+    "CRM for service businesses",
     "small business CRM",
     "field service management",
     "business data management",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "UnifData – Unified Business Data. Clearer Decisions.",
     description:
-      "Organize your customers, jobs, follow-ups, and revenue into one clean workspace. Industry-aware CRM built for local businesses.",
+      "Organize your customers, jobs, follow-ups, and revenue into one clean workspace. Industry-aware CRM built for service businesses.",
     siteName: "UnifData",
     type: "website",
   },
@@ -67,7 +67,7 @@ const organizationSchema = {
   name: "UnifData",
   applicationCategory: "BusinessApplication",
   description:
-    "Industry-aware CRM and data management for local businesses. Organize customers, jobs, follow-ups, and revenue in one workspace.",
+    "Industry-aware CRM and data management for service businesses. Organize customers, jobs, follow-ups, and revenue in one workspace.",
   operatingSystem: "Web",
 };
 

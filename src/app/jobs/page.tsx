@@ -26,7 +26,7 @@ export default async function WorkPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/sign-in");
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");

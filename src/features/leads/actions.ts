@@ -46,10 +46,9 @@ export async function createLeadAction(
 
   if (error) return { error: error.message };
 
-  revalidatePath("/leads");
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads?toast=Opportunity+created");
+  redirect("/crm?toast=Opportunity+created");
 }
 
 export async function updateLeadAction(
@@ -94,12 +93,10 @@ export async function updateLeadAction(
 
   if (error) return { error: error.message };
 
-  revalidatePath("/leads");
-  revalidatePath(`/leads/${id}`);
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads?toast=Opportunity+updated");
+  redirect("/crm?toast=Opportunity+updated");
 }
 
 export async function deleteLeadAction(id: string) {
@@ -116,10 +113,9 @@ export async function deleteLeadAction(id: string) {
 
   if (error) redirect(`/leads/${id}/edit?error=${encodeURIComponent(error.message)}`);
 
-  revalidatePath("/leads");
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  redirect("/leads?toast=Opportunity+deleted");
+  redirect("/crm?toast=Opportunity+deleted");
 }
 
 export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
@@ -136,5 +132,5 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
     .eq("company_id", company.id);
 
   if (error) throw new Error(error.message);
-  revalidatePath("/leads");
+  revalidatePath("/crm");
 }

@@ -64,7 +64,7 @@ export function CRMView({ leads, customers, profile }: Props) {
   const cleanupGroups = [
     { id: "missing-person", label: `Link ${customerSingular.toLowerCase()}`, title: `${leadPlural} missing ${customerSingular.toLowerCase()}`, count: missingPerson.length },
     { id: "missing-source", label: "Add source", title: `${leadPlural} missing source`, count: missingSource.length },
-    { id: "missing-estimate", label: "Add estimate", title: `${leadPlural} missing estimate`, count: missingEstimate.length },
+    { id: "missing-estimate", label: "Add value", title: `${leadPlural} missing value`, count: missingEstimate.length },
   ].filter((g) => g.count > 0);
 
   const recentlyClosed = [...wonLeads, ...lostLeads]
@@ -116,7 +116,7 @@ export function CRMView({ leads, customers, profile }: Props) {
         <StatCard label="Open value" value={formatCurrency(openValue)} helper={`${openLeads.length} active`} tone={openValue > 0 ? "positive" : "default"} />
         <StatCard label="Needs follow-up" value={followUpNeeded.length} helper="Missing, due, or overdue" tone={followUpNeeded.length > 0 ? "warning" : "positive"} />
         <StatCard label="Won this month" value={wonThisMonth} helper={`${wonLeads.length} won total`} tone={wonThisMonth > 0 ? "positive" : "default"} />
-        <StatCard label="Data issues" value={cleanupGroups.reduce((s, g) => s + g.count, 0)} helper="Missing links, sources, estimates" tone={cleanupGroups.length > 0 ? "warning" : "positive"} />
+        <StatCard label="Data issues" value={cleanupGroups.reduce((s, g) => s + g.count, 0)} helper="Missing links, sources, or value" tone={cleanupGroups.length > 0 ? "warning" : "positive"} />
       </div>
 
       {/* Kanban */}
@@ -193,7 +193,7 @@ export function CRMView({ leads, customers, profile }: Props) {
           {cleanupGroups.length === 0 ? (
             <EmptyState
               title={`${leadPlural} look clean`}
-              description={`No missing ${customerSingular.toLowerCase()} links, sources, or estimates.`}
+              description={`No missing ${customerSingular.toLowerCase()} links, sources, or value.`}
             />
           ) : (
             <div>
