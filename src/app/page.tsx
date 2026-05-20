@@ -161,7 +161,7 @@ export default function HomePage() {
                 Built for service businesses
               </div>
 
-              <h1 className="animate-fade-up [animation-delay:80ms] mt-6 font-serif italic text-5xl leading-[1.08] tracking-tight sm:text-6xl lg:text-[68px]">
+              <h1 className="animate-fade-up [animation-delay:80ms] mt-6 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-[68px]">
                 Stop losing revenue to scattered data.
               </h1>
 
@@ -341,7 +341,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-12 rounded-[24px] border border-white/10 bg-white/5 p-10 text-center">
-            <h2 className="font-serif italic text-[32px] tracking-tight">
+            <h2 className="text-[30px] font-semibold tracking-tight">
               Five spreadsheets and a notebook is not a system.
             </h2>
             <p className="mt-3 text-slate-300">

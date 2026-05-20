@@ -53,7 +53,7 @@ export default function PricingPage() {
           <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
           Simple, transparent pricing
         </div>
-        <h1 className="animate-fade-up [animation-delay:80ms] mt-6 font-serif italic text-5xl tracking-tight sm:text-6xl">
+        <h1 className="animate-fade-up [animation-delay:80ms] mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
           One price.<br />Everything included.
         </h1>
         <p className="animate-fade-up [animation-delay:160ms] mx-auto mt-5 max-w-xl text-[17px] leading-8 text-slate-300">
@@ -162,7 +162,7 @@ export default function PricingPage() {
       {/* CTA */}
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-serif italic text-[34px] tracking-tight">
+          <h2 className="text-[30px] font-semibold tracking-tight">
             Stop running your business from memory.
           </h2>
           <p className="mt-3 text-slate-300">

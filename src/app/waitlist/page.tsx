@@ -12,7 +12,7 @@ export default function WaitlistPage() {
             <p className="animate-fade-up text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
               Invite-only beta
             </p>
-            <h1 className="animate-fade-up [animation-delay:80ms] mt-4 max-w-xl font-serif italic text-5xl leading-tight tracking-tight">
+            <h1 className="animate-fade-up [animation-delay:80ms] mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight">
               Your customers, jobs, and revenue — in one place.
             </h1>
             <p className="animate-fade-up [animation-delay:160ms] mt-5 max-w-xl text-base leading-8 text-slate-300">
