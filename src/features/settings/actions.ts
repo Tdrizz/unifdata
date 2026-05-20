@@ -37,7 +37,7 @@ export async function updateWorkspaceAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentCompany = await getCurrentCompany();
@@ -113,10 +113,7 @@ export async function updateWorkspaceAction(formData: FormData) {
 }
 
 export async function signOutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-
-  redirect("/login");
+  redirect("/sign-in");
 }
 
 export async function changePasswordAction(formData: FormData) {
@@ -127,7 +124,7 @@ export async function changePasswordAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   const currentPassword = formData.get("currentPassword") as string;
@@ -163,17 +160,23 @@ export async function inviteMember(email: string, role: "owner" | "member" = "me
   if (currentRole !== "owner") throw new Error("Only owners can invite members");
 
   const client = await clerkClient();
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
-  await client.invitations.createInvitation({
-    emailAddress: email,
-    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/invite/accept`,
-    notify: true,
-    ignoreExisting: true,
-    publicMetadata: {
-      company_id: companyId,
-      invited_role: role,
-    },
-  });
+  try {
+    await client.invitations.createInvitation({
+      emailAddress: email,
+      redirectUrl: `${appUrl}/invite/accept`,
+      notify: true,
+      ignoreExisting: true,
+      publicMetadata: {
+        company_id: companyId,
+        invited_role: role,
+      },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Could not send invitation: ${msg}`);
+  }
 
   revalidatePath("/settings");
   return { ok: true as const };
@@ -274,8 +277,7 @@ export async function deleteWorkspaceAction(): Promise<void> {
 
   if (error) throw new Error(error.message);
 
-  await supabase.auth.signOut();
-  redirect("/login?workspace_deleted=1");
+  redirect("/sign-in?workspace_deleted=1");
 }
 
 export async function removeMember(targetUserId: string) {

@@ -74,9 +74,11 @@ export async function submitWaitlistRequest(
     const resend = new Resend(resendKey);
 
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? `noreply@${new URL(appUrl || "https://example.com").hostname}`;
-    const adminEmail = process.env.ADMIN_EMAIL ?? "";
+    const adminEmail = (process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? "")
+      .split(",")[0]
+      ?.trim() ?? "";
     if (!adminEmail) {
-      console.warn("[waitlist.submit] ADMIN_EMAIL env var not set — skipping notification email");
+      console.warn("[waitlist.submit] ADMIN_EMAILS env var not set — skipping notification email");
       return { ok: true };
     }
 
