@@ -217,7 +217,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
         <div className="card mb-5">
           <div className="card-header">
             <div className="card-title">Recent syncs</div>
-            <div className="card-desc">What was staged from your connected integrations</div>
+            <div className="card-desc">What was pulled in from your connected integrations</div>
           </div>
           <div>
             {syncRuns.slice(0, 6).map((run) => {
@@ -229,45 +229,87 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
               const isError = run.status === "error" || run.status === "failed";
               const hasRecords = (run.records_seen ?? 0) > 0;
 
+              // Sessions that still need user review
+              const pendingSessions = linkedSessions.filter((s) => s && s.status === "ready");
+              // Sessions that were fully committed
+              const committedSessions = linkedSessions.filter((s) => s && s.status === "committed");
+              // All sessions to show a breakdown for
+              const allSessions = linkedSessions.length > 0 ? linkedSessions : [];
+
               return (
                 <div key={run.id} className="queue-item" style={{ alignItems: "flex-start", flexDirection: "column", gap: "10px" }}>
+                  {/* Header row */}
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
-                    <div style={{ flex: 1 }}>
-                      <div className="queue-action">{providerName} sync</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="queue-action">{providerName}</div>
                       <div className="queue-meta">{formatSyncTime(run.started_at)}</div>
                     </div>
                     <span className={`badge ${isError ? "badge-danger" : hasRecords ? "badge-success" : "badge-neutral"}`}>
-                      {isError ? "Failed" : hasRecords ? `${run.records_seen} staged` : "Nothing new"}
+                      {isError ? "Failed" : hasRecords ? "Synced" : "Nothing new"}
                     </span>
                   </div>
 
+                  {/* Error message */}
                   {isError && run.error_message && (
-                    <p style={{ fontSize: "12px", color: "var(--color-danger)", margin: 0 }}>{run.error_message}</p>
+                    <p style={{ fontSize: "12px", color: "var(--ud-danger)", margin: 0 }}>{run.error_message}</p>
                   )}
 
-                  {!isError && (
-                    <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--color-muted)" }}>
-                      {(run.records_created ?? 0) > 0 && (
-                        <span>{run.records_created} created</span>
-                      )}
-                      {(run.records_updated ?? 0) > 0 && (
-                        <span>{run.records_updated} updated</span>
-                      )}
-                      {linkedSessions.length > 0 && (
-                        <span style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                          Review:
-                          {linkedSessions.map((session) => session && (
-                            <Link
-                              key={session.id}
-                              href={`/imports/sessions/${session.id}`}
-                              style={{ color: "var(--color-accent)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px" }}
-                            >
-                              {getRecordTypeLabel(session.record_type)} ({session.total_rows ?? 0})
-                            </Link>
-                          ))}
-                        </span>
-                      )}
+                  {/* Per-record-type breakdown */}
+                  {!isError && allSessions.length > 0 && (
+                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {allSessions.map((session) => {
+                        if (!session) return null;
+                        const label = getRecordTypeLabel(session.record_type);
+                        const added = session.created_rows ?? 0;
+                        const updated = session.updated_rows ?? 0;
+                        const skipped = session.duplicate_rows ?? 0;
+                        const needsReview = session.status === "ready";
+
+                        const parts: string[] = [];
+                        if (added > 0) parts.push(`${added} added`);
+                        if (updated > 0) parts.push(`${updated} updated`);
+                        if (skipped > 0) parts.push(`${skipped} skipped`);
+                        if (parts.length === 0 && (session.total_rows ?? 0) > 0) parts.push(`${session.total_rows} checked`);
+
+                        return (
+                          <div key={session.id} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12.5px" }}>
+                            <span style={{ fontWeight: 600, color: "var(--ud-ink)", minWidth: "90px" }}>{label}</span>
+                            <span style={{ color: "var(--ud-text-muted)", flex: 1 }}>
+                              {parts.length > 0 ? parts.join(" · ") : "No changes"}
+                            </span>
+                            {needsReview && (
+                              <Link
+                                href={`/imports/sessions/${session.id}`}
+                                style={{ color: "var(--ud-accent)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px", whiteSpace: "nowrap" }}
+                              >
+                                Review →
+                              </Link>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
+                  )}
+
+                  {/* Totals fallback when no session detail is available */}
+                  {!isError && allSessions.length === 0 && hasRecords && (
+                    <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--ud-text-muted)" }}>
+                      {(run.records_created ?? 0) > 0 && <span>{run.records_created} added</span>}
+                      {(run.records_updated ?? 0) > 0 && <span>{run.records_updated} updated</span>}
+                      {(run.records_failed ?? 0) > 0 && <span style={{ color: "var(--ud-danger)" }}>{run.records_failed} failed</span>}
+                    </div>
+                  )}
+
+                  {/* Pending review summary when there are multiple sessions needing review */}
+                  {!isError && pendingSessions.length > 1 && (
+                    <p style={{ fontSize: "12px", color: "var(--ud-warning)", margin: 0 }}>
+                      {pendingSessions.length} record types need review before they&apos;re committed.
+                    </p>
+                  )}
+                  {!isError && committedSessions.length > 0 && pendingSessions.length === 0 && allSessions.length === committedSessions.length && (
+                    <p style={{ fontSize: "12px", color: "var(--ud-success)", margin: 0 }}>
+                      All records committed to your workspace.
+                    </p>
                   )}
                 </div>
               );
