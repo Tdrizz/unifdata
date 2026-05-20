@@ -1,14 +1,13 @@
-const toneAccent: Record<string, string> = {
-  default: "bg-[#4A3FA8]",
-  subtle: "bg-[#a8b96a]",
-  positive: "bg-emerald-500",
-  warning: "bg-amber-500",
-  danger: "bg-red-500",
-  // backward-compatible aliases
-  green: "bg-emerald-500",
-  blue: "bg-[#4A3FA8]",
-  amber: "bg-amber-500",
-  red: "bg-red-500",
+const toneSurface: Record<string, string> = {
+  default:  "bg-ud-surface border-ud",
+  subtle:   "bg-ud-surface border-ud",
+  positive: "bg-emerald-50/70 border-emerald-100",
+  warning:  "bg-amber-50/70 border-amber-100",
+  danger:   "bg-red-50/60 border-red-100",
+  green:    "bg-emerald-50/70 border-emerald-100",
+  blue:     "bg-ud-surface border-ud",
+  amber:    "bg-amber-50/70 border-amber-100",
+  red:      "bg-red-50/60 border-red-100",
 };
 
 export function StatCard({
@@ -20,22 +19,20 @@ export function StatCard({
   label: string;
   value: string | number;
   helper?: string;
-  tone?: keyof typeof toneAccent;
+  tone?: keyof typeof toneSurface;
 }) {
-  const accent = toneAccent[tone] ?? toneAccent.default;
+  const surface = toneSurface[tone] ?? toneSurface.default;
 
   return (
-    <div className="relative overflow-hidden rounded-[12px] border border-ud bg-ud-surface p-4 shadow-ud">
-      <div className={`absolute left-0 top-0 h-full w-[3px] ${accent}`} />
+    <div className={`rounded-[16px] border p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08),0_6px_20px_rgba(0,0,0,0.05)] ${surface}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">{label}</p>
 
-      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint">{label}</p>
-
-      <p className="mt-[5px] text-[27px] font-bold tracking-[-0.03em] leading-none text-ud-ink" style={{fontVariantNumeric:"tabular-nums"}}>
+      <p className="mt-[6px] text-[30px] font-bold tracking-[-0.03em] leading-none text-ud-ink" style={{ fontVariantNumeric: "tabular-nums" }}>
         {value}
       </p>
 
       {helper && (
-        <p className="mt-[5px] text-[11.5px] text-ud-muted">
+        <p className="mt-[6px] text-[12px] text-ud-muted">
           {helper}
         </p>
       )}
