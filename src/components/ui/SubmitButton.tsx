@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { haptic } from "@/lib/haptics";
 
 export function SubmitButton({ children }: { children: React.ReactNode }) {
   const { pending } = useFormStatus();
@@ -8,6 +9,7 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
     <button
       type="submit"
       disabled={pending}
+      onMouseDown={() => haptic("medium")}
       className="inline-flex items-center gap-2 rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-[opacity,transform] duration-[120ms] ease-out active:scale-[0.96] disabled:opacity-60 disabled:cursor-not-allowed"
     >
       {pending && (

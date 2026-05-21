@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { haptic } from "@/lib/haptics";
 
 export function DeleteConfirm({
   action,
@@ -39,6 +40,7 @@ export function DeleteConfirm({
         </button>
         <button
           type="button"
+          onTouchStart={() => haptic("heavy")}
           onClick={() => {
             setDeleteError("");
             startTransition(async () => {

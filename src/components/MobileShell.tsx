@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductMark } from "@/components/ProductMark";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 
 type Props = {
   children: ReactNode;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function MobileShell({ children, back, trailing, companyName }: Props) {
+  useSwipeBack(!!back);
   return (
     <div className="flex flex-col min-h-screen bg-ud-page">
       {/* Header */}

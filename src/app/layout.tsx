@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
@@ -23,6 +23,14 @@ const instrumentSerif = Instrument_Serif({
   style: ["normal", "italic"],
 });
 
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f3f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#090e1a" },
+  ],
+};
+
 export const metadata: Metadata = {
   title: {
     default: "UnifData – Unified Business Data. Clearer Decisions.",
@@ -42,15 +50,15 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "UnifData",
   },
   other: {
     "mobile-web-app-capable": "yes",
-    "theme-color": "#090e1a",
   },
   icons: {
     icon: "/unifdata-mark.svg",
+    apple: "/icons/icon-192.png",
   },
   openGraph: {
     title: "UnifData – Unified Business Data. Clearer Decisions.",

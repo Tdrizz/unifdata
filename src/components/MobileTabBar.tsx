@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { haptic } from "@/lib/haptics";
 
 // ── Per-tab SVG icons (21px, variable strokeWidth) ─────────────────────────
 function SvgHome({ active }: { active: boolean }) {
@@ -121,6 +122,7 @@ export function MobileTabBar({
           <Link
             key={tab.href}
             href={tab.href}
+            onTouchStart={() => haptic("light")}
             className={cn(
               "flex flex-1 flex-col items-center gap-[3px] pb-1 active:opacity-60 transition-opacity duration-75",
               active ? "text-ud-accent" : "text-ud-faint",
