@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { cn } from "@/lib/utils";
 
 function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
@@ -22,8 +23,18 @@ function buildCommands(businessSector?: string | null) {
 
 export function CommandPalette({ businessSector }: { businessSector?: string | null }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const commands = buildCommands(businessSector);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+    } else {
+      const t = setTimeout(() => setMounted(false), 150);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -42,18 +53,22 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
     router.push(href);
   }
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm"
+        className={cn(
+          "fixed inset-0 z-50 bg-black/20 backdrop-blur-sm",
+          open ? "[animation:fade-in_160ms_ease_both]" : "[animation:fade-out_120ms_ease_both]",
+        )}
         onClick={() => setOpen(false)}
       />
 
       {/* Dialog */}
       <div className="fixed left-1/2 top-[20vh] z-50 w-full max-w-[560px] -translate-x-1/2 px-4">
+        <div className={open ? "[animation:modal-enter_160ms_cubic-bezier(0.16,1,0.3,1)_both]" : "[animation:modal-leave_120ms_ease-in_both]"}>
         <Command
           className="rounded-[14px] border border-ud bg-ud-surface shadow-ud-pop overflow-hidden"
           shouldFilter
@@ -114,6 +129,7 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
             </span>
           </div>
         </Command>
+        </div>
       </div>
     </>
   );

@@ -26,7 +26,7 @@ export function DeleteConfirm({
   }
 
   return (
-    <div className="rounded-[10px] border border-red-200 bg-red-50 p-4">
+    <div className="rounded-[10px] border border-red-200 bg-red-50 p-4 [animation:modal-enter_160ms_cubic-bezier(0.16,1,0.3,1)_both]">
       <p className="text-sm font-semibold text-ud-ink">Are you sure?</p>
       <p className="mt-1 text-sm leading-6 text-ud-muted">{description}</p>
       <div className="mt-4 flex flex-wrap gap-2">

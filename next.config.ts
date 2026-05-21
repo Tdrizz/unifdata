@@ -8,6 +8,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    viewTransition: true,
+  },
   serverExternalPackages: ["bullmq", "ioredis"],
   async headers() {
     return [

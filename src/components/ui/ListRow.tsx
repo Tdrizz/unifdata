@@ -28,7 +28,7 @@ export function ListRow({
     <div
       onClick={onClick}
       className={cn(
-        "flex items-center gap-3 px-[14px] border-ud-soft",
+        "group flex items-center gap-3 px-[14px] border-ud-soft",
         dense ? "py-[10px]" : "py-[13px]",
         !isLast && "border-b",
         onClick && "cursor-pointer hover:bg-ud-surface-soft transition-colors",
@@ -45,7 +45,25 @@ export function ListRow({
         )}
         {meta && <div className="mt-1">{meta}</div>}
       </div>
-      {trailing && <div className="shrink-0 text-ud-faint">{trailing}</div>}
+      {trailing && (
+        <div className="shrink-0 text-ud-faint transition-transform duration-150 group-hover:translate-x-[2px]">
+          {trailing}
+        </div>
+      )}
+      {onClick && !trailing && (
+        <svg
+          className="h-4 w-4 shrink-0 text-ud-faint opacity-0 transition-[opacity,transform] duration-150 group-hover:opacity-100 group-hover:translate-x-[1px]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      )}
     </div>
   );
 }

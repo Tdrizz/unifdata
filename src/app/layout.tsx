@@ -103,7 +103,20 @@ export default function RootLayout({
         </head>
         <body className="min-h-full flex flex-col">
           {children}
-          <Toaster position="bottom-right" richColors />
+          <Toaster
+            position="bottom-right"
+            richColors
+            offset={16}
+            gap={8}
+            toastOptions={{
+              style: {
+                borderRadius: "12px",
+                fontSize: "13.5px",
+                fontFamily: "var(--font-geist-sans)",
+                letterSpacing: "-0.005em",
+              },
+            }}
+          />
           <ToastHandler />
           <Analytics />
           <script

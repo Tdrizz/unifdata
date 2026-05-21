@@ -77,10 +77,10 @@ export function SendMessageModal({ customerId, customerName, phone, email, compa
 
       {open && (
         <div
-          style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+          style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fade-in 160ms ease both" }}
           onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
         >
-          <div style={{ background: "var(--surface)", borderRadius: "16px", padding: "0", maxWidth: "480px", width: "100%", boxShadow: "0 8px 40px rgba(0,0,0,0.18)", overflow: "hidden" }}>
+          <div style={{ background: "var(--ud-surface)", borderRadius: "16px", padding: "0", maxWidth: "480px", width: "100%", boxShadow: "var(--ud-shadow-pop)", overflow: "hidden", animation: "modal-enter 160ms cubic-bezier(0.16,1,0.3,1) both" }}>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
               <div>
