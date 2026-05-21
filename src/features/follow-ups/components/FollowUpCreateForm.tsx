@@ -3,6 +3,9 @@
 import { useActionState } from "react";
 import type { CustomerRow } from "../types";
 import { createFollowUpAction, type ActionState } from "../actions";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+
+const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
   people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
@@ -15,9 +18,6 @@ export function FollowUpCreateForm({ people }: Props) {
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-4 border-b border-ud-soft">
         <p className="text-sm font-semibold text-ud-ink">Add follow-up</p>
-        <p className="mt-0.5 text-xs text-ud-muted">
-          Create a reminder, callback, or next step.
-        </p>
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
@@ -26,12 +26,9 @@ export function FollowUpCreateForm({ people }: Props) {
           </p>
         )}
 
-        <label className="block text-sm font-medium text-ud-muted">
-          Link to person or business
-          <select
-            name="customer_id"
-            className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-          >
+        <label className="block">
+          <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
+          <select name="customer_id" className={f}>
             <option value="">No linked person yet</option>
             {people.map((person) => (
               <option key={person.id} value={person.id}>
@@ -42,37 +39,31 @@ export function FollowUpCreateForm({ people }: Props) {
         </label>
 
         <div>
-          <label className="block text-sm font-medium text-ud-muted">
-            Follow-up action
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">
+              Follow-up action <span className="text-ud-accent">*</span>
+            </span>
             <input
               name="message"
               required
               placeholder="Call customer, send quote, check payment, schedule job…"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
+              className={f}
             />
           </label>
           {state?.fieldErrors?.message && (
-            <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
+            <p className="mt-1 text-xs text-red-600">{state.fieldErrors.message}</p>
           )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-medium text-ud-muted">
-            Due date
-            <input
-              name="due_date"
-              type="date"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            />
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Due date</span>
+            <input name="due_date" type="date" className={f} />
           </label>
 
-          <label className="text-sm font-medium text-ud-muted">
-            Status
-            <select
-              name="status"
-              defaultValue="Open"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            >
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Status</span>
+            <select name="status" defaultValue="Open" className={f}>
               <option value="Open">Open</option>
               <option value="Pending">Pending</option>
               <option value="Follow Up">Follow Up</option>
@@ -82,12 +73,7 @@ export function FollowUpCreateForm({ people }: Props) {
         </div>
 
         <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity active:scale-[0.96]"
-          >
-            Create follow-up
-          </button>
+          <SubmitButton>Create follow-up</SubmitButton>
         </div>
       </form>
     </div>

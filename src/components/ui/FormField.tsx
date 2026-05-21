@@ -10,7 +10,7 @@ export function FormField({
   children: ReactNode;
 }) {
   return (
-    <label className="block text-sm font-medium text-ud-text">
+    <label className="block text-xs font-semibold text-ud-muted">
       {label}
       {children}
       {hint && (

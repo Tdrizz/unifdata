@@ -4,6 +4,9 @@ import { useActionState } from "react";
 import { createJobAction, type ActionState } from "../actions";
 import type { CustomerRow, LeadRow } from "../types";
 import { formatCurrency } from "@/lib/utils";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+
+const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
@@ -20,9 +23,6 @@ export function JobCreateForm({ customers, leads }: Props) {
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-4 border-b border-ud-soft">
         <p className="text-sm font-semibold text-ud-ink">Add work</p>
-        <p className="mt-0.5 text-xs text-ud-muted">
-          Create a job, appointment, service visit, or order.
-        </p>
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
@@ -32,12 +32,9 @@ export function JobCreateForm({ customers, leads }: Props) {
         )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-medium text-ud-muted">
-            Link to person or business
-            <select
-              name="customer_id"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            >
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
+            <select name="customer_id" className={f}>
               <option value="">No linked person yet</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
@@ -47,12 +44,9 @@ export function JobCreateForm({ customers, leads }: Props) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-ud-muted">
-            Link to opportunity
-            <select
-              name="lead_id"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            >
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Link to opportunity</span>
+            <select name="lead_id" className={f}>
               <option value="">No linked opportunity yet</option>
               {leads.map((lead) => (
                 <option key={lead.id} value={lead.id}>
@@ -65,46 +59,44 @@ export function JobCreateForm({ customers, leads }: Props) {
 
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
           <div>
-            <label className="text-sm font-medium text-ud-muted">
-              Work name
+            <label className="block">
+              <span className="block text-xs font-semibold text-ud-muted">
+                Work name <span className="text-ud-accent">*</span>
+              </span>
               <input
                 name="service_type"
                 required
                 placeholder="Flooring install, website build, service visit…"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
+                className={f}
               />
             </label>
             {state?.fieldErrors?.service_type && (
-              <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_type}</p>
+              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.service_type}</p>
             )}
           </div>
 
           <div>
-            <label className="text-sm font-medium text-ud-muted">
-              Work value
+            <label className="block">
+              <span className="block text-xs font-semibold text-ud-muted">Work value</span>
               <input
                 name="job_value"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="2500"
-                className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
+                className={f}
               />
             </label>
             {state?.fieldErrors?.job_value && (
-              <p className="mt-1 text-sm text-red-600">{state.fieldErrors.job_value}</p>
+              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.job_value}</p>
             )}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-medium text-ud-muted">
-            Work stage
-            <select
-              name="status"
-              defaultValue="Scheduled"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            >
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Work stage</span>
+            <select name="status" defaultValue="Scheduled" className={f}>
               <option value="Scheduled">Scheduled</option>
               <option value="Active">Active</option>
               <option value="In Progress">In Progress</option>
@@ -113,13 +105,9 @@ export function JobCreateForm({ customers, leads }: Props) {
             </select>
           </label>
 
-          <label className="text-sm font-medium text-ud-muted">
-            Payment status
-            <select
-              name="paid_status"
-              defaultValue="Unpaid"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            >
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Payment status</span>
+            <select name="paid_status" defaultValue="Unpaid" className={f}>
               <option value="Unpaid">Unpaid</option>
               <option value="Partial">Partial</option>
               <option value="Paid">Paid</option>
@@ -128,32 +116,19 @@ export function JobCreateForm({ customers, leads }: Props) {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="text-sm font-medium text-ud-muted">
-            Start date
-            <input
-              name="start_date"
-              type="date"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            />
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Start date</span>
+            <input name="start_date" type="date" className={f} />
           </label>
 
-          <label className="text-sm font-medium text-ud-muted">
-            Completed date
-            <input
-              name="completed_date"
-              type="date"
-              className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 focus:border-ud-accent"
-            />
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Completed date</span>
+            <input name="completed_date" type="date" className={f} />
           </label>
         </div>
 
         <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            className="rounded-[10px] bg-ud-accent px-5 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity active:scale-[0.96]"
-          >
-            Create work
-          </button>
+          <SubmitButton>Create work</SubmitButton>
         </div>
       </form>
     </div>
