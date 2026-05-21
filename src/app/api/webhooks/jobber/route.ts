@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { getAutomationQueue, JOB_LOST_QUOTE_EMAIL } from "@/lib/queue/client";
 import type { LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
+import { JobberWebhookSchema } from "@/lib/webhook-schemas";
 
 export const runtime = "nodejs";
 

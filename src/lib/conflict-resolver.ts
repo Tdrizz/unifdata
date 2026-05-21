@@ -164,10 +164,14 @@ export async function upsertMasterCustomer({
   const existingRow = existing as MasterCustomerRow;
   const mergedFields = mergeFields(existingRow, payload, source);
 
-  // Skip update if no fields actually changed
-  const hasChanges = Object.entries(mergedFields).some(
-    ([key, value]) => existingRow[key] !== value
-  );
+  // Skip update if no fields actually changed (deep-compare JSON columns)
+  const hasChanges = Object.entries(mergedFields).some(([key, value]) => {
+    const existing = existingRow[key as keyof typeof existingRow];
+    if (value !== null && typeof value === "object") {
+      return JSON.stringify(existing) !== JSON.stringify(value);
+    }
+    return existing !== value;
+  });
 
   if (!hasChanges) {
     return { id: existingRow.id, syncToken: generateSyncToken(), wasCreated: false };

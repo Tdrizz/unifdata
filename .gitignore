@@ -46,6 +46,9 @@ remotion/node_modules/
 remotion/out/
 remotion/package-lock.json
 
+# hyperframes / video project artifacts
+/videos/
+
 # claude code worktrees
 .claude/worktrees/
 
