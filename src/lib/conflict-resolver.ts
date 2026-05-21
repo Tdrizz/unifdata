@@ -164,6 +164,15 @@ export async function upsertMasterCustomer({
   const existingRow = existing as MasterCustomerRow;
   const mergedFields = mergeFields(existingRow, payload, source);
 
+  // Skip update if no fields actually changed
+  const hasChanges = Object.entries(mergedFields).some(
+    ([key, value]) => existingRow[key] !== value
+  );
+
+  if (!hasChanges) {
+    return { id: existingRow.id, syncToken: generateSyncToken(), wasCreated: false };
+  }
+
   const { error } = await supabase
     .from("master_customers")
     .update({

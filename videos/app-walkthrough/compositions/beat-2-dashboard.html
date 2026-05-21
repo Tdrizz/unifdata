@@ -1,0 +1,655 @@
+<template id="beat-2-dashboard-template">
+  <div data-composition-id="beat-2-dashboard" data-width="1920" data-height="1080" data-start="0">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+
+      [data-composition-id="beat-2-dashboard"] {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f4f3f0;
+        font-family: 'Geist', system-ui, sans-serif;
+      }
+
+      /* Grain canvas */
+      [data-composition-id="beat-2-dashboard"] .grain-canvas {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+        opacity: 0.03;
+        z-index: 100;
+      }
+
+      /* Sidebar */
+      [data-composition-id="beat-2-dashboard"] .sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 200px;
+        height: 1080px;
+        background: #eceae4;
+        border-right: 1px solid rgba(23,22,20,0.08);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding-top: 40px;
+        gap: 0;
+        z-index: 2;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .sidebar-logo {
+        width: 28px;
+        height: 28px;
+        background: #4A3FA8;
+        border-radius: 7px;
+        margin: 0 0 36px 24px;
+        flex-shrink: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-item {
+        width: 100%;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px 0 0;
+        margin-bottom: 2px;
+        position: relative;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-item.active {
+        border-left: 2px solid #4A3FA8;
+        padding-left: 22px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-item:not(.active) {
+        padding-left: 24px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        background: rgba(23,22,20,0.12);
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-item.active .nav-dot {
+        background: #4A3FA8;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-label {
+        height: 10px;
+        border-radius: 3px;
+        background: rgba(23,22,20,0.10);
+        flex: 1;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .nav-item.active .nav-label {
+        background: rgba(74,63,168,0.25);
+      }
+
+      /* Main content area */
+      [data-composition-id="beat-2-dashboard"] .main-content {
+        position: absolute;
+        top: 0;
+        left: 200px;
+        right: 0;
+        bottom: 0;
+        padding: 48px 56px 48px 56px;
+        display: flex;
+        flex-direction: column;
+        z-index: 1;
+      }
+
+      /* Dashboard panel — receives 3D tilt */
+      [data-composition-id="beat-2-dashboard"] .dashboard-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        transform-style: preserve-3d;
+        will-change: transform;
+      }
+
+      /* Header area */
+      [data-composition-id="beat-2-dashboard"] .page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .page-eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b6760;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .greeting-row {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 14px;
+        overflow: visible;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .greeting-word {
+        font-size: 72px;
+        font-weight: 600;
+        color: #171614;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        opacity: 0;
+        display: inline-block;
+      }
+
+      /* Stat cards row */
+      [data-composition-id="beat-2-dashboard"] .stats-row {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-card {
+        flex: 1;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(23,22,20,0.08);
+        box-shadow: 0 1px 0 rgba(23,22,20,0.04), 0 1px 2px rgba(23,22,20,0.03);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-card.s-danger {
+        background: #fbeded;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-card.s-success {
+        background: #eef5ec;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b6760;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-value {
+        font-family: 'Geist Mono', 'Geist', monospace;
+        font-size: 32px;
+        font-weight: 600;
+        color: #171614;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-card.s-danger .stat-value {
+        color: #a83232;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-card.s-success .stat-value {
+        color: #3f7c3f;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .stat-helper {
+        font-size: 12px;
+        color: #6b6760;
+        font-weight: 400;
+      }
+
+      /* Lower panels */
+      [data-composition-id="beat-2-dashboard"] .panels-row {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(23,22,20,0.08);
+        box-shadow: 0 1px 0 rgba(23,22,20,0.04), 0 1px 2px rgba(23,22,20,0.03);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel-queue {
+        flex: 2;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel-jobs {
+        flex: 1;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #171614;
+        letter-spacing: -0.01em;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .panel-count {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a09b91;
+        background: #f4f3f0;
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+
+      /* Queue items */
+      [data-composition-id="beat-2-dashboard"] .queue-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(23,22,20,0.06);
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-item:last-child {
+        border-bottom: none;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-dot.danger { background: #a83232; }
+      [data-composition-id="beat-2-dashboard"] .queue-dot.warning { background: #92571b; }
+      [data-composition-id="beat-2-dashboard"] .queue-dot.neutral { background: #a09b91; }
+
+      [data-composition-id="beat-2-dashboard"] .queue-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-action {
+        font-size: 13px;
+        font-weight: 600;
+        color: #171614;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-meta {
+        font-size: 11px;
+        color: #6b6760;
+        font-weight: 400;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-chip {
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        flex-shrink: 0;
+        letter-spacing: 0.03em;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-chip.danger {
+        background: #fbeded;
+        color: #a83232;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-chip.warning {
+        background: #faf0e3;
+        color: #92571b;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .queue-chip.neutral {
+        background: #f4f3f0;
+        color: #6b6760;
+      }
+
+      /* Job rows */
+      [data-composition-id="beat-2-dashboard"] .job-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(23,22,20,0.06);
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-row:last-child {
+        border-bottom: none;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: rgba(74,63,168,0.08);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-icon-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4A3FA8;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #171614;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-meta {
+        font-size: 11px;
+        color: #6b6760;
+      }
+
+      [data-composition-id="beat-2-dashboard"] .job-status {
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: #eef5ec;
+        color: #3f7c3f;
+      }
+    </style>
+
+    <!-- Grain canvas -->
+    <canvas class="grain-canvas" id="b2-grain" width="1920" height="1080"></canvas>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo"></div>
+      <div class="nav-item active">
+        <div class="nav-dot"></div>
+        <div class="nav-label" style="width:80px;"></div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot"></div>
+        <div class="nav-label" style="width:64px;"></div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot"></div>
+        <div class="nav-label" style="width:72px;"></div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-dot"></div>
+        <div class="nav-label" style="width:56px;"></div>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <div class="dashboard-panel">
+
+        <!-- Page header -->
+        <div class="page-header">
+          <div class="page-eyebrow" id="b2-eyebrow">Monday, May 18</div>
+          <div class="greeting-row">
+            <span class="greeting-word" id="b2-word-good">Good</span>
+            <span class="greeting-word" id="b2-word-morning">morning.</span>
+          </div>
+        </div>
+
+        <!-- Stat cards row -->
+        <div class="stats-row">
+          <div class="stat-card s-danger" id="b2-card-0">
+            <div class="stat-label">Follow-ups due</div>
+            <div class="stat-value" id="b2-val-0">0</div>
+            <div class="stat-helper">1 overdue · 2 due today</div>
+          </div>
+          <div class="stat-card" id="b2-card-1">
+            <div class="stat-label">Jobs today</div>
+            <div class="stat-value" id="b2-val-1">0</div>
+            <div class="stat-helper">4 active</div>
+          </div>
+          <div class="stat-card s-success" id="b2-card-2">
+            <div class="stat-label">Revenue MTD</div>
+            <div class="stat-value" id="b2-val-2">$0</div>
+            <div class="stat-helper">This month</div>
+          </div>
+          <div class="stat-card" id="b2-card-3">
+            <div class="stat-label">Open pipeline</div>
+            <div class="stat-value" id="b2-val-3">$0</div>
+            <div class="stat-helper">6 active leads</div>
+          </div>
+          <div class="stat-card s-danger" id="b2-card-4">
+            <div class="stat-label">Unpaid sales</div>
+            <div class="stat-value" id="b2-val-4">$0</div>
+            <div class="stat-helper">2 outstanding</div>
+          </div>
+        </div>
+
+        <!-- Lower panels -->
+        <div class="panels-row">
+          <!-- Priority queue panel -->
+          <div class="panel panel-queue" id="b2-panel-queue">
+            <div class="panel-header">
+              <div class="panel-title">Priority queue</div>
+              <div class="panel-count">3 items</div>
+            </div>
+            <div class="queue-item" id="b2-qi-0">
+              <div class="queue-dot danger"></div>
+              <div class="queue-text">
+                <div class="queue-action">Follow up with Hartley &amp; Sons re: proposal</div>
+                <div class="queue-meta">Contact · Last touched 4 days ago</div>
+              </div>
+              <div class="queue-chip danger">Overdue</div>
+            </div>
+            <div class="queue-item" id="b2-qi-1">
+              <div class="queue-dot warning"></div>
+              <div class="queue-text">
+                <div class="queue-action">Send revised quote to Marina Steele</div>
+                <div class="queue-meta">Lead · $6,400 potential</div>
+              </div>
+              <div class="queue-chip warning">Due today</div>
+            </div>
+            <div class="queue-item" id="b2-qi-2">
+              <div class="queue-dot neutral"></div>
+              <div class="queue-text">
+                <div class="queue-action">Confirm site access for Thursday job</div>
+                <div class="queue-meta">Job #J-0041 · Pending</div>
+              </div>
+              <div class="queue-chip neutral">This week</div>
+            </div>
+          </div>
+
+          <!-- Jobs today panel -->
+          <div class="panel panel-jobs" id="b2-panel-jobs">
+            <div class="panel-header">
+              <div class="panel-title">Jobs today</div>
+              <div class="panel-count">4 active</div>
+            </div>
+            <div class="job-row" id="b2-jr-0">
+              <div class="job-icon"><div class="job-icon-dot"></div></div>
+              <div class="job-text">
+                <div class="job-name">Reyes Residence</div>
+                <div class="job-meta">9:00 AM · Electrical install</div>
+              </div>
+              <div class="job-status">Active</div>
+            </div>
+            <div class="job-row" id="b2-jr-1">
+              <div class="job-icon"><div class="job-icon-dot"></div></div>
+              <div class="job-text">
+                <div class="job-name">Caldwell Commercial</div>
+                <div class="job-meta">1:30 PM · HVAC service</div>
+              </div>
+              <div class="job-status">Active</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.dashboard-panel -->
+    </div><!-- /.main-content -->
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        /* ---------- Grain (deterministic mulberry32) ---------- */
+        var canvas = document.getElementById('b2-grain');
+        var ctx = canvas.getContext('2d');
+        function mulberry32(a) {
+          return function () {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+          };
+        }
+        var rng = mulberry32(0xDEADBEEF);
+        var imgData = ctx.createImageData(1920, 1080);
+        var d = imgData.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var v = Math.floor(rng() * 256);
+          d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 255;
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        /* ---------- Timeline ---------- */
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+        window.__timelines['beat-2-dashboard'] = tl;
+
+        /* --- 3D tilt on dashboard panel --- */
+        tl.fromTo('.dashboard-panel',
+          { rotationX: 12, transformPerspective: 1800 },
+          { rotationX: 0, duration: 4, ease: 'power1.out' },
+          0.1
+        );
+
+        /* --- Eyebrow --- */
+        tl.fromTo('#b2-eyebrow',
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+          0.1
+        );
+
+        /* --- Greeting words: "Good morning." per-word --- */
+        tl.fromTo('#b2-word-good',
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+          0.18
+        );
+        tl.fromTo('#b2-word-morning',
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' },
+          0.37
+        );
+
+        /* --- Stat cards: all fade in simultaneously then count up --- */
+        var cardIds = ['#b2-card-0','#b2-card-1','#b2-card-2','#b2-card-3','#b2-card-4'];
+        tl.fromTo(cardIds,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.06 },
+          0.68
+        );
+
+        /* Counter: Follow-ups due — integer 3 */
+        var proxy0 = { val: 0 };
+        var el0 = document.getElementById('b2-val-0');
+        tl.to(proxy0, {
+          val: 3, duration: 1.4, ease: 'power2.out',
+          onUpdate: function () { el0.textContent = Math.round(proxy0.val); }
+        }, 0.90);
+
+        /* Counter: Jobs today — integer 4 */
+        var proxy1 = { val: 0 };
+        var el1 = document.getElementById('b2-val-1');
+        tl.to(proxy1, {
+          val: 4, duration: 1.4, ease: 'power2.out',
+          onUpdate: function () { el1.textContent = Math.round(proxy1.val); }
+        }, 0.90);
+
+        /* Counter: Revenue MTD — $8,420 */
+        var proxy2 = { val: 0 };
+        var el2 = document.getElementById('b2-val-2');
+        tl.to(proxy2, {
+          val: 8420, duration: 1.5, ease: 'power2.out',
+          onUpdate: function () {
+            var v = Math.round(proxy2.val);
+            el2.textContent = '$' + v.toLocaleString('en-US');
+          }
+        }, 0.90);
+
+        /* Counter: Open pipeline — $24,000 */
+        var proxy3 = { val: 0 };
+        var el3 = document.getElementById('b2-val-3');
+        tl.to(proxy3, {
+          val: 24000, duration: 1.5, ease: 'power2.out',
+          onUpdate: function () {
+            var v = Math.round(proxy3.val);
+            el3.textContent = '$' + v.toLocaleString('en-US');
+          }
+        }, 0.90);
+
+        /* Counter: Unpaid sales — $1,200 */
+        var proxy4 = { val: 0 };
+        var el4 = document.getElementById('b2-val-4');
+        tl.to(proxy4, {
+          val: 1200, duration: 1.4, ease: 'power2.out',
+          onUpdate: function () {
+            var v = Math.round(proxy4.val);
+            el4.textContent = '$' + v.toLocaleString('en-US');
+          }
+        }, 0.90);
+
+        /* --- Panel backgrounds appear --- */
+        tl.fromTo(['#b2-panel-queue','#b2-panel-jobs'],
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.08 },
+          1.42
+        );
+
+        /* --- Queue items stagger in --- */
+        tl.fromTo(['#b2-qi-0','#b2-qi-1','#b2-qi-2'],
+          { opacity: 0, x: -8 },
+          { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out', stagger: 0.12 },
+          1.68
+        );
+
+        /* --- Job rows stagger in --- */
+        tl.fromTo(['#b2-jr-0','#b2-jr-1'],
+          { opacity: 0, x: -8 },
+          { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out', stagger: 0.12 },
+          1.80
+        );
+
+      })();
+    </script>
+  </div>
+</template>

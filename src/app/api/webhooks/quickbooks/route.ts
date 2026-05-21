@@ -48,9 +48,11 @@ export async function POST(request: Request) {
 
   let payload: QBWebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as QBWebhookPayload;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    const parsed = JSON.parse(rawBody);
+    payload = QuickBooksWebhookSchema.parse(parsed);
+  } catch (e) {
+    console.error("[quickbooks.webhook] Payload validation failed", e);
+    return NextResponse.json({ error: "Invalid JSON or schema validation failed." }, { status: 400 });
   }
 
   const supabase = createAdminClient();

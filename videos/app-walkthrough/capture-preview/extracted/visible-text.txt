@@ -1,0 +1,20 @@
+[h1] Log in to Vercel
+[span] Continue
+[span] with Email
+[span] Continue
+[span] with
+[span] Google
+[span] Continue
+[span] with
+[span] GitHub
+[span] Continue
+[span] with
+[span] Apple
+[span] Continue
+[span] with SAML SSO
+[span] Continue
+[span] with Passkey
+[span] Show other options
+[p] Don't have an account?
+[a] Sign Up
+[a] Privacy Policy

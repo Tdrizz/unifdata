@@ -1,0 +1,662 @@
+<template id="beat-5-integrations-template">
+  <div data-composition-id="beat-5-integrations" data-width="1920" data-height="1080" data-start="0">
+    <style>
+      [data-composition-id="beat-5-integrations"] {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f4f3f0;
+        font-family: 'Geist', sans-serif;
+      }
+
+      /* Grain canvas */
+      [data-composition-id="beat-5-integrations"] .b5-grain-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+        opacity: 0.03;
+        z-index: 10;
+      }
+
+      /* Ghost text */
+      [data-composition-id="beat-5-integrations"] .b5-ghost-text {
+        position: absolute;
+        top: 50%;
+        right: -60px;
+        transform: translateY(-50%);
+        font-family: 'Geist', sans-serif;
+        font-weight: 900;
+        font-size: 240px;
+        color: rgba(23, 22, 20, 0.04);
+        line-height: 1;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+        user-select: none;
+      }
+
+      /* SVG flow lines layer */
+      [data-composition-id="beat-5-integrations"] .b5-flow-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+        z-index: 3;
+      }
+
+      /* Integration cards row */
+      [data-composition-id="beat-5-integrations"] .b5-cards-row {
+        position: absolute;
+        top: 140px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        z-index: 5;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card {
+        width: 200px;
+        height: 110px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(23, 22, 20, 0.10), 0 1px 4px rgba(23, 22, 20, 0.06);
+        padding: 16px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card-stripe {
+        border-left: 3px solid #4A3FA8;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card-hubspot {
+        border-left: 3px solid #e8632a;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card-jobber {
+        border-left: 3px solid #3f7c3f;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card-icon {
+        font-size: 20px;
+        line-height: 1;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-card-name {
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        color: #171614;
+        line-height: 1;
+      }
+
+      /* Progress bar track */
+      [data-composition-id="beat-5-integrations"] .b5-progress-track {
+        position: absolute;
+        top: 414px;
+        left: calc(50% - 290px);
+        height: 4px;
+        width: 580px;
+        background: rgba(74, 63, 168, 0.12);
+        border-radius: 2px;
+        overflow: hidden;
+        z-index: 5;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-progress-bar {
+        height: 4px;
+        width: 0px;
+        background: #4A3FA8;
+        border-radius: 2px;
+      }
+
+      /* Staging table */
+      [data-composition-id="beat-5-integrations"] .b5-staging-table {
+        position: absolute;
+        top: 448px;
+        left: calc(50% - 390px);
+        width: 780px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(23, 22, 20, 0.10), 0 2px 6px rgba(23, 22, 20, 0.06);
+        overflow: hidden;
+        z-index: 6;
+        opacity: 0;
+        transform-origin: center top;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-table-header {
+        height: 42px;
+        background: rgba(23, 22, 20, 0.03);
+        border-bottom: 1px solid rgba(23, 22, 20, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        gap: 0;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-th {
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+        color: #6b6760;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        flex: 1;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-th:last-child {
+        flex: 0 0 160px;
+        text-align: right;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-table-row {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        border-bottom: 1px solid rgba(23, 22, 20, 0.06);
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-table-row:last-child {
+        border-bottom: none;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-td-name {
+        flex: 1;
+        font-family: 'Geist', sans-serif;
+        font-weight: 500;
+        font-size: 15px;
+        color: #171614;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-td-source {
+        flex: 1;
+        font-family: 'Geist', sans-serif;
+        font-weight: 400;
+        font-size: 14px;
+        color: #6b6760;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-td-badge-wrap {
+        flex: 0 0 160px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 12px;
+        background: #faf0e3;
+        color: #92571b;
+        font-family: 'Geist', sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      /* Counter block */
+      [data-composition-id="beat-5-integrations"] .b5-counter-block {
+        position: absolute;
+        bottom: 118px;
+        left: calc(50% - 180px);
+        text-align: center;
+        z-index: 7;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-counter-number {
+        font-family: 'Geist Mono', 'GeistMono', monospace;
+        font-weight: 600;
+        font-size: 72px;
+        color: #171614;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-counter-label {
+        font-family: 'Geist', sans-serif;
+        font-weight: 400;
+        font-size: 24px;
+        color: #6b6760;
+        margin-top: 6px;
+      }
+
+      /* "No overwrites" pill */
+      [data-composition-id="beat-5-integrations"] .b5-pill {
+        position: absolute;
+        bottom: 118px;
+        right: 120px;
+        display: inline-flex;
+        align-items: center;
+        height: 44px;
+        padding: 0 24px;
+        background: #1D2D3E;
+        color: #ffffff;
+        font-family: 'Geist', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        border-radius: 999px;
+        white-space: nowrap;
+        z-index: 8;
+        opacity: 0;
+      }
+
+      /* Narration captions */
+      [data-composition-id="beat-5-integrations"] .b5-narration {
+        position: absolute;
+        bottom: 56px;
+        left: 120px;
+        right: 120px;
+        font-family: 'Geist', sans-serif;
+        font-weight: 500;
+        font-size: 40px;
+        color: #171614;
+        line-height: 1.3;
+        z-index: 9;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        align-items: flex-end;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-word {
+        display: inline-block;
+        opacity: 0;
+        margin-right: 14px;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-word.b5-accent {
+        color: #4A3FA8;
+        font-weight: 700;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-word.b5-accent-orange {
+        color: #e8632a;
+        font-weight: 700;
+      }
+
+      [data-composition-id="beat-5-integrations"] .b5-word.b5-accent-green {
+        color: #3f7c3f;
+        font-weight: 700;
+      }
+    </style>
+
+    <!-- Grain canvas -->
+    <canvas class="b5-grain-canvas" id="b5-grain-canvas" width="1920" height="1080"></canvas>
+
+    <!-- Ghost text -->
+    <div class="b5-ghost-text">sync</div>
+
+    <!-- SVG flow lines -->
+    <svg class="b5-flow-svg" id="b5-flow-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <!-- Three curved paths from card centers down to a convergence point above the progress bar -->
+      <!-- Card centers (approx): Stripe ~(760, 195), HubSpot ~(960, 195), Jobber ~(1160, 195) -->
+      <!-- Convergence point: (960, 405) just above progress track at 414px -->
+      <path id="b5-path-stripe"
+        d="M 760 250 C 760 330 960 330 960 400"
+        stroke="#4A3FA8" stroke-width="2" stroke-opacity="0.40" stroke-linecap="round"/>
+      <path id="b5-path-hubspot"
+        d="M 960 250 C 960 310 960 360 960 400"
+        stroke="#4A3FA8" stroke-width="2" stroke-opacity="0.40" stroke-linecap="round"/>
+      <path id="b5-path-jobber"
+        d="M 1160 250 C 1160 330 960 330 960 400"
+        stroke="#4A3FA8" stroke-width="2" stroke-opacity="0.40" stroke-linecap="round"/>
+    </svg>
+
+    <!-- Integration cards -->
+    <div class="b5-cards-row">
+      <div class="b5-card b5-card-stripe" id="b5-card-stripe">
+        <div class="b5-card-icon">⚡</div>
+        <div class="b5-card-name">Stripe</div>
+      </div>
+      <div class="b5-card b5-card-hubspot" id="b5-card-hubspot">
+        <div class="b5-card-icon">🔶</div>
+        <div class="b5-card-name">HubSpot</div>
+      </div>
+      <div class="b5-card b5-card-jobber" id="b5-card-jobber">
+        <div class="b5-card-icon">🔧</div>
+        <div class="b5-card-name">Jobber</div>
+      </div>
+    </div>
+
+    <!-- Progress bar track + fill -->
+    <div class="b5-progress-track" id="b5-progress-track">
+      <div class="b5-progress-bar" id="b5-progress-bar"></div>
+    </div>
+
+    <!-- Staging table -->
+    <div class="b5-staging-table" id="b5-staging-table">
+      <div class="b5-table-header">
+        <div class="b5-th">Name</div>
+        <div class="b5-th">Source</div>
+        <div class="b5-th">Status</div>
+      </div>
+      <div class="b5-table-row" id="b5-row-1">
+        <div class="b5-td-name">Meridian Landscaping</div>
+        <div class="b5-td-source">Jobber</div>
+        <div class="b5-td-badge-wrap"><span class="b5-badge">Ready to review</span></div>
+      </div>
+      <div class="b5-table-row" id="b5-row-2">
+        <div class="b5-td-name">Crestwood Electric</div>
+        <div class="b5-td-source">Stripe</div>
+        <div class="b5-td-badge-wrap"><span class="b5-badge">Ready to review</span></div>
+      </div>
+      <div class="b5-table-row" id="b5-row-3">
+        <div class="b5-td-name">Halcyon Realty Group</div>
+        <div class="b5-td-source">HubSpot</div>
+        <div class="b5-td-badge-wrap"><span class="b5-badge">Ready to review</span></div>
+      </div>
+    </div>
+
+    <!-- Counter block -->
+    <div class="b5-counter-block" id="b5-counter-block">
+      <div class="b5-counter-number" id="b5-counter-number">0</div>
+      <div class="b5-counter-label">records synced</div>
+    </div>
+
+    <!-- "No overwrites" pill -->
+    <div class="b5-pill" id="b5-pill">No overwrites</div>
+
+    <!-- Narration captions -->
+    <div class="b5-narration" id="b5-narration">
+      <span class="b5-word" id="b5-w-connect">Connect</span><span class="b5-word b5-accent" id="b5-w-stripe">Stripe,</span><span class="b5-word b5-accent-orange" id="b5-w-hubspot">HubSpot,</span><span class="b5-word" id="b5-w-or">or</span><span class="b5-word b5-accent-green" id="b5-w-jobber">Jobber</span><span class="b5-word" id="b5-w-dash">—</span><span class="b5-word" id="b5-w-your">your</span><span class="b5-word" id="b5-w-existing">existing</span><span class="b5-word" id="b5-w-records">records</span><span class="b5-word" id="b5-w-sync">sync</span><span class="b5-word" id="b5-w-in">in</span><span class="b5-word" id="b5-w-automatically">automatically.</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        // --- Seeded PRNG (mulberry32) ---
+        function mulberry32(seed) {
+          return function () {
+            seed |= 0;
+            seed = (seed + 0x6D2B79F5) | 0;
+            var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+
+        var rand = mulberry32(97);
+
+        // Pre-generate grain buffer
+        var GRAIN_BUF_SIZE = 1920 * 1080;
+        var grainBuf = new Uint8Array(GRAIN_BUF_SIZE);
+        for (var gi = 0; gi < GRAIN_BUF_SIZE; gi++) {
+          grainBuf[gi] = (rand() * 255) | 0;
+        }
+
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+
+        var root = document.querySelector('[data-composition-id="beat-5-integrations"]');
+
+        // Element refs
+        var grainCanvas   = root.querySelector('#b5-grain-canvas');
+        var cardStripe    = root.querySelector('#b5-card-stripe');
+        var cardHubspot   = root.querySelector('#b5-card-hubspot');
+        var cardJobber    = root.querySelector('#b5-card-jobber');
+        var pathStripe    = root.querySelector('#b5-path-stripe');
+        var pathHubspot   = root.querySelector('#b5-path-hubspot');
+        var pathJobber    = root.querySelector('#b5-path-jobber');
+        var progressTrack = root.querySelector('#b5-progress-track');
+        var progressBar   = root.querySelector('#b5-progress-bar');
+        var stagingTable  = root.querySelector('#b5-staging-table');
+        var row1          = root.querySelector('#b5-row-1');
+        var row2          = root.querySelector('#b5-row-2');
+        var row3          = root.querySelector('#b5-row-3');
+        var counterBlock  = root.querySelector('#b5-counter-block');
+        var counterNumber = root.querySelector('#b5-counter-number');
+        var pill          = root.querySelector('#b5-pill');
+
+        // Word refs
+        var wConnect     = root.querySelector('#b5-w-connect');
+        var wStripe      = root.querySelector('#b5-w-stripe');
+        var wHubspot     = root.querySelector('#b5-w-hubspot');
+        var wOr          = root.querySelector('#b5-w-or');
+        var wJobber      = root.querySelector('#b5-w-jobber');
+        var wDash        = root.querySelector('#b5-w-dash');
+        var wYour        = root.querySelector('#b5-w-your');
+        var wExisting    = root.querySelector('#b5-w-existing');
+        var wRecords     = root.querySelector('#b5-w-records');
+        var wSync        = root.querySelector('#b5-w-sync');
+        var wIn          = root.querySelector('#b5-w-in');
+        var wAuto        = root.querySelector('#b5-w-automatically');
+
+        // ----------------------------------------------------------------
+        // GRAIN CANVAS — deterministic, proxy-driven
+        // ----------------------------------------------------------------
+        var grainCtx = grainCanvas.getContext('2d');
+        var grainProxy = { frame: 0 };
+        var totalDuration = 4.5;
+        var FPS = 60;
+        var totalFrames = Math.ceil(totalDuration * FPS);
+
+        function drawGrainFrame(frameIndex) {
+          var imageData = grainCtx.createImageData(1920, 1080);
+          var data = imageData.data;
+          var offset = (frameIndex * 97) % GRAIN_BUF_SIZE;
+          for (var i = 0; i < 1920 * 1080; i++) {
+            var idx = (i + offset) % GRAIN_BUF_SIZE;
+            var v = grainBuf[idx];
+            var p = i * 4;
+            data[p]     = v;
+            data[p + 1] = v;
+            data[p + 2] = v;
+            data[p + 3] = 255;
+          }
+          grainCtx.putImageData(imageData, 0, 0);
+        }
+
+        drawGrainFrame(0);
+
+        tl.to(grainProxy, {
+          frame: totalFrames - 1,
+          duration: totalDuration,
+          ease: 'none',
+          onUpdate: function () {
+            drawGrainFrame(Math.round(grainProxy.frame));
+          }
+        }, 0);
+
+        // ----------------------------------------------------------------
+        // SVG FLOW LINES — pre-compute stroke dasharray from path length
+        // ----------------------------------------------------------------
+        [pathStripe, pathHubspot, pathJobber].forEach(function (path) {
+          var len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+        });
+
+        // ----------------------------------------------------------------
+        // CARD ENTRANCES (stagger from y:20 opacity:0)
+        // ----------------------------------------------------------------
+        tl.fromTo(cardStripe,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.45, ease: 'power2.out' },
+          0.0
+        );
+
+        tl.fromTo(cardHubspot,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.45, ease: 'power2.out' },
+          0.1
+        );
+
+        tl.fromTo(cardJobber,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.45, ease: 'power2.out' },
+          0.2
+        );
+
+        // ----------------------------------------------------------------
+        // CARD PULSE — each pulses when its name is spoken in VO
+        // Stripe at 0.48s, HubSpot at 1.00s, Jobber at 1.60s
+        // ----------------------------------------------------------------
+        // Stripe pulse
+        tl.fromTo(cardStripe,
+          { scale: 1 },
+          { scale: 1.04, duration: 0.15, ease: 'power2.out', yoyo: true, repeat: 1 },
+          0.48
+        );
+
+        // HubSpot pulse
+        tl.fromTo(cardHubspot,
+          { scale: 1 },
+          { scale: 1.04, duration: 0.15, ease: 'power2.out', yoyo: true, repeat: 1 },
+          1.00
+        );
+
+        // Jobber pulse
+        tl.fromTo(cardJobber,
+          { scale: 1 },
+          { scale: 1.04, duration: 0.15, ease: 'power2.out', yoyo: true, repeat: 1 },
+          1.60
+        );
+
+        // ----------------------------------------------------------------
+        // SVG FLOW LINES — draw sequentially after cards appear, ~1.5s
+        // ----------------------------------------------------------------
+        tl.to(pathStripe, {
+          strokeDashoffset: 0,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, 1.5);
+
+        tl.to(pathHubspot, {
+          strokeDashoffset: 0,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, 1.65);
+
+        tl.to(pathJobber, {
+          strokeDashoffset: 0,
+          duration: 0.5,
+          ease: 'power2.out'
+        }, 1.8);
+
+        // ----------------------------------------------------------------
+        // PROGRESS BAR — appears at ~2.0s, fills over 1.5s
+        // ----------------------------------------------------------------
+        tl.fromTo(progressTrack,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.2, ease: 'power1.out' },
+          2.0
+        );
+
+        tl.fromTo(progressBar,
+          { width: '0px' },
+          { width: '580px', duration: 1.5, ease: 'power2.inOut' },
+          2.05
+        );
+
+        // ----------------------------------------------------------------
+        // STAGING TABLE — 3D perspective reveal (rotateX 20° → 0) at ~2.5s
+        // ----------------------------------------------------------------
+        tl.fromTo(stagingTable,
+          { rotationX: 20, transformPerspective: 1800, opacity: 0 },
+          { rotationX: 0, opacity: 1, duration: 0.8, ease: 'power2.out' },
+          2.5
+        );
+
+        // Table rows stagger-fade in 0.15s apart
+        tl.fromTo(row1,
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' },
+          2.7
+        );
+
+        tl.fromTo(row2,
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' },
+          2.85
+        );
+
+        tl.fromTo(row3,
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' },
+          3.0
+        );
+
+        // ----------------------------------------------------------------
+        // COUNTER — 0 → 247 over 1s at ~3.2s
+        // ----------------------------------------------------------------
+        tl.fromTo(counterBlock,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' },
+          3.1
+        );
+
+        var counterProxy = { val: 0 };
+        tl.to(counterProxy, {
+          val: 247,
+          duration: 1.0,
+          ease: 'power2.out',
+          onUpdate: function () {
+            counterNumber.textContent = Math.round(counterProxy.val);
+          }
+        }, 3.2);
+
+        // ----------------------------------------------------------------
+        // "NO OVERWRITES" PILL — slides in from right at ~3.8s
+        // ----------------------------------------------------------------
+        tl.fromTo(pill,
+          { x: 80, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+          3.8
+        );
+
+        // ----------------------------------------------------------------
+        // NARRATION CAPTIONS — word-by-word synced to VO
+        // Timings relative to beat start (global offset already subtracted)
+        // ----------------------------------------------------------------
+        var wordTimings = [
+          { el: wConnect,  t: 0.00 },
+          { el: wStripe,   t: 0.48 },
+          { el: wHubspot,  t: 1.00 },
+          { el: wOr,       t: 1.48 },
+          { el: wJobber,   t: 1.60 },
+          { el: wDash,     t: 1.70 },
+          { el: wYour,     t: 1.87 },
+          { el: wExisting, t: 2.11 },
+          { el: wRecords,  t: 2.60 },
+          { el: wSync,     t: 3.05 },
+          { el: wIn,       t: 3.40 },
+          { el: wAuto,     t: 3.51 }
+        ];
+
+        wordTimings.forEach(function (w) {
+          tl.fromTo(
+            w.el,
+            { x: 14, y: 10, opacity: 0 },
+            { x: 0, y: 0, opacity: 1, duration: 0.28, ease: 'power2.out' },
+            w.t
+          );
+        });
+
+        // ----------------------------------------------------------------
+        // Register timeline
+        // ----------------------------------------------------------------
+        window.__timelines['beat-5-integrations'] = tl;
+      })();
+    </script>
+  </div>
+</template>

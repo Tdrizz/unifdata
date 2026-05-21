@@ -1,0 +1,573 @@
+<template id="beat-1-hook-template">
+  <div data-composition-id="beat-1-hook" data-width="1920" data-height="1080" data-start="0">
+    <style>
+      [data-composition-id="beat-1-hook"] {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f4f3f0;
+        font-family: 'Geist', sans-serif;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grain-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+        opacity: 0.04;
+        z-index: 10;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-ghost-text {
+        position: absolute;
+        bottom: -40px;
+        left: -20px;
+        font-family: 'Geist', sans-serif;
+        font-weight: 700;
+        font-size: 240px;
+        color: rgba(74, 63, 168, 0.06);
+        line-height: 1;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+        user-select: none;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-sticky-note {
+        position: absolute;
+        top: 180px;
+        left: 180px;
+        width: 160px;
+        height: 160px;
+        background: #fef3c7;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
+        transform: rotate(-8deg);
+        z-index: 4;
+        opacity: 0;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-sticky-lines {
+        position: absolute;
+        top: 28px;
+        left: 18px;
+        right: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-sticky-line {
+        height: 2px;
+        background: rgba(0, 0, 0, 0.12);
+        border-radius: 1px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-sticky-line:last-child {
+        width: 60%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-spreadsheet {
+        position: absolute;
+        top: 240px;
+        right: 280px;
+        width: 320px;
+        height: 200px;
+        background: #ffffff;
+        border: 1px solid rgba(23, 22, 20, 0.08);
+        box-shadow: 0 2px 8px rgba(23, 22, 20, 0.06);
+        z-index: 4;
+        opacity: 0;
+        overflow: hidden;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-spreadsheet-header {
+        height: 28px;
+        background: rgba(23, 22, 20, 0.04);
+        border-bottom: 1px solid rgba(23, 22, 20, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        gap: 8px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-spreadsheet-header-cell {
+        flex: 1;
+        height: 10px;
+        background: rgba(23, 22, 20, 0.1);
+        border-radius: 2px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-rows {
+        display: flex;
+        flex-direction: column;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-row {
+        display: flex;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        height: 28px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-cell {
+        flex: 1;
+        border-right: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 8px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-cell-inner {
+        height: 8px;
+        border-radius: 2px;
+        background: rgba(23, 22, 20, 0.07);
+        width: 70%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-cell-inner.short {
+        width: 45%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-grid-cell-inner.medium {
+        width: 85%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-1 {
+        position: absolute;
+        bottom: 200px;
+        left: 120px;
+        width: 280px;
+        height: 180px;
+        background: #c8c5be;
+        border-radius: 8px;
+        filter: blur(6px);
+        opacity: 0;
+        z-index: 3;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-1-titlebar {
+        height: 28px;
+        background: #b5b1aa;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 6px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-1-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.15);
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-1-body {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-1-row {
+        height: 10px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 2px;
+        width: 80%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-2 {
+        position: absolute;
+        top: 80px;
+        right: 120px;
+        width: 280px;
+        height: 180px;
+        background: #d2cfc9;
+        border-radius: 8px;
+        filter: blur(6px);
+        opacity: 0;
+        z-index: 3;
+        transform: rotate(10deg);
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-2-titlebar {
+        height: 28px;
+        background: #bfbbb5;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 6px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-2-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.15);
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-2-body {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-app-window-2-row {
+        height: 10px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 2px;
+        width: 70%;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-narration {
+        position: absolute;
+        bottom: 140px;
+        left: 120px;
+        right: 120px;
+        font-family: 'Geist', sans-serif;
+        font-weight: 500;
+        font-size: 56px;
+        color: #171614;
+        line-height: 1.25;
+        z-index: 8;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        align-items: flex-end;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-word {
+        display: inline-block;
+        position: relative;
+        opacity: 0;
+        margin-right: 18px;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-word.b1-brand {
+        color: #4A3FA8;
+      }
+
+      [data-composition-id="beat-1-hook"] .b1-rule {
+        position: absolute;
+        bottom: 112px;
+        left: 120px;
+        height: 1px;
+        width: 480px;
+        background: rgba(74, 63, 168, 0.2);
+        transform-origin: left center;
+        transform: scaleX(0);
+        z-index: 8;
+      }
+    </style>
+
+    <!-- Background is handled by the CSS on the root element -->
+
+    <!-- Canvas grain overlay -->
+    <canvas class="b1-grain-canvas" id="b1-grain-canvas" width="1920" height="1080"></canvas>
+
+    <!-- Ghost oversized text -->
+    <div class="b1-ghost-text">scattered</div>
+
+    <!-- Sticky note -->
+    <div class="b1-sticky-note" id="b1-sticky">
+      <div class="b1-sticky-lines">
+        <div class="b1-sticky-line"></div>
+        <div class="b1-sticky-line"></div>
+        <div class="b1-sticky-line"></div>
+        <div class="b1-sticky-line"></div>
+        <div class="b1-sticky-line short"></div>
+      </div>
+    </div>
+
+    <!-- Spreadsheet grid -->
+    <div class="b1-spreadsheet" id="b1-spreadsheet">
+      <div class="b1-spreadsheet-header">
+        <div class="b1-spreadsheet-header-cell"></div>
+        <div class="b1-spreadsheet-header-cell"></div>
+        <div class="b1-spreadsheet-header-cell"></div>
+      </div>
+      <div class="b1-grid-rows">
+        <div class="b1-grid-row">
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner medium"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner short"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+        </div>
+        <div class="b1-grid-row">
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner medium"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner short"></div></div>
+        </div>
+        <div class="b1-grid-row">
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner short"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner medium"></div></div>
+        </div>
+        <div class="b1-grid-row">
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner medium"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner short"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+        </div>
+        <div class="b1-grid-row">
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner medium"></div></div>
+          <div class="b1-grid-cell"><div class="b1-grid-cell-inner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App window 1 (blurry, lower-left) -->
+    <div class="b1-app-window-1" id="b1-app1">
+      <div class="b1-app-window-1-titlebar">
+        <div class="b1-app-window-1-dot"></div>
+        <div class="b1-app-window-1-dot"></div>
+        <div class="b1-app-window-1-dot"></div>
+      </div>
+      <div class="b1-app-window-1-body">
+        <div class="b1-app-window-1-row"></div>
+        <div class="b1-app-window-1-row" style="width:60%"></div>
+        <div class="b1-app-window-1-row" style="width:90%"></div>
+        <div class="b1-app-window-1-row" style="width:50%"></div>
+      </div>
+    </div>
+
+    <!-- App window 2 (blurry, upper-right) -->
+    <div class="b1-app-window-2" id="b1-app2">
+      <div class="b1-app-window-2-titlebar">
+        <div class="b1-app-window-2-dot"></div>
+        <div class="b1-app-window-2-dot"></div>
+        <div class="b1-app-window-2-dot"></div>
+      </div>
+      <div class="b1-app-window-2-body">
+        <div class="b1-app-window-2-row"></div>
+        <div class="b1-app-window-2-row" style="width:85%"></div>
+        <div class="b1-app-window-2-row" style="width:55%"></div>
+        <div class="b1-app-window-2-row" style="width:75%"></div>
+      </div>
+    </div>
+
+    <!-- Narration text with per-word spans -->
+    <div class="b1-narration" id="b1-narration">
+      <span class="b1-word" id="b1-w-your">Your</span><span class="b1-word" id="b1-w-business">business</span><span class="b1-word" id="b1-w-runs">runs</span><span class="b1-word" id="b1-w-across">across</span><span class="b1-word" id="b1-w-sticky">sticky</span><span class="b1-word" id="b1-w-notes">notes,</span><span class="b1-word" id="b1-w-spreadsheets">spreadsheets,</span><span class="b1-word" id="b1-w-and">and</span><span class="b1-word" id="b1-w-three">three</span><span class="b1-word" id="b1-w-different">different</span><span class="b1-word" id="b1-w-apps">apps.</span><span class="b1-word b1-brand" id="b1-w-unifdata">unifdata</span><span class="b1-word" id="b1-w-pulls">pulls</span><span class="b1-word" id="b1-w-it">it</span><span class="b1-word" id="b1-w-into">into</span><span class="b1-word" id="b1-w-one">one.</span>
+    </div>
+
+    <!-- Thin horizontal rule -->
+    <div class="b1-rule" id="b1-rule"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        // --- Seeded PRNG (mulberry32) ---
+        function mulberry32(seed) {
+          return function () {
+            seed |= 0;
+            seed = (seed + 0x6D2B79F5) | 0;
+            var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+
+        var rand = mulberry32(42);
+
+        // Pre-generate grain noise values so every seek to the same frame looks the same.
+        // We'll cycle through a buffer rather than regenerating on each call.
+        var GRAIN_BUF_SIZE = 1920 * 1080;
+        var grainBuf = new Uint8Array(GRAIN_BUF_SIZE);
+        for (var gi = 0; gi < GRAIN_BUF_SIZE; gi++) {
+          grainBuf[gi] = (rand() * 255) | 0;
+        }
+
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+
+        var root = document.querySelector('[data-composition-id="beat-1-hook"]');
+
+        // Element refs
+        var grainCanvas = root.querySelector('#b1-grain-canvas');
+        var sticky = root.querySelector('#b1-sticky');
+        var spreadsheet = root.querySelector('#b1-spreadsheet');
+        var app1 = root.querySelector('#b1-app1');
+        var app2 = root.querySelector('#b1-app2');
+        var rule = root.querySelector('#b1-rule');
+
+        // Word elements
+        var words = {
+          your:         root.querySelector('#b1-w-your'),
+          business:     root.querySelector('#b1-w-business'),
+          runs:         root.querySelector('#b1-w-runs'),
+          across:       root.querySelector('#b1-w-across'),
+          sticky:       root.querySelector('#b1-w-sticky'),
+          notes:        root.querySelector('#b1-w-notes'),
+          spreadsheets: root.querySelector('#b1-w-spreadsheets'),
+          and:          root.querySelector('#b1-w-and'),
+          three:        root.querySelector('#b1-w-three'),
+          different:    root.querySelector('#b1-w-different'),
+          apps:         root.querySelector('#b1-w-apps'),
+          unifdata:     root.querySelector('#b1-w-unifdata'),
+          pulls:        root.querySelector('#b1-w-pulls'),
+          it:           root.querySelector('#b1-w-it'),
+          into:         root.querySelector('#b1-w-into'),
+          one:          root.querySelector('#b1-w-one')
+        };
+
+        // ----------------------------------------------------------------
+        // GRAIN CANVAS — proxy-driven, deterministic
+        // ----------------------------------------------------------------
+        var grainCtx = grainCanvas.getContext('2d');
+        var grainProxy = { frame: 0 };
+
+        // Determine the total number of frames we'll need for 5.5s at 60fps
+        var totalDuration = 5.5;
+        var FPS = 60;
+        var totalFrames = Math.ceil(totalDuration * FPS); // 330 frames
+
+        // Draw grain for a given frame index (deterministic per frame, cycles)
+        function drawGrainFrame(frameIndex) {
+          var imageData = grainCtx.createImageData(1920, 1080);
+          var data = imageData.data;
+          var offset = (frameIndex * 73) % GRAIN_BUF_SIZE; // rotate buffer for per-frame variation
+          for (var i = 0; i < 1920 * 1080; i++) {
+            var idx = (i + offset) % GRAIN_BUF_SIZE;
+            var v = grainBuf[idx];
+            var p = i * 4;
+            data[p]     = v;
+            data[p + 1] = v;
+            data[p + 2] = v;
+            data[p + 3] = 255;
+          }
+          grainCtx.putImageData(imageData, 0, 0);
+        }
+
+        // Draw initial frame
+        drawGrainFrame(0);
+
+        tl.to(grainProxy, {
+          frame: totalFrames - 1,
+          duration: totalDuration,
+          ease: 'none',
+          onUpdate: function () {
+            drawGrainFrame(Math.round(grainProxy.frame));
+          }
+        }, 0);
+
+        // ----------------------------------------------------------------
+        // FRAGMENT ENTRANCES
+        // ----------------------------------------------------------------
+
+        // Sticky note — enters from y:-80, power2.out
+        tl.fromTo(sticky,
+          { y: -80, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' },
+          0.05
+        );
+
+        // Spreadsheet — enters from x:60, power2.out
+        tl.fromTo(spreadsheet,
+          { x: 60, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.7, ease: 'power2.out' },
+          0.15
+        );
+
+        // App window 1 (lower-left) — floats in slowly
+        tl.fromTo(app1,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 0.4, duration: 0.9, ease: 'power1.out' },
+          0.25
+        );
+
+        // App window 2 (upper-right) — floats in slowly
+        tl.fromTo(app2,
+          { x: 30, opacity: 0 },
+          { x: 0, opacity: 0.4, duration: 0.9, ease: 'power1.out' },
+          0.35
+        );
+
+        // ----------------------------------------------------------------
+        // AMBIENT WOBBLE — finite repeat, on tl
+        // duration: 5.5s total, cycle: 3s, so repeat = ceil(5.5/3)-1 = 1
+        // ----------------------------------------------------------------
+        var wobbleCycles = Math.ceil(5.5 / 3) - 1; // = 1
+
+        // Sticky note rotationX wobble (breathe around its -8deg rotation)
+        tl.fromTo(sticky,
+          { rotationX: 0 },
+          { rotationX: 2, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: wobbleCycles },
+          0.65
+        );
+
+        // Spreadsheet rotationX wobble
+        tl.fromTo(spreadsheet,
+          { rotationX: 0 },
+          { rotationX: -2, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: wobbleCycles },
+          0.85
+        );
+
+        // App window 1 gentle float
+        tl.fromTo(app1,
+          { y: 0 },
+          { y: -8, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: wobbleCycles },
+          1.15
+        );
+
+        // App window 2 gentle float
+        tl.fromTo(app2,
+          { y: 0 },
+          { y: 8, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: wobbleCycles },
+          1.05
+        );
+
+        // ----------------------------------------------------------------
+        // HORIZONTAL RULE — scaleX 0→1
+        // ----------------------------------------------------------------
+        tl.fromTo(rule,
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.8, ease: 'power2.out' },
+          0.5
+        );
+
+        // ----------------------------------------------------------------
+        // PER-WORD KINETIC TYPOGRAPHY
+        // Slide decay: "Your" at 60px slide, decaying to ~10px for last words
+        // 16 words total; interpolate slideAmt from 60 down to 10
+        // ----------------------------------------------------------------
+        var wordTimings = [
+          { el: words.your,         t: 0.03,  slide: 60 },
+          { el: words.business,     t: 0.18,  slide: 57 },
+          { el: words.runs,         t: 0.55,  slide: 54 },
+          { el: words.across,       t: 0.73,  slide: 50 },
+          { el: words.sticky,       t: 1.01,  slide: 46 },
+          { el: words.notes,        t: 1.29,  slide: 42 },
+          { el: words.spreadsheets, t: 1.64,  slide: 38 },
+          { el: words.and,          t: 2.31,  slide: 34 },
+          { el: words.three,        t: 2.46,  slide: 30 },
+          { el: words.different,    t: 2.79,  slide: 26 },
+          { el: words.apps,         t: 3.31,  slide: 22 },
+          { el: words.unifdata,     t: 3.79,  slide: 18 },
+          { el: words.pulls,        t: 4.27,  slide: 16 },
+          { el: words.it,           t: 4.50,  slide: 14 },
+          { el: words.into,         t: 4.63,  slide: 12 },
+          { el: words.one,          t: 4.86,  slide: 10 }
+        ];
+
+        wordTimings.forEach(function (w) {
+          tl.fromTo(
+            w.el,
+            { x: w.slide, y: 14, opacity: 0 },
+            { x: 0, y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' },
+            w.t
+          );
+        });
+
+        // ----------------------------------------------------------------
+        // Register on window
+        // ----------------------------------------------------------------
+        window.__timelines['beat-1-hook'] = tl;
+      })();
+    </script>
+  </div>
+</template>

@@ -64,9 +64,11 @@ export async function POST(request: Request) {
 
   let payload: JobberWebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as JobberWebhookPayload;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    const parsed = JSON.parse(rawBody);
+    payload = JobberWebhookSchema.parse(parsed);
+  } catch (e) {
+    console.error("[jobber.webhook] Payload validation failed", e);
+    return NextResponse.json({ error: "Invalid JSON or schema validation failed." }, { status: 400 });
   }
 
   const event = payload.webHookEvent ?? payload.topic ?? "";

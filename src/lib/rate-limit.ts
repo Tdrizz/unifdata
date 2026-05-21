@@ -1,29 +1,24 @@
-import { createServiceClient } from "@/lib/supabase/service";
+import { redis } from "@/lib/redis";
 
 export async function rateLimit(
   key: string,
   limit = 10,
   windowMs = 60_000,
 ): Promise<boolean> {
-  const supabase = createServiceClient();
-  const windowStart = new Date(Date.now() - windowMs).toISOString();
+  // Fallback for local development if environment variables are missing
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return true; 
+  }
 
-  const { count } = await supabase
-    .from("rate_limit_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("key", key)
-    .gte("requested_at", windowStart);
+  const redisKey = `rate_limit:${key}`;
+  
+  // Atomic operation: increment the counter
+  const current = await redis.incr(redisKey);
+  
+  // Set expiration only on the first increment to define the window
+  if (current === 1) {
+    await redis.expire(redisKey, Math.ceil(windowMs / 1000));
+  }
 
-  if ((count ?? 0) >= limit) return false;
-
-  await supabase.from("rate_limit_requests").insert({ key });
-
-  // Fire-and-forget: delete rows older than 1 hour to keep the table small
-  supabase
-    .from("rate_limit_requests")
-    .delete()
-    .lt("requested_at", new Date(Date.now() - 60 * 60 * 1000).toISOString())
-    .then(() => {});
-
-  return true;
+  return current <= limit;
 }

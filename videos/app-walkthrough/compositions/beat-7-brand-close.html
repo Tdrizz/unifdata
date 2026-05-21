@@ -1,0 +1,234 @@
+<template id="beat-7-brand-close-template">
+  <div data-composition-id="beat-7-brand-close" data-width="1920" data-height="1080" data-start="0">
+    <style>
+      [data-composition-id="beat-7-brand-close"] {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f4f3f0;
+        font-family: 'Geist', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-vignette-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-ghost-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, calc(-50% + 60px));
+        font-family: 'Geist', sans-serif;
+        font-weight: 900;
+        font-size: 320px;
+        color: rgba(23, 22, 20, 0.04);
+        line-height: 1;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 2;
+        user-select: none;
+        letter-spacing: -0.03em;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-content {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-wordmark {
+        font-family: 'Geist', sans-serif;
+        font-size: 120px;
+        color: #171614;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        display: flex;
+        align-items: baseline;
+        margin-bottom: 18px;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-wl {
+        display: inline-block;
+        position: relative;
+        font-variation-settings: "wght" 200;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-rule-svg {
+        display: block;
+        margin-bottom: 28px;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-descriptor {
+        font-family: 'Geist', sans-serif;
+        font-size: 36px;
+        font-weight: 400;
+        color: #6b6760;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+        max-width: 900px;
+      }
+
+      [data-composition-id="beat-7-brand-close"] .b7-dword {
+        display: inline-block;
+        position: relative;
+        opacity: 0;
+        margin-right: 10px;
+      }
+    </style>
+
+    <!-- Vignette canvas — drawn once by script -->
+    <canvas class="b7-vignette-canvas" id="b7-vignette" width="1920" height="1080"></canvas>
+
+    <!-- Ghost repeat text -->
+    <div class="b7-ghost-text">unifdata</div>
+
+    <!-- All animated content in one centred flex column -->
+    <div class="b7-content" id="b7-content">
+
+      <!-- Descriptor line — sits above the wordmark in render order but
+           positioned above via flex column ordering -->
+      <div class="b7-descriptor" id="b7-descriptor">
+        <span class="b7-dword" id="b7-dw-it">It</span><span class="b7-dword" id="b7-dw-works">works</span><span class="b7-dword" id="b7-dw-the">the</span><span class="b7-dword" id="b7-dw-way">way</span><span class="b7-dword" id="b7-dw-your">your</span><span class="b7-dword" id="b7-dw-business">business</span><span class="b7-dword" id="b7-dw-worksperiod">works.</span>
+      </div>
+
+      <!-- Wordmark with per-letter spans -->
+      <div class="b7-wordmark" id="b7-wordmark">
+        <span class="b7-wl" id="b7-l0">u</span><span class="b7-wl" id="b7-l1">n</span><span class="b7-wl" id="b7-l2">i</span><span class="b7-wl" id="b7-l3">f</span><span class="b7-wl" id="b7-l4">d</span><span class="b7-wl" id="b7-l5">a</span><span class="b7-wl" id="b7-l6">t</span><span class="b7-wl" id="b7-l7">a</span>
+      </div>
+
+      <!-- SVG rule — draws left to right -->
+      <svg class="b7-rule-svg" id="b7-rule-svg" width="320" height="2" viewBox="0 0 320 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line id="b7-rule-line" x1="0" y1="1" x2="320" y2="1" stroke="#4A3FA8" stroke-opacity="0.6" stroke-width="1.5" stroke-dasharray="320" stroke-dashoffset="320"/>
+      </svg>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script>
+      (function () {
+        window.__timelines = window.__timelines || {};
+
+        var root = document.querySelector('[data-composition-id="beat-7-brand-close"]');
+
+        // ----------------------------------------------------------------
+        // VIGNETTE — drawn once, static
+        // ----------------------------------------------------------------
+        var vigCanvas = root.querySelector('#b7-vignette');
+        var vigCtx = vigCanvas.getContext('2d');
+        var grad = vigCtx.createRadialGradient(960, 540, 200, 960, 540, 980);
+        grad.addColorStop(0, 'rgba(244,243,240,0)');
+        grad.addColorStop(1, 'rgba(244,243,240,0.5)');
+        vigCtx.fillStyle = grad;
+        vigCtx.fillRect(0, 0, 1920, 1080);
+
+        // ----------------------------------------------------------------
+        // TIMELINE
+        // ----------------------------------------------------------------
+        var tl = gsap.timeline({ paused: true });
+
+        var content    = root.querySelector('#b7-content');
+        var wordmark   = root.querySelector('#b7-wordmark');
+        var ruleLine   = root.querySelector('#b7-rule-line');
+
+        // Descriptor word elements
+        var dWords = [
+          { el: root.querySelector('#b7-dw-it'),          t: 0.0  },
+          { el: root.querySelector('#b7-dw-works'),        t: 0.09 },
+          { el: root.querySelector('#b7-dw-the'),          t: 0.37 },
+          { el: root.querySelector('#b7-dw-way'),          t: 0.47 },
+          { el: root.querySelector('#b7-dw-your'),         t: 0.61 },
+          { el: root.querySelector('#b7-dw-business'),     t: 0.80 },
+          { el: root.querySelector('#b7-dw-worksperiod'),  t: 1.19 }
+        ];
+
+        // ----------------------------------------------------------------
+        // DESCRIPTOR — per-word entrance, y:16 → 0, opacity:0 → 1
+        // ----------------------------------------------------------------
+        dWords.forEach(function (w) {
+          tl.fromTo(
+            w.el,
+            { y: 16, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.32, ease: 'power2.out' },
+            w.t
+          );
+        });
+
+        // ----------------------------------------------------------------
+        // WORDMARK — per-letter weight bloom
+        // Letters start at wght:200 (set in CSS), bloom to wght:600
+        // Stagger: 0.06s × 8 letters, starting at 1.67s
+        // ----------------------------------------------------------------
+        var letters = ['#b7-l0','#b7-l1','#b7-l2','#b7-l3','#b7-l4','#b7-l5','#b7-l6','#b7-l7'];
+        var bloomStart = 1.67;
+        var bloomStagger = 0.06;
+
+        letters.forEach(function (sel, i) {
+          tl.fromTo(
+            root.querySelector(sel),
+            { 'font-variation-settings': '"wght" 200', opacity: 0.15 },
+            { 'font-variation-settings': '"wght" 600', opacity: 1, duration: 0.3, ease: 'power2.out' },
+            bloomStart + i * bloomStagger
+          );
+        });
+
+        // ----------------------------------------------------------------
+        // SVG RULE — stroke-dashoffset 320 → 0
+        // ----------------------------------------------------------------
+        tl.fromTo(
+          ruleLine,
+          { strokeDashoffset: 320 },
+          { strokeDashoffset: 0, duration: 0.4, ease: 'power2.out' },
+          1.9
+        );
+
+        // ----------------------------------------------------------------
+        // AMBIENT FLOAT — wordmark gentle sine float
+        // Starts at 2.5s, 0.6s half-cycle, yoyo, repeat:7 → ~4.2 full cycles
+        // ----------------------------------------------------------------
+        tl.to(
+          wordmark,
+          { y: -4, yoyo: true, repeat: 7, duration: 0.6, ease: 'sine.inOut' },
+          2.5
+        );
+
+        // ----------------------------------------------------------------
+        // FINAL FADE — content fades out, BG stays #f4f3f0
+        // ----------------------------------------------------------------
+        tl.to(
+          content,
+          { opacity: 0, duration: 1.5, ease: 'power1.in' },
+          5.0
+        );
+
+        tl.to(
+          '[data-composition-id="beat-7-brand-close"]',
+          { backgroundColor: '#f4f3f0', duration: 1.5, ease: 'power1.in' },
+          5.0
+        );
+
+        // ----------------------------------------------------------------
+        // Register timeline
+        // ----------------------------------------------------------------
+        window.__timelines['beat-7-brand-close'] = tl;
+      })();
+    </script>
+  </div>
+</template>
