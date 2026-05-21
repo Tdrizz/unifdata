@@ -122,11 +122,18 @@ export function MobileTabBar({
             key={tab.href}
             href={tab.href}
             className={cn(
-              "flex flex-1 flex-col items-center gap-[3px] pb-1 transition-colors",
-              active ? "text-ud-ink" : "text-ud-faint",
+              "flex flex-1 flex-col items-center gap-[3px] pb-1 active:opacity-60 transition-opacity duration-75",
+              active ? "text-ud-accent" : "text-ud-faint",
             )}
           >
-            <Icon active={active} />
+            <div
+              className={cn(
+                "flex items-center justify-center w-[46px] h-[28px] rounded-[10px] transition-colors duration-200",
+                active ? "bg-ud-accent/[0.10]" : "",
+              )}
+            >
+              <Icon active={active} />
+            </div>
             <span
               className={cn(
                 "text-[9.5px] tracking-[-0.005em]",

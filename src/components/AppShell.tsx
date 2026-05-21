@@ -103,7 +103,7 @@ export async function AppShell({
 
       {/* ── Mobile layout ─────────────────────────────────────────────────── */}
       <div className="flex flex-col min-h-screen md:hidden bg-ud-page">
-        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud bg-ud-page/95 backdrop-blur-sm">
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud/60 bg-ud-page/90 backdrop-blur-[20px] saturate-[160%]">
           <Link href="/workspace">
             <ProductMark companyName={companyName} />
           </Link>

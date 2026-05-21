@@ -48,7 +48,7 @@ function QuickActionButton({ icon, label, href }: { icon: React.ReactNode; label
   return (
     <a
       href={href}
-      className="flex flex-col items-center gap-1 rounded-[10px] border border-ud bg-ud-surface p-[10px_4px] text-center transition-colors hover:bg-ud-surface-soft"
+      className="flex flex-col items-center justify-center gap-[6px] rounded-[12px] border border-ud bg-ud-surface py-[12px] px-[4px] text-center active:opacity-60 active:scale-[0.97] transition-[opacity,transform] duration-75"
     >
       <span className="text-ud-accent">{icon}</span>
       <span className="text-[10.5px] font-semibold text-ud-muted">{label}</span>
@@ -127,12 +127,12 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
             href={phone ? `tel:${phone}` : "#"}
             label="Call"
             icon={
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91A16 16 0 0 0 15.09 15.91l.8-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
             }
           />
-          <div className="flex flex-col items-center gap-1 rounded-[10px] border border-ud bg-ud-surface p-[10px_4px] text-center transition-colors hover:bg-ud-surface-soft">
+          <div className="flex flex-col items-center justify-center gap-[6px] rounded-[12px] border border-ud bg-ud-surface py-[12px] px-[4px] text-center active:opacity-60 active:scale-[0.97] transition-[opacity,transform] duration-75">
             <SendMessageModal
               customerId={customer.id}
               customerName={customer.name || "Customer"}
@@ -145,7 +145,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
             href={customer.address ? `https://maps.google.com/?q=${encodeURIComponent(customer.address)}` : "#"}
             label="Route"
             icon={
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
               </svg>
             }
@@ -154,7 +154,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
             href="/leads#leads-quick-add"
             label="New"
             icon={
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 8v8M8 12h8" />
               </svg>
             }
@@ -174,7 +174,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto border-b border-ud-soft no-scrollbar">
+      <div className="relative flex overflow-x-auto border-b border-ud-soft no-scrollbar after:pointer-events-none after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-ud-page after:to-transparent">
         {TABS.map((tab) => {
           const count = tab === leadLabel ? leads.length : tab === jobLabel ? jobs.length : tab === saleLabel ? sales.length : 0;
           return (
@@ -196,7 +196,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
       </div>
 
       {/* Tab content */}
-      <div className="px-[14px] py-[14px]">
+      <div key={activeTab} className="px-[14px] py-[14px] [animation:fade-in_180ms_ease_both]">
         {activeTab === "Overview" && (
           <div className="space-y-[14px]">
             <Card padding={0}>
