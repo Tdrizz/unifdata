@@ -13,6 +13,7 @@ import { formatTimestampDate } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CustomerRow } from "../types";
 import { updateCustomerAction, deleteCustomerAction, type ActionState } from "../actions";
+import { SendMessageModal } from "./SendMessageModal";
 
 type Props = {
   customer: CustomerRow;
@@ -218,15 +219,22 @@ export function CustomerForm({
             />
           </FormField>
 
-          <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
-            <Link
-              href="/customers"
-              className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
-            >
-              Cancel
-            </Link>
-
-            <SubmitButton>Save person</SubmitButton>
+          <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
+            <SendMessageModal
+              customerId={customer.id}
+              customerName={customer.name || "Customer"}
+              phone={customer.phone ?? null}
+              email={customer.email ?? null}
+            />
+            <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center">
+              <Link
+                href="/customers"
+                className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+              >
+                Cancel
+              </Link>
+              <SubmitButton>Save person</SubmitButton>
+            </div>
           </div>
         </form>
       </SectionCard>

@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
+import { toE164 } from "@/lib/webhook-validation";
+import { rateLimit } from "@/lib/rate-limit";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -140,6 +143,92 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     .eq("id", winnerId);
 
   revalidatePath("/customers");
+}
+
+export type SendMessageState = { ok: true } | { error: string } | null;
+
+export async function sendCustomerMessageAction(
+  customerId: string,
+  messageType: "sms" | "email",
+  body: string,
+  subject: string,
+): Promise<SendMessageState> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return { error: "Unauthorized." };
+  const { company } = currentCompany;
+
+  if (!await rateLimit(`messages:${company.id}`, 20)) {
+    return { error: "Too many messages. Try again in a minute." };
+  }
+
+  const supabase = await createClient();
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id, name, phone, email")
+    .eq("id", customerId)
+    .eq("company_id", company.id)
+    .maybeSingle();
+
+  if (!customer) return { error: "Customer not found." };
+
+  const admin = createAdminClient();
+  let providerMessageId = "";
+
+  try {
+    if (messageType === "sms") {
+      if (!customer.phone) return { error: "This customer has no phone number." };
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+      if (!accountSid || !authToken || !fromNumber) return { error: "SMS is not configured. Add Twilio credentials in settings." };
+
+      const res = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: toE164(customer.phone), From: fromNumber, Body: body }),
+        },
+      );
+      const data = (await res.json()) as { sid?: string; message?: string };
+      if (!res.ok) return { error: data.message ?? "SMS send failed." };
+      providerMessageId = data.sid ?? "";
+    } else {
+      if (!customer.email) return { error: "This customer has no email address." };
+      const apiKey = process.env.MAILGUN_API_KEY;
+      const domain = process.env.MAILGUN_DOMAIN;
+      const fromEmail = process.env.MAILGUN_FROM_EMAIL ?? (domain ? `noreply@${domain}` : undefined);
+      if (!apiKey || !domain) return { error: "Email is not configured. Add Mailgun credentials in settings." };
+
+      const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}` },
+        body: new URLSearchParams({ from: fromEmail ?? `noreply@${domain}`, to: customer.email, subject: subject || "(no subject)", text: body }),
+      });
+      const data = (await res.json()) as { id?: string; message?: string };
+      if (!res.ok) return { error: data.message ?? "Email send failed." };
+      providerMessageId = data.id ?? "";
+    }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Send failed." };
+  }
+
+  await admin.from("communications_log").insert({
+    organization_id: company.id,
+    customer_id: customerId,
+    direction: "outbound",
+    channel: messageType,
+    to_address: messageType === "sms" ? toE164(customer.phone!) : customer.email!,
+    subject: messageType === "email" ? subject || null : null,
+    payload: body,
+    status: "sent",
+    provider_message_id: providerMessageId || null,
+  });
+
+  return { ok: true };
 }
 
 export async function deleteCustomerAction(id: string) {

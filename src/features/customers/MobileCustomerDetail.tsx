@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
+import { SendMessageModal } from "./components/SendMessageModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { Display } from "@/components/ui/Display";
 import { StatStrip } from "@/components/ui/StatStrip";
@@ -131,15 +132,15 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
               </svg>
             }
           />
-          <QuickActionButton
-            href={email ? `mailto:${email}` : "#"}
-            label="Email"
-            icon={
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
-              </svg>
-            }
-          />
+          <div className="flex flex-col items-center gap-1 rounded-[10px] border border-ud bg-ud-surface p-[10px_4px] text-center transition-colors hover:bg-ud-surface-soft">
+            <SendMessageModal
+              customerId={customer.id}
+              customerName={customer.name || "Customer"}
+              phone={phone ?? null}
+              email={email ?? null}
+              compact
+            />
+          </div>
           <QuickActionButton
             href={customer.address ? `https://maps.google.com/?q=${encodeURIComponent(customer.address)}` : "#"}
             label="Route"

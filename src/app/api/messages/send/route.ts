@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toE164 } from "@/lib/webhook-validation";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -90,6 +91,10 @@ export async function POST(request: Request) {
   }
 
   const { customer_id, organization_id, message_type, body: messageBody, subject = "" } = body;
+
+  if (!await rateLimit(`messages:${organization_id}`, 20)) {
+    return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
+  }
 
   if (!customer_id || !organization_id || !message_type || !messageBody) {
     return NextResponse.json(
