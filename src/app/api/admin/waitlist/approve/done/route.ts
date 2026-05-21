@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 
 export function GET(request: Request) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return new NextResponse("Server misconfiguration.", { status: 500 });
+  }
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return new NextResponse("Unauthorized.", { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name") ?? "The applicant";
   const already = searchParams.get("already");
