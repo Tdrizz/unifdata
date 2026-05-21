@@ -4,6 +4,7 @@ import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateQuickBooksSignature } from "@/lib/webhook-validation";
 import { getAutomationQueue, JOB_OVERDUE_INVOICE } from "@/lib/queue/client";
 import type { OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
+import { QuickBooksWebhookSchema } from "@/lib/webhook-schemas";
 
 export const runtime = "nodejs";
 
@@ -48,9 +49,11 @@ export async function POST(request: Request) {
 
   let payload: QBWebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as QBWebhookPayload;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    const parsed = JSON.parse(rawBody);
+    payload = QuickBooksWebhookSchema.parse(parsed) as QBWebhookPayload;
+  } catch (e) {
+    console.error("[quickbooks.webhook] Payload validation failed", e);
+    return NextResponse.json({ error: "Invalid JSON or schema validation failed." }, { status: 400 });
   }
 
   const supabase = createAdminClient();
