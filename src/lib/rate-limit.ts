@@ -1,4 +1,4 @@
-import { redis } from "@/lib/redis";
+import { redis } from "./redis";
 
 export async function rateLimit(
   key: string,
