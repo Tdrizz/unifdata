@@ -71,6 +71,7 @@ export default async function CustomerDetailPage({
       companyName={company.name}
       userEmail={user.email || ""}
       businessSector={company.business_sector}
+      hideMobileHeader
     >
       {/* Mobile view */}
       <div className="block md:hidden">

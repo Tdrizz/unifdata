@@ -18,12 +18,14 @@ export async function AppShell({
   userEmail,
   userName: _userName,
   businessSector,
+  hideMobileHeader,
 }: {
   children: ReactNode;
   companyName: string;
   userEmail: string;
   userName?: string; // kept for API compat
   businessSector?: string | null;
+  hideMobileHeader?: boolean;
 }) {
   const supabase = await createClient();
   const companyId = await getCurrentCompanyId();
@@ -102,21 +104,23 @@ export async function AppShell({
       </div>
 
       {/* ── Mobile layout ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col min-h-screen md:hidden bg-ud-page">
-        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud/60 bg-ud-page/90 backdrop-blur-[20px] saturate-[160%]">
-          <Link href="/workspace">
-            <ProductMark companyName={companyName} />
-          </Link>
-          <div className="flex items-center gap-1">
-            {companyId && (
-              <NotificationBell
-                companyId={companyId}
-                initialNotifications={initialNotifications ?? []}
-              />
-            )}
-            <MobileSearchButton />
-          </div>
-        </header>
+      <div className="flex flex-col min-h-screen md:hidden bg-ud-page overflow-x-hidden">
+        {!hideMobileHeader && (
+          <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud/60 bg-ud-page/90 backdrop-blur-[20px] saturate-[160%]">
+            <Link href="/workspace">
+              <ProductMark companyName={companyName} />
+            </Link>
+            <div className="flex items-center gap-1">
+              {companyId && (
+                <NotificationBell
+                  companyId={companyId}
+                  initialNotifications={initialNotifications ?? []}
+                />
+              )}
+              <MobileSearchButton />
+            </div>
+          </header>
+        )}
         <main className="flex-1 pb-[calc(80px+env(safe-area-inset-bottom))]">
           {children}
         </main>
