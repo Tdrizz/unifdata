@@ -59,6 +59,41 @@ export type Database = {
           },
         ]
       }
+      ai_data_keeper_audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          description: string
+          id: string
+          organization_id: string
+          payload_snapshot: Json
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          description: string
+          id?: string
+          organization_id: string
+          payload_snapshot: Json
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          organization_id?: string
+          payload_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_data_keeper_audit_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_reports: {
         Row: {
           company_id: string
@@ -349,6 +384,50 @@ export type Database = {
           {
             foreignKeyName: "customers_company_id_fkey"
             columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_reconciliation_proposals: {
+        Row: {
+          confidence_score: number
+          created_at: string | null
+          id: string
+          organization_id: string
+          proposed_changes: Json
+          raw_reasoning: string
+          status: string | null
+          target_record_id: string | null
+          target_table: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          proposed_changes: Json
+          raw_reasoning: string
+          status?: string | null
+          target_record_id?: string | null
+          target_table?: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          proposed_changes?: Json
+          raw_reasoning?: string
+          status?: string | null
+          target_record_id?: string | null
+          target_table?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_reconciliation_proposals_organization_id_fkey"
+            columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
@@ -1300,6 +1379,25 @@ export type Database = {
           p_name: string
         }
         Returns: string
+      }
+      fetch_master_customer_candidates: {
+        Args: {
+          p_email?: string
+          p_full_name?: string
+          p_org_id: string
+          p_phone?: string
+        }
+        Returns: {
+          billing_address: Json
+          data_health_score: number
+          first_name: string
+          id: string
+          last_name: string
+          metadata: Json
+          primary_email: string
+          primary_phone: string
+          service_address: Json
+        }[]
       }
       is_company_admin: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }

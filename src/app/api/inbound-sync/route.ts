@@ -51,7 +51,13 @@ async function processInboundPayload(body: InboundBody) {
 
     if (exactMatch) {
       // Direct SQL update — no AI needed for clean exact hits
-      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      const updates: {
+        updated_at: string;
+        first_name?: string;
+        last_name?: string;
+        primary_email?: string;
+        primary_phone?: string;
+      } = { updated_at: new Date().toISOString() };
       if (payload.firstName) updates.first_name = payload.firstName.trim();
       if (payload.lastName) updates.last_name = payload.lastName.trim();
       if (email) updates.primary_email = email;

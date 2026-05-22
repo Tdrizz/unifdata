@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { redis } from "@/lib/redis";
 import type { DataKeeperDecision, NormalizedPayload, FieldDelta } from "./types";
+import type { Json } from "@/types/db";
 
 // Counts non-null fields in a normalized payload to compute health score delta.
 function countFilledFields(payload: NormalizedPayload): number {
@@ -176,7 +177,7 @@ export async function executeDecision(
           updates: decision.fieldDelta,
           normalizedData: decision.normalizedData,
           metadata: decision.normalizedData.extractedMetadata,
-        },
+        } as unknown as Json,
         raw_reasoning: decision.reasoning,
         status: "PENDING",
       });

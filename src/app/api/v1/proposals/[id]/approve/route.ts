@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentCompany } from "@/lib/current-company";
 import { redis } from "@/lib/redis";
 import type { FieldDelta, NormalizedPayload } from "@/lib/data-keeper/types";
+import type { TablesUpdate } from "@/types/db";
 
 export async function POST(
   _req: NextRequest,
@@ -55,7 +56,7 @@ export async function POST(
 
     await admin
       .from("master_customers")
-      .update(updateRecord)
+      .update(updateRecord as TablesUpdate<"master_customers">)
       .eq("id", proposal.target_record_id)
       .eq("organization_id", company.id);
   } else if (!proposal.target_record_id && changes.normalizedData) {
