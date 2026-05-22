@@ -18,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   "/reset-password(.*)",
   "/api/stripe/webhook(.*)",
   "/api/leads/ingest(.*)",
+  "/api/inbound-sync(.*)",
   "/api/cron/(.*)",
   "/api/webhooks/(.*)",
 ]);
