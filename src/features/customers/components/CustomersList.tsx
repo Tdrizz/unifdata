@@ -206,7 +206,7 @@ export function CustomersList({
               <Link key={customer.id} href={`/customers/${customer.id}`}>
                 <div
                   className={cn(
-                    "px-[16px] py-[16px] border-b border-ud-soft flex items-start gap-3",
+                    "px-4 py-[14px] border-b border-ud-soft flex items-start gap-3",
                     i === filteredCustomers.length - 1 && "border-0",
                   )}
                 >

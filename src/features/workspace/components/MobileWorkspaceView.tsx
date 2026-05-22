@@ -233,7 +233,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
       {/* 3. 2×2 stat grid */}
       <div className="px-4 grid grid-cols-2 gap-3 pb-5">
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
           <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {openLeads.length}
@@ -241,7 +241,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           <p className="text-[12px] text-ud-faint mt-0.5">{formatCurrency(openPipelineValue)}</p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Active {jobPlural.toLowerCase()}</p>
           <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {activeWork.length}
@@ -249,7 +249,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           <p className="text-[12px] text-ud-faint mt-0.5">{formatCurrency(activeWorkValue)}</p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Unpaid revenue</p>
           <p className={cn(
             "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
@@ -262,7 +262,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Follow-ups due</p>
           <p className={cn(
             "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
@@ -298,7 +298,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
                   className="flex items-center gap-3 px-4 py-[14px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
                 >
                   <Pill tone={pillTone} className="shrink-0">{item.label}</Pill>
-                  <p className="text-[13px] font-semibold text-ud-ink truncate flex-1">{item.title}</p>
+                  <p className="text-[14px] font-semibold text-ud-ink truncate flex-1">{item.title}</p>
                   <svg className="shrink-0 text-ud-faint" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                     <path d="m9 18 6-6-6-6" />
                   </svg>
@@ -310,10 +310,10 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       )}
 
       {/* 5. Today's visits */}
-      <div className="px-[14px] pb-[14px]">
+      <div className="px-4 pb-5">
         <Card padding={0} radius="md" className="overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
-            <p className="text-[13px] font-semibold text-ud-ink">
+          <div className="flex items-center justify-between px-4 py-[14px] border-b border-ud-soft">
+            <p className="text-[14px] font-semibold text-ud-ink">
               Today&apos;s {jobPlural.toLowerCase()}
             </p>
             <Link href="/jobs" className="text-[12px] font-semibold text-ud-accent">
@@ -337,12 +337,12 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
                   className="flex items-center gap-3 px-4 py-[14px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ud-ink truncate">
+                    <p className="text-[14px] font-semibold text-ud-ink truncate">
                       {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <Pill tone={pillTone}>{job.status || "Active"}</Pill>
-                      <p className="text-[11.5px] text-ud-muted truncate">
+                      <p className="text-[12px] text-ud-muted truncate">
                         {customer?.name || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
                       </p>
                     </div>

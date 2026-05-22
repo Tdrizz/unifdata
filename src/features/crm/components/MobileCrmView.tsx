@@ -44,7 +44,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
   const leadPlural = profile.labels.leadPlural;
 
   return (
-    <div className="block md:hidden pb-[24px]">
+    <div className="block md:hidden pb-8">
       {/* Header */}
       <div className="px-4 pt-[22px] pb-[18px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
@@ -81,7 +81,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
 
       {/* Lead list */}
       {activeStageLeads.length === 0 ? (
-        <div className="px-[14px]">
+        <div className="px-4">
           <EmptyState
             title={`No ${leadPlural.toLowerCase()} in this stage`}
             description="Move a record here when it's ready."

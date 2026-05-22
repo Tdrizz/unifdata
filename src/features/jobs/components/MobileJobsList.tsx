@@ -47,7 +47,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
   const eyebrow = profile.labels.jobPlural || "Jobs";
 
   return (
-    <div className="pb-[24px]">
+    <div className="pb-8">
       {/* Header */}
       <div className="px-4 pt-[22px] pb-[18px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
@@ -84,7 +84,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
 
       {/* Jobs list */}
       {filteredJobs.length === 0 ? (
-        <div className="px-[14px]">
+        <div className="px-4">
           <EmptyState
             title={activeFilter === "All" ? `No ${profile.labels.jobPlural.toLowerCase()} yet` : `No ${activeFilter.toLowerCase()} ${profile.labels.jobPlural.toLowerCase()}`}
             description={
