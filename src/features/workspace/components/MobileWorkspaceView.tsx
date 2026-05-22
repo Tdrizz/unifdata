@@ -180,7 +180,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   return (
     <div className="block md:hidden pb-8">
       {/* 1. Greeting */}
-      <div className="px-[18px] pt-5 pb-4">
+      <div className="px-4 pt-6 pb-5">
         <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">
           {dayLabel}
         </p>
@@ -190,7 +190,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       </div>
 
       {/* 2. Quick actions */}
-      <div className="overflow-x-auto no-scrollbar px-[14px] pb-[14px]">
+      <div className="overflow-x-auto no-scrollbar px-4 pb-5">
         <div className="flex gap-[8px]">
           <Link
             href="/customers#customer-quick-add"
@@ -232,7 +232,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       </div>
 
       {/* 3. 2×2 stat grid */}
-      <div className="px-[14px] grid grid-cols-2 gap-[10px] pb-[14px]">
+      <div className="px-4 grid grid-cols-2 gap-3 pb-5">
         <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
           <p className="text-[12px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
           <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
@@ -278,9 +278,9 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
       {/* 4. Needs attention */}
       {priorityQueue.length > 0 && (
-        <div className="px-[14px] pb-[14px]">
+        <div className="px-4 pb-5">
           <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-ud-soft">
+            <div className="flex items-center justify-between px-4 py-[14px] border-b border-ud-soft">
               <p className="text-[13px] font-semibold text-ud-ink">Needs attention</p>
               <Link href="/follow-ups" className="text-[12px] font-semibold text-ud-accent">
                 {totalQueueCount > priorityQueue.length ? `All ${totalQueueCount} →` : "View all →"}

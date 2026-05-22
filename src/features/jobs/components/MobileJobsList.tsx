@@ -49,7 +49,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
   return (
     <div className="pb-[24px]">
       {/* Header */}
-      <div className="px-[18px] pt-[18px] pb-[14px]">
+      <div className="px-4 pt-[22px] pb-[18px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
           {eyebrow}
         </p>
@@ -64,7 +64,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
       </div>
 
       {/* Stage filter chips */}
-      <div className="overflow-x-auto no-scrollbar flex gap-2 px-[18px] pb-[12px]">
+      <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
         {STAGE_FILTERS.map((filter) => (
           <button
             key={filter}
@@ -95,7 +95,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
           />
         </div>
       ) : (
-        <div className="px-[14px] flex flex-col gap-[10px]">
+        <div className="px-4 flex flex-col gap-3">
           {filteredJobs.map((job) => {
             const customer = job.customer_id ? customerById.get(job.customer_id) : null;
 
@@ -103,7 +103,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
               <Link
                 key={job.id}
                 href={`/jobs/${job.id}/edit`}
-                className="bg-ud-surface rounded-[10px] border border-ud p-[14px] block"
+                className="bg-ud-surface rounded-[10px] border border-ud p-4 block"
               >
                 {/* Row 1: service type + value */}
                 <div className="flex items-start justify-between gap-[8px]">
@@ -141,7 +141,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
           })}
         </div>
       )}
-      <div id="job-quick-add" className="px-[14px] mt-[20px]">
+      <div id="job-quick-add" className="px-4 mt-6">
         <JobCreateForm customers={customers} leads={leads} />
       </div>
     </div>

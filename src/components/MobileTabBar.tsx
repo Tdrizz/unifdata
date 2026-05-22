@@ -124,7 +124,7 @@ export function MobileTabBar({
             href={tab.href}
             onTouchStart={() => haptic("light")}
             className={cn(
-              "flex flex-1 flex-col items-center gap-[3px] pb-1 active:opacity-60 transition-opacity duration-75",
+              "flex flex-1 flex-col items-center gap-1 pb-1 active:opacity-60 transition-opacity duration-75",
               active ? "text-ud-accent" : "text-ud-faint",
             )}
           >
@@ -138,7 +138,7 @@ export function MobileTabBar({
             </div>
             <span
               className={cn(
-                "text-[9.5px] tracking-[-0.005em]",
+                "text-[11px] tracking-[-0.005em]",
                 active ? "font-bold" : "font-medium",
               )}
             >
