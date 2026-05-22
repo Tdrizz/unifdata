@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redis } from "@/lib/redis";
+import { rateLimit } from "@/lib/rate-limit";
 import { normalizePhone, normalizeEmail } from "@/lib/normalize";
 import { getDataKeeperQueue, JOB_ANALYZE_DATA_FRAGMENT, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import type { InboundPayload } from "@/lib/data-keeper/types";
@@ -121,10 +122,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Return immediately — processing happens out-of-band
-  void processInboundPayload(body).catch((err) => {
-    console.error("[inbound-sync] Processing error:", err?.message ?? err);
-  });
+  // Rate limit: 60 payloads per org per minute — prevents accidental or malicious storms
+  const allowed = await rateLimit(`inbound-sync:${body.organizationId}`, 60, 60_000);
+  if (!allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded — retry after 60 seconds" }, { status: 429 });
+  }
+
+  // Await processing so the caller knows if enqueuing failed (e.g. Redis down)
+  try {
+    await processInboundPayload(body);
+  } catch (err) {
+    console.error("[inbound-sync] Processing error:", (err as Error)?.message ?? err);
+    return NextResponse.json({ error: "Service unavailable — please retry" }, { status: 503 });
+  }
 
   return NextResponse.json({ received: true });
 }

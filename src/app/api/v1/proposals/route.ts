@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = await createClient();
 
   const {
@@ -22,16 +22,31 @@ export async function GET() {
 
   const { company } = currentCompany;
 
-  const { data: proposals, error } = await supabase
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "25", 10)));
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data: proposals, error, count } = await supabase
     .from("data_reconciliation_proposals")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("organization_id", company.id)
     .eq("status", "PENDING")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ proposals: proposals ?? [] });
+  return NextResponse.json({
+    proposals: proposals ?? [],
+    pagination: {
+      page,
+      limit,
+      total: count ?? 0,
+      hasMore: (count ?? 0) > to + 1,
+    },
+  });
 }

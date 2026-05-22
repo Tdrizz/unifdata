@@ -69,7 +69,7 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
 
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
-export function SalesList({ sales, count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
+export function SalesList({ sales, count: _count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
   );

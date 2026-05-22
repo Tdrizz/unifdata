@@ -7,3 +7,10 @@ export type SaleRow = Database["public"]["Tables"]["sales"]["Row"];
 export type FollowUpRow = Database["public"]["Tables"]["follow_ups"]["Row"];
 
 export type { ProposalRow } from "@/lib/data-keeper/types";
+
+export type AuditLogRow = {
+  id: string;
+  action_type: string;
+  description: string;
+  created_at: string;
+};

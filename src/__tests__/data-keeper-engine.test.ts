@@ -82,7 +82,7 @@ describe("confidence engine — no candidates", () => {
     mockFetch.mockResolvedValue([]);
     const result = await runConfidenceEngine(
       "org-1",
-      makeRawPayload({ email: null, phone: "5551234567" }),
+      makeRawPayload({ email: undefined, phone: "5551234567" }),
       "test",
     );
     expect(result.action).toBe("AUTO_CREATE");
@@ -92,7 +92,7 @@ describe("confidence engine — no candidates", () => {
     mockFetch.mockResolvedValue([]);
     const result = await runConfidenceEngine(
       "org-1",
-      makeRawPayload({ email: null, phone: null }),
+      makeRawPayload({ email: undefined, phone: undefined }),
       "test",
     );
     expect(result.action).toBe("CREATE_PROPOSAL");
@@ -168,7 +168,7 @@ describe("confidence engine — AUTO_IGNORE below 0.35", () => {
     mockFetch.mockResolvedValue([candidate]);
     const result = await runConfidenceEngine(
       "org-1",
-      makeRawPayload({ email: null, phone: null }),
+      makeRawPayload({ email: undefined, phone: undefined }),
       "test",
     );
     expect(result.action).toBe("AUTO_IGNORE");
@@ -295,16 +295,12 @@ function makePayload(overrides: Partial<NormalizedPayload> = {}): NormalizedPayl
   return {
     firstName: null,
     lastName: null,
-    fullName: null,
+    fullName: "",
     email: null,
     phone: null,
     businessName: null,
     normalizedBusinessName: null,
-    billingAddress: null,
-    serviceAddress: null,
-    sourceSystem: "test",
     extractedMetadata: {},
-    raw: {},
     ...overrides,
   };
 }
