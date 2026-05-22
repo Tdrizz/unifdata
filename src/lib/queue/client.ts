@@ -61,3 +61,21 @@ export function getAutomationQueue(): Queue {
 
   return automationQueue;
 }
+
+// ── Data Keeper queue ─────────────────────────────────────────────────────────
+
+export const QUEUE_DATA_KEEPER = "data-keeper";
+export const JOB_ANALYZE_DATA_FRAGMENT = "analyze-data-fragment";
+
+let dataKeeperQueue: Queue | null = null;
+
+export function getDataKeeperQueue(): Queue {
+  if (dataKeeperQueue) return dataKeeperQueue;
+
+  dataKeeperQueue = new Queue(QUEUE_DATA_KEEPER, {
+    connection: getRedisConnection(),
+    defaultJobOptions: DEFAULT_JOB_OPTIONS,
+  });
+
+  return dataKeeperQueue;
+}

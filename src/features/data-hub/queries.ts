@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
-import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow } from "./types";
+import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow, ProposalRow } from "./types";
 
 type DataHubCustomer = Pick<CustomerRow, "id" | "name" | "phone" | "email" | "address" | "customer_type" | "created_at">;
 type DataHubLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
@@ -76,4 +76,31 @@ export async function getDataHubPageData(
     revenueRecords: (revenueResult.data ?? []) as DataHubSale[],
     followUps: (followUpsResult.data ?? []) as DataHubFollowUp[],
   };
+}
+
+export async function getPendingProposals(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+): Promise<ProposalRow[]> {
+  const { data } = await supabase
+    .from("data_reconciliation_proposals")
+    .select("*")
+    .eq("organization_id", companyId)
+    .eq("status", "PENDING")
+    .order("created_at", { ascending: false });
+
+  return (data ?? []) as unknown as ProposalRow[];
+}
+
+export async function getPendingProposalsCount(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+): Promise<number> {
+  const { count } = await supabase
+    .from("data_reconciliation_proposals")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", companyId)
+    .eq("status", "PENDING");
+
+  return count ?? 0;
 }

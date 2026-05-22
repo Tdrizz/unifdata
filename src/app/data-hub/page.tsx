@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getDataHubPageData } from "@/features/data-hub/queries";
+import { getDataHubPageData, getPendingProposals } from "@/features/data-hub/queries";
 import { DataHubView } from "@/features/data-hub/components/DataHubView";
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +27,10 @@ export default async function DataHubPage() {
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const data = await getDataHubPageData(supabase, company.id);
+  const [data, proposals] = await Promise.all([
+    getDataHubPageData(supabase, company.id),
+    getPendingProposals(supabase, company.id),
+  ]);
 
   return (
     <AppShell
@@ -35,7 +38,7 @@ export default async function DataHubPage() {
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <DataHubView {...data} profile={profile} />
+      <DataHubView {...data} profile={profile} proposals={proposals} />
     </AppShell>
   );
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAutomationWorker } from "@/lib/queue/worker";
+import { createAutomationWorker, createDataKeeperWorker } from "@/lib/queue/worker";
 
 export const runtime = "nodejs";
 
@@ -19,9 +19,11 @@ export async function GET(request: Request) {
   }
 
   const worker = createAutomationWorker();
+  const dkWorker = createDataKeeperWorker();
 
   try {
     await worker.run();
+    await dkWorker.run();
 
     // run() processes all currently-available (non-delayed) jobs and resolves
     // when the queue is momentarily empty. Delayed jobs stay in Redis until
@@ -33,5 +35,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   } finally {
     await worker.close();
+    await dkWorker.close();
   }
 }

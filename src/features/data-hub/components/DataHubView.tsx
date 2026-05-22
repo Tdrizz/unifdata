@@ -2,9 +2,12 @@ import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { DataHubPageData } from "../queries";
 import { PageHeader } from "@/components/ui/PageHeader";
+import type { ProposalRow } from "../types";
+import { ProposalsWidget } from "./ProposalsWidget";
 
 type Props = DataHubPageData & {
   profile: IndustryProfile;
+  proposals: ProposalRow[];
 };
 
 function isOpenStatus(status: string | null) {
@@ -19,7 +22,7 @@ function isOverdueDate(date: string | null) {
 
 const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
-export function DataHubView({ customers, opportunities, workRecords, revenueRecords, followUps, profile }: Props) {
+export function DataHubView({ customers, opportunities, workRecords, revenueRecords, followUps, profile, proposals }: Props) {
   const { customerSingular, customerPlural, leadSingular, leadPlural, jobSingular, jobPlural, salePlural, followUpPlural } = profile.labels;
 
   const missingEmail = customers.filter((c) => !c.email);
@@ -94,6 +97,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
 
   return (
     <div className="px-7 pb-10 pt-7">
+      <ProposalsWidget initialProposals={proposals} />
       <PageHeader
         eyebrow="Data Hub"
         title="Data quality"

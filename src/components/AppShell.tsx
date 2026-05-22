@@ -29,14 +29,27 @@ export async function AppShell({
 }) {
   const supabase = await createClient();
   const companyId = await getCurrentCompanyId();
-  const { data: initialNotifications } = companyId
-    ? await supabase
-        .from("notifications")
-        .select("id, type, title, body, read, created_at")
-        .eq("company_id", companyId)
-        .order("created_at", { ascending: false })
-        .limit(10)
-    : { data: [] };
+
+  const [notificationsResult, proposalsResult] = await Promise.all([
+    companyId
+      ? supabase
+          .from("notifications")
+          .select("id, type, title, body, read, created_at")
+          .eq("company_id", companyId)
+          .order("created_at", { ascending: false })
+          .limit(10)
+      : Promise.resolve({ data: [] }),
+    companyId
+      ? supabase
+          .from("data_reconciliation_proposals")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", companyId)
+          .eq("status", "PENDING")
+      : Promise.resolve({ count: 0 }),
+  ]);
+
+  const initialNotifications = notificationsResult.data;
+  const pendingProposals = proposalsResult.count ?? 0;
 
   return (
     <>
@@ -72,7 +85,7 @@ export async function AppShell({
 
           {/* Nav */}
           <nav className="sidebar-nav">
-            <AppNav businessSector={businessSector} />
+            <AppNav businessSector={businessSector} pendingProposals={pendingProposals} />
           </nav>
 
           {/* Footer */}
