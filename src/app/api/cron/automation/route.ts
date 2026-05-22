@@ -1,3 +1,4 @@
+import type { Worker } from "bullmq";
 import { NextResponse } from "next/server";
 import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } from "@/lib/queue/worker";
 import { getSweeperQueue, JOB_SWEEP_BATCH, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
@@ -8,6 +9,24 @@ export const runtime = "nodejs";
 // Vercel gives Functions up to 300 s on Pro.
 // We drain whatever jobs are ready in that window.
 export const maxDuration = 300;
+
+// Starts a worker, waits for the queue to drain (or timeoutMs), then closes it.
+// worker.run() loops forever — it only exits when closed, so we listen for the
+// 'drained' event (queue transitions to empty) and force-close after that.
+async function drainWorker(worker: Worker, timeoutMs = 60_000): Promise<void> {
+  const runPromise = worker.run().catch(() => {});
+
+  await new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs);
+    worker.once("drained", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+
+  await worker.close(true).catch(() => {});
+  await runPromise;
+}
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -21,7 +40,7 @@ export async function GET(request: Request) {
   }
 
   // Schedule sweep batch jobs for orgs with unswept records.
-  // jobId = `sweep:${orgId}` deduplicates — if an org is already queued it won't be added again.
+  // jobId = `sweep-${orgId}` deduplicates — if an org is already queued it won't be added again.
   try {
     const orgs = await getOrgsWithPendingSweep(50);
     if (orgs.length > 0) {
@@ -31,7 +50,7 @@ export async function GET(request: Request) {
           sweeperQueue.add(
             JOB_SWEEP_BATCH,
             { organizationId: orgId },
-            { ...DEFAULT_JOB_OPTIONS, jobId: `sweep:${orgId}` },
+            { ...DEFAULT_JOB_OPTIONS, jobId: `sweep-${orgId}` },
           ),
         ),
       );
@@ -46,21 +65,15 @@ export async function GET(request: Request) {
   const swWorker = createSweeperWorker();
 
   try {
-    await worker.run();
-    await dkWorker.run();
-    await swWorker.run();
+    // Run each worker sequentially, draining available jobs then moving on.
+    await drainWorker(worker);
+    await drainWorker(dkWorker);
+    await drainWorker(swWorker);
 
-    // run() processes all currently-available (non-delayed) jobs and resolves
-    // when the queue is momentarily empty. Delayed jobs stay in Redis until
-    // their delay elapses and will be picked up by the next cron invocation.
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[cron.automation] Worker run failed", message);
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
-  } finally {
-    await worker.close();
-    await dkWorker.close();
-    await swWorker.close();
   }
 }
