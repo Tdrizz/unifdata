@@ -403,16 +403,12 @@ function makePayload(overrides: Partial<NormalizedPayload> = {}): NormalizedPayl
   return {
     firstName: null,
     lastName: null,
-    fullName: null,
+    fullName: "",
     email: null,
     phone: null,
     businessName: null,
     normalizedBusinessName: null,
-    billingAddress: null,
-    serviceAddress: null,
-    sourceSystem: "test",
     extractedMetadata: {},
-    raw: {},
     ...overrides,
   };
 }

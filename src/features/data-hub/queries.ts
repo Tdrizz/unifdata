@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
-import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow, ProposalRow } from "./types";
+import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow, ProposalRow, AuditLogRow } from "./types";
 
 type DataHubCustomer = Pick<CustomerRow, "id" | "name" | "phone" | "email" | "address" | "customer_type" | "created_at">;
 type DataHubLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
@@ -90,6 +90,21 @@ export async function getPendingProposals(
     .order("created_at", { ascending: false });
 
   return (data ?? []) as unknown as ProposalRow[];
+}
+
+export async function getRecentAuditLog(
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  limit = 20,
+): Promise<AuditLogRow[]> {
+  const { data } = await supabase
+    .from("ai_data_keeper_audit_logs")
+    .select("id, action_type, description, created_at")
+    .eq("organization_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return (data ?? []) as AuditLogRow[];
 }
 
 export async function getPendingProposalsCount(

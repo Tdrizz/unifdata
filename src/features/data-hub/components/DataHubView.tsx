@@ -173,6 +173,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
           )}
         </div>
       </div>
+
     </div>
   );
 }
