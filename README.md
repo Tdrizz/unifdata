@@ -124,7 +124,7 @@ npm run build
 - **Imports** — CSV and Google Sheets import with staged review (validate → resolve duplicates → commit)
 - **Integrations** — Jobber, QuickBooks, HubSpot, Square
 - **AI Advisor** — Plain-language chat over live workspace data
-- **Data Hub** — Record quality checks and health overview
+- **Data Hub** — Record quality, health scoring, and automatic background reconciliation — duplicate and fuzzy-matched records from connected tools are merged without manual intervention
 
 ---
 

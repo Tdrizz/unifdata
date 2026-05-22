@@ -101,7 +101,7 @@ const features = [
   {
     title: "Data Hub",
     description:
-      "See record completeness across your whole workspace. Missing fields and unlinked records get flagged automatically.",
+      "See record completeness across your whole workspace. Missing fields get flagged, and new records from connected tools are automatically reconciled against existing customer data.",
   },
   {
     title: "CSV imports",
