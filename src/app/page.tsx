@@ -109,7 +109,7 @@ const whyItMatters = [
     num: "03",
     title: "Incomplete records are where customers go missing",
     description:
-      "Fix missing fields, unlinked records, and incomplete contact info before they cost you a relationship.",
+      "Fix missing fields and unlinked records before they cost you a relationship — and let UnifData quietly reconcile duplicates in the background as new data comes in.",
   },
 ];
 
@@ -124,7 +124,7 @@ const workflowCards = [
     step: "02",
     title: "UnifData links everything together",
     description:
-      "Records link automatically into one view — customers, open work, and revenue — so you stop hunting across tabs.",
+      "Records link automatically into one view — customers, open work, and revenue — and duplicates from connected tools are reconciled in the background without manual cleanup.",
   },
   {
     step: "03",
@@ -413,7 +413,7 @@ export default function HomePage() {
                 {[
                   "CRM for customers, leads, jobs & sales",
                   "Daily priority queue & follow-ups",
-                  "Data health scoring & cleanup tools",
+                  "Data health scoring & automatic deduplication",
                   "CSV import + QuickBooks, Jobber sync",
                   "AI-generated operating briefs",
                   "Secure, isolated workspace",

@@ -61,7 +61,7 @@ const pages = [
     path: "/data-hub",
     tag: "Health",
     description:
-      "Business data command center. Tracks record completeness, flags missing fields, lists recent imports, and shows recent activity across the workspace.",
+      "Business data command center. Tracks record completeness, flags missing fields, lists recent imports, and automatically reconciles incoming records — merging fuzzy matches and surfacing ambiguous cases for review.",
   },
   {
     name: "People",
