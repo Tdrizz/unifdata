@@ -47,7 +47,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
     <div className="block md:hidden pb-[24px]">
       {/* Header */}
       <div className="px-[18px] pt-[18px] pb-[14px]">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
           {leadPlural}
         </p>
         <p className="mt-[4px] text-[22px] font-semibold leading-[1.2] tracking-[-0.02em] text-ud-ink">
@@ -67,7 +67,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
               type="button"
               onClick={() => setActiveStage(stage.name)}
               className={[
-                "flex-shrink-0 rounded-full px-[14px] py-[6px] text-[12px] font-semibold transition-colors",
+                "flex-shrink-0 rounded-full px-[16px] py-[9px] text-[13px] font-semibold transition-colors",
                 isActive
                   ? "bg-ud-ink text-white"
                   : "bg-ud-surface border border-ud text-ud-muted",
