@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         .from("sales")
         .select("id, payment_status, amount, customer_id")
         .eq("company_id", companyId)
-        .or(`service_type.ilike.%${entity.id}%`)
+        .ilike("service_type", `%${entity.id}%`)
         .in("payment_status", ["Unpaid", "unpaid", "Overdue", "overdue"])
         .maybeSingle();
 

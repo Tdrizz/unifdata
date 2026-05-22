@@ -1,6 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentCompanyId } from "@/lib/current-company";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -10,7 +11,6 @@ type MessageType = "sms" | "email";
 
 type SendMessageBody = {
   customer_id: string;
-  organization_id: string;
   message_type: MessageType;
   body: string;
   subject?: string;
@@ -78,9 +78,19 @@ async function sendEmail(to: string, subject: string, body: string): Promise<str
 }
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const companyId = await getCurrentCompanyId();
+  if (!companyId) {
+    return NextResponse.json({ error: "No company context." }, { status: 401 });
+  }
+
+  if (!await rateLimit(`messages:${user.id}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
   }
 
   let body: SendMessageBody;
@@ -90,15 +100,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
-  const { customer_id, organization_id, message_type, body: messageBody, subject = "" } = body;
+  const { customer_id, message_type, body: messageBody, subject = "" } = body;
 
-  if (!await rateLimit(`messages:${organization_id}`, 20)) {
-    return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
-  }
-
-  if (!customer_id || !organization_id || !message_type || !messageBody) {
+  if (!customer_id || !message_type || !messageBody) {
     return NextResponse.json(
-      { error: "Missing required fields: customer_id, organization_id, message_type, body." },
+      { error: "Missing required fields: customer_id, message_type, body." },
       { status: 400 },
     );
   }
@@ -107,14 +113,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "message_type must be 'sms' or 'email'." }, { status: 400 });
   }
 
-  const supabase = createAdminClient();
+  const admin = createAdminClient();
 
-  // Fetch customer contact details.
-  const { data: customer, error: customerError } = await supabase
+  // Fetch customer — scoped to the authenticated company (prevents IDOR).
+  const { data: customer, error: customerError } = await admin
     .from("master_customers")
     .select("id, primary_phone, primary_email, organization_id")
     .eq("id", customer_id)
-    .eq("organization_id", organization_id)
+    .eq("organization_id", companyId)
     .maybeSingle();
 
   if (customerError || !customer) {
@@ -143,8 +149,8 @@ export async function POST(request: Request) {
   }
 
   // Write to communications_log.
-  const { error: logError } = await supabase.from("communications_log").insert({
-    organization_id,
+  const { error: logError } = await admin.from("communications_log").insert({
+    organization_id: companyId,
     customer_id,
     direction: "outbound",
     channel: message_type,

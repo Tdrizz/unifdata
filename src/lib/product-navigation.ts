@@ -1,12 +1,12 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
-export type ProductNavItem = {
+type ProductNavItem = {
   href: string;
   label: string;
   description: string;
 };
 
-export type ProductNavGroup = {
+type ProductNavGroup = {
   label: string;
   items: ProductNavItem[];
 };
@@ -81,6 +81,3 @@ export function getProductNavigation(profile: IndustryProfile): ProductNavGroup[
   ];
 }
 
-export function getFlatProductNavigation(profile: IndustryProfile) {
-  return getProductNavigation(profile).flatMap((group) => group.items);
-}

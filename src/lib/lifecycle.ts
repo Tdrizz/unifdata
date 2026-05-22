@@ -1,23 +1,3 @@
-export const opportunityStatusOptions = [
-  { value: "New", label: "New" },
-  { value: "Contacted", label: "Contacted" },
-  { value: "Estimate Sent", label: "Proposal / estimate sent" },
-  { value: "Needs Follow-Up", label: "Needs follow-up" },
-  { value: "Won", label: "Accepted / won" },
-  { value: "Lost", label: "Closed lost" },
-];
-
-export function formatOpportunityStatus(status: string | null) {
-  if (!status) {
-    return "Unknown";
-  }
-
-  return (
-    opportunityStatusOptions.find((option) => option.value === status)?.label ||
-    status
-  );
-}
-
 export function isAcceptedOpportunityStatus(status: string | null) {
   return status === "Won";
 }
