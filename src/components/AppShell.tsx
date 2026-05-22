@@ -119,7 +119,10 @@ export async function AppShell({
       {/* ── Mobile layout ─────────────────────────────────────────────────── */}
       <div className="flex flex-col min-h-[100dvh] md:hidden bg-ud-page overflow-x-hidden">
         {!hideMobileHeader && (
-          <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-ud/60 bg-ud-page/90 backdrop-blur-[20px] saturate-[160%]">
+          <header
+            className="sticky top-0 z-30 flex items-center justify-between px-4 border-b border-ud/60 bg-ud-page/95 backdrop-blur-[20px] saturate-[160%]"
+            style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "12px" }}
+          >
             <Link href="/workspace">
               <ProductMark companyName={companyName} />
             </Link>

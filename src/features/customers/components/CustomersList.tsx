@@ -140,7 +140,7 @@ export function CustomersList({
   return (
     <div className="block md:hidden">
       {/* 1. Title block */}
-      <div className="px-[18px] pt-[18px] pb-[12px]">
+      <div className="px-4 pt-[22px] pb-[14px]">
         <p className="text-[12px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
           {profile?.labels.customerPlural ?? "Clients"}
         </p>
@@ -165,7 +165,7 @@ export function CustomersList({
       </div>
 
       {/* 2. Filter chips */}
-      <div className="px-[18px] pb-[14px] overflow-x-auto no-scrollbar">
+      <div className="px-4 pb-4 overflow-x-auto no-scrollbar">
       <div className="flex items-center gap-[2px] bg-ud-surface-sunk border border-ud rounded-[9px] p-[3px] w-fit mb-4">
         <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>
           All {customers.length}
@@ -270,7 +270,7 @@ export function CustomersList({
 
       {/* 4. Inline create form */}
       {profile && (
-        <div id="customer-quick-add" className="px-[14px] pb-[16px]">
+        <div id="customer-quick-add" className="px-4 pb-5">
           <CustomerCreateForm profile={profile} />
         </div>
       )}

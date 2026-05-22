@@ -46,7 +46,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
   return (
     <div className="block md:hidden pb-[24px]">
       {/* Header */}
-      <div className="px-[18px] pt-[18px] pb-[14px]">
+      <div className="px-4 pt-[22px] pb-[18px]">
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
           {leadPlural}
         </p>
@@ -57,7 +57,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
       </div>
 
       {/* Stage chips */}
-      <div className="overflow-x-auto no-scrollbar flex gap-2 px-[18px] pb-[12px]">
+      <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
         {STAGES.map((stage) => {
           const count = (leadsByStage.get(stage.name) ?? []).length;
           const isActive = activeStage === stage.name;
@@ -88,14 +88,14 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
           />
         </div>
       ) : (
-        <div className="px-[14px] flex flex-col gap-[10px]">
+        <div className="px-4 flex flex-col gap-3">
           {activeStageLeads.map((lead) => {
             const customer = lead.customer_id ? customerById.get(lead.customer_id) : undefined;
             return (
               <Link
                 key={lead.id}
                 href={`/leads/${lead.id}/edit`}
-                className="bg-ud-surface rounded-[10px] border border-ud p-[14px] block active:bg-ud-surface-sunk"
+                className="bg-ud-surface rounded-[10px] border border-ud p-4 block active:bg-ud-surface-sunk"
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold text-[14px] text-ud-ink leading-snug">
@@ -125,7 +125,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
       )}
 
       {/* Quick add */}
-      <div id="leads-quick-add" className="px-[14px] mt-[20px]">
+      <div id="leads-quick-add" className="px-4 mt-6">
         <LeadCreateForm customers={customers} profile={profile} />
       </div>
     </div>

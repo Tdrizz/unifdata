@@ -51,12 +51,24 @@ export async function POST(request: Request) {
   const supabase = createAdminClient();
 
   // Look up master customer by phone (exact match first, then digits-only).
-  const { data: customer } = await supabase
+  // Use separate .eq() queries to avoid filter-string injection on phone values.
+  let customer: { id: string; organization_id: string } | null = null;
+  const { data: byE164 } = await supabase
     .from("master_customers")
     .select("id, organization_id")
-    .or(`primary_phone.eq.${fromE164},primary_phone.eq.${fromDigits}`)
+    .eq("primary_phone", fromE164)
     .limit(1)
     .maybeSingle();
+  customer = byE164 ?? null;
+  if (!customer) {
+    const { data: byDigits } = await supabase
+      .from("master_customers")
+      .select("id, organization_id")
+      .eq("primary_phone", fromDigits)
+      .limit(1)
+      .maybeSingle();
+    customer = byDigits ?? null;
+  }
 
   // Drop echo webhooks (messages we sent that bounced back).
   if (customer) {

@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getSalesPageData, getCustomersForSaleSelect } from "@/features/sales/queries";
 import { SalesList } from "@/features/sales/components/SalesList";
+import { MobileSalesView } from "@/features/sales/components/MobileSalesView";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +39,7 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
+      <MobileSalesView sales={sales} profile={profile} customers={customers} />
       <SalesList
         sales={sales}
         count={count}
