@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { createAutomationWorker } from "@/lib/queue/worker";
+import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } from "@/lib/queue/worker";
+import { getSweeperQueue, JOB_SWEEP_BATCH, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
+import { getOrgsWithPendingSweep } from "@/lib/data-keeper/sweeper";
 
 export const runtime = "nodejs";
 
@@ -18,10 +20,35 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  // Schedule sweep batch jobs for orgs with unswept records.
+  // jobId = `sweep:${orgId}` deduplicates — if an org is already queued it won't be added again.
+  try {
+    const orgs = await getOrgsWithPendingSweep(50);
+    if (orgs.length > 0) {
+      const sweeperQueue = getSweeperQueue();
+      await Promise.all(
+        orgs.map((orgId) =>
+          sweeperQueue.add(
+            JOB_SWEEP_BATCH,
+            { organizationId: orgId },
+            { ...DEFAULT_JOB_OPTIONS, jobId: `sweep:${orgId}` },
+          ),
+        ),
+      );
+    }
+  } catch (err) {
+    // Non-fatal: log and continue — the automation workers must still run
+    console.warn("[cron.automation] Failed to schedule sweeper batches:", err instanceof Error ? err.message : err);
+  }
+
   const worker = createAutomationWorker();
+  const dkWorker = createDataKeeperWorker();
+  const swWorker = createSweeperWorker();
 
   try {
     await worker.run();
+    await dkWorker.run();
+    await swWorker.run();
 
     // run() processes all currently-available (non-delayed) jobs and resolves
     // when the queue is momentarily empty. Delayed jobs stay in Redis until
@@ -33,5 +60,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   } finally {
     await worker.close();
+    await dkWorker.close();
+    await swWorker.close();
   }
 }

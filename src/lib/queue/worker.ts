@@ -3,12 +3,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getRedisConnection,
   QUEUE_AUTOMATION,
+  QUEUE_DATA_KEEPER,
+  QUEUE_SWEEPER,
   JOB_OVERDUE_INVOICE,
   JOB_LOST_QUOTE_EMAIL,
   JOB_LOST_QUOTE_SMS,
+  JOB_ANALYZE_DATA_FRAGMENT,
+  JOB_SWEEP_BATCH,
 } from "@/lib/queue/client";
 import { processOverdueInvoice, type OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
 import { processLostQuoteEmail, processLostQuoteSms, type LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
+import { processDataKeeperJob } from "@/lib/queue/jobs/data-keeper-job";
+import { processSweeperJob, type SweeperJobData } from "@/lib/queue/jobs/sweeper-job";
+import type { DataKeeperJobData } from "@/lib/data-keeper/types";
 
 // ── Worker ────────────────────────────────────────────────────────────────────
 // Created with autorun: false so callers control when processing starts.
@@ -70,6 +77,87 @@ export function createAutomationWorker() {
     console.error(`[automation.worker] Job failed`, {
       id: job?.id,
       name: job?.name,
+      attempt: job?.attemptsMade,
+      error: err.message,
+    });
+  });
+
+  return worker;
+}
+
+// ── Data Keeper Worker ────────────────────────────────────────────────────────
+
+export function createDataKeeperWorker() {
+  const worker = new Worker(
+    QUEUE_DATA_KEEPER,
+    async (job) => {
+      switch (job.name) {
+        case JOB_ANALYZE_DATA_FRAGMENT: {
+          return await processDataKeeperJob(job.data as DataKeeperJobData);
+        }
+        default:
+          throw new Error(`Unknown data keeper job: ${job.name}`);
+      }
+    },
+    {
+      connection: getRedisConnection(),
+      autorun: false,
+      concurrency: 2,
+    },
+  );
+
+  worker.on("completed", (job, result) => {
+    console.info(`[data-keeper.worker] Job completed`, {
+      id: job.id,
+      name: job.name,
+      result,
+    });
+  });
+
+  worker.on("failed", (job, err) => {
+    console.error(`[data-keeper.worker] Job failed`, {
+      id: job?.id,
+      name: job?.name,
+      attempt: job?.attemptsMade,
+      error: err.message,
+    });
+  });
+
+  return worker;
+}
+
+// ── Sweeper Worker ────────────────────────────────────────────────────────────
+
+export function createSweeperWorker() {
+  const worker = new Worker(
+    QUEUE_SWEEPER,
+    async (job) => {
+      switch (job.name) {
+        case JOB_SWEEP_BATCH:
+          return await processSweeperJob(job.data as SweeperJobData);
+        default:
+          throw new Error(`Unknown sweeper job: ${job.name}`);
+      }
+    },
+    {
+      connection: getRedisConnection(),
+      autorun: false,
+      concurrency: 1, // sequential per-org to avoid DB contention
+    },
+  );
+
+  worker.on("completed", (job, result) => {
+    console.info(`[sweeper.worker] Batch completed`, {
+      id: job.id,
+      org: (job.data as SweeperJobData).organizationId,
+      result,
+    });
+  });
+
+  worker.on("failed", (job, err) => {
+    console.error(`[sweeper.worker] Batch failed`, {
+      id: job?.id,
+      org: (job?.data as SweeperJobData)?.organizationId,
       attempt: job?.attemptsMade,
       error: err.message,
     });

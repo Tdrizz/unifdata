@@ -139,7 +139,13 @@ function isActive(pathname: string, href: string) {
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
-export function AppNav({ businessSector }: { businessSector?: string | null }) {
+export function AppNav({
+  businessSector,
+  pendingProposals = 0,
+}: {
+  businessSector?: string | null;
+  pendingProposals?: number;
+}) {
   const pathname = usePathname();
   const profile = getIndustryProfile(businessSector);
   const groups = buildNavGroups(profile);
@@ -161,9 +167,11 @@ export function AppNav({ businessSector }: { businessSector?: string | null }) {
               >
                 <span className="nav-icon"><Icon /></span>
                 <span className="nav-label">{item.label}</span>
-                {item.badge && (
+                {item.href === "/data-hub" && pendingProposals > 0 ? (
+                  <span className="nav-badge">{pendingProposals}</span>
+                ) : item.badge ? (
                   <span className="nav-badge">{item.badge}</span>
-                )}
+                ) : null}
               </Link>
             );
           })}
