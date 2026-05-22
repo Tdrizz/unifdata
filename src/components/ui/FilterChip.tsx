@@ -17,14 +17,14 @@ export function FilterChip({ children, active, count, onClick, className }: Prop
       className={cn(
         "inline-flex items-center gap-1.5 px-[13px] py-[5px] rounded-[7px] text-[12.5px] font-semibold whitespace-nowrap transition-[color,background-color,box-shadow] duration-[120ms] ease-out active:scale-[0.96]",
         active
-          ? "bg-ud-surface text-ud-ink shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)]"
+          ? "bg-ud-accent-tint text-ud-accent"
           : "bg-transparent text-ud-muted hover:text-ud-ink",
         className,
       )}
     >
       {children}
       {count !== undefined && (
-        <span className={cn("text-[11px] font-bold", active ? "text-ud-faint" : "text-ud-faint")}>
+        <span className={cn("text-[11px] font-bold", active ? "text-ud-accent/70" : "text-ud-faint")}>
           {count}
         </span>
       )}

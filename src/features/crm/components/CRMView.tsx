@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { LeadsTableClient } from "@/features/leads/components/LeadsTableClient";
 import { LeadCreateForm } from "@/features/leads/components/LeadCreateForm";
 import type { CRMPageData } from "../queries";
@@ -38,6 +39,9 @@ function isLost(status: string | null) {
   const s = String(status || "").toLowerCase();
   return s.includes("lost") || s.includes("cancel") || s.includes("declined");
 }
+
+const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
+const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function CRMView({ leads, customers, profile }: Props) {
   const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
@@ -90,29 +94,27 @@ export function CRMView({ leads, customers, profile }: Props) {
   }
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">Pipeline</div>
-          <div className="page-title">{leadPlural}</div>
-          <div className="page-desc">
-            {openLeads.length} active · {formatCurrency(openValue)} · {wonThisMonth} won this month
-          </div>
-        </div>
-        <div className="page-actions">
-          <a href="/api/export/csv?table=leads" download className="btn btn-ghost">Export CSV</a>
-          <Link href="#leads-quick-add" className="btn btn-primary">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            New {leadSingular.toLowerCase()}
-          </Link>
-        </div>
-      </div>
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow="Pipeline"
+        title={leadPlural}
+        description={`${openLeads.length} active · ${formatCurrency(openValue)} · ${wonThisMonth} won this month`}
+        className="mb-6"
+        actions={
+          <>
+            <a href="/api/export/csv?table=leads" download className={btnGhost}>Export CSV</a>
+            <Link href="#leads-quick-add" className={btnPrimary}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New {leadSingular.toLowerCase()}
+            </Link>
+          </>
+        }
+      />
 
       {/* Stats */}
-      <div className="stat-row stat-row-4" style={{ marginBottom: "24px" }}>
+      <div className="grid grid-cols-4 gap-3 mb-6">
         <StatCard label="Open value" value={formatCurrency(openValue)} helper={`${openLeads.length} active`} tone={openValue > 0 ? "positive" : "default"} />
         <StatCard label="Needs follow-up" value={followUpNeeded.length} helper="Missing, due, or overdue" tone={followUpNeeded.length > 0 ? "warning" : "positive"} />
         <StatCard label="Won this month" value={wonThisMonth} helper={`${wonLeads.length} won total`} tone={wonThisMonth > 0 ? "positive" : "default"} />
@@ -120,18 +122,18 @@ export function CRMView({ leads, customers, profile }: Props) {
       </div>
 
       {/* Kanban */}
-      <div className="kanban" style={{ marginBottom: "32px" }}>
+      <div className="grid grid-cols-4 gap-3.5 items-start mb-8">
         {STAGES.filter((s) => s.name !== "Lost").map((stage) => {
           const stageLeads = leadsByStage.get(stage.name) ?? [];
           const totalValue = stageLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
           return (
-            <div key={stage.name} className="kanban-col">
-              <div className="kanban-col-header">
+            <div key={stage.name} className="bg-[rgba(0,0,0,0.022)] rounded-[16px] p-3.5 min-h-[200px] border border-[rgba(0,0,0,0.04)]">
+              <div className="flex items-center justify-between mb-3 gap-2">
                 <div>
-                  <span className="kanban-col-title">{stage.name}</span>
-                  <span className="kanban-col-meta" style={{ fontSize: "10px", marginLeft: "5px" }}>{formatCurrency(totalValue)}</span>
+                  <span className="text-[11px] font-bold text-ud-muted uppercase tracking-[0.10em]">{stage.name}</span>
+                  <span className="text-[11px] text-ud-faint ml-[5px]">{formatCurrency(totalValue)}</span>
                 </div>
-                <span className="kanban-count">{stageLeads.length}</span>
+                <span className="text-[10.5px] font-bold bg-[rgba(0,0,0,0.07)] text-ud-muted rounded-full px-[7px] py-[1px]">{stageLeads.length}</span>
               </div>
 
               {stageLeads.map((lead) => {
@@ -140,11 +142,11 @@ export function CRMView({ leads, customers, profile }: Props) {
                 const dl = dateLabel(lead);
                 return (
                   <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
-                    <div className={`kanban-card ${urgent ? "urgent" : ""}`}>
-                      <div className="kanban-card-name">{lead.service_requested || `Untitled ${leadSingular.toLowerCase()}`}</div>
-                      <div className="kanban-card-client">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
-                      <div className="kanban-card-footer">
-                        <span className="badge badge-neutral">{formatCurrency(lead.estimated_value)}</span>
+                    <div className={`bg-ud-surface border rounded-[13px] p-[14px_15px] mb-2 shadow-ud cursor-pointer transition-[box-shadow,transform] duration-[220ms] hover:-translate-y-0.5 hover:shadow-ud-raised ${urgent ? "bg-[#fef8f8] border-[rgba(224,80,80,0.18)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+                      <p className="text-[13px] font-semibold text-ud-ink mb-[3px] leading-[1.3]">{lead.service_requested || `Untitled ${leadSingular.toLowerCase()}`}</p>
+                      <p className="text-[12px] text-ud-muted mb-2.5">{customer?.name || `No ${customerSingular.toLowerCase()}`}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted">{formatCurrency(lead.estimated_value)}</span>
                         <span style={{ fontSize: "11px", color: urgent ? "var(--danger)" : "var(--faint)", fontWeight: urgent ? 600 : 400 }}>
                           {urgent ? `${Math.floor((Date.now() - new Date(lead.next_follow_up_date!).getTime()) / 86400000)}d overdue` : dl}
                         </span>
@@ -154,7 +156,7 @@ export function CRMView({ leads, customers, profile }: Props) {
                 );
               })}
 
-              <Link href="#leads-quick-add" className="kanban-add" style={{ textDecoration: "none" }}>
+              <Link href="#leads-quick-add" className="flex items-center gap-1.5 p-2 rounded-[8px] text-[12px] text-ud-faint cursor-pointer w-full border border-dashed border-transparent hover:bg-[rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.10)] hover:text-ud-muted transition-[background-color,border-color,color] duration-[120ms]" style={{ textDecoration: "none" }}>
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
@@ -166,7 +168,7 @@ export function CRMView({ leads, customers, profile }: Props) {
       </div>
 
       {/* Open leads table + health */}
-      <div className="grid-2" style={{ marginBottom: "24px" }}>
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 items-start mb-6">
         <SectionCard
           title={`Open ${leadPlural.toLowerCase()}`}
           description="Prioritized by follow-up need and value."

@@ -9,6 +9,7 @@ import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
 import { NotificationToggles } from "./NotificationToggles";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 interface Company {
   id: string;
@@ -35,6 +36,10 @@ function isConnected(integration: SettingsIntegration | undefined) {
   return s.includes("active") || s.includes("connected");
 }
 
+const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
+const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
+const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
+
 export function SettingsView({
   company,
   user,
@@ -53,160 +58,112 @@ export function SettingsView({
   const jobberIntegration = integrations.find((i) => i.provider === "jobber");
 
   const integrationRows = [
-    {
-      provider: "quickbooks",
-      label: "QuickBooks",
-      desc: "Sync customers, invoices, and revenue",
-      integration: quickbooksIntegration,
-      startHref: "/api/integrations/quickbooks/start",
-    },
-    {
-      provider: "google_sheets",
-      label: "Google Sheets",
-      desc: "Used for bulk imports via the Imports page",
-      integration: googleIntegration,
-      startHref: "/api/integrations/google/start",
-    },
-    {
-      provider: "jobber",
-      label: "Jobber",
-      desc: "Sync jobs, quotes, and field schedules",
-      integration: jobberIntegration,
-      startHref: "/api/integrations/jobber/start",
-    },
-    {
-      provider: "hubspot",
-      label: "HubSpot",
-      desc: "Sync contacts and deal activity",
-      integration: hubspotIntegration,
-      startHref: "/api/integrations/hubspot/start",
-    },
-    {
-      provider: "square",
-      label: "Square",
-      desc: "Import payments, invoices, and customer records",
-      integration: squareIntegration,
-      startHref: "/api/integrations/square/start",
-    },
+    { provider: "quickbooks", label: "QuickBooks", desc: "Sync customers, invoices, and revenue", integration: quickbooksIntegration, startHref: "/api/integrations/quickbooks/start" },
+    { provider: "google_sheets", label: "Google Sheets", desc: "Used for bulk imports via the Imports page", integration: googleIntegration, startHref: "/api/integrations/google/start" },
+    { provider: "jobber", label: "Jobber", desc: "Sync jobs, quotes, and field schedules", integration: jobberIntegration, startHref: "/api/integrations/jobber/start" },
+    { provider: "hubspot", label: "HubSpot", desc: "Sync contacts and deal activity", integration: hubspotIntegration, startHref: "/api/integrations/hubspot/start" },
+    { provider: "square", label: "Square", desc: "Import payments, invoices, and customer records", integration: squareIntegration, startHref: "/api/integrations/square/start" },
   ];
 
   return (
-    <div style={{ padding: "28px 28px 40px" }}>
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">Settings</div>
-          <div className="page-title">Workspace settings</div>
-          <div className="page-desc">Manage your business profile, integrations, and account.</div>
-        </div>
-      </div>
+    <div className="px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow="Settings"
+        title="Workspace settings"
+        description="Manage your business profile, integrations, and account."
+        className="mb-6"
+      />
 
       <div style={{ maxWidth: "680px" }}>
 
-        {/* ── Business profile ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Business profile</div>
-            <div className="setting-section-desc">Details used across the workspace and AI outputs.</div>
+        {/* Business profile */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Business profile</p>
+            <p className="text-[12px] text-ud-muted">Details used across the workspace and AI outputs.</p>
           </div>
           <form action={updateWorkspaceAction}>
             <div className="form-row" style={{ marginBottom: "16px" }}>
               <div>
                 <label className="form-label">Business name</label>
-                <input
-                  name="name"
-                  required
-                  defaultValue={company.name || ""}
-                  className="form-input"
-                />
+                <input name="name" required defaultValue={company.name || ""} className="form-input" />
               </div>
               <div>
                 <label className="form-label">Industry</label>
-                <select
-                  name="business_sector"
-                  defaultValue={company.business_sector || "general"}
-                  className="form-input"
-                >
+                <select name="business_sector" defaultValue={company.business_sector || "general"} className="form-input">
                   {businessSectorOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button type="reset" className="btn btn-ghost">Cancel</button>
-              <button type="submit" className="btn btn-ink">Save changes</button>
+              <button type="reset" className={btnGhost}>Cancel</button>
+              <button type="submit" className={btnInk}>Save changes</button>
             </div>
           </form>
         </div>
 
-        {/* ── Account ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Account</div>
-            <div className="setting-section-desc">Your personal sign-in details.</div>
+        {/* Account */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Account</p>
+            <p className="text-[12px] text-ud-muted">Your personal sign-in details.</p>
           </div>
-          <div className="setting-row">
+          <div className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] gap-4">
             <div>
-              <div className="setting-row-label">Signed in as</div>
-              <div className="setting-row-desc">{user.email}</div>
+              <p className="text-[13px] font-medium text-ud-ink">Signed in as</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">{user.email}</p>
             </div>
           </div>
-          <div className="setting-row">
+          <div className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] gap-4">
             <div>
-              <div className="setting-row-label">Workspace</div>
-              <div className="setting-row-desc">{company.name}</div>
+              <p className="text-[13px] font-medium text-ud-ink">Workspace</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">{company.name}</p>
             </div>
           </div>
-          <div className="setting-row">
+          <div className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] gap-4">
             <div>
-              <div className="setting-row-label">Password</div>
-              <div className="setting-row-desc">Change your account password</div>
+              <p className="text-[13px] font-medium text-ud-ink">Password</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">Change your account password</p>
             </div>
           </div>
-          <div style={{ paddingTop: "8px" }}>
-            <ChangePasswordForm />
-          </div>
-          <div style={{ paddingTop: "12px" }}>
-            <LogoutButton />
-          </div>
+          <div style={{ paddingTop: "8px" }}><ChangePasswordForm /></div>
+          <div style={{ paddingTop: "12px" }}><LogoutButton /></div>
         </div>
 
-        {/* ── Notifications ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Notifications</div>
-            <div className="setting-section-desc">Control what triggers an in-app notification.</div>
+        {/* Notifications */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Notifications</p>
+            <p className="text-[12px] text-ud-muted">Control what triggers an in-app notification.</p>
           </div>
           <NotificationToggles initialPrefs={notificationPrefs} />
         </div>
 
-        {/* ── Integrations ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Integrations</div>
-            <div className="setting-section-desc">Connect external tools to sync data automatically.</div>
+        {/* Integrations */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Integrations</p>
+            <p className="text-[12px] text-ud-muted">Connect external tools to sync data automatically.</p>
           </div>
           {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
             const connected = isConnected(integration);
             return (
-              <div key={label} className="setting-row">
+              <div key={label} className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 gap-4">
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div className="setting-row-label">{label}</div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] font-medium text-ud-ink">{label}</p>
                     {connected && (
-                      <span className="badge badge-success">Connected</span>
+                      <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success">Connected</span>
                     )}
                   </div>
-                  <div className="setting-row-desc">{desc}</div>
+                  <p className="text-[12px] text-ud-muted mt-[1px]">{desc}</p>
                   {integration?.provider_account_name && (
-                    <div style={{ fontSize: "11px", color: "var(--faint)", marginTop: "2px" }}>
+                    <p style={{ fontSize: "11px", color: "var(--faint)", marginTop: "2px" }}>
                       {integration.provider_account_name}
-                      {integration.created_at && (
-                        <> · Connected {formatTimestampDate(integration.created_at)}</>
-                      )}
-                    </div>
+                      {integration.created_at && <> · Connected {formatTimestampDate(integration.created_at)}</>}
+                    </p>
                   )}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
@@ -215,10 +172,10 @@ export function SettingsView({
                   )}
                   {connected ? (
                     <form action={disconnectIntegrationAction.bind(null, provider)}>
-                      <button type="submit" className="btn btn-ghost btn-sm">Disconnect</button>
+                      <button type="submit" className={btnGhostSm}>Disconnect</button>
                     </form>
                   ) : (
-                    <Link href={startHref} className="btn btn-ghost btn-sm">Connect</Link>
+                    <Link href={startHref} className={btnGhostSm}>Connect</Link>
                   )}
                 </div>
               </div>
@@ -226,39 +183,35 @@ export function SettingsView({
           })}
         </div>
 
-        {/* ── Team members ── */}
-        <div className="setting-section">
-          <div className="setting-section-head">
-            <div className="setting-section-title">Team members</div>
-            <div className="setting-section-desc">Manage who has access to this workspace.</div>
+        {/* Team members */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Team members</p>
+            <p className="text-[12px] text-ud-muted">Manage who has access to this workspace.</p>
           </div>
           {members.map((member) => (
-            <div key={member.user_id} className="setting-row">
+            <div key={member.user_id} className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 gap-4">
               <div>
-                <div className="setting-row-label">{member.profiles?.full_name ?? "Team member"}</div>
-                <div className="setting-row-desc" style={{ textTransform: "capitalize" }}>{member.role}</div>
+                <p className="text-[13px] font-medium text-ud-ink">{member.profiles?.full_name ?? "Team member"}</p>
+                <p className="text-[12px] text-ud-muted mt-[1px] capitalize">{member.role}</p>
               </div>
               {currentUserRole === "owner" && (
                 <form action={removeMember.bind(null, member.user_id)}>
-                  <button type="submit" className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }}>
-                    Remove
-                  </button>
+                  <button type="submit" className={btnGhostSm} style={{ color: "var(--danger)" }}>Remove</button>
                 </form>
               )}
             </div>
           ))}
           {currentUserRole === "owner" && (
-            <div style={{ paddingTop: "12px" }}>
-              <InviteMemberForm />
-            </div>
+            <div style={{ paddingTop: "12px" }}><InviteMemberForm /></div>
           )}
         </div>
 
-        {/* ── Danger zone ── */}
-        <div className="setting-section" style={{ paddingBottom: "8px" }}>
-          <div className="setting-section-head">
-            <div className="setting-section-title" style={{ color: "#dc2626" }}>Danger zone</div>
-            <div className="setting-section-desc">Irreversible actions. Proceed with care.</div>
+        {/* Danger zone */}
+        <div className="py-[26px]" style={{ paddingBottom: "8px" }}>
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold mb-0.5" style={{ color: "#dc2626" }}>Danger zone</p>
+            <p className="text-[12px] text-ud-muted">Irreversible actions. Proceed with care.</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", border: "1px solid #fecaca", borderRadius: "10px", background: "#fff8f8", gap: "16px" }}>
             <div>

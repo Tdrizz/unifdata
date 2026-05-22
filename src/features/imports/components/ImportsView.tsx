@@ -4,6 +4,7 @@ import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type Props = ImportsPageData & { profile: IndustryProfile };
 
@@ -16,6 +17,13 @@ const SYNC_PROVIDER_NAMES: Record<string, string> = {
 };
 
 const SYNC_SOURCE_TYPES = new Set(Object.keys(SYNC_PROVIDER_NAMES));
+
+const card = "bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[var(--radius-ud-lg)] shadow-ud overflow-hidden";
+const cardHeader = "px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)]";
+const cardTitle = "text-[13.5px] font-semibold text-ud-ink";
+const cardDesc = "text-[12px] text-ud-muted mt-0.5";
+const queueItem = "flex items-center gap-3.5 px-5 py-[14px] border-b border-[rgba(0,0,0,0.04)] last:border-b-0";
+const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 function formatImportDate(date: string | null) {
   if (!date) return "—";
@@ -39,11 +47,12 @@ function getRecordTypeLabel(rt: string | null) {
 }
 
 function sessionStatusBadge(status: string | null) {
+  const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
   const s = (status || "").toLowerCase();
-  if (s === "committed") return "badge badge-success";
-  if (s === "failed" || s === "error") return "badge badge-danger";
-  if (s === "ready" || s === "draft" || s === "analyzing") return "badge badge-warning";
-  return "badge badge-neutral";
+  if (s === "committed") return `${base} bg-ud-success-bg text-ud-success`;
+  if (s === "failed" || s === "error") return `${base} bg-[#fef2f2] text-ud-danger`;
+  if (s === "ready" || s === "draft" || s === "analyzing") return `${base} bg-ud-warning-bg text-ud-warning`;
+  return `${base} bg-ud-surface-sunk text-ud-muted`;
 }
 
 function sessionStatusLabel(session: ImportsPageData["importSessions"][number]) {
@@ -119,44 +128,51 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
   const syncSessions = importSessions.filter((s) => SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
   const manualSessions = importSessions.filter((s) => !SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
 
-  // Build a map from session_id → session for quick lookup
   const sessionById = new Map(syncSessions.map((s) => [s.id, s]));
 
+  const badgePill = (connected: boolean) => {
+    const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
+    return connected
+      ? `${base} bg-ud-success-bg text-ud-success`
+      : `${base} bg-ud-surface-sunk text-ud-muted`;
+  };
+
+  const syncBadge = (isError: boolean, hasRecords: boolean) => {
+    const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
+    if (isError) return `${base} bg-[#fef2f2] text-ud-danger`;
+    if (hasRecords) return `${base} bg-ud-success-bg text-ud-success`;
+    return `${base} bg-ud-surface-sunk text-ud-muted`;
+  };
+
   return (
-    <div style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">Imports</div>
-          <div className="page-title">Import data</div>
-          <div className="page-desc">Bring in clients, jobs, or revenue from a CSV or Google Sheets.</div>
-        </div>
-      </div>
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow="Imports"
+        title="Import data"
+        description="Bring in clients, jobs, or revenue from a CSV or Google Sheets."
+        className="mb-6"
+      />
 
       {/* Two import cards */}
-      <div className="grid-2-even mb-5">
+      <div className="grid grid-cols-2 gap-5 items-start mb-[22px]">
         {/* CSV card */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Upload a CSV</div>
-              <div className="card-desc">Drag a file or click to browse</div>
-            </div>
+        <div className={card}>
+          <div className={cardHeader}>
+            <p className={cardTitle}>Upload a CSV</p>
+            <p className={cardDesc}>Drag a file or click to browse</p>
           </div>
-          <div className="card-body">
+          <div className="p-[18px_20px]">
             <CsvImportSessionFlow />
           </div>
         </div>
 
         {/* Google Sheets card */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Google Sheets</div>
-              <div className="card-desc">Import from a spreadsheet</div>
-            </div>
+        <div className={card}>
+          <div className={cardHeader}>
+            <p className={cardTitle}>Google Sheets</p>
+            <p className={cardDesc}>Import from a spreadsheet</p>
           </div>
-          <div className="card-body">
+          <div className="p-[18px_20px]">
             {googleConnected ? (
               <GoogleSheetsImportFlow />
             ) : (
@@ -177,34 +193,32 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
       </div>
 
       {/* Sync integrations */}
-      <div className="card mb-5">
-        <div className="card-header">
-          <div>
-            <div className="card-title">Sync from integrations</div>
-            <div className="card-desc">Pull data directly from connected tools — no file needed</div>
-          </div>
+      <div className={`${card} mb-[22px]`}>
+        <div className={cardHeader}>
+          <p className={cardTitle}>Sync from integrations</p>
+          <p className={cardDesc}>Pull data directly from connected tools — no file needed</p>
         </div>
         <div>
           {INTEGRATIONS.map((integration) => {
             const connected = connectedIds.has(integration.id);
             return (
-              <div key={integration.id} className="queue-item">
+              <div key={integration.id} className={queueItem}>
                 <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: integration.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {integration.icon}
                 </div>
-                <div className="queue-body">
-                  <div className="queue-action">{integration.name}</div>
-                  <div className="queue-meta">{integration.meta}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-ud-ink">{integration.name}</p>
+                  <p className="text-[12px] text-ud-muted mt-[1px]">{integration.meta}</p>
                 </div>
-                <span className={`badge ${connected ? "badge-success" : "badge-neutral"}`} style={{ marginRight: "12px" }}>
+                <span className={badgePill(connected)} style={{ marginRight: "12px" }}>
                   {connected ? "Connected" : "Not connected"}
                 </span>
                 {connected ? (
                   <form action={disconnectIntegrationAction.bind(null, integration.id)}>
-                    <button type="submit" className="btn btn-ghost btn-sm">Disconnect</button>
+                    <button type="submit" className={btnGhostSm}>Disconnect</button>
                   </form>
                 ) : (
-                  <Link href={integration.startHref} className="btn btn-ghost btn-sm">Connect</Link>
+                  <Link href={integration.startHref} className={btnGhostSm}>Connect</Link>
                 )}
               </div>
             );
@@ -214,10 +228,10 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
 
       {/* Recent syncs */}
       {syncRuns.length > 0 && (
-        <div className="card mb-5">
-          <div className="card-header">
-            <div className="card-title">Recent syncs</div>
-            <div className="card-desc">What was pulled in from your connected integrations</div>
+        <div className={`${card} mb-[22px]`}>
+          <div className={cardHeader}>
+            <p className={cardTitle}>Recent syncs</p>
+            <p className={cardDesc}>What was pulled in from your connected integrations</p>
           </div>
           <div>
             {syncRuns.slice(0, 6).map((run) => {
@@ -229,34 +243,29 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
               const isError = run.status === "error" || run.status === "failed";
               const hasRecords = (run.records_seen ?? 0) > 0;
 
-              // Sessions that still need user review
               const pendingSessions = linkedSessions.filter((s) => s && s.status === "ready");
-              // Sessions that were fully committed
               const committedSessions = linkedSessions.filter((s) => s && s.status === "committed");
-              // All sessions to show a breakdown for
               const allSessions = linkedSessions.length > 0 ? linkedSessions : [];
 
               return (
-                <div key={run.id} className="queue-item" style={{ alignItems: "flex-start", flexDirection: "column", gap: "10px" }}>
+                <div key={run.id} className={`${queueItem} flex-col gap-[10px] items-start`}>
                   {/* Header row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="queue-action">{providerName}</div>
-                      <div className="queue-meta">{formatSyncTime(run.started_at)}</div>
+                  <div className="flex items-center gap-[10px] w-full">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-ud-ink">{providerName}</p>
+                      <p className="text-[12px] text-ud-muted mt-[1px]">{formatSyncTime(run.started_at)}</p>
                     </div>
-                    <span className={`badge ${isError ? "badge-danger" : hasRecords ? "badge-success" : "badge-neutral"}`}>
+                    <span className={syncBadge(isError, hasRecords)}>
                       {isError ? "Failed" : hasRecords ? "Synced" : "Nothing new"}
                     </span>
                   </div>
 
-                  {/* Error message */}
                   {isError && run.error_message && (
                     <p style={{ fontSize: "12px", color: "var(--ud-danger)", margin: 0 }}>{run.error_message}</p>
                   )}
 
-                  {/* Per-record-type breakdown */}
                   {!isError && allSessions.length > 0 && (
-                    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div className="w-full flex flex-col gap-[6px]">
                       {allSessions.map((session) => {
                         if (!session) return null;
                         const label = getRecordTypeLabel(session.record_type);
@@ -272,15 +281,15 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                         if (parts.length === 0 && (session.total_rows ?? 0) > 0) parts.push(`${session.total_rows} checked`);
 
                         return (
-                          <div key={session.id} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12.5px" }}>
-                            <span style={{ fontWeight: 600, color: "var(--ud-ink)", minWidth: "90px" }}>{label}</span>
-                            <span style={{ color: "var(--ud-text-muted)", flex: 1 }}>
+                          <div key={session.id} className="flex items-center gap-[10px] text-[12.5px]">
+                            <span className="font-semibold text-ud-ink min-w-[90px]">{label}</span>
+                            <span className="text-ud-muted flex-1">
                               {parts.length > 0 ? parts.join(" · ") : "No changes"}
                             </span>
                             {needsReview && (
                               <Link
                                 href={`/imports/sessions/${session.id}`}
-                                style={{ color: "var(--ud-accent)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: "2px", whiteSpace: "nowrap" }}
+                                className="text-ud-accent font-semibold underline underline-offset-[2px] whitespace-nowrap"
                               >
                                 Review →
                               </Link>
@@ -291,23 +300,21 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                     </div>
                   )}
 
-                  {/* Totals fallback when no session detail is available */}
                   {!isError && allSessions.length === 0 && hasRecords && (
-                    <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--ud-text-muted)" }}>
+                    <div className="flex gap-4 text-[12px] text-ud-muted">
                       {(run.records_created ?? 0) > 0 && <span>{run.records_created} added</span>}
                       {(run.records_updated ?? 0) > 0 && <span>{run.records_updated} updated</span>}
                       {(run.records_failed ?? 0) > 0 && <span style={{ color: "var(--ud-danger)" }}>{run.records_failed} failed</span>}
                     </div>
                   )}
 
-                  {/* Pending review summary when there are multiple sessions needing review */}
                   {!isError && pendingSessions.length > 1 && (
-                    <p style={{ fontSize: "12px", color: "var(--ud-warning)", margin: 0 }}>
+                    <p className="text-[12px] text-ud-warning m-0">
                       {pendingSessions.length} record types need review before they&apos;re committed.
                     </p>
                   )}
                   {!isError && committedSessions.length > 0 && pendingSessions.length === 0 && allSessions.length === committedSessions.length && (
-                    <p style={{ fontSize: "12px", color: "var(--ud-success)", margin: 0 }}>
+                    <p className="text-[12px] text-ud-success m-0">
                       All records committed to your workspace.
                     </p>
                   )}
@@ -319,40 +326,38 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
       )}
 
       {/* Recent manual imports */}
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">Recent imports</div>
+      <div className={card}>
+        <div className={cardHeader}>
+          <p className={cardTitle}>Recent imports</p>
         </div>
-        <div className="table-wrap" style={{ border: "none", borderRadius: 0, boxShadow: "none" }}>
-          <table>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse bg-ud-surface">
             <thead>
               <tr>
-                <th>File</th>
-                <th>Type</th>
-                <th>Records</th>
-                <th>Date</th>
-                <th>Status</th>
+                {["File", "Type", "Records", "Date", "Status"].map((h) => (
+                  <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
               {manualSessions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                  <td colSpan={5} className="px-4 py-6 text-[13px] text-ud-muted text-center border-b border-[rgba(0,0,0,0.04)]">
                     No imports yet.
                   </td>
                 </tr>
               ) : (
                 manualSessions.slice(0, 10).map((session) => (
-                  <tr key={session.id} style={{ cursor: "pointer" }}>
-                    <td className="td-primary">
-                      <Link href={`/imports/sessions/${session.id}`} style={{ display: "block" }}>
+                  <tr key={session.id} className="cursor-pointer">
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold text-ud-ink">
+                      <Link href={`/imports/sessions/${session.id}`} className="block">
                         {session.file_name || session.source_name || "—"}
                       </Link>
                     </td>
-                    <td className="td-muted">{getRecordTypeLabel(session.record_type)}</td>
-                    <td className="td-muted">{session.total_rows ?? "—"} records</td>
-                    <td className="td-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
-                    <td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{getRecordTypeLabel(session.record_type)}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{session.total_rows ?? "—"} records</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
                       <Link href={`/imports/sessions/${session.id}`}>
                         <span className={sessionStatusBadge(session.status)}>{sessionStatusLabel(session)}</span>
                       </Link>

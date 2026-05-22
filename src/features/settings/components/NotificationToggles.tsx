@@ -29,15 +29,15 @@ export function NotificationToggles({ initialPrefs }: Props) {
   return (
     <>
       {TOGGLES.map(({ key, label, desc }) => (
-        <div key={key} className="setting-row">
+        <div key={key} className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 gap-4">
           <div>
-            <div className="setting-row-label">{label}</div>
-            <div className="setting-row-desc">{desc}</div>
+            <div className="text-[13px] font-medium text-ud-ink">{label}</div>
+            <div className="text-[12px] text-ud-muted mt-[1px]">{desc}</div>
           </div>
           <button
             type="button"
             onClick={() => toggle(key)}
-            className={`toggle ${prefs[key] ? "toggle-on" : "toggle-off"}`}
+            className={`w-9 h-5 rounded-[10px] cursor-pointer shrink-0 transition-colors border-0 ${prefs[key] ? "bg-ud-accent" : "bg-[#d8d3ca]"}`}
             aria-label={`${prefs[key] ? "Disable" : "Enable"} ${label}`}
           />
         </div>

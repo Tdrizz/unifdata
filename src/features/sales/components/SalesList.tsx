@@ -6,6 +6,8 @@ import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { SaleRow, CustomerRow } from "../types";
 import { SaleCreateForm } from "./SaleCreateForm";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { FilterChip } from "@/components/ui/FilterChip";
 
 type Props = {
   sales: SaleRow[];
@@ -35,10 +37,10 @@ function isPending(status: string | null) {
 
 function statusBadgeClass(status: string | null) {
   const s = (status || "").toLowerCase();
-  if (isPaid(status)) return "badge badge-success";
-  if (s.includes("overdue")) return "badge badge-danger";
-  if (s === "pending" || s === "unpaid") return "badge badge-warning";
-  return "badge badge-neutral";
+  if (isPaid(status)) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success";
+  if (s.includes("overdue")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-danger-bg text-ud-danger";
+  if (s === "pending" || s === "unpaid") return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-warning-bg text-ud-warning";
+  return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted";
 }
 
 function formatSaleDate(dateStr: string | null | undefined) {
@@ -64,6 +66,8 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
     })
     .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 }
+
+const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function SalesList({ sales, count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>(
@@ -104,63 +108,57 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
     return true;
   });
 
-  // Chart data — last 6 months
   const months = getLastNMonths(6, now);
   const maxVal = Math.max(...months.map((m) => sumSalesForMonth(sales, m.year, m.month)), 1);
-
   const sixMonthTotal = months.reduce((sum, m) => sum + sumSalesForMonth(sales, m.year, m.month), 0);
 
   return (
-    <div style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">Revenue</div>
-          <div className="page-title">Revenue &amp; {salePlural.toLowerCase()}</div>
-          <div className="page-desc">
-            {formatCurrency(revenueMTD)} this month · {openCount} open {openCount === 1 ? saleSingular.toLowerCase() : salePlural.toLowerCase()}
-          </div>
-        </div>
-        <div className="page-actions">
-          <a href="#sale-quick-add" className="btn btn-primary">
+    <div className="px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow="Revenue"
+        title={`Revenue & ${salePlural.toLowerCase()}`}
+        description={`${formatCurrency(revenueMTD)} this month · ${openCount} open ${openCount === 1 ? saleSingular.toLowerCase() : salePlural.toLowerCase()}`}
+        className="mb-6"
+        actions={
+          <a href="#sale-quick-add" className={btnPrimary}>
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             New {saleSingular.toLowerCase()}
           </a>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stat row */}
-      <div className="stat-row stat-row-4 mb-5">
-        <div className={`stat-card ${revenueMTD > 0 ? "s-success" : ""}`}>
-          <div className="stat-label">Month to date</div>
-          <div className={`stat-value ${revenueMTD > 0 ? "c-success" : ""}`}>{formatCurrency(revenueMTD)}</div>
-          <div className="stat-helper">This month</div>
+      <div className="grid grid-cols-4 gap-3 mb-[22px]">
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${revenueMTD > 0 ? "bg-[#f4fdf6] border-[rgba(29,107,46,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Month to date</div>
+          <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none [font-variant-numeric:tabular-nums] ${revenueMTD > 0 ? "text-ud-success" : "text-ud-ink"}`}>{formatCurrency(revenueMTD)}</div>
+          <div className="text-[12px] text-ud-muted mt-1.5">This month</div>
         </div>
-        <div className={`stat-card ${outstandingValue > 0 ? "s-danger" : ""}`}>
-          <div className="stat-label">Outstanding</div>
-          <div className={`stat-value ${outstandingValue > 0 ? "c-danger" : ""}`}>{formatCurrency(outstandingValue)}</div>
-          <div className="stat-helper">{overdueCount} overdue · {pendingCount} pending</div>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${outstandingValue > 0 ? "bg-[#fef8f8] border-[rgba(160,40,40,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Outstanding</div>
+          <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none [font-variant-numeric:tabular-nums] ${outstandingValue > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{formatCurrency(outstandingValue)}</div>
+          <div className="text-[12px] text-ud-muted mt-1.5">{overdueCount} overdue · {pendingCount} pending</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Paid this month</div>
-          <div className="stat-value">{formatCurrency(paidThisMonthValue)}</div>
-          <div className="stat-helper">{paidCount} {salePlural.toLowerCase()} collected</div>
+        <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[16px] p-5 shadow-ud">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Paid this month</div>
+          <div className="text-[30px] font-bold tracking-[-0.03em] text-ud-ink mt-1.5 leading-none [font-variant-numeric:tabular-nums]">{formatCurrency(paidThisMonthValue)}</div>
+          <div className="text-[12px] text-ud-muted mt-1.5">{paidCount} {salePlural.toLowerCase()} collected</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg open {saleSingular.toLowerCase()}</div>
-          <div className="stat-value">{formatCurrency(avgOpenInvoice)}</div>
-          <div className="stat-helper">{outstanding.length} outstanding</div>
+        <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[16px] p-5 shadow-ud">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Avg open {saleSingular.toLowerCase()}</div>
+          <div className="text-[30px] font-bold tracking-[-0.03em] text-ud-ink mt-1.5 leading-none [font-variant-numeric:tabular-nums]">{formatCurrency(avgOpenInvoice)}</div>
+          <div className="text-[12px] text-ud-muted mt-1.5">{outstanding.length} outstanding</div>
         </div>
       </div>
 
       {/* Revenue trend chart */}
-      <div className="card mb-5">
-        <div className="card-header">
+      <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[var(--radius-ud-lg)] shadow-ud overflow-hidden mb-[22px]">
+        <div className="px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
           <div>
-            <div className="card-title">Revenue trend</div>
-            <div className="card-desc">Last 6 months · MTD figures for {now.toLocaleDateString("en-US", { month: "long" })}</div>
+            <p className="text-[13.5px] font-semibold text-ud-ink">Revenue trend</p>
+            <p className="text-[12px] text-ud-muted mt-0.5">Last 6 months · MTD figures for {now.toLocaleDateString("en-US", { month: "long" })}</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--muted)" }}>
@@ -173,22 +171,19 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
             </div>
           </div>
         </div>
-        <div className="card-body" style={{ padding: "20px 24px 18px" }}>
+        <div className="p-[20px_24px_18px]">
           {/* Chart area */}
           <div style={{ position: "relative", height: "120px", display: "flex", alignItems: "flex-end", gap: "10px", marginBottom: "6px" }}>
-            {/* Y-axis labels */}
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none" }}>
               <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>{formatCurrency(maxVal)}</div>
               <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>{formatCurrency(maxVal / 2)}</div>
               <div style={{ fontSize: "10px", color: "var(--faint)", fontWeight: 600 }}>$0</div>
             </div>
-            {/* Gridlines */}
             <div style={{ position: "absolute", left: "28px", right: 0, top: 0, bottom: 0, pointerEvents: "none" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, borderTop: "1px dashed rgba(0,0,0,0.07)" }} />
               <div style={{ position: "absolute", top: "50%", left: 0, right: 0, borderTop: "1px dashed rgba(0,0,0,0.07)" }} />
               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, borderTop: "1px solid rgba(0,0,0,0.09)" }} />
             </div>
-            {/* Bar groups */}
             <div style={{ flex: 1, marginLeft: "28px", display: "flex", gap: "10px", alignItems: "flex-end", height: "100%" }}>
               {months.map((m, i) => {
                 const val = sumSalesForMonth(sales, m.year, m.month);
@@ -198,14 +193,8 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
                 const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
                 return (
                   <div key={i} style={{ flex: 1, display: "flex", gap: "3px", alignItems: "flex-end", height: "100%", position: "relative" }}>
-                    <div
-                      style={{ flex: 1, background: "var(--surface-sunk)", border: "1px solid var(--border)", borderRadius: "4px 4px 0 0", height: `${Math.max(lastPct, 2)}%` }}
-                      title={`${m.label} ${m.year - 1} · ${formatCurrency(lastYearVal)}`}
-                    />
-                    <div
-                      style={{ flex: 1, background: "var(--accent)", borderRadius: "4px 4px 0 0", height: `${Math.max(pct, 2)}%`, opacity: isCurrentMonth ? 1 : 0.8, position: "relative" }}
-                      title={`${m.label} ${m.year}${isCurrentMonth ? " MTD" : ""} · ${formatCurrency(val)}`}
-                    >
+                    <div style={{ flex: 1, background: "var(--surface-sunk)", border: "1px solid var(--border)", borderRadius: "4px 4px 0 0", height: `${Math.max(lastPct, 2)}%` }} title={`${m.label} ${m.year - 1} · ${formatCurrency(lastYearVal)}`} />
+                    <div style={{ flex: 1, background: "var(--accent)", borderRadius: "4px 4px 0 0", height: `${Math.max(pct, 2)}%`, opacity: isCurrentMonth ? 1 : 0.8, position: "relative" }} title={`${m.label} ${m.year}${isCurrentMonth ? " MTD" : ""} · ${formatCurrency(val)}`}>
                       {isCurrentMonth && val > 0 && (
                         <div style={{ position: "absolute", top: "-20px", left: "50%", transform: "translateX(-50%)", fontSize: "10px", fontWeight: 700, color: "var(--accent)", whiteSpace: "nowrap" }}>
                           {val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : formatCurrency(val)}
@@ -217,7 +206,7 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
               })}
             </div>
           </div>
-          {/* X-axis labels */}
+          {/* X-axis */}
           <div style={{ display: "flex", gap: "10px", marginLeft: "28px" }}>
             {months.map((m, i) => {
               const isCurrentMonth = m.year === now.getFullYear() && m.month === now.getMonth();
@@ -252,39 +241,27 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
       </div>
 
       {/* Filter tabs */}
-      <div className="filter-tabs mb-4">
-        <button className={`filter-tab ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
-          All <span style={{ color: "var(--faint)", fontWeight: 500 }}>{count}</span>
-        </button>
-        <button className={`filter-tab ${filter === "overdue" ? "active" : ""}`} onClick={() => setFilter("overdue")}>
-          Overdue <span style={{ color: "var(--danger)", fontWeight: 600 }}>{overdueCount}</span>
-        </button>
-        <button className={`filter-tab ${filter === "pending" ? "active" : ""}`} onClick={() => setFilter("pending")}>
-          Pending <span style={{ color: "var(--faint)", fontWeight: 500 }}>{pendingCount}</span>
-        </button>
-        <button className={`filter-tab ${filter === "paid" ? "active" : ""}`} onClick={() => setFilter("paid")}>
-          Paid <span style={{ color: "var(--faint)", fontWeight: 500 }}>{paidCount}</span>
-        </button>
+      <div className="flex gap-0.5 bg-ud-surface-sunk rounded-[9px] p-[3px] border border-ud w-fit mb-4">
+        <FilterChip active={filter === "all"} count={sales.length} onClick={() => setFilter("all")}>All</FilterChip>
+        <FilterChip active={filter === "overdue"} count={overdueCount} onClick={() => setFilter("overdue")}>Overdue</FilterChip>
+        <FilterChip active={filter === "pending"} count={pendingCount} onClick={() => setFilter("pending")}>Pending</FilterChip>
+        <FilterChip active={filter === "paid"} count={paidCount} onClick={() => setFilter("paid")}>Paid</FilterChip>
       </div>
 
       {/* Invoice table */}
-      <div className="table-wrap">
-        <table>
+      <div className="overflow-hidden rounded-[var(--radius-ud-lg)] border border-[rgba(0,0,0,0.06)] shadow-ud">
+        <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              <th>{saleSingular}</th>
-              <th>{profile?.labels.customerSingular ?? "Client"}</th>
-              <th>Amount</th>
-              <th>Issued</th>
-              <th>Due</th>
-              <th>Status</th>
-              <th></th>
+              {[saleSingular, profile?.labels.customerSingular ?? "Client", "Amount", "Issued", "Due", "Status", ""].map((h) => (
+                <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                <td colSpan={7} className="px-4 py-6 text-[13px] text-ud-muted text-center">
                   No {salePlural.toLowerCase()} found.
                 </td>
               </tr>
@@ -294,16 +271,14 @@ export function SalesList({ sales, count, page: _page, q: _q, customers = [], se
                 const isOver = isOverdue(sale.payment_status);
                 return (
                   <tr key={sale.id}>
-                    <td className="td-primary">#{sale.id.slice(-6).toUpperCase()}</td>
-                    <td>{customer?.name || sale.service_type || "—"}</td>
-                    <td className="td-mono">{formatCurrency(sale.amount)}</td>
-                    <td className="td-muted">{formatSaleDate(sale.sale_date || sale.created_at)}</td>
-                    <td className={isOver ? "text-danger" : "td-muted"} style={isOver ? { fontWeight: 600 } : undefined}>—</td>
-                    <td><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
-                    <td>
-                      <Link href={`/sales/${sale.id}/edit`} className="td-link">
-                        View →
-                      </Link>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold text-ud-ink">#{sale.id.slice(-6).toUpperCase()}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-text">{customer?.name || sale.service_type || "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold [font-variant-numeric:tabular-nums]">{formatCurrency(sale.amount)}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{formatSaleDate(sale.sale_date || sale.created_at)}</td>
+                    <td className={`px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] ${isOver ? "font-semibold text-ud-danger" : "text-ud-muted"}`}>—</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
+                      <Link href={`/sales/${sale.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link>
                     </td>
                   </tr>
                 );

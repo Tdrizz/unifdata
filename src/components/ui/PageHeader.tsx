@@ -18,7 +18,7 @@ export function PageHeader({
     <header className={cn("flex flex-col justify-between gap-3 md:flex-row md:items-start", className)}>
       <div>
         {eyebrow && (
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ud-accent mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ud-faint mb-1">
             {eyebrow}
           </p>
         )}

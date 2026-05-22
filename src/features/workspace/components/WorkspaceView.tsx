@@ -17,6 +17,11 @@ import {
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
+import { KpiCard } from "@/components/ui/KpiCard";
+import { Card } from "@/components/ui/Card";
+import { ListRow } from "@/components/ui/ListRow";
+import { Pill } from "@/components/ui/Pill";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type QueueItem = {
   id: string;
@@ -59,19 +64,6 @@ function getGreeting() {
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";
-}
-
-function dotClass(tone: string) {
-  if (tone === "danger") return "queue-dot queue-dot-danger";
-  if (tone === "warning") return "queue-dot queue-dot-warning";
-  if (tone === "success") return "queue-dot queue-dot-success";
-  return "queue-dot queue-dot-neutral";
-}
-
-function dueClass(tone: string) {
-  if (tone === "danger") return "queue-due queue-due-danger";
-  if (tone === "warning") return "queue-due queue-due-warning";
-  return "queue-due queue-due-ok";
 }
 
 type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
@@ -189,169 +181,166 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     return parts.length > 0 ? parts.join(" · ") : "Nothing urgent today";
   })();
 
-  return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">{dayLabel}</div>
-          <div className="page-title">{getGreeting()}, {companyName}.</div>
-          <div className="page-desc">{statusLine}</div>
-        </div>
-        <div className="page-actions">
-          <Link href="/jobs" className="btn btn-ghost">View calendar</Link>
-          <Link href="/customers" className="btn btn-primary">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Quick add
-          </Link>
-        </div>
-      </div>
+  // Link classes reused from Button secondary/ghost (no asChild support on Button)
+  const btnSecondary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity] duration-[120ms] ease-out bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard rounded-[9px] px-3 py-2 text-[13px]";
+  const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color] duration-[120ms] ease-out bg-transparent text-ud-muted border border-transparent hover:bg-ud-surface-sunk rounded-[8px] px-2.5 py-1.5 text-xs";
 
-      {/* Stat row */}
-      <div className="stat-row stat-row-5">
-        <div className={`stat-card ${followUpSchedule.length > 0 ? "s-danger" : ""}`}>
-          <div className="stat-label">{followUpPlural} due</div>
-          <div className={`stat-value ${followUpSchedule.length > 0 ? "c-danger" : ""}`}>{followUpSchedule.length}</div>
-          <div className="stat-helper">{overdueCount} overdue · {dueTodayCount} due today</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">{jobPlural} today</div>
-          <div className="stat-value">{activeWork.length}</div>
-          <div className="stat-helper">{activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"}</div>
-        </div>
-        <div className={`stat-card ${revenueMTD > 0 ? "s-success" : ""}`}>
-          <div className="stat-label">Revenue MTD</div>
-          <div className={`stat-value ${revenueMTD > 0 ? "c-success" : ""}`}>{formatCurrency(revenueMTD)}</div>
-          <div className="stat-helper">This month</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Open pipeline</div>
-          <div className="stat-value">{formatCurrency(openPipelineValue)}</div>
-          <div className="stat-helper">{openLeads.length} active {leadPlural.toLowerCase()}</div>
-        </div>
-        <div className={`stat-card ${unpaidRevenueValue > 0 ? "s-danger" : ""}`}>
-          <div className="stat-label">Unpaid {salePlural.toLowerCase()}</div>
-          <div className={`stat-value ${unpaidRevenueValue > 0 ? "c-danger" : ""}`}>{formatCurrency(unpaidRevenueValue)}</div>
-          <div className="stat-helper">{unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}</div>
-        </div>
+  return (
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      {/* Page header */}
+      <PageHeader
+        eyebrow={dayLabel}
+        title={`${getGreeting()}, ${companyName}.`}
+        description={statusLine}
+        className="mb-6"
+        actions={
+          <>
+            <Link href="/jobs" className={btnGhostSm}>View calendar</Link>
+            <Link href="/customers" className={btnSecondary}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Quick add
+            </Link>
+          </>
+        }
+      />
+
+      {/* KPI row */}
+      <div className="grid grid-cols-5 gap-3 mb-6">
+        <KpiCard
+          label={`${followUpPlural} due`}
+          value={followUpSchedule.length}
+          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
+          delta={overdueCount > 0 ? `${overdueCount} over` : undefined}
+          deltaTone={overdueCount > 0 ? "down" : "flat"}
+        />
+        <KpiCard
+          label={`${jobPlural} today`}
+          value={activeWork.length}
+          helper={activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"}
+        />
+        <KpiCard
+          label="Revenue MTD"
+          value={formatCurrency(revenueMTD)}
+          helper="This month"
+          delta={revenueMTD > 0 ? "this month" : undefined}
+          deltaTone={revenueMTD > 0 ? "up" : "flat"}
+        />
+        <KpiCard
+          label="Open pipeline"
+          value={formatCurrency(openPipelineValue)}
+          helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
+        />
+        <KpiCard
+          label={`Unpaid ${salePlural.toLowerCase()}`}
+          value={formatCurrency(unpaidRevenueValue)}
+          helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
+          delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
+          deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
+        />
       </div>
 
       {/* Two-column grid */}
-      <div className="grid-2">
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 items-start">
         {/* Priority queue */}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">Priority queue</div>
-            <Link href="/follow-ups" className="btn btn-ghost btn-sm">View all</Link>
+        <Card padding={0} radius="md" className="overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
+            <p className="text-[13.5px] font-semibold text-ud-ink">Priority queue</p>
+            <Link href="/follow-ups" className={btnGhostSm}>View all</Link>
           </div>
           {priorityQueue.length === 0 ? (
-            <div className="queue-item">
-              <div className="queue-body">
-                <div className="queue-meta" style={{ textAlign: "center", padding: "12px 0" }}>Nothing needs attention right now.</div>
-              </div>
-            </div>
+            <p className="px-5 py-5 text-sm text-ud-muted text-center">Nothing needs attention right now.</p>
           ) : (
-            priorityQueue.map((item) => (
-              <Link key={item.id} href={item.href} style={{ textDecoration: "none" }}>
-                <div className="queue-item">
-                  <div className={dotClass(item.tone)} />
-                  <div className="queue-body">
-                    <div className="queue-action">{item.title}</div>
-                    <div className="queue-meta">{item.detail}</div>
-                  </div>
-                  <div className={dueClass(item.tone)}>{item.label}</div>
-                </div>
+            priorityQueue.map((item, idx) => (
+              <Link key={item.id} href={item.href}>
+                <ListRow
+                  leading={<Pill tone={item.tone}>{item.label}</Pill>}
+                  title={item.title}
+                  subtitle={item.detail}
+                  isLast={idx === priorityQueue.length - 1}
+                  onClick={() => {}}
+                />
               </Link>
             ))
           )}
-        </div>
+        </Card>
 
         {/* Right column */}
-        <div className="col-stack">
+        <div className="flex flex-col gap-4">
           {/* Jobs today */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">{jobPlural} today</div>
-              <Link href="/jobs" className="btn btn-ghost btn-sm">Calendar</Link>
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
+              <p className="text-[13.5px] font-semibold text-ud-ink">{jobPlural} today</p>
+              <Link href="/jobs" className={btnGhostSm}>Calendar</Link>
             </div>
             {activeWork.length === 0 ? (
-              <div className="queue-item">
-                <div className="queue-body">
-                  <div className="queue-meta">No active {jobPlural.toLowerCase()} right now.</div>
-                </div>
-              </div>
+              <p className="px-5 py-5 text-sm text-ud-muted">No active {jobPlural.toLowerCase()} right now.</p>
             ) : (
-              activeWork.slice(0, 5).map((job) => {
+              activeWork.slice(0, 5).map((job, idx) => {
                 const customer = job.customer_id ? customerById.get(job.customer_id) : null;
                 const tone = getWorkTone(job.status);
                 return (
-                  <Link key={job.id} href={`/jobs/${job.id}/edit`} style={{ textDecoration: "none" }}>
-                    <div className="queue-item">
-                      <div className={dotClass(tone)} />
-                      <div className="queue-body">
-                        <div className="queue-action">{job.service_type || `Untitled ${jobSingular.toLowerCase()}`}</div>
-                        <div className="queue-meta">{customer?.name || `No ${customerSingular.toLowerCase()}`}</div>
-                      </div>
-                      <span className="badge badge-info">{job.status || "Active"}</span>
-                    </div>
+                  <Link key={job.id} href={`/jobs/${job.id}/edit`}>
+                    <ListRow
+                      leading={<Pill tone={tone}>{job.status || "Active"}</Pill>}
+                      title={job.service_type || `Untitled ${jobSingular.toLowerCase()}`}
+                      subtitle={customer?.name || `No ${customerSingular.toLowerCase()}`}
+                      isLast={idx === Math.min(activeWork.length, 5) - 1}
+                      onClick={() => {}}
+                    />
                   </Link>
                 );
               })
             )}
-          </div>
+          </Card>
 
           {/* Pipeline snapshot */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Pipeline snapshot</div>
-              <Link href="/crm" className="btn btn-ghost btn-sm">View all</Link>
+          <Card padding={0} radius="md" className="overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
+              <p className="text-[13.5px] font-semibold text-ud-ink">Pipeline snapshot</p>
+              <Link href="/crm" className={btnGhostSm}>View all</Link>
             </div>
             {openLeads.length === 0 ? (
-              <div className="queue-item">
-                <div className="queue-body">
-                  <div className="queue-meta">No open {leadPlural.toLowerCase()}.</div>
-                </div>
-              </div>
+              <p className="px-5 py-5 text-sm text-ud-muted">No open {leadPlural.toLowerCase()}.</p>
             ) : (
-              openLeads.slice(0, 4).map((lead) => (
-                <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
-                  <div className="queue-item">
-                    <div className="queue-body">
-                      <div className="queue-action">{lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}</div>
-                      <div className="queue-meta">{lead.status || "Lead"} · {formatCurrency(lead.estimated_value)}</div>
-                    </div>
-                    <span className="badge badge-neutral">{lead.status || "Lead"}</span>
-                  </div>
+              openLeads.slice(0, 4).map((lead, idx) => (
+                <Link key={lead.id} href={`/leads/${lead.id}/edit`}>
+                  <ListRow
+                    trailing={<Pill tone="neutral">{lead.status || "Lead"}</Pill>}
+                    title={lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+                    subtitle={`${lead.status || "Lead"} · ${formatCurrency(lead.estimated_value)}`}
+                    isLast={idx === Math.min(openLeads.length, 4) - 1}
+                    onClick={() => {}}
+                  />
                 </Link>
               ))
             )}
-          </div>
+          </Card>
 
           {/* Quick actions */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Quick actions</div>
+          <Card padding={16} radius="md">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-3">Quick actions</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: `New ${customerSingular.toLowerCase()}`, href: "/customers#customer-quick-add" },
+                { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
+                { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
+                { label: "Ask AI", href: "/ai-assistant" },
+              ].map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[12.5px] font-semibold text-ud-text shadow-ud hover:border-ud-hard hover:text-ud-ink transition-[border-color,color] duration-[120ms]"
+                >
+                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" className="text-ud-accent">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  {action.label}
+                </Link>
+              ))}
             </div>
-            <div className="card-body" style={{ padding: "16px" }}>
-              <div className="quick-actions">
-                {[
-                  { label: `New ${customerSingular.toLowerCase()}`, href: "/customers#customer-quick-add" },
-                  { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
-                  { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
-                  { label: "Ask AI", href: "/ai-assistant" },
-                ].map((action) => (
-                  <Link key={action.label} href={action.href} className="quick-action" style={{ textDecoration: "none" }}>
-                    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg>
-                    {action.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

@@ -7,6 +7,8 @@ import type { CustomerRow } from "../types";
 import type { Database } from "@/types/db";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { CustomerCreateForm } from "./CustomerCreateForm";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { FilterChip } from "@/components/ui/FilterChip";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -46,12 +48,12 @@ function getCustomerStatus(customer: CustomerRow, leads: LeadRow[], jobs: JobRow
   const hasOpenLead = leads.some(
     (l) => l.customer_id === customer.id && l.status !== "closed" && l.status !== "won" && l.status !== "lost",
   );
-  if (hasOpenLead) return { label: "Quote pending", badgeClass: "badge badge-warning" };
+  if (hasOpenLead) return { label: "Quote pending", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-warning-bg text-ud-warning" };
 
   const recentJob = jobs.find((j) => j.customer_id === customer.id && j.status === "completed");
-  if (recentJob) return { label: "Active", badgeClass: "badge badge-success" };
+  if (recentJob) return { label: "Active", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success" };
 
-  return { label: "Dormant", badgeClass: "badge badge-neutral" };
+  return { label: "Dormant", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted" };
 }
 
 function getInitials(name: string | null): string {
@@ -76,6 +78,9 @@ function avatarColor(name: string | null) {
 }
 
 type Filter = "all" | "active" | "quote" | "dormant";
+
+const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
+const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function CustomersTableClient({
   customers,
@@ -123,28 +128,28 @@ export function CustomersTableClient({
     : byFilter;
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">{custPlural}</div>
-          <div className="page-title">All {custPlural.toLowerCase()}</div>
-          <div className="page-desc">{customers.length} {custPlural.toLowerCase()}</div>
-        </div>
-        <div className="page-actions">
-          <Link href="/imports" className="btn btn-ghost">Import</Link>
-          <a href="#customer-quick-add" className="btn btn-primary">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add {custSingular.toLowerCase()}
-          </a>
-        </div>
-      </div>
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow={custPlural}
+        title={`All ${custPlural.toLowerCase()}`}
+        description={`${customers.length} ${custPlural.toLowerCase()}`}
+        className="mb-6"
+        actions={
+          <>
+            <Link href="/imports" className={btnGhost}>Import</Link>
+            <a href="#customer-quick-add" className={btnPrimary}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add {custSingular.toLowerCase()}
+            </a>
+          </>
+        }
+      />
 
       {/* Search bar */}
-      <div className="search-bar">
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round">
+      <div className="flex items-center gap-2.5 px-[14px] py-[9px] bg-ud-surface border border-ud rounded-[10px] shadow-ud mb-4">
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" className="text-ud-faint shrink-0">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         <input
@@ -152,65 +157,55 @@ export function CustomersTableClient({
           placeholder="Search by name, email, or phone…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border-0 outline-none bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint"
+          style={{ fontFamily: "var(--font)" }}
         />
       </div>
 
       {/* Filter tabs */}
-      <div className="filter-tabs mb-4">
-        <button className={`filter-tab ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
-          All <span style={{ color: "var(--faint)", fontWeight: 500 }}>{customers.length}</span>
-        </button>
-        <button className={`filter-tab ${filter === "active" ? "active" : ""}`} onClick={() => setFilter("active")}>
-          Active <span style={{ color: "var(--faint)", fontWeight: 500 }}>{activeCount}</span>
-        </button>
-        <button className={`filter-tab ${filter === "quote" ? "active" : ""}`} onClick={() => setFilter("quote")}>
-          Quote pending <span style={{ color: "var(--faint)", fontWeight: 500 }}>{quoteCount}</span>
-        </button>
-        <button className={`filter-tab ${filter === "dormant" ? "active" : ""}`} onClick={() => setFilter("dormant")}>
-          Dormant <span style={{ color: "var(--faint)", fontWeight: 500 }}>{dormantCount}</span>
-        </button>
+      <div className="flex gap-0.5 bg-ud-surface-sunk rounded-[9px] p-[3px] border border-ud w-fit mb-4">
+        <FilterChip active={filter === "all"} count={customers.length} onClick={() => setFilter("all")}>All</FilterChip>
+        <FilterChip active={filter === "active"} count={activeCount} onClick={() => setFilter("active")}>Active</FilterChip>
+        <FilterChip active={filter === "quote"} count={quoteCount} onClick={() => setFilter("quote")}>Quote pending</FilterChip>
+        <FilterChip active={filter === "dormant"} count={dormantCount} onClick={() => setFilter("dormant")}>Dormant</FilterChip>
       </div>
 
       {/* Table */}
-      <div className="table-wrap">
-        <table>
+      <div className="overflow-hidden rounded-[var(--radius-ud-lg)] border border-[rgba(0,0,0,0.06)] shadow-ud">
+        <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Contact</th>
-              <th>{jobPlural}</th>
-              <th>Lifetime value</th>
-              <th>Last {jobPlural.toLowerCase().replace(/s$/, "")}</th>
-              <th>Status</th>
-              <th></th>
+              {["Name", "Contact", jobPlural, "Lifetime value", `Last ${jobPlural.toLowerCase().replace(/s$/, "")}`, "Status", ""].map((h) => (
+                <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
+                <td colSpan={7} className="px-4 py-6 text-[13px] text-ud-muted text-center">
                   No {custPlural.toLowerCase()} match your filter.
                 </td>
               </tr>
             ) : (
               filtered.map((customer) => {
-                const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", badgeClass: "badge badge-neutral" } };
+                const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted" } };
                 const initials = getInitials(customer.name);
                 const col = avatarColor(customer.name);
                 return (
                   <tr key={customer.id}>
-                    <td>
-                      <div className="cl-row">
-                        <div className="cl-avatar" style={{ background: col.bg, color: col.color }}>{initials}</div>
-                        <span className="td-primary">{customer.name || `Unnamed ${custSingular.toLowerCase()}`}</span>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center text-[11px] font-bold shrink-0" style={{ background: col.bg, color: col.color }}>{initials}</div>
+                        <span className="font-semibold text-ud-ink">{customer.name || `Unnamed ${custSingular.toLowerCase()}`}</span>
                       </div>
                     </td>
-                    <td className="td-muted">{customer.email || customer.phone || "—"}</td>
-                    <td className="td-muted">{s.jobCount}</td>
-                    <td className="td-mono">{s.lifetime > 0 ? formatCurrency(s.lifetime) : "—"}</td>
-                    <td className="td-muted">{s.lastJob || "—"}</td>
-                    <td><span className={s.status.badgeClass}>{s.status.label}</span></td>
-                    <td><Link href={`/customers/${customer.id}`} className="td-link">View →</Link></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{customer.email || customer.phone || "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{s.jobCount}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold [font-variant-numeric:tabular-nums]">{s.lifetime > 0 ? formatCurrency(s.lifetime) : "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{s.lastJob || "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={s.status.badgeClass}>{s.status.label}</span></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><Link href={`/customers/${customer.id}`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link></td>
                   </tr>
                 );
               })

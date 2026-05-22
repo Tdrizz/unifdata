@@ -26,8 +26,7 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="btn btn-sm"
-        style={{ borderColor: "#fca5a5", color: "#dc2626", background: "transparent", flexShrink: 0 }}
+        className="inline-flex items-center px-[11px] py-[5px] rounded-[7px] border border-[#fca5a5] bg-transparent text-[#dc2626] text-[12px] font-semibold shrink-0 cursor-pointer"
       >
         Delete workspace
       </button>
@@ -84,7 +83,7 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
             <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="inline-flex items-center px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted text-[13px] font-semibold hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer"
                 onClick={() => { setOpen(false); setConfirm(""); }}
                 disabled={isPending}
               >
@@ -94,13 +93,11 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
                 type="button"
                 onClick={handleDelete}
                 disabled={!confirmed || isPending}
-                className="btn btn-sm"
+                className="inline-flex items-center px-3 py-2 rounded-[9px] text-[13px] font-semibold border-0"
                 style={{
                   background: confirmed ? "#dc2626" : "var(--surface-sunk)",
                   color: confirmed ? "#fff" : "var(--faint)",
-                  border: "none",
                   cursor: confirmed ? "pointer" : "not-allowed",
-                  padding: "8px 16px",
                 }}
               >
                 {isPending ? "Deleting…" : "Delete workspace"}

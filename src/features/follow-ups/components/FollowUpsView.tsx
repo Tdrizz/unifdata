@@ -8,6 +8,9 @@ import type { FollowUpRow, LeadRow, CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { markFollowUpCompleteAction } from "../actions";
 import { FollowUpCreateForm } from "./FollowUpCreateForm";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { Card } from "@/components/ui/Card";
 
 type Props = {
   followUps: FollowUpRow[];
@@ -42,15 +45,15 @@ function isUpcoming(date: string | null, status: string | null) {
 }
 
 function getDotClass(date: string | null, status: string | null) {
-  if (isOverdue(date, status)) return "queue-dot queue-dot-danger";
-  if (isDueToday(date, status)) return "queue-dot queue-dot-warning";
-  return "queue-dot queue-dot-neutral";
+  if (isOverdue(date, status)) return "w-2 h-2 rounded-full bg-[#e05050] shrink-0";
+  if (isDueToday(date, status)) return "w-2 h-2 rounded-full bg-[#d97706] shrink-0";
+  return "w-2 h-2 rounded-full bg-[#c5bfb5] shrink-0";
 }
 
 function getDueClass(date: string | null, status: string | null) {
-  if (isOverdue(date, status)) return "queue-due queue-due-danger";
-  if (isDueToday(date, status)) return "queue-due queue-due-warning";
-  return "queue-due queue-due-ok";
+  if (isOverdue(date, status)) return "text-[12px] font-semibold text-ud-danger shrink-0";
+  if (isDueToday(date, status)) return "text-[12px] font-semibold text-ud-warning shrink-0";
+  return "text-[12px] font-semibold text-ud-muted shrink-0";
 }
 
 function getDueLabel(date: string | null, status: string | null): string {
@@ -77,6 +80,9 @@ type QueueEntry = {
   href: string;
   priority: number;
 };
+
+const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
+const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function FollowUpsView({ followUps, opportunities, people, profile }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
@@ -129,58 +135,48 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
   const filtered = filter === "overdue" ? overdueItems : filter === "today" ? todayItems : filter === "upcoming" ? upcomingItems : all;
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">{profile?.labels.followUpPlural ?? "Follow-ups"}</div>
-          <div className="page-title">Priority queue</div>
-          <div className="page-desc">
-            {all.length} open · {overdueItems.length} overdue · {todayItems.length} due today
-          </div>
-        </div>
-        <div className="page-actions">
-          <Link href="/crm" className="btn btn-ghost">Pipeline view</Link>
-          <a href="#followup-quick-add" className="btn btn-primary">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add follow-up
-          </a>
-        </div>
-      </div>
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow={profile?.labels.followUpPlural ?? "Follow-ups"}
+        title="Priority queue"
+        description={`${all.length} open · ${overdueItems.length} overdue · ${todayItems.length} due today`}
+        className="mb-6"
+        actions={
+          <>
+            <Link href="/crm" className={btnGhostSm}>Pipeline view</Link>
+            <a href="#followup-quick-add" className={btnPrimary}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add follow-up
+            </a>
+          </>
+        }
+      />
 
       {/* Filter tabs */}
-      <div className="filter-tabs mb-4">
-        <button className={`filter-tab ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
-          All <span style={{ color: "var(--faint)", fontWeight: 500 }}>{all.length}</span>
-        </button>
-        <button className={`filter-tab ${filter === "overdue" ? "active" : ""}`} onClick={() => setFilter("overdue")}>
-          Overdue <span style={{ color: "var(--danger)", fontWeight: 600 }}>{overdueItems.length}</span>
-        </button>
-        <button className={`filter-tab ${filter === "today" ? "active" : ""}`} onClick={() => setFilter("today")}>
-          Due today <span style={{ color: "var(--warning)", fontWeight: 600 }}>{todayItems.length}</span>
-        </button>
-        <button className={`filter-tab ${filter === "upcoming" ? "active" : ""}`} onClick={() => setFilter("upcoming")}>
-          Upcoming <span style={{ color: "var(--faint)", fontWeight: 500 }}>{upcomingItems.length}</span>
-        </button>
+      <div className="flex gap-0.5 bg-ud-surface-sunk rounded-[9px] p-[3px] border border-ud w-fit mb-4">
+        <FilterChip active={filter === "all"} count={all.length} onClick={() => setFilter("all")}>All</FilterChip>
+        <FilterChip active={filter === "overdue"} count={overdueItems.length} onClick={() => setFilter("overdue")}>Overdue</FilterChip>
+        <FilterChip active={filter === "today"} count={todayItems.length} onClick={() => setFilter("today")}>Due today</FilterChip>
+        <FilterChip active={filter === "upcoming"} count={upcomingItems.length} onClick={() => setFilter("upcoming")}>Upcoming</FilterChip>
       </div>
 
       {/* Queue card */}
-      <div className="card">
-        <div className="card-header">
+      <Card padding={0} radius="md" className="overflow-hidden">
+        <div className="px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
           <div>
-            <div className="card-title">Follow-up queue</div>
-            <div className="card-desc">Ordered by urgency</div>
+            <p className="text-[13.5px] font-semibold text-ud-ink">Follow-up queue</p>
+            <p className="text-[12px] text-ud-muted mt-0.5">Ordered by urgency</p>
           </div>
         </div>
         <div>
           {filtered.length === 0 ? (
-            <div className="queue-item">
-              <div className="queue-body">
-                <div className="queue-meta" style={{ textAlign: "center", padding: "12px 0" }}>
+            <div className="flex items-center gap-3.5 px-5 py-[14px]">
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] text-ud-muted text-center py-3">
                   {`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} in this category.`}
-                </div>
+                </p>
               </div>
             </div>
           ) : (
@@ -189,18 +185,18 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
               const rawId = isManual ? item.id.replace("manual-", "") : null;
               return (
                 <Link key={item.id} href={item.href} style={{ textDecoration: "none" }}>
-                  <div className="queue-item">
+                  <div className="flex items-center gap-3.5 px-5 py-[14px] border-b border-[rgba(0,0,0,0.04)] last:border-b-0 hover:bg-[rgba(0,0,0,0.015)] transition-colors">
                     <div className={getDotClass(item.due_date, item.status)} />
-                    <div className="queue-body">
-                      <div className="queue-action">{item.title}</div>
-                      <div className="queue-meta">{item.meta}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-ud-ink truncate">{item.title}</p>
+                      <p className="text-[12px] text-ud-muted mt-0.5">{item.meta}</p>
                     </div>
                     <div className={getDueClass(item.due_date, item.status)} style={{ marginRight: "12px" }}>
                       {getDueLabel(item.due_date, item.status)}
                     </div>
                     {isManual && rawId && (
                       <button
-                        className="btn btn-ghost btn-sm"
+                        className={btnGhostSm}
                         onClick={(e) => {
                           e.preventDefault();
                           startTransition(() => markFollowUpCompleteAction(rawId));
@@ -210,7 +206,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
                       </button>
                     )}
                     {!isManual && (
-                      <span className="btn btn-ghost btn-sm">View →</span>
+                      <span className={btnGhostSm}>View →</span>
                     )}
                   </div>
                 </Link>
@@ -218,7 +214,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
             })
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Quick add */}
       <div id="followup-quick-add" style={{ marginTop: "20px" }}>

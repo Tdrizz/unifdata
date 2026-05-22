@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { JobListRow, CustomerRow, LeadRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { JobCreateForm } from "./JobCreateForm";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type Props = {
   jobs: JobListRow[];
@@ -15,7 +16,7 @@ type Props = {
 };
 
 function getWeekDays(today: Date): { name: string; num: number; date: Date }[] {
-  const dow = today.getDay(); // 0=Sun
+  const dow = today.getDay();
   const mondayOffset = dow === 0 ? -6 : 1 - dow;
   const monday = new Date(today);
   monday.setDate(today.getDate() + mondayOffset);
@@ -43,12 +44,14 @@ function formatJobDate(startDate: string | null | undefined, today: Date): { lab
 
 function statusBadgeClass(status: string | null) {
   const s = (status || "").toLowerCase();
-  if (s.includes("progress") || s.includes("active")) return "badge badge-info";
-  if (s.includes("complete") || s.includes("done")) return "badge badge-success";
-  if (s.includes("cancel")) return "badge badge-neutral";
-  if (s.includes("quote") || s.includes("pending")) return "badge badge-warning";
-  return "badge badge-neutral";
+  if (s.includes("progress") || s.includes("active")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-[#eef2ff] text-[#3730a3]";
+  if (s.includes("complete") || s.includes("done")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success";
+  if (s.includes("cancel")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted";
+  if (s.includes("quote") || s.includes("pending")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-warning-bg text-ud-warning";
+  return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted";
 }
+
+const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function JobsList({ jobs, count, customers, leads, profile, selectedStage }: Props) {
   const jobPlural = profile?.labels.jobPlural ?? "Visits";
@@ -77,44 +80,43 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
     });
 
   return (
-    <div className="hidden md:block" style={{ padding: "28px 28px 40px" }}>
-      {/* Page header */}
-      <div className="page-header">
-        <div>
-          <div className="page-eyebrow">{jobPlural}</div>
-          <div className="page-title">Scheduled {jobPlural.toLowerCase()}</div>
-          <div className="page-desc">
-            {count} total · {weekLabel} · {totalThisWeek} scheduled this week{todayCount > 0 ? ` · ${todayCount} today` : ""}
-          </div>
-        </div>
-        <div className="page-actions">
-          <a href="#job-quick-add" className="btn btn-primary">
+    <div className="hidden md:block px-7 pb-10 pt-7">
+      <PageHeader
+        eyebrow={jobPlural}
+        title={`Scheduled ${jobPlural.toLowerCase()}`}
+        description={`${count} total · ${weekLabel} · ${totalThisWeek} scheduled this week${todayCount > 0 ? ` · ${todayCount} today` : ""}`}
+        className="mb-6"
+        actions={
+          <a href="#job-quick-add" className={btnPrimary}>
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Log {jobSingular.toLowerCase()}
           </a>
-        </div>
-      </div>
+        }
+      />
 
       {/* Week strip */}
-      <div className="week-strip">
+      <div className="grid grid-cols-7 gap-2 mb-5">
         {weekDays.map(({ name, num, date }, i) => {
           const isToday = isSameDay(date, today);
           const cnt = countsByDay[i];
           return (
-            <div key={name} className={`week-day${isToday ? " today" : ""}`}>
-              <div className="week-day-name">{name}</div>
-              <div className="week-day-num">{num}</div>
+            <div
+              key={name}
+              className={`bg-ud-surface border rounded-[10px] px-2 py-[10px] text-center shadow-ud ${isToday ? "border-ud-accent bg-ud-accent-tint" : "border-ud"}`}
+            >
+              <div className={`text-[10px] font-bold uppercase tracking-[0.08em] ${isToday ? "text-ud-accent" : "text-ud-faint"}`}>{name}</div>
+              <div className="text-[17px] font-bold text-ud-ink my-[3px]">{num}</div>
               {cnt > 0 ? (
                 <>
-                  <div className="week-day-count" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  <div className="text-[11px] text-ud-muted" style={{ color: "var(--accent)", fontWeight: 600 }}>
                     {cnt} {cnt === 1 ? jobSingular.toLowerCase() : jobPlural.toLowerCase()}
                   </div>
-                  <div className="week-day-dot" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-ud-accent mx-auto mt-1" />
                 </>
               ) : (
-                <div className="week-day-count">—</div>
+                <div className="text-[11px] text-ud-muted">—</div>
               )}
             </div>
           );
@@ -122,24 +124,21 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
       </div>
 
       {/* Table */}
-      <div className="table-wrap">
-        <table>
+      <div className="overflow-hidden rounded-[var(--radius-ud-lg)] border border-[rgba(0,0,0,0.06)] shadow-ud">
+        <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              <th>Client</th>
-              <th>Service</th>
-              <th>Date &amp; time</th>
-              <th>Location</th>
-              <th>Assigned to</th>
-              <th>Status</th>
-              <th></th>
+              {["Client", "Service", "Date & time", "Location", "Assigned to", "Status", ""].map((h) => (
+                <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
             {sorted.length === 0 ? (
               <tr>
-                <td colSpan={7} className="td-muted" style={{ textAlign: "center", padding: "24px" }}>
-                  No {jobPlural.toLowerCase()} scheduled. <a href="#job-quick-add" className="td-link">Add one →</a>
+                <td colSpan={7} className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted text-center py-6">
+                  No {jobPlural.toLowerCase()} scheduled.{" "}
+                  <a href="#job-quick-add" className="text-ud-accent no-underline font-medium text-[12px] hover:underline">Add one →</a>
                 </td>
               </tr>
             ) : (
@@ -148,15 +147,13 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
                 const { label: dateLabel, isToday } = formatJobDate(job.start_date, today);
                 return (
                   <tr key={job.id}>
-                    <td className="td-primary">{customer?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "client"}`}</td>
-                    <td>{job.service_type || "—"}</td>
-                    <td style={isToday ? { fontWeight: 600, color: "var(--ink)" } : undefined} className={isToday ? undefined : "td-muted"}>
-                      {dateLabel}
-                    </td>
-                    <td className="td-muted">—</td>
-                    <td className="td-muted">—</td>
-                    <td><span className={statusBadgeClass(job.status)}>{job.status || "Scheduled"}</span></td>
-                    <td><Link href={`/jobs/${job.id}/edit`} className="td-link">View →</Link></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold text-ud-ink">{customer?.name || `No ${profile?.labels.customerSingular?.toLowerCase() ?? "client"}`}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-text">{job.service_type || "—"}</td>
+                    <td className={`px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] ${isToday ? "font-semibold text-ud-ink" : "text-ud-muted"}`}>{dateLabel}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={statusBadgeClass(job.status)}>{job.status || "Scheduled"}</span></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><Link href={`/jobs/${job.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link></td>
                   </tr>
                 );
               })
