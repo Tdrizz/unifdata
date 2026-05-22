@@ -9,7 +9,8 @@ import type {
   MasterCustomerCandidate,
 } from "./types";
 
-const THRESHOLD_AUTO_UPDATE = 0.95;
+// Conservative launch threshold — raise only after real-world calibration confirms accuracy.
+const THRESHOLD_AUTO_UPDATE = 0.98;
 const THRESHOLD_GEMINI_MIN = 0.35;
 
 function hasIdentifier(payload: ReturnType<typeof normalizePayload>): boolean {
@@ -20,6 +21,10 @@ export async function runConfidenceEngine(
   organizationId: string,
   rawPayload: InboundPayload,
   sourceSystem: string,
+  options?: {
+    excludeId?: string;  // omit this record from candidates (sweeper self-exclusion)
+    sweepMode?: boolean; // caps max action at CREATE_PROPOSAL; never AUTO_CREATE
+  },
 ): Promise<DataKeeperDecision> {
   const normalized = normalizePayload(rawPayload);
 
@@ -27,14 +32,26 @@ export async function runConfidenceEngine(
   const notesMeta = extractMetadata(rawPayload.notes);
   Object.assign(normalized.extractedMetadata, notesMeta);
 
-  // Fetch top 5 candidates via pg_trgm SQL
+  // Fetch top 5 candidates via pg_trgm SQL, excluding the source record in sweep mode
   const candidates: MasterCustomerCandidate[] = await fetchTopMatchCandidates(
     organizationId,
     normalized,
+    options?.excludeId,
   );
 
   // No candidates found
   if (candidates.length === 0) {
+    // Sweep mode: the source record already exists — never auto-create a duplicate
+    if (options?.sweepMode) {
+      return {
+        action: "AUTO_IGNORE",
+        targetId: null,
+        normalizedData: normalized,
+        fieldDelta: {},
+        confidence: 0,
+        reasoning: "Sweep: no duplicate candidates found.",
+      };
+    }
     if (hasIdentifier(normalized)) {
       return {
         action: "AUTO_CREATE",
@@ -71,8 +88,18 @@ export async function runConfidenceEngine(
     };
   }
 
-  // High confidence — auto-update without Gemini
+  // High confidence — auto-update without Gemini (sweep mode always proposes instead)
   if (best.score >= THRESHOLD_AUTO_UPDATE) {
+    if (options?.sweepMode) {
+      return {
+        action: "CREATE_PROPOSAL",
+        targetId: best.candidateId,
+        normalizedData: normalized,
+        fieldDelta: best.fieldDelta,
+        confidence: best.score,
+        reasoning: `Sweep: ${best.reasoning}`,
+      };
+    }
     return {
       action: "AUTO_UPDATE",
       targetId: best.candidateId,
@@ -103,19 +130,20 @@ export async function runConfidenceEngine(
       geminiResult.targetCandidateId ??
       (geminiResult.action === "AUTO_UPDATE" ? best.candidateId : null);
 
-    // Hard safety: Gemini cannot push below-threshold scores to AUTO_UPDATE
+    // Hard safety: Gemini cannot push below-threshold scores to AUTO_UPDATE.
+    // Sweep mode never auto-updates — always proposes for human review.
     const action =
-      geminiResult.confidence >= THRESHOLD_AUTO_UPDATE
+      !options?.sweepMode && geminiResult.confidence >= THRESHOLD_AUTO_UPDATE
         ? geminiResult.action
         : "CREATE_PROPOSAL";
 
     return {
       action,
-      targetId,
+      targetId: action === "CREATE_PROPOSAL" && options?.sweepMode ? targetId : targetId,
       normalizedData: normalized,
       fieldDelta: best.fieldDelta,
       confidence: geminiResult.confidence,
-      reasoning: geminiResult.reasoning,
+      reasoning: options?.sweepMode ? `Sweep: ${geminiResult.reasoning}` : geminiResult.reasoning,
     };
   }
 

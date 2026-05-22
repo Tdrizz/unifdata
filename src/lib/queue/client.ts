@@ -67,6 +67,11 @@ export function getAutomationQueue(): Queue {
 export const QUEUE_DATA_KEEPER = "data-keeper";
 export const JOB_ANALYZE_DATA_FRAGMENT = "analyze-data-fragment";
 
+// ── Sweeper queue ─────────────────────────────────────────────────────────────
+
+export const QUEUE_SWEEPER = "sweeper";
+export const JOB_SWEEP_BATCH = "sweep-batch";
+
 let dataKeeperQueue: Queue | null = null;
 
 export function getDataKeeperQueue(): Queue {
@@ -78,4 +83,17 @@ export function getDataKeeperQueue(): Queue {
   });
 
   return dataKeeperQueue;
+}
+
+let sweeperQueue: Queue | null = null;
+
+export function getSweeperQueue(): Queue {
+  if (sweeperQueue) return sweeperQueue;
+
+  sweeperQueue = new Queue(QUEUE_SWEEPER, {
+    connection: getRedisConnection(),
+    defaultJobOptions: DEFAULT_JOB_OPTIONS,
+  });
+
+  return sweeperQueue;
 }

@@ -984,6 +984,8 @@ export type Database = {
           hubspot_contact_id: string | null
           id: string
           jobber_client_id: string | null
+          keeper_last_swept_at: string | null
+          keeper_sweep_status: string | null
           last_name: string | null
           metadata: Json | null
           organization_id: string
@@ -1002,6 +1004,8 @@ export type Database = {
           hubspot_contact_id?: string | null
           id?: string
           jobber_client_id?: string | null
+          keeper_last_swept_at?: string | null
+          keeper_sweep_status?: string | null
           last_name?: string | null
           metadata?: Json | null
           organization_id: string
@@ -1020,6 +1024,8 @@ export type Database = {
           hubspot_contact_id?: string | null
           id?: string
           jobber_client_id?: string | null
+          keeper_last_swept_at?: string | null
+          keeper_sweep_status?: string | null
           last_name?: string | null
           metadata?: Json | null
           organization_id?: string

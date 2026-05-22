@@ -4,6 +4,7 @@ import type { MasterCustomerCandidate, NormalizedPayload } from "./types";
 export async function fetchTopMatchCandidates(
   organizationId: string,
   payload: NormalizedPayload,
+  excludeId?: string,
 ): Promise<MasterCustomerCandidate[]> {
   const supabase = createAdminClient();
 
@@ -22,24 +23,22 @@ export async function fetchTopMatchCandidates(
 
   if (error) {
     // Fallback: basic query without similarity ordering if RPC not available
-    const { data: fallback } = await supabase
+    let fallbackQuery = supabase
       .from("master_customers")
       .select(
         "id, first_name, last_name, primary_email, primary_phone, billing_address, service_address, metadata, data_health_score",
       )
-      .eq("organization_id", organizationId)
-      .or(
-        [
-          email ? `primary_email.eq.${email}` : null,
-          phone ? `primary_phone.eq.${phone}` : null,
-        ]
-          .filter(Boolean)
-          .join(",") || "id.neq.00000000-0000-0000-0000-000000000000",
-      )
-      .limit(5);
+      .eq("organization_id", organizationId);
 
+    if (email) fallbackQuery = fallbackQuery.eq("primary_email", email);
+    else if (phone) fallbackQuery = fallbackQuery.eq("primary_phone", phone);
+
+    if (excludeId) fallbackQuery = fallbackQuery.neq("id", excludeId);
+
+    const { data: fallback } = await fallbackQuery.limit(5);
     return (fallback ?? []) as MasterCustomerCandidate[];
   }
 
-  return (data ?? []) as MasterCustomerCandidate[];
+  const candidates = (data ?? []) as MasterCustomerCandidate[];
+  return excludeId ? candidates.filter((c) => c.id !== excludeId) : candidates;
 }
