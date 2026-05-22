@@ -96,7 +96,71 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
   };
 
   return (
-    <div className="px-7 pb-10 pt-7">
+    <>
+    {/* ── Mobile data hub ────────────────────────────────────────────────── */}
+    <div className="block md:hidden pb-8">
+      <ProposalsWidget initialProposals={proposals} />
+      <div className="px-4 pt-[22px] pb-5">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">Data Hub</p>
+        <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
+          {healthPct}% health
+        </p>
+        <p className="text-[13px] text-ud-muted mt-1">{totalIssues > 0 ? `${totalIssues} issues to fix` : "Data looks clean"}</p>
+      </div>
+      {/* Health bar */}
+      <div className="px-4 pb-5">
+        <div className="h-2 bg-ud-surface-sunk rounded-full overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${healthPct}%`, background: "linear-gradient(90deg, #2a8c3c, #4ade80)" }} />
+        </div>
+      </div>
+      {/* 2×2 issue grid */}
+      <div className="px-4 grid grid-cols-2 gap-3 pb-5">
+        <div className={`bg-ud-surface border rounded-[12px] p-[14px_16px] ${customerIssues > 0 ? "border-ud-danger/20 bg-ud-danger-bg/30" : "border-ud"}`}>
+          <p className="text-[12px] font-medium text-ud-muted">{customerPlural}</p>
+          <p className={`text-[22px] font-semibold tracking-[-0.02em] mt-0.5 ${customerIssues > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{customerIssues}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">Contact gaps</p>
+        </div>
+        <div className={`bg-ud-surface border rounded-[12px] p-[14px_16px] ${pipelineIssues > 0 ? "border-ud-warning/20 bg-ud-warning-bg/30" : "border-ud"}`}>
+          <p className="text-[12px] font-medium text-ud-muted">Pipeline</p>
+          <p className={`text-[22px] font-semibold tracking-[-0.02em] mt-0.5 ${pipelineIssues > 0 ? "text-ud-warning" : "text-ud-ink"}`}>{pipelineIssues}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">{leadSingular} data gaps</p>
+        </div>
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+          <p className="text-[12px] font-medium text-ud-muted">{jobSingular} &amp; follow-ups</p>
+          <p className="text-[22px] font-semibold tracking-[-0.02em] mt-0.5 text-ud-ink">{workIssues}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">Unlinked or overdue</p>
+        </div>
+        <div className={`bg-ud-surface border rounded-[12px] p-[14px_16px] ${revenueIssues > 0 ? "border-ud-danger/20 bg-ud-danger-bg/30" : "border-ud"}`}>
+          <p className="text-[12px] font-medium text-ud-muted">Payments</p>
+          <p className={`text-[22px] font-semibold tracking-[-0.02em] mt-0.5 ${revenueIssues > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{revenueIssues}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">Unpaid</p>
+        </div>
+      </div>
+      {/* Issues list */}
+      {issues.length > 0 && (
+        <div className="px-4">
+          <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
+            <div className="px-4 py-[14px] border-b border-ud-soft">
+              <p className="text-[13px] font-semibold text-ud-ink">Issues to resolve</p>
+              <p className="text-[12px] text-ud-muted mt-0.5">Scanned at {scanTime}</p>
+            </div>
+            {issues.map((issue) => (
+              <Link key={issue.id} href={issue.href} className="flex items-center gap-3 px-4 py-[14px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft">
+                <div className={dotClass(issue.dot)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-ud-ink">{issue.title}</p>
+                  <p className="text-[11.5px] text-ud-muted mt-0.5 truncate">{issue.meta}</p>
+                </div>
+                <svg className="shrink-0 text-ud-faint" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* ── Desktop data hub ───────────────────────────────────────────────── */}
+    <div className="hidden md:block px-7 pb-10 pt-7">
       <ProposalsWidget initialProposals={proposals} />
       <PageHeader
         eyebrow="Data Hub"
@@ -175,5 +239,6 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
       </div>
 
     </div>
+    </>
   );
 }

@@ -113,7 +113,7 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
   const sixMonthTotal = months.reduce((sum, m) => sum + sumSalesForMonth(sales, m.year, m.month), 0);
 
   return (
-    <div className="px-7 pb-10 pt-7">
+    <div className="hidden md:block px-7 pb-10 pt-7">
       <PageHeader
         eyebrow="Revenue"
         title={`Revenue & ${salePlural.toLowerCase()}`}
