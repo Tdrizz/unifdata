@@ -50,7 +50,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
     <div className="pb-[24px]">
       {/* Header */}
       <div className="px-[18px] pt-[18px] pb-[14px]">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
           {eyebrow}
         </p>
         <h1 className="mt-[4px] text-[22px] leading-[1.2] text-ud-ink">
@@ -71,7 +71,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
             type="button"
             onClick={() => setActiveFilter(filter)}
             className={cn(
-              "flex-shrink-0 rounded-full px-[14px] py-[6px] text-[12px] font-semibold transition-colors",
+              "flex-shrink-0 rounded-full px-[16px] py-[9px] text-[13px] font-semibold transition-colors",
               activeFilter === filter
                 ? "bg-ud-ink text-white"
                 : "bg-ud-surface border border-ud text-ud-muted",

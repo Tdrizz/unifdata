@@ -141,7 +141,7 @@ export function CustomersList({
     <div className="block md:hidden">
       {/* 1. Title block */}
       <div className="px-[18px] pt-[18px] pb-[12px]">
-        <p className="text-[10.5px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
+        <p className="text-[12px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
           {profile?.labels.customerPlural ?? "Clients"}
         </p>
         <span className="flex items-baseline gap-2">
@@ -206,7 +206,7 @@ export function CustomersList({
               <Link key={customer.id} href={`/customers/${customer.id}`}>
                 <div
                   className={cn(
-                    "px-[14px] py-[13px] border-b border-ud-soft flex items-start gap-3",
+                    "px-[16px] py-[16px] border-b border-ud-soft flex items-start gap-3",
                     i === filteredCustomers.length - 1 && "border-0",
                   )}
                 >
@@ -225,7 +225,7 @@ export function CustomersList({
 
                     {/* Sub: contact + city */}
                     {metaParts && (
-                      <p className="text-[12.5px] text-ud-muted mt-[2px] truncate">
+                      <p className="text-[13px] text-ud-muted mt-[2px] truncate">
                         {metaParts}
                       </p>
                     )}

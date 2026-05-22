@@ -181,7 +181,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     <div className="block md:hidden pb-8">
       {/* 1. Greeting */}
       <div className="px-[18px] pt-5 pb-4">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">
           {dayLabel}
         </p>
         <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
@@ -194,7 +194,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         <div className="flex gap-[8px]">
           <Link
             href="/customers#customer-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -203,7 +203,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/leads#leads-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -212,7 +212,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/jobs#job-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -221,7 +221,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/follow-ups#followup-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[14px] py-[8px] text-[12.5px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -233,44 +233,44 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
       {/* 3. 2×2 stat grid */}
       <div className="px-[14px] grid grid-cols-2 gap-[10px] pb-[14px]">
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
-          <p className="text-[11px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+          <p className="text-[12px] font-medium text-ud-muted">Open {leadPlural.toLowerCase()}</p>
           <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {openLeads.length}
           </p>
-          <p className="text-[11px] text-ud-faint mt-0.5">{formatCurrency(openPipelineValue)}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">{formatCurrency(openPipelineValue)}</p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
-          <p className="text-[11px] font-medium text-ud-muted">Active {jobPlural.toLowerCase()}</p>
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+          <p className="text-[12px] font-medium text-ud-muted">Active {jobPlural.toLowerCase()}</p>
           <p className="udv2-num text-[24px] font-semibold tracking-[-0.02em] text-ud-ink mt-0.5">
             {activeWork.length}
           </p>
-          <p className="text-[11px] text-ud-faint mt-0.5">{formatCurrency(activeWorkValue)}</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">{formatCurrency(activeWorkValue)}</p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
-          <p className="text-[11px] font-medium text-ud-muted">Unpaid revenue</p>
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+          <p className="text-[12px] font-medium text-ud-muted">Unpaid revenue</p>
           <p className={cn(
             "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
             unpaidRevenueValue > 0 ? "text-ud-danger" : "text-ud-ink",
           )}>
             {formatCurrency(unpaidRevenueValue)}
           </p>
-          <p className="text-[11px] text-ud-faint mt-0.5">
+          <p className="text-[12px] text-ud-faint mt-0.5">
             {unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
           </p>
         </div>
 
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[12px_14px]">
-          <p className="text-[11px] font-medium text-ud-muted">Follow-ups due</p>
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+          <p className="text-[12px] font-medium text-ud-muted">Follow-ups due</p>
           <p className={cn(
             "udv2-num text-[24px] font-semibold tracking-[-0.02em] mt-0.5",
             followUpSchedule.length > 0 ? "text-ud-warning" : "text-ud-ink",
           )}>
             {followUpSchedule.length}
           </p>
-          <p className={cn("text-[11px] mt-0.5", overdueFollowUps > 0 ? "text-ud-danger" : "text-ud-faint")}>
+          <p className={cn("text-[12px] mt-0.5", overdueFollowUps > 0 ? "text-ud-danger" : "text-ud-faint")}>
             {overdueFollowUps > 0 ? `${overdueFollowUps} overdue` : "On track"}
           </p>
         </div>
@@ -295,7 +295,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-[11px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+                  className="flex items-center gap-3 px-4 py-[14px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
                 >
                   <Pill tone={pillTone} className="shrink-0">{item.label}</Pill>
                   <p className="text-[13px] font-semibold text-ud-ink truncate flex-1">{item.title}</p>
@@ -334,7 +334,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
                 <Link
                   key={job.id}
                   href={`/jobs/${job.id}/edit`}
-                  className="flex items-center gap-3 px-4 py-[11px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+                  className="flex items-center gap-3 px-4 py-[14px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-ud-ink truncate">
