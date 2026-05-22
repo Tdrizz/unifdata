@@ -87,7 +87,7 @@ export function MobileSalesView({ sales, profile, customers = [] }: Props) {
 
       {/* Stat cards */}
       <div className="px-4 grid grid-cols-2 gap-3 pb-5">
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Outstanding</p>
           <p className={cn(
             "text-[22px] font-semibold tracking-[-0.02em] mt-0.5 [font-variant-numeric:tabular-nums]",
@@ -97,7 +97,7 @@ export function MobileSalesView({ sales, profile, customers = [] }: Props) {
           </p>
           <p className="text-[12px] text-ud-faint mt-0.5">{outstanding.length} open</p>
         </div>
-        <div className="bg-ud-surface border border-ud rounded-[12px] p-[14px_16px]">
+        <div className="bg-ud-surface border border-ud rounded-[12px] p-4">
           <p className="text-[12px] font-medium text-ud-muted">Overdue</p>
           <p className={cn(
             "text-[22px] font-semibold tracking-[-0.02em] mt-0.5",
