@@ -78,7 +78,7 @@ function scoreNames(
       ? firstScore * 0.35 + lastScore * 0.45 + fullScore * 0.20
       : Math.max(fullScore, lastScore, firstScore);
 
-  const bonus = (phoneticBonus ? 0.10 : 0) + (nicknameBonus ? 0 : 0);
+  const bonus = (phoneticBonus ? 0.10 : 0) + (nicknameBonus ? 0.10 : 0);
   return {
     score: Math.min(1, nameScore + bonus),
     phoneticBonus,

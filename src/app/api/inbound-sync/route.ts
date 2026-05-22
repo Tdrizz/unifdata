@@ -17,11 +17,14 @@ type InboundBody = {
 async function processInboundPayload(body: InboundBody) {
   const { organizationId, sourceSystem, payload } = body;
 
-  // Guardrail A: Sync loop shield — drop payloads that echo our own writes
+  const email = normalizeEmail(payload.email);
+  const phone = normalizePhone(payload.phone);
+
+  // Guardrail A: Sync loop shield — hash matches writeSyncToken in state-engine
   if (redis) {
     const hash = crypto
       .createHash("sha256")
-      .update(JSON.stringify({ organizationId, payload }))
+      .update(JSON.stringify({ organizationId, email: email ?? null, phone: phone ?? null }))
       .digest("hex");
     const isEcho = await redis.get(`sync_token:${hash}`);
     if (isEcho) return;
@@ -30,24 +33,32 @@ async function processInboundPayload(body: InboundBody) {
   const supabase = createAdminClient();
 
   // Guardrail B: Exact-match bypass — if email or phone hits cleanly, update directly
-  const email = normalizeEmail(payload.email);
-  const phone = normalizePhone(payload.phone);
-
   if (email || phone) {
-    let query = supabase
-      .from("master_customers")
-      .select("id")
-      .eq("organization_id", organizationId);
+    // Use separate parameterized .eq() queries instead of .or() string interpolation
+    // to avoid PostgREST filter-string injection on unusual email characters
+    let exactMatchId: string | null = null;
 
-    if (email && phone) {
-      query = query.or(`primary_email.eq.${email},primary_phone.eq.${phone}`);
-    } else if (email) {
-      query = query.eq("primary_email", email);
-    } else if (phone) {
-      query = query.eq("primary_phone", phone);
+    if (email) {
+      const { data } = await supabase
+        .from("master_customers")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("primary_email", email)
+        .maybeSingle();
+      exactMatchId = data?.id ?? null;
     }
 
-    const { data: exactMatch } = await query.maybeSingle();
+    if (!exactMatchId && phone) {
+      const { data } = await supabase
+        .from("master_customers")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("primary_phone", phone)
+        .maybeSingle();
+      exactMatchId = data?.id ?? null;
+    }
+
+    const exactMatch = exactMatchId ? { id: exactMatchId } : null;
 
     if (exactMatch) {
       // Direct SQL update — no AI needed for clean exact hits
@@ -86,13 +97,14 @@ async function processInboundPayload(body: InboundBody) {
 }
 
 export async function POST(req: NextRequest) {
-  // Auth: simple shared secret for internal/integration use
+  // Auth: shared secret is required — fail closed if not configured
   const secret = process.env.INBOUND_SYNC_SECRET;
-  if (secret) {
-    const provided = req.headers.get("x-sync-secret");
-    if (provided !== secret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "Endpoint not configured" }, { status: 503 });
+  }
+  const provided = req.headers.get("x-sync-secret");
+  if (provided !== secret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let body: InboundBody;

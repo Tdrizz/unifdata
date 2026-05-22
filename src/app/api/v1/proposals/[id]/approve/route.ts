@@ -25,17 +25,19 @@ export async function POST(
   const { company } = currentCompany;
   const admin = createAdminClient();
 
-  // Fetch the proposal and verify org ownership
+  // Atomic claim: flip PENDING → PROCESSING in a single UPDATE…WHERE.
+  // Only one concurrent request can claim the row; others get null back.
   const { data: proposal } = await admin
     .from("data_reconciliation_proposals")
-    .select("*")
+    .update({ status: "PROCESSING" })
     .eq("id", id)
     .eq("organization_id", company.id)
     .eq("status", "PENDING")
+    .select("*")
     .maybeSingle();
 
   if (!proposal) {
-    return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
+    return NextResponse.json({ error: "Proposal not found or already processed" }, { status: 404 });
   }
 
   const changes = proposal.proposed_changes as {
@@ -76,21 +78,27 @@ export async function POST(
     });
   }
 
-  // Write sync token to prevent echo loop from the write we just made
-  if (redis && changes.normalizedData) {
+  // Write sync token to prevent echo loop — covers both update and create paths.
+  // Hash matches the format used by writeSyncToken in state-engine.ts.
+  if (redis) {
     const p = changes.normalizedData;
-    const hash = crypto
-      .createHash("sha256")
-      .update(JSON.stringify({ organizationId: company.id, email: p.email, phone: p.phone }))
-      .digest("hex");
-    await redis.set(`sync_token:${hash}`, "true", { ex: 60 });
+    const email = p?.email ?? null;
+    const phone = p?.phone ?? null;
+    if (email || phone) {
+      const hash = crypto
+        .createHash("sha256")
+        .update(JSON.stringify({ organizationId: company.id, email, phone }))
+        .digest("hex");
+      await redis.set(`sync_token:${hash}`, "true", { ex: 60 });
+    }
   }
 
-  // Flip status to APPROVED
+  // Flip status to APPROVED — org check prevents cross-tenant manipulation
   await admin
     .from("data_reconciliation_proposals")
     .update({ status: "APPROVED" })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("organization_id", company.id);
 
   // Audit log
   await admin.from("ai_data_keeper_audit_logs").insert({

@@ -36,7 +36,8 @@ export async function POST(
   await admin
     .from("data_reconciliation_proposals")
     .update({ status: "REJECTED" })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("organization_id", company.id);
 
   return NextResponse.json({ ok: true });
 }

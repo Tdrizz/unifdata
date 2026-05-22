@@ -119,15 +119,14 @@ export async function runConfidenceEngine(
     };
   }
 
-  // Gemini unavailable — deterministic fallback
-  const fallbackAction =
-    best.score >= 0.80 ? "CREATE_PROPOSAL" : "CREATE_PROPOSAL";
+  // Gemini unavailable — deterministic fallback: always create a proposal for human review.
+  // targetId is null so the approve flow takes the safe INSERT path, not an unverified UPDATE.
   return {
-    action: fallbackAction,
-    targetId: best.candidateId,
+    action: "CREATE_PROPOSAL",
+    targetId: null,
     normalizedData: normalized,
     fieldDelta: best.fieldDelta,
     confidence: best.score,
-    reasoning: deterministicReasoning(best, fallbackAction),
+    reasoning: deterministicReasoning(best, "CREATE_PROPOSAL"),
   };
 }
