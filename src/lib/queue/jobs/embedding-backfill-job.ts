@@ -15,7 +15,7 @@ export async function processEmbeddingBackfillJob(
   const supabase = createAdminClient();
 
   let offset = 0;
-  let processed = 0;
+  let _processed = 0;
 
   while (true) {
     const { data: rows } = await supabase
@@ -51,7 +51,7 @@ export async function processEmbeddingBackfillJob(
           .eq("id", (row as { id: string }).id)
           .eq("company_id", companyId);
 
-        processed++;
+        _processed++;
       } catch {
         // Skip failed rows, continue with the rest
       }
