@@ -59,6 +59,136 @@ export type Database = {
           },
         ]
       }
+      agent_alerts: {
+        Row: {
+          alert_type: string
+          body: string
+          created_at: string | null
+          id: string
+          organization_id: string
+          record_id: string | null
+          severity: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          body: string
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          record_id?: string | null
+          severity?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          body?: string
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          record_id?: string | null
+          severity?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_alerts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_drafts: {
+        Row: {
+          action_label: string | null
+          approve_action: string | null
+          approve_args: Json | null
+          body: string
+          created_at: string | null
+          draft_type: string
+          id: string
+          organization_id: string
+          recipient_info: Json | null
+          record_id: string | null
+          status: string | null
+          subject: string | null
+        }
+        Insert: {
+          action_label?: string | null
+          approve_action?: string | null
+          approve_args?: Json | null
+          body: string
+          created_at?: string | null
+          draft_type: string
+          id?: string
+          organization_id: string
+          recipient_info?: Json | null
+          record_id?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Update: {
+          action_label?: string | null
+          approve_action?: string | null
+          approve_args?: Json | null
+          body?: string
+          created_at?: string | null
+          draft_type?: string
+          id?: string
+          organization_id?: string
+          recipient_info?: Json | null
+          record_id?: string | null
+          status?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_drafts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_logs: {
+        Row: {
+          agent_name: string
+          autopilot: boolean | null
+          error: string | null
+          events_fired: number | null
+          id: string
+          organization_id: string | null
+          run_at: string | null
+          signals_checked: number | null
+        }
+        Insert: {
+          agent_name: string
+          autopilot?: boolean | null
+          error?: string | null
+          events_fired?: number | null
+          id?: string
+          organization_id?: string | null
+          run_at?: string | null
+          signals_checked?: number | null
+        }
+        Update: {
+          agent_name?: string
+          autopilot?: boolean | null
+          error?: string | null
+          events_fired?: number | null
+          id?: string
+          organization_id?: string | null
+          run_at?: string | null
+          signals_checked?: number | null
+        }
+        Relationships: []
+      }
       ai_data_keeper_audit_logs: {
         Row: {
           action_type: string
@@ -164,6 +294,41 @@ export type Database = {
           },
         ]
       }
+      chat_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          messages: Json
+          organization_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          organization_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          organization_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communications_log: {
         Row: {
           channel: string
@@ -235,7 +400,9 @@ export type Database = {
           name: string
           notification_preferences: Json
           plan: string
+          preferences: Json
           status: string
+          tier: string
         }
         Insert: {
           accent_color?: string
@@ -247,7 +414,9 @@ export type Database = {
           name: string
           notification_preferences?: Json
           plan?: string
+          preferences?: Json
           status?: string
+          tier?: string
         }
         Update: {
           accent_color?: string
@@ -259,7 +428,9 @@ export type Database = {
           name?: string
           notification_preferences?: Json
           plan?: string
+          preferences?: Json
           status?: string
+          tier?: string
         }
         Relationships: []
       }
@@ -1126,6 +1297,44 @@ export type Database = {
         }
         Relationships: []
       }
+      roi_events: {
+        Row: {
+          amount_recovered: number | null
+          created_at: string | null
+          event_type: string
+          id: string
+          organization_id: string
+          record_id: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          amount_recovered?: number | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          organization_id: string
+          record_id?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          amount_recovered?: number | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          organization_id?: string
+          record_id?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roi_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales: {
         Row: {
           amount: number
@@ -1134,10 +1343,12 @@ export type Database = {
           customer_id: string | null
           id: string
           job_id: string | null
+          last_synced_at: string | null
           payment_status: string
           sale_date: string
           service_type: string | null
           source: string | null
+          source_system: string | null
         }
         Insert: {
           amount?: number
@@ -1146,10 +1357,12 @@ export type Database = {
           customer_id?: string | null
           id?: string
           job_id?: string | null
+          last_synced_at?: string | null
           payment_status?: string
           sale_date?: string
           service_type?: string | null
           source?: string | null
+          source_system?: string | null
         }
         Update: {
           amount?: number
@@ -1158,10 +1371,12 @@ export type Database = {
           customer_id?: string | null
           id?: string
           job_id?: string | null
+          last_synced_at?: string | null
           payment_status?: string
           sale_date?: string
           service_type?: string | null
           source?: string | null
+          source_system?: string | null
         }
         Relationships: [
           {
@@ -1542,3 +1757,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

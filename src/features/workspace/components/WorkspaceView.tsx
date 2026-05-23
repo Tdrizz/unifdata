@@ -22,6 +22,8 @@ import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
 import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { AgentInbox } from "./AgentInbox";
+import { RoiCounter } from "./RoiCounter";
 
 type QueueItem = {
   id: string;
@@ -66,9 +68,18 @@ function getGreeting() {
   return "Good evening";
 }
 
-type Props = WorkspaceData & { profile: IndustryProfile; companyName: string };
+type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null };
+type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string };
+type Props = WorkspaceData & {
+  profile: IndustryProfile;
+  companyName: string;
+  drafts?: Draft[];
+  alerts?: Alert[];
+  isPro?: boolean;
+  roiTotal?: number;
+};
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0 }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -205,6 +216,12 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           </>
         }
       />
+
+      {/* Agent Inbox (Pro tier) */}
+      {isPro && <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />}
+
+      {/* ROI counter (Pro tier, only if recovered > 0) */}
+      {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
 
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">

@@ -10,11 +10,13 @@ import {
   JOB_LOST_QUOTE_SMS,
   JOB_ANALYZE_DATA_FRAGMENT,
   JOB_SWEEP_BATCH,
+  JOB_RUN_NIGHTLY_COORDINATOR,
 } from "@/lib/queue/client";
 import { processOverdueInvoice, type OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
 import { processLostQuoteEmail, processLostQuoteSms, type LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
 import { processDataKeeperJob } from "@/lib/queue/jobs/data-keeper-job";
 import { processSweeperJob, type SweeperJobData } from "@/lib/queue/jobs/sweeper-job";
+import { processNightlyCoordinatorJob, type NightlyCoordinatorJobData } from "@/lib/queue/jobs/nightly-coordinator-job";
 import type { DataKeeperJobData } from "@/lib/data-keeper/types";
 
 // ── Worker ────────────────────────────────────────────────────────────────────
@@ -30,6 +32,11 @@ export function createAutomationWorker() {
       const supabase = createAdminClient();
 
       switch (job.name) {
+        case JOB_RUN_NIGHTLY_COORDINATOR: {
+          await processNightlyCoordinatorJob(job.data as NightlyCoordinatorJobData);
+          return;
+        }
+
         case JOB_OVERDUE_INVOICE: {
           const result = await processOverdueInvoice(
             job.data as OverdueInvoiceJobData,

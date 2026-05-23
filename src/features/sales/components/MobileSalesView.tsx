@@ -38,6 +38,17 @@ function formatSaleDate(dateStr: string | null | undefined) {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function sourceBadge(sourceSystem: string | null | undefined) {
+  if (!sourceSystem) return null;
+  const labels: Record<string, string> = {
+    quickbooks: "QB",
+    stripe: "Stripe",
+    square: "Square",
+    jobber: "Jobber",
+  };
+  return labels[sourceSystem.toLowerCase()] ?? sourceSystem.toUpperCase().slice(0, 4);
+}
+
 export function MobileSalesView({ sales, profile, customers = [] }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -154,13 +165,18 @@ export function MobileSalesView({ sales, profile, customers = [] }: Props) {
                     {formatCurrency(sale.amount)}
                   </p>
                 </div>
-                <div className="mt-[10px] flex items-center gap-2">
+                <div className="mt-[10px] flex items-center gap-2 flex-wrap">
                   <span className={cn(
                     "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold",
                     statusBadgeColor(sale.payment_status),
                   )}>
                     {sale.payment_status || "Unpaid"}
                   </span>
+                  {sourceBadge(sale.source_system) && (
+                    <span className="inline-flex items-center px-[7px] py-[2px] rounded-[5px] text-[10px] font-bold bg-[rgba(74,63,168,0.08)] text-ud-accent border border-[rgba(74,63,168,0.15)]">
+                      {sourceBadge(sale.source_system)}
+                    </span>
+                  )}
                   {formatSaleDate(sale.sale_date) && (
                     <span className="text-[12px] text-ud-muted">{formatSaleDate(sale.sale_date)}</span>
                   )}

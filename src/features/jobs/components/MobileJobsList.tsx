@@ -87,10 +87,20 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
         <div className="px-4">
           <EmptyState
             title={activeFilter === "All" ? `No ${profile.labels.jobPlural.toLowerCase()} yet` : `No ${activeFilter.toLowerCase()} ${profile.labels.jobPlural.toLowerCase()}`}
-            description={
+            body={
               activeFilter === "All"
-                ? "Add work manually or import records from CSV."
+                ? `Schedule your first ${profile.labels.jobSingular?.toLowerCase() ?? "job"} to start tracking work orders, visits, and completion status.`
                 : `No records are currently marked ${activeFilter.toLowerCase()}.`
+            }
+            action={
+              activeFilter === "All" ? (
+                <div className="flex flex-wrap items-center gap-2 justify-center">
+                  <Link href="/jobs/new" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
+                    + Add {profile.labels.jobSingular?.toLowerCase() ?? "job"}
+                  </Link>
+                  <Link href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</Link>
+                </div>
+              ) : undefined
             }
           />
         </div>

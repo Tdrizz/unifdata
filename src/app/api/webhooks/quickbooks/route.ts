@@ -77,7 +77,16 @@ export async function POST(request: Request) {
     await setOrgScope(supabase, companyId);
 
     for (const entity of entities) {
-      if (entity.name !== "Invoice" || entity.operation !== "Update") continue;
+      if (entity.name !== "Invoice") continue;
+
+      // Stamp source_system and last_synced_at on any matching sale record
+      await supabase
+        .from("sales")
+        .update({ source_system: "quickbooks", last_synced_at: new Date().toISOString() })
+        .eq("company_id", companyId)
+        .ilike("service_type", `%${entity.id}%`);
+
+      if (entity.operation !== "Update") continue;
 
       // Check the local sales table: is this invoice recorded as unpaid/overdue?
       const { data: sale } = await supabase
@@ -116,6 +125,27 @@ export async function POST(request: Request) {
         companyId,
         delay: "24h",
       });
+
+      // ROI detection: check if a prior approved agent_draft for this sale triggered payment
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: approvedDraft } = await supabase
+        .from("agent_drafts")
+        .select("id")
+        .eq("organization_id", companyId)
+        .eq("record_id", sale.id)
+        .eq("status", "approved")
+        .gte("created_at", thirtyDaysAgo)
+        .maybeSingle();
+
+      if (approvedDraft) {
+        await supabase.from("roi_events").insert({
+          organization_id: companyId,
+          event_type: "invoice_paid_after_reminder",
+          amount_recovered: sale.amount,
+          record_id: sale.id,
+          triggered_by: "outreach-worker",
+        });
+      }
     }
   }
 

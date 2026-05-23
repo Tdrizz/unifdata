@@ -340,8 +340,16 @@ export function FollowUpList({ followUps, opportunities, people, filters, profil
         >
           {visibleActions.length === 0 ? (
             <EmptyState
-              title={`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} found`}
-              description="Add a manual follow-up or set a next follow-up date on an opportunity."
+              title={`No ${profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} yet`}
+              body={`Stay on top of your clients by logging calls, emails, and visits. Your first ${profile?.labels.followUpSingular?.toLowerCase() ?? "follow-up"} will appear here.`}
+              action={
+                <div className="flex flex-wrap items-center gap-2 justify-center">
+                  <Link href="/follow-ups/new" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
+                    + Log {profile?.labels.followUpSingular?.toLowerCase() ?? "follow-up"}
+                  </Link>
+                  <Link href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</Link>
+                </div>
+              }
             />
           ) : (
             <>
