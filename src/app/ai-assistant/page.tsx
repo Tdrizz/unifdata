@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { isAiAllowed } from "@/lib/feature-gates";
 import { AiAssistantView } from "@/features/ai-assistant/AiAssistantView";
 import { MobileAiView } from "@/features/ai-assistant/MobileAiView";
+import { getOrCreateSession } from "@/features/ai-assistant/queries";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,19 @@ export default async function AiAssistantPage() {
   const { company } = currentCompany;
   const aiAllowed = isAiAllowed(company);
 
+  // Load existing session so chat history survives page navigation
+  let initialSessionId: string | null = null;
+  let initialMessages: Array<{ role: "user" | "model"; text: string }> = [];
+  if (aiAllowed) {
+    try {
+      const session = await getOrCreateSession(supabase, company.id);
+      initialSessionId = session.id;
+      initialMessages = session.messages;
+    } catch {
+      // non-fatal — chat starts fresh
+    }
+  }
+
   return (
     <AppShell
       companyName={company.name}
@@ -44,7 +58,7 @@ export default async function AiAssistantPage() {
           </div>
         ) : (
           <div className="hidden md:block">
-            <AiAssistantView />
+            <AiAssistantView initialMessages={initialMessages} initialSessionId={initialSessionId} />
           </div>
         )}
         {!aiAllowed ? (
@@ -56,7 +70,7 @@ export default async function AiAssistantPage() {
           </div>
         ) : (
           <div className="block md:hidden">
-            <MobileAiView />
+            <MobileAiView initialMessages={initialMessages} initialSessionId={initialSessionId} />
           </div>
         )}
       </>

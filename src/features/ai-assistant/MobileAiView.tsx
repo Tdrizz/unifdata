@@ -18,12 +18,17 @@ const STARTER_QUESTIONS = [
   "Where are my biggest data gaps?",
 ];
 
-export function MobileAiView() {
-  const [messages, setMessages] = useState<Message[]>([]);
+type Props = {
+  initialMessages?: Array<{ role: "user" | "model"; text: string }>;
+  initialSessionId?: string | null;
+};
+
+export function MobileAiView({ initialMessages = [], initialSessionId = null }: Props) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

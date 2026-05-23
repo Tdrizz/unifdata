@@ -20,11 +20,16 @@ const STARTER_QUESTIONS = [
 const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
 
-export function AiAssistantView() {
-  const [messages, setMessages] = useState<Message[]>([]);
+type Props = {
+  initialMessages?: Array<{ role: "user" | "model"; text: string }>;
+  initialSessionId?: string | null;
+};
+
+export function AiAssistantView({ initialMessages = [], initialSessionId = null }: Props) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
