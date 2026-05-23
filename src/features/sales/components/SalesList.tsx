@@ -287,7 +287,7 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
                   <p className="text-[13px] text-ud-muted mb-4 max-w-xs mx-auto">Log your first {saleSingular.toLowerCase()} to start tracking revenue, payment status, and trends.</p>
                   <div className="flex items-center justify-center gap-3">
                     <a href="#sale-quick-add" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">+ New {saleSingular.toLowerCase()}</a>
-                    <a href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</a>
+                    <Link href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</Link>
                   </div>
                 </td>
               </tr>

@@ -114,7 +114,7 @@ export function AiSettingsToggles({ autopilot, aiFirstMode, isPro }: Props) {
         <div className="flex-1">
           <p className="text-[13px] font-medium text-ud-ink">AI-first mode</p>
           <p className="text-[12px] text-ud-muted mt-[1px]">
-            Open the AI assistant instead of Today's dashboard when you sign in.
+            Open the AI assistant instead of Today&apos;s dashboard when you sign in.
           </p>
         </div>
         <Toggle enabled={aiFirstEnabled} onChange={handleAiFirstToggle} disabled={pending} />

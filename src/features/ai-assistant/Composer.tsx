@@ -26,9 +26,10 @@ export function Composer({
 
   function toggleVoice() {
     const win = typeof window !== "undefined" ? (window as unknown as Record<string, unknown>) : null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const SpeechRecognitionCtor: (new () => any) | null =
       (win?.SpeechRecognition as (new () => any)) ?? (win?.webkitSpeechRecognition as (new () => any)) ?? null;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     if (!SpeechRecognitionCtor) return;
 

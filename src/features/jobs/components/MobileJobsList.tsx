@@ -95,10 +95,10 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
             action={
               activeFilter === "All" ? (
                 <div className="flex flex-wrap items-center gap-2 justify-center">
-                  <a href="/jobs/new" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
+                  <Link href="/jobs/new" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
                     + Add {profile.labels.jobSingular?.toLowerCase() ?? "job"}
-                  </a>
-                  <a href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</a>
+                  </Link>
+                  <Link href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</Link>
                 </div>
               ) : undefined
             }
