@@ -27,6 +27,7 @@
     "openai": "^6.39.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-markdown": "^10.1.0",
     "resend": "^6.12.3",
     "sonner": "^2.0.7",
     "stripe": "^22.1.1",

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
 import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -197,7 +198,19 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null }: 
             >
               {message.text ? (
                 <>
-                  {message.text}
+                  {message.role === "model" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  ) : message.text}
                   {message.streaming && <span className="animate-pulse text-ud-muted ml-0.5">|</span>}
                 </>
               ) : null}
