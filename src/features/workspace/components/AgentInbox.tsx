@@ -56,8 +56,8 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   if (total === 0) {
     return (
       <div className="mb-5 rounded-[var(--radius-ud-lg)] border border-dashed border-ud bg-ud-surface px-5 py-4">
-        <p className="text-[13px] font-semibold text-ud-ink mb-0.5">AI Inbox is active</p>
-        <p className="text-[12.5px] text-ud-muted">Your agents will surface outreach drafts and alerts here after your first nightly run.</p>
+        <p className="text-[13px] font-semibold text-ud-ink mb-0.5">All caught up</p>
+        <p className="text-[12.5px] text-ud-muted">Your agents monitor your business overnight and will flag anything that needs your attention here.</p>
       </div>
     );
   }
