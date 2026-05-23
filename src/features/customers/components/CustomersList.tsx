@@ -186,8 +186,16 @@ export function CustomersList({
       <Card padding={0}>
         {filteredCustomers.length === 0 ? (
           <EmptyState
-            title={`No ${(profile?.labels.customerPlural ?? "clients").toLowerCase()} found`}
-            description="Try a different filter or search term."
+            title={`No ${(profile?.labels.customerPlural ?? "clients").toLowerCase()} yet`}
+            body={`Add your first ${(profile?.labels.customerSingular ?? "client").toLowerCase()} to start tracking revenue, jobs, and follow-ups.`}
+            action={
+              <div className="flex flex-wrap items-center gap-2 justify-center">
+                <a href="/customers/new" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
+                  + Add {(profile?.labels.customerSingular ?? "client").toLowerCase()}
+                </a>
+                <a href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</a>
+              </div>
+            }
           />
         ) : (
           filteredCustomers.map((customer, i) => {

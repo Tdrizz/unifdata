@@ -48,6 +48,8 @@ export default async function SettingsPage() {
               id: company.id,
               name: company.name,
               business_sector: company.business_sector,
+              tier: company.tier,
+              preferences: company.preferences as Record<string, unknown> | undefined,
             }}
             user={{ email: user.email || "" }}
             integrations={integrations}

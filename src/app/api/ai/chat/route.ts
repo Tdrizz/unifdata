@@ -10,6 +10,8 @@ import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { isPro } from "@/lib/feature-gates";
 import { getOrCreateSession, saveMessages } from "@/features/ai-assistant/queries";
 import type { StoredMessage } from "@/features/ai-assistant/queries";
+import { CHAT_TOOLS } from "@/lib/ai/tools";
+import { executeTool } from "@/lib/ai/tool-executor";
 
 type Topic = "sales" | "customers" | "jobs" | "leads" | "followups" | "all";
 
@@ -212,43 +214,134 @@ ${JSON.stringify(contextSnapshot, null, 2)}`;
   }));
 
   try {
-    const stream = await aiRouter.chat.completions.create({
+    const baseMessages: Parameters<typeof aiRouter.chat.completions.create>[0]["messages"] = [
+      { role: "system", content: systemContent },
+      ...historyMessages,
+      { role: "user", content: userText },
+    ];
+
+    // First call (non-streaming) to detect tool calls
+    const firstResponse = await aiRouter.chat.completions.create({
       model: AI_MODELS.chat,
       temperature: 0.6,
-      stream: true,
-      messages: [
-        { role: "system", content: systemContent },
-        ...historyMessages,
-        { role: "user", content: userText },
-      ],
+      stream: false,
+      tools: CHAT_TOOLS,
+      tool_choice: "auto",
+      messages: baseMessages,
     });
 
+    const firstMessage = firstResponse.choices[0]?.message;
+    const toolCalls = firstMessage?.tool_calls;
+
+    // Prepare SSE stream
     const encoder = new TextEncoder();
-    let fullText = "";
 
     const readableStream = new ReadableStream({
       async start(controller) {
-        try {
-          for await (const chunk of stream) {
-            const delta = chunk.choices[0]?.delta?.content ?? "";
-            if (delta) {
-              fullText += delta;
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+        let fullText = "";
+        let toolActionSummary: string | null = null;
+
+        if (toolCalls && toolCalls.length > 0) {
+          // Execute each tool call and collect results
+          const toolResults: { tool_call_id: string; result: string }[] = [];
+          const actionLines: string[] = [];
+
+          for (const tc of toolCalls) {
+            if (!("function" in tc) || !tc.function) continue;
+            let args: Record<string, unknown>;
+            try {
+              args = JSON.parse(tc.function.arguments);
+            } catch {
+              args = {};
+            }
+            const result = await executeTool(tc.function.name, args, supabase, company.id);
+            toolResults.push({ tool_call_id: tc.id, result: result.message });
+            if (result.success) actionLines.push(`✓ ${result.message}`);
+          }
+
+          toolActionSummary = actionLines.join("\n") || null;
+
+          // Emit tool action bubble before streaming final reply
+          if (toolActionSummary) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ toolAction: toolActionSummary })}\n\n`,
+              ),
+            );
+          }
+
+          // Build second call messages with tool results
+          const followUpMessages: Parameters<typeof aiRouter.chat.completions.create>[0]["messages"] = [
+            ...baseMessages,
+            firstMessage as { role: "assistant"; content: string | null; tool_calls: NonNullable<typeof toolCalls> },
+            ...toolResults.map((tr) => ({
+              role: "tool" as const,
+              tool_call_id: tr.tool_call_id,
+              content: tr.result,
+            })),
+          ];
+
+          // Second streaming call for final confirmation reply
+          try {
+            const followUpStream = await aiRouter.chat.completions.create({
+              model: AI_MODELS.chat,
+              temperature: 0.6,
+              stream: true,
+              messages: followUpMessages,
+            });
+
+            for await (const chunk of followUpStream) {
+              const delta = chunk.choices[0]?.delta?.content ?? "";
+              if (delta) {
+                fullText += delta;
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+              }
+            }
+          } catch {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
+              ),
+            );
+          }
+        } else {
+          // No tool calls — content is in the first response; emit it token-by-token is not possible
+          // after a non-streaming call, so emit the whole content as one chunk then stream nothing extra
+          const content = firstMessage?.content ?? "";
+          if (content) {
+            fullText = content;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: content })}\n\n`));
+          } else {
+            // Fallback: if content is empty, do a fresh streaming call without tools
+            try {
+              const fallbackStream = await aiRouter.chat.completions.create({
+                model: AI_MODELS.chat,
+                temperature: 0.6,
+                stream: true,
+                messages: baseMessages,
+              });
+              for await (const chunk of fallbackStream) {
+                const delta = chunk.choices[0]?.delta?.content ?? "";
+                if (delta) {
+                  fullText += delta;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+                }
+              }
+            } catch {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
+                ),
+              );
             }
           }
-        } catch {
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
-            ),
-          );
         }
 
-        // Persist session after stream completes
+        // Persist session
         const updatedMessages: StoredMessage[] = [
           ...session.messages,
           { role: "user", text: userText },
-          { role: "model", text: fullText || "No response generated." },
+          { role: "model", text: fullText || toolActionSummary || "No response generated." },
         ];
         const isFirstMessage = session.messages.length === 0;
         const title = isFirstMessage ? userText.slice(0, 60) : undefined;

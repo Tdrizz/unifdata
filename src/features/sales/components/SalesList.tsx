@@ -49,6 +49,27 @@ function formatSaleDate(dateStr: string | null | undefined) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function sourceBadge(sourceSystem: string | null | undefined) {
+  if (!sourceSystem) return null;
+  const labels: Record<string, string> = {
+    quickbooks: "QB",
+    stripe: "Stripe",
+    square: "Square",
+    jobber: "Jobber",
+  };
+  return labels[sourceSystem.toLowerCase()] ?? sourceSystem.toUpperCase().slice(0, 4);
+}
+
+function formatRelativeTime(dateStr: string | null | undefined) {
+  if (!dateStr) return null;
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 function getLastNMonths(n: number, now: Date) {
   const months = [];
   for (let i = n - 1; i >= 0; i--) {
@@ -261,8 +282,13 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
           <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-[13px] text-ud-muted text-center">
-                  No {salePlural.toLowerCase()} found.
+                <td colSpan={7} className="px-6 py-12 text-center">
+                  <p className="text-[14px] font-semibold text-ud-ink mb-1">No {salePlural.toLowerCase()} yet</p>
+                  <p className="text-[13px] text-ud-muted mb-4 max-w-xs mx-auto">Log your first {saleSingular.toLowerCase()} to start tracking revenue, payment status, and trends.</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <a href="#sale-quick-add" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">+ New {saleSingular.toLowerCase()}</a>
+                    <a href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</a>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -278,7 +304,17 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
                     <td className={`px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] ${isOver ? "font-semibold text-ud-danger" : "text-ud-muted"}`}>—</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={statusBadgeClass(sale.payment_status)}>{sale.payment_status || "Pending"}</span></td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
-                      <Link href={`/sales/${sale.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link>
+                      <div className="flex items-center gap-2 justify-end">
+                        {sourceBadge(sale.source_system) && (
+                          <span
+                            title={`Synced from ${sale.source_system}${sale.last_synced_at ? ` · ${formatRelativeTime(sale.last_synced_at)}` : ""}`}
+                            className="inline-flex items-center px-[7px] py-[2px] rounded-[5px] text-[10px] font-bold bg-[rgba(74,63,168,0.08)] text-ud-accent border border-[rgba(74,63,168,0.15)]"
+                          >
+                            {sourceBadge(sale.source_system)}
+                          </span>
+                        )}
+                        <Link href={`/sales/${sale.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link>
+                      </div>
                     </td>
                   </tr>
                 );

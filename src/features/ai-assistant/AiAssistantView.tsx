@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 type Message = {
-  role: "user" | "model";
+  role: "user" | "model" | "action";
   text: string;
   streaming?: boolean;
 };
@@ -80,6 +80,22 @@ export function AiAssistantView() {
 
           try {
             const parsed = JSON.parse(payload);
+            if (parsed.toolAction) {
+              // Insert action bubble before the streaming placeholder
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                const last = updated[lastIdx];
+                if (last?.streaming) {
+                  return [
+                    ...updated.slice(0, lastIdx),
+                    { role: "action" as const, text: parsed.toolAction },
+                    last,
+                  ];
+                }
+                return [...updated, { role: "action" as const, text: parsed.toolAction }];
+              });
+            }
             if (parsed.delta) {
               setMessages((prev) => {
                 const updated = [...prev];
@@ -163,13 +179,21 @@ export function AiAssistantView() {
             )}
             {messages.map((msg, i) => (
               <div key={i} className="flex flex-col gap-1">
-                <p className={`text-[10.5px] font-bold uppercase tracking-[0.10em] ${msg.role === "user" ? "text-ud-accent" : "text-[#8B80E0]"}`}>
-                  {msg.role === "user" ? "You" : "AI Assistant"}
-                </p>
-                <div className={`rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed ${msg.role === "user" ? "bg-ud-accent-tint border border-[rgba(74,63,168,0.18)] text-ud-text" : "bg-ud-surface-sunk text-ud-text"}`}>
-                  {msg.text || (msg.streaming ? <span className="animate-pulse text-ud-faint">|</span> : "")}
-                  {msg.streaming && msg.text && <span className="animate-pulse text-ud-muted">|</span>}
-                </div>
+                {msg.role === "action" ? (
+                  <div className="rounded-[10px] px-[14px] py-2.5 text-[12.5px] font-medium bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.22)] text-[#16a34a] whitespace-pre-line">
+                    {msg.text}
+                  </div>
+                ) : (
+                  <>
+                    <p className={`text-[10.5px] font-bold uppercase tracking-[0.10em] ${msg.role === "user" ? "text-ud-accent" : "text-[#8B80E0]"}`}>
+                      {msg.role === "user" ? "You" : "AI Assistant"}
+                    </p>
+                    <div className={`rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed ${msg.role === "user" ? "bg-ud-accent-tint border border-[rgba(74,63,168,0.18)] text-ud-text" : "bg-ud-surface-sunk text-ud-text"}`}>
+                      {msg.text || (msg.streaming ? <span className="animate-pulse text-ud-faint">|</span> : "")}
+                      {msg.streaming && msg.text && <span className="animate-pulse text-ud-muted">|</span>}
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             <div ref={chatBottomRef} />

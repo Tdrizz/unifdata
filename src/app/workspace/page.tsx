@@ -21,6 +21,11 @@ export default async function WorkspacePage() {
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
+
+  // AI-first mode: redirect to assistant on sign-in
+  const prefs = (company.preferences ?? {}) as Record<string, unknown>;
+  if (prefs.ai_first_mode === true) redirect("/ai-assistant");
+
   const profile = getIndustryProfile(company.business_sector);
   const isProTier = isPro(company as { tier: string });
 

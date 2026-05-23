@@ -6,7 +6,7 @@ import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
 
 type Message = {
-  role: "user" | "model";
+  role: "user" | "model" | "action";
   text: string;
   streaming?: boolean;
 };
@@ -75,6 +75,21 @@ export function MobileAiView() {
 
           try {
             const parsed = JSON.parse(payload);
+            if (parsed.toolAction) {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                const last = updated[lastIdx];
+                if (last?.streaming) {
+                  return [
+                    ...updated.slice(0, lastIdx),
+                    { role: "action" as const, text: parsed.toolAction },
+                    last,
+                  ];
+                }
+                return [...updated, { role: "action" as const, text: parsed.toolAction }];
+              });
+            }
             if (parsed.delta) {
               setMessages((prev) => {
                 const updated = [...prev];
@@ -161,20 +176,29 @@ export function MobileAiView() {
           </div>
         )}
 
-        {messages.map((message, index) => (
-          <AiMessage
-            key={index}
-            role={message.role === "user" ? "user" : "ai"}
-            isLoading={message.streaming && !message.text}
-          >
-            {message.text ? (
-              <>
-                {message.text}
-                {message.streaming && <span className="animate-pulse text-ud-muted ml-0.5">|</span>}
-              </>
-            ) : null}
-          </AiMessage>
-        ))}
+        {messages.map((message, index) =>
+          message.role === "action" ? (
+            <div
+              key={index}
+              className="rounded-[10px] px-[14px] py-[10px] text-[12.5px] font-medium bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.22)] text-[#16a34a] whitespace-pre-line"
+            >
+              {message.text}
+            </div>
+          ) : (
+            <AiMessage
+              key={index}
+              role={message.role === "user" ? "user" : "ai"}
+              isLoading={message.streaming && !message.text}
+            >
+              {message.text ? (
+                <>
+                  {message.text}
+                  {message.streaming && <span className="animate-pulse text-ud-muted ml-0.5">|</span>}
+                </>
+              ) : null}
+            </AiMessage>
+          )
+        )}
 
         {error && (
           <div className="rounded-[10px] border border-ud bg-ud-surface-soft px-[14px] py-[11px] text-[13px] text-ud-danger">
