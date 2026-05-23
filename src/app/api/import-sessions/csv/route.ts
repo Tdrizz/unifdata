@@ -102,7 +102,14 @@ export async function POST(request: Request) {
     const analyzeOnly = requestUrl.searchParams.get("analyze") === "1";
 
     if (analyzeOnly) {
-      return NextResponse.json({ ok: true, headers, mapping });
+      // includeRows=1 returns the parsed rows for client-side mapping (e.g. onboarding wizard)
+      const includeRows = requestUrl.searchParams.get("includeRows") === "1";
+      return NextResponse.json({
+        ok: true,
+        headers,
+        mapping,
+        ...(includeRows && { rows: rows.slice(0, 500) }),
+      });
     }
 
     const supabase = await createClient();
