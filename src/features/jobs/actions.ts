@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
+import { syncEmbedding } from "@/lib/embeddings/sync";
+import { buildJobText } from "@/lib/embeddings/generate";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -34,19 +36,32 @@ export async function createJobAction(
     return { fieldErrors: { job_value: "Must be a positive number." } };
   }
 
-  const { error } = await supabase.from("jobs").insert({
-    company_id: company.id,
-    customer_id: customerId || null,
-    lead_id: leadId || null,
-    service_type: serviceType,
-    status,
-    job_value: jobValue,
-    start_date: startDate || null,
-    completed_date: completedDate || null,
-    paid_status: paidStatus,
-  });
+  const { data: inserted, error } = await supabase
+    .from("jobs")
+    .insert({
+      company_id: company.id,
+      customer_id: customerId || null,
+      lead_id: leadId || null,
+      service_type: serviceType,
+      status,
+      job_value: jobValue,
+      start_date: startDate || null,
+      completed_date: completedDate || null,
+      paid_status: paidStatus,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  if (inserted) {
+    syncEmbedding(
+      "jobs",
+      inserted.id,
+      buildJobText({ service_type: serviceType, status, paid_status: paidStatus, start_date: startDate || null }),
+      company.id,
+    );
+  }
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
@@ -96,6 +111,13 @@ export async function updateJobAction(
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  syncEmbedding(
+    "jobs",
+    id,
+    buildJobText({ service_type: serviceType, status, paid_status: paidStatus, start_date: startDate || null }),
+    company.id,
+  );
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);

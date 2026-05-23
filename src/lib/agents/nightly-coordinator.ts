@@ -7,6 +7,7 @@ import { runOutreachWorker } from "./workers/outreach-worker";
 import { runRevenueWorker } from "./workers/revenue-worker";
 import { runDataQualityWorker } from "./workers/data-quality-worker";
 import { runAlertFormatterWorker } from "./workers/alert-formatter-worker";
+import { runChurnSignalAgent } from "./customer-health-agent";
 
 export async function runNightlyCoordinator(orgId: string): Promise<void> {
   const supabase = createAdminClient();
@@ -40,6 +41,9 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
       return;
     }
 
+    // Run churn signal detection alongside worker tasks
+    const churnTask = runChurnSignalAgent(orgId, supabase).catch(() => {});
+
     const workerResults = await Promise.allSettled(
       blueprint.tasks.map(async (task) => {
         switch (task.worker) {
@@ -72,6 +76,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
       }),
     );
 
+    await churnTask;
     eventsFireable = workerResults.filter((r) => r.status === "fulfilled").length;
     const failures = workerResults
       .filter((r) => r.status === "rejected")

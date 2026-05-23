@@ -7,6 +7,7 @@ import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
 import { isPro, isAiAllowed } from "@/lib/feature-gates";
+import { computeRevenueForecast } from "@/lib/analytics/revenue-forecast";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function WorkspacePage() {
   const profile = getIndustryProfile(company.business_sector);
   const isProTier = isPro(company as { tier: string });
 
-  const [data, draftsResult, alertsResult] = await Promise.all([
+  const [data, draftsResult, alertsResult, revenueForecast] = await Promise.all([
     getWorkspaceData(supabase, company.id),
     supabase
       .from("agent_drafts")
@@ -45,6 +46,7 @@ export default async function WorkspacePage() {
       .eq("status", "unread")
       .order("created_at", { ascending: false })
       .limit(10),
+    isProTier ? computeRevenueForecast(supabase, company.id) : Promise.resolve(null),
   ]);
 
   const drafts = (draftsResult.data ?? []) as unknown as Array<{
@@ -94,6 +96,7 @@ export default async function WorkspacePage() {
           alerts={alerts}
           isPro={isProTier}
           roiTotal={roiTotal}
+          revenueForecast={revenueForecast ?? undefined}
         />
         <MobileWorkspaceView
           {...data}

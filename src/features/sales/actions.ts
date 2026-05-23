@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { getTodayString } from "@/lib/date-format";
+import { syncEmbedding } from "@/lib/embeddings/sync";
+import { buildSaleText } from "@/lib/embeddings/generate";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -32,16 +34,30 @@ export async function createSaleAction(
     return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
-  const { error } = await supabase.from("sales").insert({
-    company_id: company.id,
-    amount,
-    payment_status: paymentStatus,
-    sale_date: saleDate || undefined,
-    service_type: serviceType || null,
-    source: source || null,
-  });
+  const { data: inserted, error } = await supabase
+    .from("sales")
+    .insert({
+      company_id: company.id,
+      amount,
+      payment_status: paymentStatus,
+      sale_date: saleDate || undefined,
+      service_type: serviceType || null,
+      source: source || null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  if (inserted) {
+    syncEmbedding(
+      "sales",
+      inserted.id,
+      buildSaleText({ service_type: serviceType || null, payment_status: paymentStatus, sale_date: saleDate || null, source: source || null }),
+      company.id,
+    );
+  }
+
   revalidatePath("/sales");
   revalidatePath("/workspace");
   redirect("/sales?toast=Sale+recorded");
@@ -86,6 +102,14 @@ export async function updateSaleAction(
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  syncEmbedding(
+    "sales",
+    id,
+    buildSaleText({ service_type: serviceType || null, payment_status: paymentStatus, sale_date: saleDate || null, source: source || null }),
+    company.id,
+  );
+
   revalidatePath("/sales");
   revalidatePath(`/sales/${id}`);
   revalidatePath(`/sales/${id}/edit`);
