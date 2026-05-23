@@ -42,7 +42,10 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     }
 
     // Run churn signal detection alongside worker tasks
-    const churnTask = runChurnSignalAgent(orgId, supabase).catch(() => {});
+    let churnError: string | undefined;
+    const churnTask = runChurnSignalAgent(orgId, supabase).catch((err: unknown) => {
+      churnError = err instanceof Error ? err.message : String(err);
+    });
 
     const workerResults = await Promise.allSettled(
       blueprint.tasks.map(async (task) => {
@@ -81,6 +84,8 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     const failures = workerResults
       .filter((r) => r.status === "rejected")
       .map((r) => (r as PromiseRejectedResult).reason?.message ?? "unknown error");
+
+    if (churnError) failures.push(`churn: ${churnError}`);
 
     if (failures.length > 0) {
       runError = failures.join("; ").slice(0, 2000);

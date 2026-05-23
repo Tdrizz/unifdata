@@ -25,18 +25,19 @@ export async function computeRevenueForecast(
     .eq("company_id", companyId)
     .gte("sale_date", sinceStr)
     .not("sale_date", "is", null)
+    .gt("amount", 0)       // skip $0 adjustments — they skew the epoch and regression
     .order("sale_date", { ascending: true });
 
   if (!rows || rows.length < MIN_DATA_POINTS) return null;
 
-  // Group by day (x = days since first sale)
+  // Epoch anchored to the first non-zero sale to avoid bias from $0 records
   const epoch = new Date(rows[0].sale_date!).getTime();
   const dailyTotals = new Map<number, number>();
   for (const row of rows) {
     const dayOffset = Math.round(
       (new Date(row.sale_date!).getTime() - epoch) / 86_400_000,
     );
-    dailyTotals.set(dayOffset, (dailyTotals.get(dayOffset) ?? 0) + Number(row.amount || 0));
+    dailyTotals.set(dayOffset, (dailyTotals.get(dayOffset) ?? 0) + Number(row.amount));
   }
 
   const points: [number, number][] = Array.from(dailyTotals.entries()).sort(
@@ -55,16 +56,25 @@ export async function computeRevenueForecast(
     nextMonthEstimate += Math.max(0, predict(d));
   }
 
-  // Compare last 30-day actual to forecast to derive trend
-  const last30Start = todayOffset - 30;
+  // Derive trend from the regression slope instead of last-30-day comparison.
+  // Slope comparison is more robust: it works even when last30Actual=0 (seasonal gaps).
+  // A slope covering 30 days = projected change over the next month.
+  const projectedChange = slope * 30;
   const last30Actual = points
-    .filter(([x]) => x >= last30Start)
+    .filter(([x]) => x >= todayOffset - 30)
     .reduce((sum, [, y]) => sum + y, 0);
 
-  const trendPercent =
-    last30Actual > 0
-      ? ((nextMonthEstimate - last30Actual) / last30Actual) * 100
-      : 0;
+  let trendPercent: number;
+  if (last30Actual > 0) {
+    trendPercent = Math.round(((nextMonthEstimate - last30Actual) / last30Actual) * 100);
+  } else {
+    // No recent actuals — use slope direction: +slope means growth
+    trendPercent = Math.round(
+      last30Actual === 0 && nextMonthEstimate > 0
+        ? projectedChange > 0 ? 10 : -10   // directional signal, not a % vs 0
+        : 0,
+    );
+  }
 
   const trendDirection =
     trendPercent > 2 ? "up" : trendPercent < -2 ? "down" : "flat";
@@ -72,7 +82,7 @@ export async function computeRevenueForecast(
   return {
     nextMonthEstimate: Math.round(nextMonthEstimate),
     trendDirection,
-    trendPercent: Math.round(trendPercent),
+    trendPercent: Math.abs(trendPercent),
     dataPoints: points.length,
   };
 }

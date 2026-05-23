@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateEmbedding } from "./generate";
 
@@ -15,8 +16,9 @@ export function syncEmbedding(
   text: string,
   companyId: string,
 ): void {
-  // Fire-and-forget: never await this in server actions
-  void (async () => {
+  // Use next/server `after()` so the task survives past redirect() on Vercel.
+  // redirect() throws NEXT_REDIRECT which would kill a bare fire-and-forget IIFE.
+  after(async () => {
     try {
       if (!text.trim()) return;
       const embedding = await generateEmbedding(text);
@@ -33,7 +35,7 @@ export function syncEmbedding(
     } catch {
       // Non-critical: embedding failure must never break the main action
     }
-  })();
+  });
 }
 
 export async function semanticSearch(
@@ -47,6 +49,7 @@ export async function semanticSearch(
     const supabase = createAdminClient();
     const rpcName = RPC_NAMES[table];
 
+    // pgvector accepts '[0.1,0.2,...]' text literal via PostgREST implicit cast
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any).rpc(rpcName, {
       p_company_id: companyId,

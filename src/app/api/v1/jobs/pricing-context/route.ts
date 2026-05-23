@@ -5,6 +5,11 @@ import { rateLimit } from "@/lib/rate-limit";
 
 const MIN_MATCHING_JOBS = 5;
 
+function escapeLike(s: string): string {
+  // Escape Postgres LIKE/ILIKE special characters so user input is literal
+  return s.replace(/[%_\\]/g, "\\$&");
+}
+
 export async function GET(request: Request) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
@@ -24,29 +29,36 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
 
-  // Fuzzy match: jobs where service_type contains one word from the query (case-insensitive)
+  // Use the first word of the query for fuzzy matching, escaped for ILIKE safety
+  const firstWord = escapeLike(serviceType.split(/\s+/)[0]);
+
   const { data: jobs } = await supabase
     .from("jobs")
     .select("job_value")
     .eq("company_id", companyId)
     .not("job_value", "is", null)
-    .ilike("service_type", `%${serviceType.split(/\s+/)[0]}%`)
+    .ilike("service_type", `%${firstWord}%`)
     .limit(200);
 
+  // Use total matching job count for the sufficient check (including $0 jobs)
   if (!jobs || jobs.length < MIN_MATCHING_JOBS) {
     return NextResponse.json({ sufficient: false });
   }
 
-  const values = jobs.map((j) => Number(j.job_value)).filter((v) => v > 0);
-  if (values.length < MIN_MATCHING_JOBS) {
+  // Compute average from non-zero jobs only (exclude unpriced/free work from baseline)
+  const pricedValues = jobs
+    .map((j) => Number(j.job_value))
+    .filter((v) => v > 0);
+
+  if (pricedValues.length === 0) {
     return NextResponse.json({ sufficient: false });
   }
 
-  const averageAmount = values.reduce((a, b) => a + b, 0) / values.length;
+  const averageAmount = pricedValues.reduce((a, b) => a + b, 0) / pricedValues.length;
 
   return NextResponse.json({
     sufficient: true,
     averageAmount: Math.round(averageAmount),
-    sampleSize: values.length,
+    sampleSize: jobs.length,
   });
 }

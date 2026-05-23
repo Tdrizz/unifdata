@@ -105,6 +105,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           isPro={isProTier}
+          revenueForecast={revenueForecast ?? undefined}
         />
       </>
     </AppShell>
