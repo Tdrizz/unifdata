@@ -67,7 +67,27 @@ function guessFieldTarget(header: string): FieldTarget {
 }
 
 function splitCsvLine(line: string): string[] {
-  return line.split(/[,\t]/).map((c) => c.trim().replace(/^"|"$/g, ""));
+  const fields: string[] = [];
+  let i = 0;
+  while (i < line.length) {
+    if (line[i] === '"') {
+      let field = "";
+      i++;
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2; }
+        else if (line[i] === '"') { i++; break; }
+        else { field += line[i++]; }
+      }
+      fields.push(field.trim());
+      if (line[i] === "," || line[i] === "\t") i++;
+    } else {
+      const sep = line.indexOf(",", i) === -1 ? line.indexOf("\t", i) : line.indexOf("\t", i) === -1 ? line.indexOf(",", i) : Math.min(line.indexOf(",", i), line.indexOf("\t", i));
+      const end = sep === -1 ? line.length : sep;
+      fields.push(line.slice(i, end).trim());
+      i = end + 1;
+    }
+  }
+  return fields;
 }
 
 function applyMapping(

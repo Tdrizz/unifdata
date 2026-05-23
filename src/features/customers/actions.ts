@@ -132,8 +132,12 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     if (updateError) throw new Error(`Failed to re-parent ${table}: ${updateError.message}`);
   }
 
-  // Delete the loser
-  const { error: deleteError } = await supabase.from("customers").delete().eq("id", loserId);
+  // Delete the loser — company_id guard prevents cross-tenant deletion
+  const { error: deleteError } = await supabase
+    .from("customers")
+    .delete()
+    .eq("id", loserId)
+    .eq("company_id", company.id);
   if (deleteError) throw new Error(`Failed to delete merged customer: ${deleteError.message}`);
 
   // Touch winner's updated_at
