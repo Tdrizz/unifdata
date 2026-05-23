@@ -19,6 +19,7 @@ export async function AppShell({
   userName: _userName,
   businessSector,
   hideMobileHeader,
+  agentInboxCount = 0,
 }: {
   children: ReactNode;
   companyName: string;
@@ -26,6 +27,7 @@ export async function AppShell({
   userName?: string; // kept for API compat
   businessSector?: string | null;
   hideMobileHeader?: boolean;
+  agentInboxCount?: number;
 }) {
   const supabase = await createClient();
   const companyId = await getCurrentCompanyId();
@@ -85,7 +87,7 @@ export async function AppShell({
 
           {/* Nav */}
           <nav className="sidebar-nav">
-            <AppNav businessSector={businessSector} pendingProposals={pendingProposals} />
+            <AppNav businessSector={businessSector} pendingProposals={pendingProposals} agentInboxCount={agentInboxCount} />
           </nav>
 
           {/* Footer */}

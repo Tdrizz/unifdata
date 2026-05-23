@@ -72,6 +72,10 @@ export const JOB_ANALYZE_DATA_FRAGMENT = "analyze-data-fragment";
 export const QUEUE_SWEEPER = "sweeper";
 export const JOB_SWEEP_BATCH = "sweep-batch";
 
+// ── Nightly coordinator ────────────────────────────────────────────────────────
+
+export const JOB_RUN_NIGHTLY_COORDINATOR = "run-nightly-coordinator";
+
 let dataKeeperQueue: Queue | null = null;
 
 export function getDataKeeperQueue(): Queue {

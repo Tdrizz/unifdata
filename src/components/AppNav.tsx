@@ -142,9 +142,11 @@ function isActive(pathname: string, href: string) {
 export function AppNav({
   businessSector,
   pendingProposals = 0,
+  agentInboxCount = 0,
 }: {
   businessSector?: string | null;
   pendingProposals?: number;
+  agentInboxCount?: number;
 }) {
   const pathname = usePathname();
   const profile = getIndustryProfile(businessSector);
@@ -167,7 +169,9 @@ export function AppNav({
               >
                 <span className="nav-icon"><Icon /></span>
                 <span className="nav-label">{item.label}</span>
-                {item.href === "/data-hub" && pendingProposals > 0 ? (
+                {item.href === "/workspace" && agentInboxCount > 0 ? (
+                  <span className="nav-badge">{agentInboxCount}</span>
+                ) : item.href === "/data-hub" && pendingProposals > 0 ? (
                   <span className="nav-badge">{pendingProposals}</span>
                 ) : item.badge ? (
                   <span className="nav-badge">{item.badge}</span>

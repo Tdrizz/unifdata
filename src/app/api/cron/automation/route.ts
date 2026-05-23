@@ -1,8 +1,9 @@
 import type { Worker } from "bullmq";
 import { NextResponse } from "next/server";
 import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } from "@/lib/queue/worker";
-import { getSweeperQueue, JOB_SWEEP_BATCH, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
+import { getSweeperQueue, getAutomationQueue, JOB_SWEEP_BATCH, JOB_RUN_NIGHTLY_COORDINATOR, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import { getOrgsWithPendingSweep } from "@/lib/data-keeper/sweeper";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -58,6 +59,31 @@ export async function GET(request: Request) {
   } catch (err) {
     // Non-fatal: log and continue — the automation workers must still run
     console.warn("[cron.automation] Failed to schedule sweeper batches:", err instanceof Error ? err.message : err);
+  }
+
+  // Schedule nightly coordinator jobs for Pro orgs
+  try {
+    const supabase = createAdminClient();
+    const { data: proOrgs } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("tier", "pro");
+
+    if (proOrgs && proOrgs.length > 0) {
+      const automationQueue = getAutomationQueue();
+      const dateString = new Date().toISOString().slice(0, 10);
+      await Promise.all(
+        proOrgs.map((org) =>
+          automationQueue.add(
+            JOB_RUN_NIGHTLY_COORDINATOR,
+            { orgId: org.id },
+            { ...DEFAULT_JOB_OPTIONS, jobId: `coordinator-${org.id}-${dateString}` },
+          ),
+        ),
+      );
+    }
+  } catch (err) {
+    console.warn("[cron.automation] Failed to schedule nightly coordinator jobs:", err instanceof Error ? err.message : err);
   }
 
   const worker = createAutomationWorker();

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 type Message = {
   role: "user" | "model";
   text: string;
+  streaming?: boolean;
 };
 
 const STARTER_QUESTIONS = [
@@ -23,6 +24,7 @@ export function AiAssistantView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,29 +35,84 @@ export function AiAssistantView() {
     if (!text.trim() || loading) return;
 
     const userMessage: Message = { role: "user", text: text.trim() };
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
+
+    // Add placeholder streaming message
+    setMessages((prev) => [...prev, { role: "model", text: "", streaming: true }]);
 
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({
+          messages: [userMessage],
+          sessionId,
+        }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessages((prev) => [...prev, { role: "model", text: data.error || "Something went wrong." }]);
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "model", text: data.error || "Something went wrong." },
+        ]);
         return;
       }
 
-      setMessages((prev) => [...prev, { role: "model", text: data.reply }]);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.delta) {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.streaming) {
+                  updated[updated.length - 1] = { ...last, text: last.text + parsed.delta };
+                }
+                return updated;
+              });
+            }
+            if (parsed.event === "session" && parsed.sessionId) {
+              setSessionId(parsed.sessionId);
+            }
+          } catch {
+            // ignore malformed chunks
+          }
+        }
+      }
+
+      // Mark streaming done
+      setMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.streaming) {
+          updated[updated.length - 1] = { ...last, streaming: false };
+        }
+        return updated;
+      });
     } catch {
-      setMessages((prev) => [...prev, { role: "model", text: "Could not reach the server." }]);
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "model", text: "Could not reach the server." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -64,6 +121,18 @@ export function AiAssistantView() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     sendMessage(input);
+  }
+
+  function handleClear() {
+    setMessages([]);
+    setSessionId(null);
+    if (sessionId) {
+      fetch("/api/ai/session/clear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {});
+    }
   }
 
   return (
@@ -75,16 +144,14 @@ export function AiAssistantView() {
         className="mb-6"
       />
 
-      {/* Grid layout */}
       <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 items-start">
         {/* Chat card */}
         <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[var(--radius-ud-lg)] shadow-ud overflow-hidden flex flex-col">
           <div className="px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
             <p className="text-[13.5px] font-semibold text-ud-ink">Chat</p>
-            <button className={btnGhostSm} onClick={() => setMessages([])}>Clear</button>
+            <button className={btnGhostSm} onClick={handleClear}>New conversation</button>
           </div>
 
-          {/* Chat area */}
           <div className="flex flex-col gap-3.5 p-[18px_20px] min-h-[300px]">
             {messages.length === 0 && !loading && (
               <div className="flex flex-col gap-1">
@@ -100,16 +167,11 @@ export function AiAssistantView() {
                   {msg.role === "user" ? "You" : "AI Assistant"}
                 </p>
                 <div className={`rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed ${msg.role === "user" ? "bg-ud-accent-tint border border-[rgba(74,63,168,0.18)] text-ud-text" : "bg-ud-surface-sunk text-ud-text"}`}>
-                  {msg.text}
+                  {msg.text || (msg.streaming ? <span className="animate-pulse text-ud-faint">|</span> : "")}
+                  {msg.streaming && msg.text && <span className="animate-pulse text-ud-muted">|</span>}
                 </div>
               </div>
             ))}
-            {loading && (
-              <div className="flex flex-col gap-1">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-[#8B80E0]">AI Assistant</p>
-                <div className="rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed bg-ud-surface-sunk text-ud-faint">Thinking…</div>
-              </div>
-            )}
             <div ref={chatBottomRef} />
           </div>
 
@@ -130,7 +192,6 @@ export function AiAssistantView() {
 
         {/* Right column */}
         <div className="flex flex-col gap-4">
-          {/* Try asking */}
           <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[var(--radius-ud-lg)] shadow-ud overflow-hidden">
             <div className="px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)]">
               <p className="text-[13.5px] font-semibold text-ud-ink">Try asking</p>

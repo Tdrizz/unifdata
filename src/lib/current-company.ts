@@ -19,6 +19,8 @@ export async function getCurrentCompany() {
         accent_color,
         plan,
         status,
+        tier,
+        preferences,
         created_at
     )
     `,
