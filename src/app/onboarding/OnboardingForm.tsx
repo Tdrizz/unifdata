@@ -49,7 +49,6 @@ const BTN_GHOST =
 type ManualRow = { name: string; phone: string; email: string };
 type MiniCustomer = { id: string; name: string };
 
-
 function ProgressBar({ step }: { step: number }) {
   return (
     <div className="mb-6">
