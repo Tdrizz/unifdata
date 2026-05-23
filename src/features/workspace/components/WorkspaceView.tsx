@@ -24,6 +24,8 @@ import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AgentInbox } from "./AgentInbox";
 import { RoiCounter } from "./RoiCounter";
+import { RevenueForecast } from "./RevenueForecast";
+import type { RevenueForecast as ForecastData } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -77,9 +79,10 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   isPro?: boolean;
   roiTotal?: number;
+  revenueForecast?: ForecastData;
 };
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0 }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0, revenueForecast }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -222,6 +225,13 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
       {/* ROI counter (Pro tier, only if recovered > 0) */}
       {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
+
+      {/* Revenue forecast (Pro only, when enough data) */}
+      {isPro && revenueForecast && (
+        <div className="mb-3">
+          <RevenueForecast forecast={revenueForecast} />
+        </div>
+      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">

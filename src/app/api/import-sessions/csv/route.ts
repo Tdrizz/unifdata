@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "@e965/xlsx";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import {
@@ -7,9 +6,9 @@ import {
   guessImportMapping,
   type ImportMapping,
   type ImportRecordType,
-  type RawImportRow,
 } from "@/lib/import-engine";
 import { rateLimit } from "@/lib/rate-limit";
+import { parseUploadedFile } from "@/lib/imports/parser";
 
 const validRecordTypes: ImportRecordType[] = [
   "relationships",
@@ -18,76 +17,6 @@ const validRecordTypes: ImportRecordType[] = [
   "revenue",
   "actions",
 ];
-
-
-function parseCsvLine(line: string) {
-  const values: string[] = [];
-  let current = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const nextChar = line[index + 1];
-
-    if (char === '"' && nextChar === '"') {
-      current += '"';
-      index += 1;
-      continue;
-    }
-
-    if (char === '"') {
-      insideQuotes = !insideQuotes;
-      continue;
-    }
-
-    if (char === "," && !insideQuotes) {
-      values.push(current.trim());
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  values.push(current.trim());
-
-  return values;
-}
-
-function parseCsv(text: string) {
-  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-
-  const lines = normalized
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length < 2) {
-    return {
-      headers: lines[0] ? parseCsvLine(lines[0]) : [],
-      rows: [] as RawImportRow[],
-    };
-  }
-
-  const headers = parseCsvLine(lines[0]).map((header) => header.trim());
-
-  const rows = lines.slice(1).map((line) => {
-    const values = parseCsvLine(line);
-    const row: RawImportRow = {};
-
-    headers.forEach((header, index) => {
-      row[header] = values[index]?.trim() || "";
-    });
-
-    return row;
-  });
-
-  return {
-    headers,
-    rows,
-  };
-}
-
 
 function isValidRecordType(value: string): value is ImportRecordType {
   return validRecordTypes.includes(value as ImportRecordType);
@@ -126,63 +55,28 @@ export async function POST(request: Request) {
 
     if (!uploadedFile || typeof uploadedFile === "string") {
       return NextResponse.json(
-        { error: "Upload a CSV or Excel file." },
+        { error: "Upload a file (CSV, TSV, Excel, ODS, or Numbers)." },
         { status: 400 },
       );
     }
 
     const file = uploadedFile as File;
 
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 10MB." },
+        { error: "File too large. Maximum size is 10 MB." },
         { status: 400 },
       );
     }
 
-    const isXlsx =
-      file.name.endsWith(".xlsx") ||
-      file.type ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    const parsed = await parseUploadedFile(file);
 
-    let headers: string[];
-    let rows: RawImportRow[];
-
-    if (isXlsx) {
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-        sheet,
-        { defval: "" },
-      );
-      headers =
-        jsonData.length > 0
-          ? Object.keys(jsonData[0] as Record<string, unknown>)
-          : [];
-      rows = jsonData.map((row) =>
-        Object.fromEntries(
-          Object.entries(row as Record<string, unknown>).map(([k, v]) => [
-            k,
-            String(v),
-          ]),
-        ),
-      );
-    } else {
-      const text = await file.text();
-      const parsed = parseCsv(text);
-      headers = parsed.headers;
-      rows = parsed.rows;
-    }
+    const { headers, rows } = parsed;
 
     if (!headers.length || !rows.length) {
       return NextResponse.json(
-        {
-          error:
-            "File must include a header row and at least one data row.",
-        },
+        { error: "File must include a header row and at least one data row." },
         { status: 400 },
       );
     }
@@ -191,9 +85,13 @@ export async function POST(request: Request) {
 
     if (typeof mappingValue === "string" && mappingValue.trim()) {
       try {
-        const parsed = JSON.parse(mappingValue) as unknown;
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-          mapping = parsed as ImportMapping;
+        const userMapping = JSON.parse(mappingValue) as unknown;
+        if (
+          userMapping &&
+          typeof userMapping === "object" &&
+          !Array.isArray(userMapping)
+        ) {
+          mapping = userMapping as ImportMapping;
         }
       } catch {
         // ignore malformed mapping, use auto-guessed
@@ -204,7 +102,14 @@ export async function POST(request: Request) {
     const analyzeOnly = requestUrl.searchParams.get("analyze") === "1";
 
     if (analyzeOnly) {
-      return NextResponse.json({ ok: true, headers, mapping });
+      // includeRows=1 returns the parsed rows for client-side mapping (e.g. onboarding wizard)
+      const includeRows = requestUrl.searchParams.get("includeRows") === "1";
+      return NextResponse.json({
+        ok: true,
+        headers,
+        mapping,
+        ...(includeRows && { rows: rows.slice(0, 500) }),
+      });
     }
 
     const supabase = await createClient();
@@ -233,7 +138,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to create CSV import session.",
+            : "Failed to create import session.",
       },
       { status: 500 },
     );

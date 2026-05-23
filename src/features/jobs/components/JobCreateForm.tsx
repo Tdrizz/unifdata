@@ -1,12 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { createJobAction, type ActionState } from "../actions";
 import type { CustomerRow, LeadRow } from "../types";
 import { formatCurrency } from "@/lib/utils";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
+
+type PricingContext = {
+  sufficient: true;
+  averageAmount: number;
+  sampleSize: number;
+} | { sufficient: false };
 
 type Props = {
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
@@ -18,6 +24,42 @@ export function JobCreateForm({ customers, leads }: Props) {
     createJobAction,
     null,
   );
+
+  const [serviceType, setServiceType] = useState("");
+  const [jobValue, setJobValue] = useState("");
+  const [pricingCtx, setPricingCtx] = useState<PricingContext | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!serviceType.trim()) {
+      setPricingCtx(null);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/v1/jobs/pricing-context?service_type=${encodeURIComponent(serviceType)}`,
+        );
+        if (res.ok) {
+          const data = (await res.json()) as PricingContext;
+          setPricingCtx(data);
+        }
+      } catch {
+        // Non-critical — silently ignore network errors
+      }
+    }, 600);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [serviceType]);
+
+  const belowAverage =
+    pricingCtx?.sufficient &&
+    jobValue !== "" &&
+    Number(jobValue) > 0 &&
+    Number(jobValue) < pricingCtx.averageAmount * 0.75;
 
   return (
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
@@ -68,6 +110,8 @@ export function JobCreateForm({ customers, leads }: Props) {
                 required
                 placeholder="Flooring install, website build, service visit…"
                 className={f}
+                value={serviceType}
+                onChange={(e) => setServiceType(e.target.value)}
               />
             </label>
             {state?.fieldErrors?.service_type && (
@@ -85,6 +129,8 @@ export function JobCreateForm({ customers, leads }: Props) {
                 min="0"
                 placeholder="2500"
                 className={f}
+                value={jobValue}
+                onChange={(e) => setJobValue(e.target.value)}
               />
             </label>
             {state?.fieldErrors?.job_value && (
@@ -92,6 +138,17 @@ export function JobCreateForm({ customers, leads }: Props) {
             )}
           </div>
         </div>
+
+        {belowAverage && pricingCtx?.sufficient && (
+          <div className="flex items-start gap-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3">
+            <span className="mt-0.5 text-amber-500 text-sm leading-none">⚠</span>
+            <p className="text-sm text-amber-800">
+              This is more than 25% below your workspace average of{" "}
+              <strong>{formatCurrency(pricingCtx.averageAmount)}</strong> for similar work
+              ({pricingCtx.sampleSize} jobs).
+            </p>
+          </div>
+        )}
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">

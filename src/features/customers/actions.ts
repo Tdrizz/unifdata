@@ -8,6 +8,8 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
+import { syncEmbedding } from "@/lib/embeddings/sync";
+import { buildCustomerText } from "@/lib/embeddings/generate";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -28,17 +30,35 @@ export async function createCustomerAction(
     return { fieldErrors: { email: "Enter a valid email address." } };
   }
 
-  const { error } = await supabase.from("customers").insert({
-    company_id: company.id,
-    name,
-    phone: getFormString(formData, "phone") || null,
-    email: email || null,
-    address: getFormString(formData, "address") || null,
-    customer_type: getFormString(formData, "customer_type") || null,
-    notes: getFormString(formData, "notes") || null,
-  });
+  const customerType = getFormString(formData, "customer_type") || null;
+  const address = getFormString(formData, "address") || null;
+  const notes = getFormString(formData, "notes") || null;
+
+  const { data: inserted, error } = await supabase
+    .from("customers")
+    .insert({
+      company_id: company.id,
+      name,
+      phone: getFormString(formData, "phone") || null,
+      email: email || null,
+      address,
+      customer_type: customerType,
+      notes,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  if (inserted) {
+    syncEmbedding(
+      "customers",
+      inserted.id,
+      buildCustomerText({ name, customer_type: customerType, address, notes }),
+      company.id,
+    );
+  }
+
   revalidatePath("/customers");
   revalidatePath("/workspace");
   redirect("/customers?toast=Customer+created");
@@ -62,20 +82,32 @@ export async function updateCustomerAction(
     return { fieldErrors: { email: "Enter a valid email address." } };
   }
 
+  const customerType = getFormString(formData, "customer_type") || null;
+  const address = getFormString(formData, "address") || null;
+  const notes = getFormString(formData, "notes") || null;
+
   const { error } = await supabase
     .from("customers")
     .update({
       name,
       phone: getFormString(formData, "phone") || null,
       email: email || null,
-      address: getFormString(formData, "address") || null,
-      customer_type: getFormString(formData, "customer_type") || null,
-      notes: getFormString(formData, "notes") || null,
+      address,
+      customer_type: customerType,
+      notes,
     })
     .eq("id", id)
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  syncEmbedding(
+    "customers",
+    id,
+    buildCustomerText({ name, customer_type: customerType, address, notes }),
+    company.id,
+  );
+
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
   revalidatePath(`/customers/${id}/edit`);
@@ -132,8 +164,12 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     if (updateError) throw new Error(`Failed to re-parent ${table}: ${updateError.message}`);
   }
 
-  // Delete the loser
-  const { error: deleteError } = await supabase.from("customers").delete().eq("id", loserId);
+  // Delete the loser — company_id guard prevents cross-tenant deletion
+  const { error: deleteError } = await supabase
+    .from("customers")
+    .delete()
+    .eq("id", loserId)
+    .eq("company_id", company.id);
   if (deleteError) throw new Error(`Failed to delete merged customer: ${deleteError.message}`);
 
   // Touch winner's updated_at

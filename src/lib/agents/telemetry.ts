@@ -60,7 +60,7 @@ export async function compileTelemetry(
       .from("jobs")
       .select("id", { count: "exact", head: true })
       .eq("company_id", orgId)
-      .not("status", "in", '("completed","cancelled")')
+      .not("status", "in", "(completed,cancelled)")
       .lt("updated_at", tenDaysAgo),
 
     // 4. New customers in last 7 days with no follow-up
@@ -75,7 +75,7 @@ export async function compileTelemetry(
       .from("sales")
       .select("amount")
       .eq("company_id", orgId)
-      .neq("payment_status", "paid")
+      .not("payment_status", "ilike", "paid")
       .lt("sale_date", thirtyDaysAgo),
 
     // 6. Pending data reconciliation proposals

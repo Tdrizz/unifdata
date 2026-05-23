@@ -9,6 +9,9 @@ import {
   createWizardJobAction,
   createWizardFollowUpAction,
 } from "./actions";
+import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
+import { acceptedFileExtensions } from "@/lib/imports/parser";
+import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
 
 const INDUSTRY_ICONS: Record<string, string> = {
   general: "📊",
@@ -45,68 +48,7 @@ const BTN_GHOST =
 
 type ManualRow = { name: string; phone: string; email: string };
 type MiniCustomer = { id: string; name: string };
-type FieldTarget = "first_name" | "last_name" | "full_name" | "email" | "phone" | "skip";
 
-const FIELD_OPTIONS: Array<{ value: FieldTarget; label: string }> = [
-  { value: "first_name", label: "First Name" },
-  { value: "last_name", label: "Last Name" },
-  { value: "full_name", label: "Full Name" },
-  { value: "email", label: "Email" },
-  { value: "phone", label: "Phone" },
-  { value: "skip", label: "Skip" },
-];
-
-function guessFieldTarget(header: string): FieldTarget {
-  const h = header.toLowerCase().trim();
-  if (/^name$|full.?name|display.?name/.test(h)) return "full_name";
-  if (/first.?name|fname|given.?name|^given$/.test(h)) return "first_name";
-  if (/last.?name|lname|surname|family.?name|^family$/.test(h)) return "last_name";
-  if (/email|e.?mail/.test(h)) return "email";
-  if (/phone|mobile|cell|telephone|^tel$/.test(h)) return "phone";
-  return "skip";
-}
-
-function splitCsvLine(line: string): string[] {
-  return line.split(/[,\t]/).map((c) => c.trim().replace(/^"|"$/g, ""));
-}
-
-function applyMapping(
-  rawRows: string[][],
-  headers: string[],
-  mapping: Record<string, FieldTarget>,
-): Array<{ name: string; phone: string; email: string }> {
-  return rawRows
-    .map((cols) => {
-      let firstName = "";
-      let lastName = "";
-      let fullName = "";
-      let email = "";
-      let phone = "";
-      headers.forEach((header, i) => {
-        const val = cols[i]?.trim() ?? "";
-        const target = mapping[header];
-        if (target === "first_name") firstName = val;
-        else if (target === "last_name") lastName = val;
-        else if (target === "full_name") fullName = val;
-        else if (target === "email") email = val;
-        else if (target === "phone") phone = val;
-      });
-      const name = fullName || [firstName, lastName].filter(Boolean).join(" ");
-      return { name, phone, email };
-    })
-    .filter((r) => r.name);
-}
-
-function downloadCsvTemplate() {
-  const content = "First Name,Last Name,Email,Phone\n";
-  const blob = new Blob([content], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "unifdata_contacts_template.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function ProgressBar({ step }: { step: number }) {
   return (
@@ -174,15 +116,15 @@ export function OnboardingForm() {
   const [stepError, setStepError] = useState<string | null>(null);
 
   // Step 2 — manual
-  const [contactMode, setContactMode] = useState<"manual" | "csv">("manual");
+  const [contactMode, setContactMode] = useState<"manual" | "upload">("manual");
   const [manualRows, setManualRows] = useState<ManualRow[]>([{ name: "", phone: "", email: "" }]);
 
-  // Step 2 — CSV
-  const [csvText, setCsvText] = useState("");
-  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-  const [csvRawRows, setCsvRawRows] = useState<string[][]>([]);
-  const [csvMapping, setCsvMapping] = useState<Record<string, FieldTarget>>({});
-  const [csvWarning, setCsvWarning] = useState<string | null>(null);
+  // Step 2 — file upload
+  const [uploadStep, setUploadStep] = useState<"file" | "mapping">("file");
+  const [uploadHeaders, setUploadHeaders] = useState<string[]>([]);
+  const [uploadRows, setUploadRows] = useState<Record<string, string>[]>([]);
+  const [uploadMapping, setUploadMapping] = useState<ColumnMapping>({});
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   // Step 3
   const [jobServiceType, setJobServiceType] = useState("");
@@ -208,56 +150,87 @@ export function OnboardingForm() {
     });
   }, [step, router]);
 
-  function handleCSVChange(text: string) {
-    setCsvText(text);
-    setCsvWarning(null);
-    if (!text.trim()) {
-      setCsvHeaders([]);
-      setCsvRawRows([]);
-      setCsvMapping({});
-      return;
+  async function analyzeUpload(file: File) {
+    setUploadLoading(true);
+    setStepError(null);
+    try {
+      const fd = new FormData();
+      fd.append("csvFile", file);
+      fd.append("recordType", "relationships");
+      const parseRes = await fetch("/api/import-sessions/csv?analyze=1&includeRows=1", {
+        method: "POST",
+        body: fd,
+      });
+      const parseData = await parseRes.json();
+      if (!parseRes.ok) {
+        setStepError(parseData.error || "Could not read file.");
+        return;
+      }
+      const headers: string[] = parseData.headers ?? [];
+      const rows: Record<string, string>[] = parseData.rows ?? [];
+
+      let mapping: ColumnMapping = {};
+      try {
+        const mapRes = await fetch("/api/imports/map-columns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            headers,
+            recordType: "relationships",
+            sampleRows: rows.slice(0, 3),
+          }),
+        });
+        if (mapRes.ok) {
+          const mapData = await mapRes.json();
+          mapping = mapData.mapping ?? {};
+        }
+      } catch { /* keep empty mapping */ }
+
+      setUploadHeaders(headers);
+      setUploadRows(rows);
+      setUploadMapping(mapping);
+      setUploadStep("mapping");
+    } catch {
+      setStepError("Failed to read file. Try a CSV or Excel file.");
+    } finally {
+      setUploadLoading(false);
     }
-
-    const lines = text.trim().split(/\r?\n/).filter(Boolean);
-    const firstLower = lines[0].toLowerCase();
-    const hasHeader =
-      firstLower.includes("name") ||
-      firstLower.includes("email") ||
-      firstLower.includes("phone") ||
-      firstLower.includes("first") ||
-      firstLower.includes("last");
-
-    let headers: string[];
-    let dataLines: string[];
-
-    if (hasHeader) {
-      headers = splitCsvLine(lines[0]);
-      dataLines = lines.slice(1);
-    } else {
-      const colCount = splitCsvLine(lines[0]).length;
-      headers = Array.from({ length: colCount }, (_, i) => `Column ${i + 1}`);
-      dataLines = lines;
-    }
-
-    let rawRows = dataLines.map(splitCsvLine);
-    let warning: string | null = null;
-    if (rawRows.length > 500) {
-      rawRows = rawRows.slice(0, 500);
-      warning = "Capped at 500 contacts — only the first 500 will be imported.";
-    }
-
-    const initialMapping: Record<string, FieldTarget> = {};
-    headers.forEach((h) => {
-      initialMapping[h] = guessFieldTarget(h);
-    });
-
-    setCsvHeaders(headers);
-    setCsvRawRows(rawRows);
-    setCsvMapping(initialMapping);
-    setCsvWarning(warning);
   }
 
-  const csvPreview = csvHeaders.length ? applyMapping(csvRawRows, csvHeaders, csvMapping) : [];
+  function applyUploadMapping(
+    confirmedMapping: Record<string, string>,
+  ): Array<{ name: string; phone?: string; email?: string }> {
+    return uploadRows
+      .map((row) => ({
+        name: confirmedMapping.name ? (row[confirmedMapping.name] ?? "") : "",
+        phone: confirmedMapping.phone
+          ? (row[confirmedMapping.phone] ?? undefined) || undefined
+          : undefined,
+        email: confirmedMapping.email
+          ? (row[confirmedMapping.email] ?? undefined) || undefined
+          : undefined,
+      }))
+      .filter((c) => c.name.trim())
+      .slice(0, 500);
+  }
+
+  function handleUploadMappingConfirm(confirmedMapping: Record<string, string>) {
+    setStepError(null);
+    const customers = applyUploadMapping(confirmedMapping);
+    if (!customers.length) {
+      setStep(3);
+      return;
+    }
+    startTransition(async () => {
+      const result = await createWizardCustomersAction(customers, companyId!);
+      if (result.error) {
+        setStepError(result.error);
+      } else {
+        setCreatedCustomers(result.created ?? []);
+        setStep(3);
+      }
+    });
+  }
 
   // Step 1
   function handleStep1(e: React.FormEvent<HTMLFormElement>) {
@@ -275,13 +248,10 @@ export function OnboardingForm() {
     });
   }
 
-  // Step 2
+  // Step 2 (manual mode only — upload mode is handled by handleUploadMappingConfirm)
   function handleStep2() {
     setStepError(null);
-    const customers =
-      contactMode === "csv"
-        ? csvPreview
-        : manualRows.filter((r) => r.name.trim());
+    const customers = manualRows.filter((r) => r.name.trim());
 
     if (!customers.length) {
       setStep(3);
@@ -431,16 +401,20 @@ export function OnboardingForm() {
 
           {/* Mode tabs */}
           <div className="flex border-b border-white/10">
-            {(["manual", "csv"] as const).map((mode) => (
+            {(["manual", "upload"] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
-                onClick={() => setContactMode(mode)}
+                onClick={() => {
+                  setContactMode(mode);
+                  setUploadStep("file");
+                  setStepError(null);
+                }}
                 className={`pb-2 pr-4 text-sm font-medium border-b-2 transition-colors ${
                   contactMode === mode ? activeTab : inactiveTab
                 }`}
               >
-                {mode === "manual" ? "Add manually" : "Paste CSV"}
+                {mode === "manual" ? "Add manually" : "Upload file"}
               </button>
             ))}
           </div>
@@ -505,99 +479,64 @@ export function OnboardingForm() {
             </div>
           )}
 
-          {/* CSV import */}
-          {contactMode === "csv" && (
+          {/* File upload import */}
+          {contactMode === "upload" && uploadStep === "file" && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-ud-faint">Paste your CSV below or</p>
-                <button
-                  type="button"
-                  onClick={downloadCsvTemplate}
-                  className="text-xs text-ud-accent hover:opacity-80 underline underline-offset-2"
-                >
-                  Download template ↓
-                </button>
-              </div>
-
-              <textarea
-                rows={5}
-                placeholder={"First Name,Last Name,Email,Phone\nJane,Smith,jane@email.com,555-0100"}
-                value={csvText}
-                onChange={(e) => handleCSVChange(e.target.value)}
-                className="w-full rounded-[10px] border border-white/10 bg-ud-surface px-4 py-3 font-mono text-xs text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint"
+              <p className="text-xs text-ud-faint">
+                CSV, TSV, Excel, ODS, or Apple Numbers — up to 500 contacts.
+              </p>
+              <input
+                type="file"
+                accept={acceptedFileExtensions()}
+                disabled={uploadLoading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void analyzeUpload(f);
+                }}
+                className="w-full rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-muted outline-none file:mr-3 file:rounded-[7px] file:border-0 file:bg-ud-accent file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white disabled:opacity-60"
               />
-
-              {csvWarning && <p className="text-xs text-amber-400">{csvWarning}</p>}
-
-              {/* Column mapping */}
-              {csvHeaders.length > 0 && (
-                <div className="rounded-[10px] border border-white/10 bg-white/5 p-3 space-y-2">
-                  <p className="text-xs font-medium text-ud-muted mb-1">Map columns</p>
-                  {csvHeaders.map((header) => (
-                    <div key={header} className="flex items-center justify-between gap-3">
-                      <span className="text-xs text-ud-ink truncate max-w-[120px]" title={header}>
-                        {header}
-                      </span>
-                      <select
-                        value={csvMapping[header] ?? "skip"}
-                        onChange={(e) =>
-                          setCsvMapping((prev) => ({
-                            ...prev,
-                            [header]: e.target.value as FieldTarget,
-                          }))
-                        }
-                        className="rounded-[8px] border border-white/10 bg-ud-surface px-2 py-1 text-xs text-ud-ink outline-none focus:ring-1 focus:ring-ud-accent/40"
-                      >
-                        {FIELD_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Preview */}
-              {csvPreview.length > 0 && (
-                <div className="rounded-[10px] border border-white/10 bg-white/5 p-3">
-                  <p className="mb-2 text-xs font-medium text-ud-muted">
-                    Preview — {csvPreview.length} contact{csvPreview.length !== 1 ? "s" : ""}{" "}
-                    detected
-                  </p>
-                  <div className="space-y-1">
-                    {csvPreview.slice(0, 8).map((r, i) => (
-                      <p key={i} className="text-xs text-ud-ink">
-                        {r.name}
-                        {r.phone ? ` · ${r.phone}` : ""}
-                        {r.email ? ` · ${r.email}` : ""}
-                      </p>
-                    ))}
-                    {csvPreview.length > 8 && (
-                      <p className="text-xs text-ud-faint">and {csvPreview.length - 8} more…</p>
-                    )}
-                  </div>
-                </div>
+              {uploadLoading && (
+                <p className="flex items-center gap-2 text-xs text-ud-faint">
+                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-ud-accent border-t-transparent" />
+                  Analyzing file…
+                </p>
               )}
             </div>
           )}
 
+          {contactMode === "upload" && uploadStep === "mapping" && (
+            <ColumnMapper
+              headers={uploadHeaders}
+              mapping={uploadMapping}
+              recordType="relationships"
+              onConfirm={handleUploadMappingConfirm}
+              onBack={() => { setUploadStep("file"); setStepError(null); }}
+              busy={isPending}
+            />
+          )}
+
           {stepError && <ErrorBox message={stepError} />}
 
-          <button type="button" disabled={isPending} onClick={handleStep2} className={BTN_PRIMARY}>
-            {isPending ? "Saving…" : "Continue →"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStepError(null);
-              setStep(3);
-            }}
-            className={BTN_GHOST}
-          >
-            Skip this step
-          </button>
+          {/* Only show Continue/Skip when not in mapping sub-step */}
+          {(contactMode === "manual" || (contactMode === "upload" && uploadStep === "file")) && (
+            <>
+              {contactMode === "manual" && (
+                <button type="button" disabled={isPending} onClick={handleStep2} className={BTN_PRIMARY}>
+                  {isPending ? "Saving…" : "Continue →"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setStepError(null);
+                  setStep(3);
+                }}
+                className={BTN_GHOST}
+              >
+                Skip this step
+              </button>
+            </>
+          )}
         </div>
       </>
     );

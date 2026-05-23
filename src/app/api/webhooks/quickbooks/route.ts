@@ -99,21 +99,12 @@ export async function POST(request: Request) {
 
       if (!sale) continue;
 
-      // Look up master_customers to attach the customer ID at enqueue time.
-      const { data: masterCustomer } = sale.customer_id
-        ? await supabase
-            .from("master_customers")
-            .select("id")
-            .eq("organization_id", companyId)
-            .eq("quickbooks_customer_id", entity.id)
-            .maybeSingle()
-        : { data: null };
-
       const jobData: OverdueInvoiceJobData = {
         organizationId: companyId,
         companyId,
         invoiceId: entity.id,
-        customerId: masterCustomer?.id ?? undefined,
+        // customerId is master_customers.id — not resolvable from the invoice entity alone;
+        // the job re-queries by sale.customer_id at execution time as its fallback
         invoiceAmount: sale.amount as number | undefined,
       };
 

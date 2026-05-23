@@ -7,6 +7,7 @@ import { runOutreachWorker } from "./workers/outreach-worker";
 import { runRevenueWorker } from "./workers/revenue-worker";
 import { runDataQualityWorker } from "./workers/data-quality-worker";
 import { runAlertFormatterWorker } from "./workers/alert-formatter-worker";
+import { runChurnSignalAgent } from "./customer-health-agent";
 
 export async function runNightlyCoordinator(orgId: string): Promise<void> {
   const supabase = createAdminClient();
@@ -29,7 +30,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
 
     let blueprint;
     try {
-      blueprint = await runManagerAgent(snapshot, profile);
+      blueprint = await runManagerAgent(snapshot, profile, company as { name: string });
     } catch (err) {
       const raw = (err as { rawResponse?: string }).rawResponse ?? String(err);
       await supabase.from("agent_logs").insert({
@@ -40,6 +41,12 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
       return;
     }
 
+    // Run churn signal detection alongside worker tasks
+    let churnError: string | undefined;
+    const churnTask = runChurnSignalAgent(orgId, supabase).catch((err: unknown) => {
+      churnError = err instanceof Error ? err.message : String(err);
+    });
+
     const workerResults = await Promise.allSettled(
       blueprint.tasks.map(async (task) => {
         switch (task.worker) {
@@ -48,10 +55,11 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               task.payload as Parameters<typeof runOutreachWorker>[0],
               company as { id: string; name: string; preferences?: Record<string, unknown> },
               supabase,
+              profile,
             );
             break;
           case "revenue":
-            await runRevenueWorker(snapshot, orgId, supabase);
+            await runRevenueWorker(snapshot, orgId, supabase, profile);
             break;
           case "data_quality":
             await runDataQualityWorker(
@@ -59,17 +67,25 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               supabase,
             );
             break;
-          case "ui_alert_formatter":
-            await runAlertFormatterWorker(task.payload as Record<string, unknown>, orgId, supabase);
+          case "alert_formatter":
+            await runAlertFormatterWorker(
+              task.payload as Record<string, unknown>,
+              orgId,
+              supabase,
+              profile,
+            );
             break;
         }
       }),
     );
 
+    await churnTask;
     eventsFireable = workerResults.filter((r) => r.status === "fulfilled").length;
     const failures = workerResults
       .filter((r) => r.status === "rejected")
       .map((r) => (r as PromiseRejectedResult).reason?.message ?? "unknown error");
+
+    if (churnError) failures.push(`churn: ${churnError}`);
 
     if (failures.length > 0) {
       runError = failures.join("; ").slice(0, 2000);

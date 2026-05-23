@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { importFieldDefinitions } from "@/lib/import-engine-fields";
+import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
+import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
+import { acceptedFileExtensions } from "@/lib/imports/parser";
 
 type RecordType =
   | "relationships"
@@ -55,6 +58,7 @@ function getFieldOptions(recordType: string) {
     []
   );
 }
+void getFieldOptions; // used by legacy mapping UI, kept for reference
 
 export function CsvImportSessionFlow() {
   const router = useRouter();
@@ -63,75 +67,93 @@ export function CsvImportSessionFlow() {
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const [step, setStep] = useState<Step>("upload");
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
-  // headerToField maps column header → field key (for UI dropdowns)
-  const [headerToField, setHeaderToField] = useState<Record<string, string>>(
-    {},
-  );
+  const [detectedRows, setDetectedRows] = useState<Record<string, string>[]>([]);
+  const [aiMapping, setAiMapping] = useState<ColumnMapping>({});
 
   async function analyzeCsv() {
     setMessage("");
 
     if (!file) {
-      setMessage("Choose a CSV or Excel file first.");
+      setMessage("Choose a file first.");
       return;
     }
 
     setAnalyzing(true);
 
     try {
+      // Step 1: parse file and get headers/rows
       const formData = new FormData();
       formData.append("recordType", recordType);
       formData.append("csvFile", file);
 
-      const response = await fetch("/api/import-sessions/csv?analyze=1", {
+      const parseRes = await fetch("/api/import-sessions/csv?analyze=1", {
         method: "POST",
         body: formData,
       });
 
-      const data = await response.json();
+      const parseData = await parseRes.json();
 
-      if (!response.ok) {
-        setMessage(data.error || "Failed to analyze file.");
+      if (!parseRes.ok) {
+        setMessage(parseData.error || "Failed to analyze file.");
         return;
       }
 
-      const headers: string[] = data.headers ?? [];
-      // API mapping is { fieldKey: "Column Header" } — invert for UI
-      const apiMapping: Record<string, string> = data.mapping ?? {};
-      const inverted: Record<string, string> = {};
-      for (const [fieldKey, columnHeader] of Object.entries(apiMapping)) {
-        inverted[columnHeader] = fieldKey;
+      const headers: string[] = parseData.headers ?? [];
+
+      // Step 2: ask AI mapper for confidence-scored mapping
+      let mapping: ColumnMapping = {};
+
+      try {
+        const mapRes = await fetch("/api/imports/map-columns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            headers,
+            recordType,
+            sampleRows: detectedRows.slice(0, 3),
+          }),
+        });
+
+        if (mapRes.ok) {
+          const mapData = await mapRes.json();
+          mapping = mapData.mapping ?? {};
+        }
+      } catch {
+        // AI mapping failed — fall back to server-guessed mapping
+        const serverMapping = parseData.mapping ?? {};
+        // Convert legacy { fieldKey: column } format to ColumnMapping
+        for (const [k, v] of Object.entries(serverMapping)) {
+          mapping[k] = { column: v as string, confidence: 0.75 };
+        }
       }
 
       setDetectedHeaders(headers);
-      setHeaderToField(inverted);
+      setDetectedRows(parseData.rows ?? []);
+      setAiMapping(mapping);
       setStep("mapping");
     } catch {
-      setMessage("Something went wrong while analyzing the CSV.");
+      setMessage("Something went wrong while analyzing the file.");
     } finally {
       setAnalyzing(false);
     }
   }
 
-  async function confirmAndCreate() {
-    setAnalyzing(true);
+  async function handleConfirmMapping(confirmedMapping: Record<string, string>) {
+    if (!file) return;
+
+    setImporting(true);
 
     try {
-      // Re-invert headerToField back to { fieldKey: "Column Header" }
-      const mapping: Record<string, string> = {};
-      for (const [columnHeader, fieldKey] of Object.entries(headerToField)) {
-        if (fieldKey) {
-          mapping[fieldKey] = columnHeader;
-        }
-      }
-
+      // Convert { fieldKey: column } → the legacy format the import engine expects
+      // (which is also { fieldKey: column })
       const formData = new FormData();
       formData.append("recordType", recordType);
-      formData.append("csvFile", file!);
-      formData.append("mapping", JSON.stringify(mapping));
+      formData.append("csvFile", file);
+      formData.append("mapping", JSON.stringify(confirmedMapping));
 
       const response = await fetch("/api/import-sessions/csv", {
         method: "POST",
@@ -142,14 +164,16 @@ export function CsvImportSessionFlow() {
 
       if (!response.ok) {
         setMessage(data.error || "Failed to create import.");
+        setStep("upload");
         return;
       }
 
       router.push(`/imports/sessions/${data.session_id}`);
     } catch {
       setMessage("Something went wrong while creating the import.");
+      setStep("upload");
     } finally {
-      setAnalyzing(false);
+      setImporting(false);
     }
   }
 
@@ -197,18 +221,22 @@ export function CsvImportSessionFlow() {
 
           <div className="rounded-[14px] border border-dashed border-ud bg-ud-surface-sunk p-5">
             <label className="text-sm font-medium text-ud-muted">
-              CSV or Excel file
+              Spreadsheet or CSV file
             </label>
 
             <input
               type="file"
-              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept={acceptedFileExtensions()}
               onChange={(event) => {
                 setFile(event.target.files?.[0] || null);
                 setMessage("");
               }}
               className="mt-3 w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-muted outline-none file:mr-4 file:rounded-[8px] file:border-0 file:bg-ud-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
             />
+
+            <p className="mt-2 text-xs text-ud-muted">
+              CSV, TSV, Excel (.xlsx, .xls), ODS, or Apple Numbers
+            </p>
 
             {file && (
               <p className="mt-3 text-sm font-medium text-ud-muted">
@@ -232,58 +260,14 @@ export function CsvImportSessionFlow() {
       )}
 
       {step === "mapping" && (
-        <div className="space-y-4">
-          <p className="text-sm font-semibold text-ud-ink">
-            Review column mapping
-          </p>
-          <p className="text-sm text-ud-muted">
-            We matched your columns to UnifData fields. Adjust any that look
-            wrong, then confirm.
-          </p>
-          <div className="divide-y divide-slate-100 rounded-[12px] border border-ud bg-ud-surface">
-            {detectedHeaders.map((header) => (
-              <div key={header} className="flex items-center gap-4 px-4 py-3">
-                <p className="w-1/2 truncate text-sm font-medium text-ud-muted">
-                  &ldquo;{header}&rdquo;
-                </p>
-                <select
-                  value={headerToField[header] ?? ""}
-                  onChange={(e) =>
-                    setHeaderToField((m) => ({
-                      ...m,
-                      [header]: e.target.value,
-                    }))
-                  }
-                  className="w-1/2 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-sm text-ud-ink outline-none"
-                >
-                  <option value="">Don&apos;t import</option>
-                  {getFieldOptions(recordType).map((f) => (
-                    <option key={f.key} value={f.key}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setStep("upload")}
-              className="rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={confirmAndCreate}
-              disabled={analyzing}
-              className="flex-1 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-            >
-              {analyzing ? "Importing…" : "Confirm and import"}
-            </button>
-          </div>
-        </div>
+        <ColumnMapper
+          headers={detectedHeaders}
+          mapping={aiMapping}
+          recordType={recordType}
+          onConfirm={handleConfirmMapping}
+          onBack={() => setStep("upload")}
+          busy={importing}
+        />
       )}
 
       {message && (

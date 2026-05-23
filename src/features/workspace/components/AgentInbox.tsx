@@ -41,7 +41,18 @@ const severityIcon: Record<string, string> = {
 export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro }: Props) {
   const [drafts, setDrafts] = useState(initialDrafts);
   const [alerts, setAlerts] = useState(initialAlerts);
-  const [actioningId, setActioningId] = useState<string | null>(null);
+  const [actioningIds, setActioningIds] = useState<Set<string>>(new Set());
+
+  function startActioning(id: string) {
+    setActioningIds((prev) => new Set(prev).add(id));
+  }
+  function stopActioning(id: string) {
+    setActioningIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }
 
   if (!isPro) {
     return (
@@ -63,32 +74,32 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   }
 
   async function approveDraft(id: string) {
-    setActioningId(id);
+    startActioning(id);
     try {
       await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
       setDrafts((prev) => prev.filter((d) => d.id !== id));
     } finally {
-      setActioningId(null);
+      stopActioning(id);
     }
   }
 
   async function dismissDraft(id: string) {
-    setActioningId(id);
+    startActioning(id);
     try {
       await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
       setDrafts((prev) => prev.filter((d) => d.id !== id));
     } finally {
-      setActioningId(null);
+      stopActioning(id);
     }
   }
 
   async function dismissAlert(id: string) {
-    setActioningId(id);
+    startActioning(id);
     try {
       await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
       setAlerts((prev) => prev.filter((a) => a.id !== id));
     } finally {
-      setActioningId(null);
+      stopActioning(id);
     }
   }
 
@@ -120,14 +131,14 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
             <div className="shrink-0 flex gap-1.5">
               <button
                 onClick={() => approveDraft(draft.id)}
-                disabled={actioningId === draft.id}
+                disabled={actioningIds.has(draft.id)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[7px] bg-ud-ink text-white text-[11.5px] font-semibold hover:opacity-85 transition-opacity disabled:opacity-40"
               >
                 {draft.action_label ?? "Approve & Send"}
               </button>
               <button
                 onClick={() => dismissDraft(draft.id)}
-                disabled={actioningId === draft.id}
+                disabled={actioningIds.has(draft.id)}
                 className="inline-flex items-center px-2.5 py-1.5 rounded-[7px] border border-ud text-ud-muted text-[11.5px] font-semibold hover:border-ud-hard hover:text-ud-ink transition-colors disabled:opacity-40"
               >
                 Dismiss
@@ -150,7 +161,7 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
             </div>
             <button
               onClick={() => dismissAlert(alert.id)}
-              disabled={actioningId === alert.id}
+              disabled={actioningIds.has(alert.id)}
               className="shrink-0 inline-flex items-center px-2.5 py-1.5 rounded-[7px] border border-ud text-ud-muted text-[11.5px] font-semibold hover:border-ud-hard hover:text-ud-ink transition-colors disabled:opacity-40"
             >
               Dismiss

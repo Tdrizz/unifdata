@@ -25,6 +25,8 @@ export async function POST(
   }
 
   // Execute the approved action
+  let sendSucceeded = false;
+
   if (draft.approve_action === "send_email") {
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
@@ -32,7 +34,7 @@ export async function POST(
     const args = (draft.approve_args ?? {}) as Record<string, string>;
 
     if (apiKey && domain && args.email) {
-      await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+      const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
@@ -44,6 +46,11 @@ export async function POST(
           text: args.body ?? "",
         }),
       });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        return NextResponse.json({ error: `Email delivery failed: ${res.status} ${body}` }, { status: 502 });
+      }
+      sendSucceeded = true;
     }
   } else if (draft.approve_action === "send_sms") {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -52,7 +59,7 @@ export async function POST(
     const args = (draft.approve_args ?? {}) as Record<string, string>;
 
     if (accountSid && authToken && from && args.phone) {
-      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
@@ -60,6 +67,11 @@ export async function POST(
         },
         body: new URLSearchParams({ To: args.phone, From: from, Body: args.body ?? "" }),
       });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        return NextResponse.json({ error: `SMS delivery failed: ${res.status} ${body}` }, { status: 502 });
+      }
+      sendSucceeded = true;
     }
   }
 
@@ -70,8 +82,8 @@ export async function POST(
     .eq("id", id)
     .eq("organization_id", currentCompany.company.id);
 
-  // Write ROI event if there's a linked record (invoice-based approval)
-  if (draft.record_id && draft.approve_action === "send_email") {
+  // Write ROI event only when a message was actually sent and there's a linked record
+  if (sendSucceeded && draft.record_id && draft.approve_action === "send_email") {
     await supabase.from("roi_events").insert({
       organization_id: draft.organization_id,
       event_type: "outreach_sent",
