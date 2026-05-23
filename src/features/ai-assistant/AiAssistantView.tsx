@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -194,8 +195,24 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null 
                       {msg.role === "user" ? "You" : "AI Assistant"}
                     </p>
                     <div className={`rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed ${msg.role === "user" ? "bg-ud-accent-tint border border-[rgba(74,63,168,0.18)] text-ud-text" : "bg-ud-surface-sunk text-ud-text"}`}>
-                      {msg.text || (msg.streaming ? <span className="animate-pulse text-ud-faint">|</span> : "")}
-                      {msg.streaming && msg.text && <span className="animate-pulse text-ud-muted">|</span>}
+                      {msg.role === "model" && msg.text ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                            li: ({ children }) => <li>{children}</li>,
+                            strong: ({ children }) => <strong className="font-semibold text-ud-ink">{children}</strong>,
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      ) : (
+                        <>
+                          {msg.text || (msg.streaming ? <span className="animate-pulse text-ud-faint">|</span> : "")}
+                          {msg.streaming && msg.text && <span className="animate-pulse text-ud-muted">|</span>}
+                        </>
+                      )}
                     </div>
                   </>
                 )}
