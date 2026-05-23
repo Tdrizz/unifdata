@@ -10,6 +10,7 @@ const RevenueAlertSchema = z.object({
       title: z.string().max(100),
       body: z.string().max(400),
       record_id: z.string().uuid().optional(),
+      reasoning: z.string().max(200).optional(),
     }),
   ).max(5),
 });
@@ -32,7 +33,7 @@ Generate alert cards only for issues that genuinely need attention. Use severity
 Respond with ONLY valid JSON:
 {
   "alerts": [
-    { "severity": "info"|"warning"|"critical", "title": "...", "body": "..." }
+    { "severity": "info"|"warning"|"critical", "title": "...", "body": "...", "reasoning": "1-2 sentences citing the specific numbers that triggered this alert (e.g. 'Revenue this week: $3,100 vs $5,400 avg (-43%). 4 invoices totalling $8,200 are 30+ days overdue.')" }
   ]
 }`;
 
@@ -56,6 +57,7 @@ Respond with ONLY valid JSON:
       title: alert.title,
       body: alert.body,
       record_id: alert.record_id ?? null,
+      reasoning: alert.reasoning ?? null,
     })),
   );
 }

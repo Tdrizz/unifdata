@@ -6,7 +6,7 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
-import { isPro } from "@/lib/feature-gates";
+import { isPro, isAiAllowed } from "@/lib/feature-gates";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +22,9 @@ export default async function WorkspacePage() {
 
   const { company } = currentCompany;
 
-  // AI-first mode: redirect to assistant on sign-in
+  // AI-first mode: redirect to assistant on sign-in (only if AI is allowed for this sector)
   const prefs = (company.preferences ?? {}) as Record<string, unknown>;
-  if (prefs.ai_first_mode === true) redirect("/ai-assistant");
+  if (prefs.ai_first_mode === true && isAiAllowed(company)) redirect("/ai-assistant");
 
   const profile = getIndustryProfile(company.business_sector);
   const isProTier = isPro(company as { tier: string });
@@ -33,34 +33,36 @@ export default async function WorkspacePage() {
     getWorkspaceData(supabase, company.id),
     supabase
       .from("agent_drafts")
-      .select("id, draft_type, subject, body, action_label")
+      .select("id, draft_type, subject, body, action_label, reasoning")
       .eq("organization_id", company.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(10),
     supabase
       .from("agent_alerts")
-      .select("id, alert_type, severity, title, body")
+      .select("id, alert_type, severity, title, body, reasoning")
       .eq("organization_id", company.id)
       .eq("status", "unread")
       .order("created_at", { ascending: false })
       .limit(10),
   ]);
 
-  const drafts = (draftsResult.data ?? []) as Array<{
+  const drafts = (draftsResult.data ?? []) as unknown as Array<{
     id: string;
     draft_type: string;
     subject?: string | null;
     body: string;
     action_label?: string | null;
+    reasoning?: string | null;
   }>;
 
-  const alerts = (alertsResult.data ?? []) as Array<{
+  const alerts = (alertsResult.data ?? []) as unknown as Array<{
     id: string;
     alert_type: string;
     severity: "info" | "warning" | "critical";
     title: string;
     body: string;
+    reasoning?: string | null;
   }>;
 
   // ROI: sum from roi_events this month via direct query (no RPC needed)

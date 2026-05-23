@@ -7,7 +7,7 @@ import { compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { rateLimit } from "@/lib/rate-limit";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
-import { isPro } from "@/lib/feature-gates";
+import { isPro, isAiAllowed } from "@/lib/feature-gates";
 import { getOrCreateSession, saveMessages } from "@/features/ai-assistant/queries";
 import type { StoredMessage } from "@/features/ai-assistant/queries";
 import { CHAT_TOOLS } from "@/lib/ai/tools";
@@ -35,6 +35,13 @@ export async function POST(request: Request) {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) {
     return NextResponse.json({ error: "No company found for current user." }, { status: 401 });
+  }
+
+  if (!isAiAllowed(currentCompany.company)) {
+    return NextResponse.json(
+      { error: "AI features are not available for healthcare businesses. A Business Associate Agreement (BAA) is required to process patient data with third-party AI providers." },
+      { status: 403 },
+    );
   }
 
   let body: { messages?: StoredMessage[]; sessionId?: string };
@@ -139,6 +146,15 @@ export async function POST(request: Request) {
     (f) => isOpenFollowUp(f.status) && f.due_date && f.due_date <= today,
   );
 
+  // PII reduction: strip full names, emails, phones before sending to third-party AI.
+  // Only first name + last initial is sent; contact details are omitted entirely.
+  function anonymizeName(full: string | null | undefined): string {
+    if (!full) return "Customer";
+    const parts = full.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+  }
+
   const contextSnapshot = {
     company: company.name,
     sector: profile.label,
@@ -152,7 +168,7 @@ export async function POST(request: Request) {
     },
     ...(customers.length > 0 && {
       [profile.labels.customerPlural]: customers.slice(0, 50).map((c) => ({
-        name: compactText(c.name, "Unnamed"),
+        name: anonymizeName(c.name),
         type: compactText(c.customer_type),
         hasPhone: Boolean(c.phone),
         hasEmail: Boolean(c.email),
@@ -161,7 +177,7 @@ export async function POST(request: Request) {
     ...(openLeads.length > 0 && {
       [profile.labels.leadPlural]: openLeads.slice(0, 50).map((l) => ({
         service: compactText(l.service_requested, "Untitled"),
-        linkedTo: compactText(customerById.get(l.customer_id ?? "")?.name, "Unlinked"),
+        linkedTo: anonymizeName(customerById.get(l.customer_id ?? "")?.name),
         status: compactText(l.status, "New"),
         value: Number(l.estimated_value || 0),
       })),
@@ -169,7 +185,7 @@ export async function POST(request: Request) {
     ...(jobs.length > 0 && {
       [profile.labels.jobPlural]: jobs.slice(0, 50).map((j) => ({
         service: compactText(j.service_type, "Untitled"),
-        linkedTo: compactText(customerById.get(j.customer_id ?? "")?.name, "Unlinked"),
+        linkedTo: anonymizeName(customerById.get(j.customer_id ?? "")?.name),
         status: compactText(j.status),
         value: Number(j.job_value || 0),
       })),
@@ -185,7 +201,7 @@ export async function POST(request: Request) {
     ...(followUps.length > 0 && {
       [profile.labels.followUpPlural]: followUps.slice(0, 50).map((f) => ({
         message: compactText(f.message, "Follow up"),
-        linkedTo: compactText(customerById.get(f.customer_id ?? "")?.name, "Unlinked"),
+        linkedTo: anonymizeName(customerById.get(f.customer_id ?? "")?.name),
         status: compactText(f.status, "Open"),
         dueDate: f.due_date || null,
       })),

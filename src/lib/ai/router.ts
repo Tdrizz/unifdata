@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 
 export const AI_MODELS = {
-  manager: "openai/gpt-4o-mini",
-  chat: "nousresearch/hermes-3-llama-3.1-70b",
+  manager: "nousresearch/hermes-3-llama-3.1-70b",
+  chat: "anthropic/claude-3-5-haiku-20241022",
   outreach: "anthropic/claude-3.5-sonnet",
-  revenue: "openai/gpt-4o",
+  revenue: "openai/gpt-4o-mini",
   dataQuality: "google/gemini-flash-1.5",
   alertFormatter: "nousresearch/hermes-3-llama-3.1-8b",
 } as const;

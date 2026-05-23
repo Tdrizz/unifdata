@@ -8,6 +8,7 @@ type Draft = {
   subject?: string | null;
   body: string;
   action_label?: string | null;
+  reasoning?: string | null;
 };
 
 type Alert = {
@@ -16,6 +17,7 @@ type Alert = {
   severity: "info" | "warning" | "critical";
   title: string;
   body: string;
+  reasoning?: string | null;
 };
 
 type Props = {
@@ -104,6 +106,9 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
                 <p className="text-[12.5px] font-semibold text-ud-ink mb-0.5 truncate">{draft.subject}</p>
               )}
               <p className="text-[12.5px] text-ud-text leading-relaxed line-clamp-3">{draft.body}</p>
+              {draft.reasoning && (
+                <p className="mt-1.5 text-[11.5px] text-ud-muted italic">{draft.reasoning}</p>
+              )}
             </div>
             <div className="shrink-0 flex gap-1.5">
               <button
@@ -132,6 +137,9 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
             <div className="flex-1 min-w-0">
               <p className="text-[12.5px] font-semibold text-ud-ink mb-0.5">{alert.title}</p>
               <p className="text-[12.5px] text-ud-text leading-relaxed">{alert.body}</p>
+              {alert.reasoning && (
+                <p className="mt-1.5 text-[11.5px] text-ud-muted italic">{alert.reasoning}</p>
+              )}
             </div>
             <button
               onClick={() => dismissAlert(alert.id)}
