@@ -217,8 +217,8 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
-      {/* Agent Inbox (Pro tier) */}
-      {isPro && <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />}
+      {/* Agent Inbox — always render so non-Pro users see the upgrade callout */}
+      <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />
 
       {/* ROI counter (Pro tier, only if recovered > 0) */}
       {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
