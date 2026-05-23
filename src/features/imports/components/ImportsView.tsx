@@ -1,10 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
+import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
 import { PageHeader } from "@/components/ui/PageHeader";
+import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
+import type { ImportRecordType } from "@/lib/import-engine-fields";
 
 type Props = ImportsPageData & { profile: IndustryProfile };
 
@@ -119,6 +126,150 @@ const INTEGRATIONS = [
   },
 ];
 
+const RECORD_TYPES: { value: ImportRecordType; label: string }[] = [
+  { value: "relationships", label: "Relationships" },
+  { value: "opportunities", label: "Opportunities" },
+  { value: "work", label: "Work" },
+  { value: "revenue", label: "Revenue" },
+  { value: "actions", label: "Actions" },
+];
+
+function PublicSheetsFlow() {
+  const router = useRouter();
+  const [url, setUrl] = useState("");
+  const [recordType, setRecordType] = useState<ImportRecordType>("relationships");
+  const [step, setStep] = useState<"input" | "mapping">("input");
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [mapping, setMapping] = useState<ColumnMapping>({});
+  const [message, setMessage] = useState("");
+
+  async function handleFetch() {
+    if (!url.trim()) { setMessage("Paste a Google Sheets URL first."); return; }
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/imports/google-sheets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMessage(data.error || "Could not fetch sheet."); return; }
+
+      const fetchedHeaders: string[] = data.headers ?? [];
+      const fetchedRows: Record<string, string>[] = data.rows ?? [];
+
+      // Get AI mapping
+      let aiMapping: ColumnMapping = {};
+      try {
+        const mapRes = await fetch("/api/imports/map-columns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ headers: fetchedHeaders, recordType, sampleRows: fetchedRows.slice(0, 3) }),
+        });
+        if (mapRes.ok) {
+          const mapData = await mapRes.json();
+          aiMapping = mapData.mapping ?? {};
+        }
+      } catch { /* use empty mapping */ }
+
+      setHeaders(fetchedHeaders);
+      setRows(fetchedRows);
+      setMapping(aiMapping);
+      setStep("mapping");
+    } catch {
+      setMessage("Something went wrong fetching the sheet.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirm(confirmedMapping: Record<string, string>) {
+    setImporting(true);
+    try {
+      const res = await fetch("/api/import-sessions/rows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rows,
+          recordType,
+          sourceName: "Google Sheets",
+          sourceType: "google_sheets",
+          mapping: confirmedMapping,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setMessage(data.error || "Import failed."); setStep("input"); return; }
+      router.push(`/imports/sessions/${data.session_id}`);
+    } catch {
+      setMessage("Something went wrong.");
+      setStep("input");
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {step === "input" && (
+        <>
+          <p className="text-sm text-ud-muted">
+            Paste a public Google Sheets URL, or{" "}
+            <Link href="/api/integrations/google/start" className="font-semibold text-ud-muted underline underline-offset-2 hover:text-ud-ink">
+              connect your Google account
+            </Link>{" "}
+            for private sheets.
+          </p>
+          <select
+            value={recordType}
+            onChange={(e) => setRecordType(e.target.value as ImportRecordType)}
+            className="w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none"
+          >
+            {RECORD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setMessage(""); }}
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+            className="w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/20"
+          />
+          <button
+            type="button"
+            onClick={handleFetch}
+            disabled={!url.trim() || loading}
+            className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+          >
+            {loading && <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {loading ? "Fetching…" : "Fetch sheet"}
+          </button>
+        </>
+      )}
+
+      {step === "mapping" && (
+        <ColumnMapper
+          headers={headers}
+          mapping={mapping}
+          recordType={recordType}
+          onConfirm={handleConfirm}
+          onBack={() => setStep("input")}
+          busy={importing}
+        />
+      )}
+
+      {message && (
+        <div className="flex items-start justify-between gap-3 rounded-[12px] border border-ud bg-ud-surface p-4">
+          <p className="text-sm font-semibold text-ud-muted">{message}</p>
+          <button type="button" onClick={() => setMessage("")} className="shrink-0 text-ud-faint hover:text-ud-muted">&times;</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
   const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
   const googleConnected = integrations.some((i) =>
@@ -155,11 +306,11 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
 
       {/* Two import cards */}
       <div className="grid grid-cols-2 gap-5 items-start mb-[22px]">
-        {/* CSV card */}
+        {/* File upload card */}
         <div className={card}>
           <div className={cardHeader}>
-            <p className={cardTitle}>Upload a CSV</p>
-            <p className={cardDesc}>Drag a file or click to browse</p>
+            <p className={cardTitle}>Upload a file</p>
+            <p className={cardDesc}>CSV, TSV, Excel, ODS, or Apple Numbers</p>
           </div>
           <div className="p-[18px_20px]">
             <CsvImportSessionFlow />
@@ -176,17 +327,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
             {googleConnected ? (
               <GoogleSheetsImportFlow />
             ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-ud-muted">
-                  Connect your Google account to pick a spreadsheet and import data directly.
-                </p>
-                <Link
-                  href="/api/integrations/google/start"
-                  className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-ud-ink px-4 py-3 text-sm font-semibold text-white hover:opacity-90"
-                >
-                  Connect Google Sheets
-                </Link>
-              </div>
+              <PublicSheetsFlow />
             )}
           </div>
         </div>
