@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 export const AI_MODELS = {
   manager: "openai/gpt-4o-mini",
-  chat: "nousresearch/hermes-3-llama-3.1-70b",
+  chat: "openai/gpt-4o-mini",
   outreach: "anthropic/claude-3.5-sonnet",
   revenue: "openai/gpt-4o",
   dataQuality: "google/gemini-flash-1.5",

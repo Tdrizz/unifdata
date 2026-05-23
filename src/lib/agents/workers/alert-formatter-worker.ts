@@ -9,6 +9,7 @@ const AgentAlertSchema = z.object({
       severity: z.enum(["info", "warning", "critical"]),
       title: z.string().max(100),
       body: z.string().max(400),
+      reasoning: z.string().max(200).optional(),
     }),
   ).max(5),
 });
@@ -43,7 +44,7 @@ Only create alerts for signals that actually need attention. Keep titles short (
 Respond with ONLY valid JSON:
 {
   "alerts": [
-    { "alert_type": "string", "severity": "info"|"warning"|"critical", "title": "...", "body": "..." }
+    { "alert_type": "string", "severity": "info"|"warning"|"critical", "title": "...", "body": "...", "reasoning": "1-2 sentences explaining which specific data triggered this alert (e.g. 'Revenue dropped 23% vs 4-week avg; 3 invoices unpaid >30 days.')" }
   ]
 }`;
 
@@ -66,6 +67,7 @@ Respond with ONLY valid JSON:
       severity: alert.severity,
       title: alert.title,
       body: alert.body,
+      reasoning: alert.reasoning ?? null,
     })),
   );
 }

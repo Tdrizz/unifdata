@@ -8,6 +8,7 @@ const OutreachDraftSchema = z.object({
   subject: z.string().max(200).optional(),
   body: z.string().min(1).max(2000),
   recipient_info: z.record(z.string(), z.unknown()).optional().default({}),
+  reasoning: z.string().max(200).optional(),
 });
 
 type OutreachPayload = {
@@ -37,7 +38,8 @@ Respond with ONLY valid JSON:
   "draft_type": "outreach_email" | "outreach_sms",
   "subject": "email subject line (omit for SMS)",
   "body": "the message body",
-  "recipient_info": { "customer_id": "${payload.customer_id ?? ""}", "customer_name": "${payload.customer_name ?? ""}" }
+  "recipient_info": { "customer_id": "${payload.customer_id ?? ""}", "customer_name": "${payload.customer_name ?? ""}" },
+  "reasoning": "1-2 sentences explaining why this outreach was triggered (e.g. 'No contact in 47 days and an open invoice of $1,200.')"
 }`;
 
   const response = await aiRouter.chat.completions.create({
@@ -95,5 +97,6 @@ Respond with ONLY valid JSON:
     action_label: draft.draft_type === "outreach_email" ? "Send email" : "Send SMS",
     approve_action: draft.draft_type === "outreach_email" ? "send_email" : "send_sms",
     approve_args: draft.recipient_info,
+    reasoning: draft.reasoning ?? null,
   });
 }
