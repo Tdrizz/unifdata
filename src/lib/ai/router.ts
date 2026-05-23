@@ -6,7 +6,7 @@ export const AI_MODELS = {
   outreach: "anthropic/claude-3.5-sonnet",
   revenue: "openai/gpt-4o-mini",
   dataQuality: "google/gemini-flash-1.5",
-  alertFormatter: "nousresearch/hermes-3-llama-3.1-8b",
+  alertFormatter: "openai/gpt-4o-mini",
 } as const;
 
 let _client: OpenAI | null = null;
