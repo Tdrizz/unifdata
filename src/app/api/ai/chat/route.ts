@@ -178,6 +178,7 @@ export async function POST(request: Request) {
     },
     ...(customers.length > 0 && {
       [profile.labels.customerPlural]: customers.slice(0, 50).map((c) => ({
+        id: c.id,
         name: anonymizeName(c.name),
         type: compactText(c.customer_type),
         hasPhone: Boolean(c.phone),
@@ -186,16 +187,20 @@ export async function POST(request: Request) {
     }),
     ...(openLeads.length > 0 && {
       [profile.labels.leadPlural]: openLeads.slice(0, 50).map((l) => ({
+        id: l.id,
         service: compactText(l.service_requested, "Untitled"),
         linkedTo: anonymizeName(customerById.get(l.customer_id ?? "")?.name),
+        linkedToId: l.customer_id ?? null,
         status: compactText(l.status, "New"),
         value: Number(l.estimated_value || 0),
       })),
     }),
     ...(jobs.length > 0 && {
       [profile.labels.jobPlural]: jobs.slice(0, 50).map((j) => ({
+        id: j.id,
         service: compactText(j.service_type, "Untitled"),
         linkedTo: anonymizeName(customerById.get(j.customer_id ?? "")?.name),
+        linkedToId: j.customer_id ?? null,
         status: compactText(j.status),
         value: Number(j.job_value || 0),
       })),
@@ -229,6 +234,7 @@ Rules:
 - Plain text only. Keep answers concise (under 200 words unless clearly needed).
 - If asked something the data doesn't contain, say so plainly.
 - Today's date is ${today}.
+- When calling tools that require a customer_id or job_id, look up the id from the context data by matching the customer or job name. Never ask the user for an ID — resolve it yourself from the context.
 
 [Current DB Context]
 ${JSON.stringify(contextSnapshot, null, 2)}`;
