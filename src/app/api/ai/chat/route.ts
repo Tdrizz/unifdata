@@ -86,51 +86,58 @@ export async function POST(request: Request) {
   const userText = lastMessage.text.trim();
   const topic = detectTopic(userText);
 
-  // Fetch only the relevant data tables
+  // Fetch relevant data rows + exact counts in parallel.
+  // Counts always run so totals are accurate even when rows are capped.
   const fetchAll = topic === "all";
-  const [customersResult, leadsResult, jobsResult, salesResult, followUpsResult] =
-    await Promise.all([
-      (fetchAll || topic === "customers")
-        ? supabase
-            .from("customers")
-            .select("id, name, phone, email, address, customer_type, created_at")
-            .eq("company_id", company.id)
-            .order("created_at", { ascending: false })
-            .limit(fetchAll ? 50 : 5)
-        : Promise.resolve({ data: [] }),
-      (fetchAll || topic === "leads")
-        ? supabase
-            .from("leads")
-            .select("id, customer_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at")
-            .eq("company_id", company.id)
-            .order("created_at", { ascending: false })
-            .limit(fetchAll ? 50 : 5)
-        : Promise.resolve({ data: [] }),
-      (fetchAll || topic === "jobs")
-        ? supabase
-            .from("jobs")
-            .select("id, customer_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
-            .eq("company_id", company.id)
-            .order("created_at", { ascending: false })
-            .limit(fetchAll ? 50 : 5)
-        : Promise.resolve({ data: [] }),
-      (fetchAll || topic === "sales")
-        ? supabase
-            .from("sales")
-            .select("id, amount, payment_status, sale_date, service_type, source, created_at")
-            .eq("company_id", company.id)
-            .order("created_at", { ascending: false })
-            .limit(fetchAll ? 50 : 5)
-        : Promise.resolve({ data: [] }),
-      (fetchAll || topic === "followups")
-        ? supabase
-            .from("follow_ups")
-            .select("id, customer_id, due_date, status, message, created_at")
-            .eq("company_id", company.id)
-            .order("created_at", { ascending: false })
-            .limit(fetchAll ? 50 : 5)
-        : Promise.resolve({ data: [] }),
-    ]);
+  const [
+    customersResult, leadsResult, jobsResult, salesResult, followUpsResult,
+    customerCount, leadCount, jobCount, followUpCount,
+  ] = await Promise.all([
+    (fetchAll || topic === "customers")
+      ? supabase
+          .from("customers")
+          .select("id, name, phone, email, address, customer_type, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(fetchAll ? 50 : 20)
+      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "leads")
+      ? supabase
+          .from("leads")
+          .select("id, customer_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(fetchAll ? 50 : 20)
+      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "jobs")
+      ? supabase
+          .from("jobs")
+          .select("id, customer_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(fetchAll ? 50 : 20)
+      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "sales")
+      ? supabase
+          .from("sales")
+          .select("id, amount, payment_status, sale_date, service_type, source, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(fetchAll ? 50 : 20)
+      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "followups")
+      ? supabase
+          .from("follow_ups")
+          .select("id, customer_id, due_date, status, message, created_at")
+          .eq("company_id", company.id)
+          .order("created_at", { ascending: false })
+          .limit(fetchAll ? 50 : 20)
+      : Promise.resolve({ data: [] }),
+    supabase.from("customers").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+    supabase.from("leads").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+    supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+    supabase.from("follow_ups").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+  ]);
 
   const customers = customersResult.data || [];
   const leads = leadsResult.data || [];
@@ -160,11 +167,14 @@ export async function POST(request: Request) {
     sector: profile.label,
     today,
     totals: {
-      [profile.labels.customerPlural]: customers.length,
+      [profile.labels.customerPlural]: customerCount.count ?? customers.length,
       [`open ${profile.labels.leadPlural}`]: openLeads.length,
+      [`total ${profile.labels.leadPlural}`]: leadCount.count ?? leads.length,
+      [`total ${profile.labels.jobPlural}`]: jobCount.count ?? jobs.length,
       openPipelineValue: `$${Math.round(openPipelineValue).toLocaleString()}`,
       unpaidRecords: unpaidSales.length,
       overdueActions: overdueFollowUps.length,
+      totalOpenFollowUps: followUpCount.count ?? followUps.length,
     },
     ...(customers.length > 0 && {
       [profile.labels.customerPlural]: customers.slice(0, 50).map((c) => ({
