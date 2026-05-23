@@ -9,6 +9,7 @@ import { formatCurrency, compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { GEMINI_MODEL } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
+import { buildOperatingBriefSystemPrompt, buildOperatingBriefUserPrompt } from "@/lib/ai/prompts";
 
 function getStartOfMonth() {
   const now = new Date();
@@ -349,67 +350,15 @@ export async function POST() {
       }),
   };
 
-  const systemInstruction = `You are the operating assistant inside UnifData, a business management platform.
-Your job is to give ${company.name} a short, direct operating brief based on real workspace data.
-This business runs as a ${profile.label} operation.
-In this workspace: customers are called "${profile.labels.customerPlural}", leads/opportunities are called "${profile.labels.leadPlural}", active work is called "${profile.labels.jobPlural}", payments are called "${profile.labels.salePlural}", and reminders are called "${profile.labels.followUpPlural}".
-Use this vocabulary throughout your brief.
-
-Rules:
-- Never invent facts. Only state what the data confirms.
-- Never say "based on the data provided" or similar filler phrases.
-- No markdown: no bold, no tables, no hashtags, no bullet symbols other than plain hyphens.
-- Plain text only.
-- Stay under 280 words.
-- Sound like a practical operations advisor, not a generic analytics report.
-- Use the correct vocabulary for this business type throughout.`;
-
-  const userPrompt = isEmptyWorkspace
-    ? `This is a brand-new workspace for ${company.name}, a ${profile.label} business. No records have been added yet.
-
-Write a practical first-week setup brief. Tell the owner:
-1. What to add first and why it matters for a ${profile.label}.
-2. Which area creates the most operational value earliest — ${profile.labels.customerPlural}, ${profile.labels.leadPlural}, or ${profile.labels.jobPlural}.
-3. The single most common early mistake businesses in this sector make when setting up a workspace like this.
-
-Use this exact format:
-
-Operating Brief
-[2-4 sentences framing where they are and what the first week should accomplish]
-
-Getting Started
-- [First action]
-- [Second action]
-- [Third action]
-
-Where to Focus First
-1. [Most impactful starting point]
-2. [Second priority]
-3. [Common early mistake to avoid]`
-    : `Here is the current workspace data for ${company.name} as of ${today}.
-
-Summary metrics:
-${JSON.stringify(metrics, null, 2)}
-
-Record-level data (most recent records, up to 40 per category):
-${JSON.stringify(workspaceData, null, 2)}
-
-Write an operating brief. Use the record-level data to be specific — mention names, services, or amounts where they matter. Do not list everything; surface the most important items only.
-
-Use this exact format:
-
-Operating Brief
-[2-4 sentences. Lead with the single most important thing the owner should act on today.]
-
-Needs Attention
-- [Specific item — name it if possible]
-- [Specific item]
-- [Specific item]
-
-Recommended Next Steps
-1. [Concrete action]
-2. [Concrete action]
-3. [Concrete action]`;
+  const systemInstruction = buildOperatingBriefSystemPrompt(profile, company);
+  const userPrompt = buildOperatingBriefUserPrompt(
+    profile,
+    company,
+    metrics,
+    workspaceData as Record<string, unknown[]>,
+    today,
+    isEmptyWorkspace,
+  );
 
   try {
     const ai = new GoogleGenAI({ apiKey });

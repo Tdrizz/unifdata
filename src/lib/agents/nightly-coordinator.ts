@@ -29,7 +29,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
 
     let blueprint;
     try {
-      blueprint = await runManagerAgent(snapshot, profile);
+      blueprint = await runManagerAgent(snapshot, profile, company as { name: string });
     } catch (err) {
       const raw = (err as { rawResponse?: string }).rawResponse ?? String(err);
       await supabase.from("agent_logs").insert({
@@ -48,10 +48,11 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               task.payload as Parameters<typeof runOutreachWorker>[0],
               company as { id: string; name: string; preferences?: Record<string, unknown> },
               supabase,
+              profile,
             );
             break;
           case "revenue":
-            await runRevenueWorker(snapshot, orgId, supabase);
+            await runRevenueWorker(snapshot, orgId, supabase, profile);
             break;
           case "data_quality":
             await runDataQualityWorker(
@@ -59,8 +60,13 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               supabase,
             );
             break;
-          case "ui_alert_formatter":
-            await runAlertFormatterWorker(task.payload as Record<string, unknown>, orgId, supabase);
+          case "alert_formatter":
+            await runAlertFormatterWorker(
+              task.payload as Record<string, unknown>,
+              orgId,
+              supabase,
+              profile,
+            );
             break;
         }
       }),

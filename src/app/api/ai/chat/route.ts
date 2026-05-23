@@ -12,6 +12,7 @@ import { getOrCreateSession, saveMessages } from "@/features/ai-assistant/querie
 import type { StoredMessage } from "@/features/ai-assistant/queries";
 import { CHAT_TOOLS } from "@/lib/ai/tools";
 import { executeTool } from "@/lib/ai/tool-executor";
+import { buildChatSystemPrompt, buildChatUserMessage, serializeContextForChat } from "@/lib/ai/prompts";
 
 type Topic = "sales" | "customers" | "jobs" | "leads" | "followups" | "all";
 
@@ -223,21 +224,11 @@ export async function POST(request: Request) {
     }),
   };
 
-  const systemContent = `You are the AI advisor inside UnifData for ${company.name}, a ${profile.label} business.
-You have access to the owner's live workspace data. Answer questions directly and specifically using that data.
-Use the correct terminology: ${profile.labels.customerPlural}, ${profile.labels.leadPlural}, ${profile.labels.jobPlural}, ${profile.labels.salePlural}, ${profile.labels.followUpPlural}.
-
-Rules:
-- Be direct and specific. Mention names, amounts, and dates from the data when relevant.
-- Never say "based on the data provided" or similar filler.
-- Use markdown sparingly: bullet lists and bold are fine, but avoid headers and tables.
-- Keep answers concise (under 200 words unless clearly needed).
-- If asked something the data doesn't contain, say so plainly.
-- Today's date is ${today}.
-- When calling tools that require a customer_id or job_id, look up the id from the context data by matching the customer or job name. Never ask the user for an ID — resolve it yourself from the context.
-
-[Current DB Context]
-${JSON.stringify(contextSnapshot, null, 2)}`;
+  const systemContent = buildChatSystemPrompt(profile, company);
+  const serializedContext = serializeContextForChat(
+    contextSnapshot as Record<string, unknown>,
+    profile,
+  );
 
   // Build conversation history in OpenAI format
   const historyMessages = session.messages.slice(-20).map((m) => ({
@@ -249,7 +240,7 @@ ${JSON.stringify(contextSnapshot, null, 2)}`;
     const baseMessages: Parameters<typeof aiRouter.chat.completions.create>[0]["messages"] = [
       { role: "system", content: systemContent },
       ...historyMessages,
-      { role: "user", content: userText },
+      { role: "user", content: buildChatUserMessage(serializedContext, userText) },
     ];
 
     // First call (non-streaming) to detect tool calls

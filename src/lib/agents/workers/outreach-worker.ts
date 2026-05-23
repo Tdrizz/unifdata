@@ -2,51 +2,32 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { isAutopilot } from "@/lib/feature-gates";
+import { buildOutreachPrompt, buildOutreachUserMessage } from "@/lib/ai/prompts";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
   subject: z.string().max(200).optional(),
   body: z.string().min(1).max(2000),
-  recipient_info: z.record(z.string(), z.unknown()).optional().default({}),
-  reasoning: z.string().max(200).optional(),
+  reasoning: z.string().max(300).optional(),
 });
 
-type OutreachPayload = {
-  customer_id?: string;
-  customer_name?: string;
-  last_interaction?: string;
-  reason?: string;
-  industry_tone?: string;
-};
+type OutreachPayload = Record<string, unknown>;
 
 export async function runOutreachWorker(
   payload: OutreachPayload,
   company: { id: string; name: string; preferences?: Record<string, unknown> },
   supabase: SupabaseClient,
+  profile: IndustryProfile,
 ): Promise<void> {
-  const prompt = `You are drafting a professional outreach message for a ${company.name} customer.
-
-Customer: ${payload.customer_name ?? "valued customer"}
-Last interaction: ${payload.last_interaction ?? "unknown"}
-Reason for outreach: ${payload.reason ?? "re-engagement"}
-Tone: ${payload.industry_tone ?? "professional and friendly"}
-
-Write a short, personalized outreach message (2-3 sentences). Decide if email or SMS is more appropriate based on message length and tone.
-
-Respond with ONLY valid JSON:
-{
-  "draft_type": "outreach_email" | "outreach_sms",
-  "subject": "email subject line (omit for SMS)",
-  "body": "the message body",
-  "recipient_info": { "customer_id": "${payload.customer_id ?? ""}", "customer_name": "${payload.customer_name ?? ""}" },
-  "reasoning": "1-2 sentences explaining why this outreach was triggered (e.g. 'No contact in 47 days and an open invoice of $1,200.')"
-}`;
-
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.outreach,
     temperature: 0.7,
     response_format: { type: "json_object" },
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildOutreachPrompt(profile) },
+      { role: "user", content: buildOutreachUserMessage(payload) },
+    ],
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
@@ -55,16 +36,19 @@ Respond with ONLY valid JSON:
   if (!parsed.success) return;
 
   const draft = parsed.data;
+  const recipientInfo = {
+    customer_id: payload.customer_id ?? "",
+    customer_name: payload.customer_name ?? "",
+  };
 
   if (isAutopilot(company)) {
-    // Autopilot: fire communication directly
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
     const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
-    const to = (draft.recipient_info as { email?: string })?.email;
+    const to = (payload as { email?: string }).email;
 
     if (draft.draft_type === "outreach_email" && apiKey && domain && to) {
-      await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+      const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
@@ -76,6 +60,7 @@ Respond with ONLY valid JSON:
           text: draft.body,
         }),
       });
+      if (!res.ok) return;
     }
 
     await supabase.from("agent_logs").insert({
@@ -87,16 +72,15 @@ Respond with ONLY valid JSON:
     return;
   }
 
-  // Co-Pilot: write to agent_drafts
   await supabase.from("agent_drafts").insert({
     organization_id: company.id,
     draft_type: draft.draft_type,
     subject: draft.subject ?? null,
     body: draft.body,
-    recipient_info: draft.recipient_info,
+    recipient_info: recipientInfo,
     action_label: draft.draft_type === "outreach_email" ? "Send email" : "Send SMS",
     approve_action: draft.draft_type === "outreach_email" ? "send_email" : "send_sms",
-    approve_args: draft.recipient_info,
+    approve_args: recipientInfo,
     reasoning: draft.reasoning ?? null,
   });
 }

@@ -1,47 +1,53 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
+import { buildRevenuePrompt, buildRevenueUserMessage, buildTelemetryBlock } from "@/lib/ai/prompts";
 import type { TelemetrySnapshot } from "../telemetry";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 const RevenueAlertSchema = z.object({
-  alerts: z.array(
-    z.object({
-      severity: z.enum(["info", "warning", "critical"]),
-      title: z.string().max(100),
-      body: z.string().max(400),
-      record_id: z.string().uuid().optional(),
-      reasoning: z.string().max(200).optional(),
-    }),
-  ).max(5),
+  alerts: z
+    .array(
+      z.object({
+        severity: z.enum(["info", "warning", "critical"]),
+        title: z.string().max(100),
+        body: z.string().max(400),
+        record_id: z.string().uuid().optional(),
+        reasoning: z.string().max(300).optional(),
+      }),
+    )
+    .max(3),
 });
 
 export async function runRevenueWorker(
   snapshot: TelemetrySnapshot,
   orgId: string,
   supabase: SupabaseClient,
+  profile: IndustryProfile,
 ): Promise<void> {
-  const prompt = `You are a financial risk analyst reviewing business metrics. Generate concise, actionable alert cards for the finance team.
-
-Metrics (pre-computed by database):
-- Revenue this week: $${Math.round(snapshot.revenueThisWeek).toLocaleString()}
-- 4-week average: $${Math.round(snapshot.revenueFourWeekAvg).toLocaleString()}
-- Delta: ${snapshot.revenueDeltaPct > 0 ? "+" : ""}${snapshot.revenueDeltaPct}%
-- Unpaid invoices ≥30 days: ${snapshot.unpaidInvoiceCount} records, $${Math.round(snapshot.unpaidInvoiceTotal).toLocaleString()} total
-
-Generate alert cards only for issues that genuinely need attention. Use severity "critical" for revenue down >20% or unpaid total >$5,000.
-
-Respond with ONLY valid JSON:
-{
-  "alerts": [
-    { "severity": "info"|"warning"|"critical", "title": "...", "body": "...", "reasoning": "1-2 sentences citing the specific numbers that triggered this alert (e.g. 'Revenue this week: $3,100 vs $5,400 avg (-43%). 4 invoices totalling $8,200 are 30+ days overdue.')" }
-  ]
-}`;
+  // Fetch the top unpaid invoices for supplementary detail
+  const { data: invoiceDetails } = await supabase
+    .from("sales")
+    .select("id, amount, payment_status, sale_date, service_type")
+    .eq("company_id", orgId)
+    .not("payment_status", "ilike", "paid")
+    .order("amount", { ascending: false })
+    .limit(5);
 
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.revenue,
     temperature: 0.2,
     response_format: { type: "json_object" },
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      { role: "system", content: buildRevenuePrompt(profile) },
+      {
+        role: "user",
+        content: buildRevenueUserMessage(
+          buildTelemetryBlock(snapshot),
+          invoiceDetails ?? [],
+        ),
+      },
+    ],
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
