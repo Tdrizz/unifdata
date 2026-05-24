@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import ReactMarkdown from "react-markdown";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -11,22 +12,24 @@ type Message = {
   streaming?: boolean;
 };
 
-const STARTER_QUESTIONS = [
-  "Which clients haven't had a job in 90+ days?",
-  "Summarize this month's revenue by client",
-  "Draft a payment reminder for overdue invoices",
-  "What's our close rate this quarter?",
-];
-
 const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
 
 type Props = {
   initialMessages?: Array<{ role: "user" | "model"; text: string }>;
   initialSessionId?: string | null;
+  profile?: IndustryProfile;
 };
 
-export function AiAssistantView({ initialMessages = [], initialSessionId = null }: Props) {
+export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile }: Props) {
+  const customerPlural = profile?.labels.customerPlural ?? "clients";
+  const jobPlural = profile?.labels.jobPlural ?? "jobs";
+  const starterQuestions = [
+    `Which ${customerPlural.toLowerCase()} haven't had a ${jobPlural.toLowerCase().replace(/s$/, "")} in 90+ days?`,
+    `Summarize this month's revenue by ${customerPlural.toLowerCase().replace(/s$/, "")}`,
+    "Draft a payment reminder for overdue invoices",
+    "What's our close rate this quarter?",
+  ];
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -225,7 +228,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null 
             <input
               className="flex-1 border border-ud rounded-[10px] px-[14px] py-[10px] text-[13.5px] outline-none bg-ud-surface-sunk text-ud-ink focus:border-ud-accent focus:shadow-[0_0_0_3px_rgba(74,63,168,0.08)] focus:bg-ud-surface transition-[border-color,box-shadow,background-color]"
               style={{ fontFamily: "var(--font)" }}
-              placeholder="Ask about your business…"
+              placeholder={`Ask about your ${customerPlural.toLowerCase()}, ${jobPlural.toLowerCase()}, revenue, or anything else.`}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
@@ -243,7 +246,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null 
               <p className="text-[13.5px] font-semibold text-ud-ink">Try asking</p>
             </div>
             <div className="p-3 flex flex-col gap-1.5">
-              {STARTER_QUESTIONS.map((q) => (
+              {starterQuestions.map((q) => (
                 <button
                   key={q}
                   type="button"

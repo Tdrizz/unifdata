@@ -9,12 +9,14 @@ import {
   JOB_LOST_QUOTE_EMAIL,
   JOB_LOST_QUOTE_SMS,
   JOB_ANALYZE_DATA_FRAGMENT,
+  JOB_EMBEDDING_BACKFILL,
   JOB_SWEEP_BATCH,
   JOB_RUN_NIGHTLY_COORDINATOR,
 } from "@/lib/queue/client";
 import { processOverdueInvoice, type OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
 import { processLostQuoteEmail, processLostQuoteSms, type LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
 import { processDataKeeperJob } from "@/lib/queue/jobs/data-keeper-job";
+import { processEmbeddingBackfillJob, type EmbeddingBackfillJobData } from "@/lib/queue/jobs/embedding-backfill-job";
 import { processSweeperJob, type SweeperJobData } from "@/lib/queue/jobs/sweeper-job";
 import { processNightlyCoordinatorJob, type NightlyCoordinatorJobData } from "@/lib/queue/jobs/nightly-coordinator-job";
 import type { DataKeeperJobData } from "@/lib/data-keeper/types";
@@ -101,6 +103,9 @@ export function createDataKeeperWorker() {
       switch (job.name) {
         case JOB_ANALYZE_DATA_FRAGMENT: {
           return await processDataKeeperJob(job.data as DataKeeperJobData);
+        }
+        case JOB_EMBEDDING_BACKFILL: {
+          return await processEmbeddingBackfillJob(job.data as EmbeddingBackfillJobData);
         }
         default:
           throw new Error(`Unknown data keeper job: ${job.name}`);

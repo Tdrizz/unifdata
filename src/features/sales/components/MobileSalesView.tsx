@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency, cn } from "@/lib/utils";
-import { Card } from "@/components/ui/Card";
 import { SaleCreateForm } from "./SaleCreateForm";
 import type { SaleRow, CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -23,7 +22,6 @@ function isOverdue(status: string | null) {
   return (status || "").toLowerCase().includes("overdue");
 }
 function isPending(status: string | null) {
-  const s = (status || "").toLowerCase();
   return !isPaid(status) && !isOverdue(status);
 }
 

@@ -25,7 +25,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { AgentInbox } from "./AgentInbox";
 import { RoiCounter } from "./RoiCounter";
 import { RevenueForecast } from "./RevenueForecast";
-import type { RevenueForecast as ForecastData } from "@/lib/analytics/revenue-forecast";
+import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -79,7 +79,7 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   isPro?: boolean;
   roiTotal?: number;
-  revenueForecast?: ForecastData;
+  revenueForecast?: RevenueForecastResult;
 };
 
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0, revenueForecast }: Props) {
@@ -178,7 +178,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const jobPlural = profile.labels.jobPlural;
   const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
-  const salePlural = profile.labels.salePlural;
   const customerSingular = profile.labels.customerSingular;
   const followUpPlural = profile.labels.followUpPlural;
 
@@ -226,45 +225,38 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       {/* ROI counter (Pro tier, only if recovered > 0) */}
       {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
 
-      {/* Revenue forecast (Pro only, when enough data) */}
-      {isPro && revenueForecast && (
-        <div className="mb-3">
-          <RevenueForecast forecast={revenueForecast} />
-        </div>
-      )}
-
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">
         <KpiCard
-          label={`${followUpPlural} due`}
-          value={followUpSchedule.length}
-          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
-          delta={overdueCount > 0 ? `${overdueCount} over` : undefined}
-          deltaTone={overdueCount > 0 ? "down" : "flat"}
-        />
-        <KpiCard
-          label={`${jobPlural} today`}
+          label={`Active ${jobPlural}`}
           value={activeWork.length}
-          helper={activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"}
+          helper={activeWork.length > 0 ? `${activeWork.length} in progress` : "None scheduled"}
         />
         <KpiCard
-          label="Revenue MTD"
-          value={formatCurrency(revenueMTD)}
-          helper="This month"
-          delta={revenueMTD > 0 ? "this month" : undefined}
-          deltaTone={revenueMTD > 0 ? "up" : "flat"}
-        />
-        <KpiCard
-          label="Open pipeline"
+          label="Open Pipeline"
           value={formatCurrency(openPipelineValue)}
           helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
         />
         <KpiCard
-          label={`Unpaid ${salePlural.toLowerCase()}`}
+          label="Unpaid Revenue"
           value={formatCurrency(unpaidRevenueValue)}
           helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
           delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
           deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
+        />
+        <KpiCard
+          label={`${followUpPlural} Due`}
+          value={followUpSchedule.length}
+          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
+          delta={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
+          deltaTone={overdueCount > 0 ? "down" : "flat"}
+        />
+        <KpiCard
+          label="Revenue This Month"
+          value={formatCurrency(revenueMTD)}
+          helper="Month to date"
+          delta={revenueMTD > 0 ? "this month" : undefined}
+          deltaTone={revenueMTD > 0 ? "up" : "flat"}
         />
       </div>
 
@@ -344,6 +336,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               ))
             )}
           </Card>
+
+          {/* Revenue forecast */}
+          {isPro && revenueForecast && <RevenueForecast result={revenueForecast} />}
 
           {/* Quick actions */}
           <Card padding={16} radius="md">

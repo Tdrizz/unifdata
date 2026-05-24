@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { businessSectorOptions } from "@/lib/industry-profiles";
+import { businessSectorOptions, getIndustryProfile } from "@/lib/industry-profiles";
 import {
   createCompanyStepAction,
   createWizardCustomersAction,
@@ -48,7 +48,6 @@ const BTN_GHOST =
 
 type ManualRow = { name: string; phone: string; email: string };
 type MiniCustomer = { id: string; name: string };
-
 
 function ProgressBar({ step }: { step: number }) {
   return (
@@ -111,6 +110,7 @@ export function OnboardingForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [sector, setSector] = useState("general");
   const [createdCustomers, setCreatedCustomers] = useState<MiniCustomer[]>([]);
   const [isPending, startTransition] = useTransition();
   const [stepError, setStepError] = useState<string | null>(null);
@@ -237,12 +237,14 @@ export function OnboardingForm() {
     e.preventDefault();
     setStepError(null);
     const fd = new FormData(e.currentTarget);
+    const selectedSector = String(fd.get("businessSector") || "general");
     startTransition(async () => {
       const result = await createCompanyStepAction(fd);
       if (result.error) {
         setStepError(result.error);
       } else if (result.companyId) {
         setCompanyId(result.companyId);
+        setSector(selectedSector);
         setStep(2);
       }
     });
@@ -315,6 +317,10 @@ export function OnboardingForm() {
     return (
       <>
         <ProgressBar step={1} />
+        <div className="mb-5">
+          <p className="text-[17px] font-semibold text-ud-ink">Let&apos;s set up your workspace</p>
+          <p className="mt-1 text-sm text-ud-faint">Tell us about your business so we can use the right language throughout.</p>
+        </div>
         <form onSubmit={handleStep1} className="space-y-5">
           <div>
             <label className="text-sm font-medium text-ud-ink">Company name</label>
@@ -393,9 +399,9 @@ export function OnboardingForm() {
         <ProgressBar step={2} />
         <div className="space-y-5">
           <div>
-            <p className="text-sm font-medium text-ud-ink">Add your contacts</p>
+            <p className="text-sm font-medium text-ud-ink">Add your {getIndustryProfile(sector).labels.customerPlural.toLowerCase()}</p>
             <p className="mt-1 text-xs text-ud-faint">
-              Import existing customers so the workspace feels alive from day one.
+              Import your existing contacts or add a few to get started. You can always add more later.
             </p>
           </div>
 
@@ -549,9 +555,9 @@ export function OnboardingForm() {
         <ProgressBar step={3} />
         <form onSubmit={handleStep3} className="space-y-5">
           <div>
-            <p className="text-sm font-medium text-ud-ink">Log your first job</p>
+            <p className="text-sm font-medium text-ud-ink">Log your first {getIndustryProfile(sector).labels.jobSingular.toLowerCase()}</p>
             <p className="mt-1 text-xs text-ud-faint">
-              Add an upcoming job or service visit so your dashboard has something to show.
+              Add a recent or upcoming {getIndustryProfile(sector).labels.jobSingular.toLowerCase()} so your dashboard has something to work with.
             </p>
           </div>
 
@@ -609,9 +615,9 @@ export function OnboardingForm() {
         <ProgressBar step={4} />
         <form onSubmit={handleStep4} className="space-y-5">
           <div>
-            <p className="text-sm font-medium text-ud-ink">Add a follow-up reminder</p>
+            <p className="text-sm font-medium text-ud-ink">Schedule a follow-up</p>
             <p className="mt-1 text-xs text-ud-faint">
-              Set a task to check in with a customer or prospect next week.
+              Is there a {getIndustryProfile(sector).labels.customerSingular.toLowerCase()} you&apos;ve been meaning to check in with?
             </p>
           </div>
 
@@ -686,10 +692,9 @@ export function OnboardingForm() {
             />
           </svg>
         </div>
-        <p className="text-[15px] font-semibold text-ud-ink">Generating your Operating Brief…</p>
+        <p className="text-[15px] font-semibold text-ud-ink">Building your workspace…</p>
         <p className="mt-2 text-sm text-ud-faint">
-          Your workspace is ready. We&apos;re putting together a first-day briefing — this takes a
-          few seconds.
+          We&apos;re generating your first operating brief using the data you just entered.
         </p>
       </div>
     </>
