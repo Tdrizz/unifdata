@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { isAiAllowed } from "@/lib/feature-gates";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import { AiAssistantView } from "@/features/ai-assistant/AiAssistantView";
 import { MobileAiView } from "@/features/ai-assistant/MobileAiView";
 import { getOrCreateSession } from "@/features/ai-assistant/queries";
@@ -28,6 +29,7 @@ export default async function AiAssistantPage() {
 
   const { company } = currentCompany;
   const aiAllowed = isAiAllowed(company);
+  const profile = getIndustryProfile(company.business_sector);
 
   // Load existing session so chat history survives page navigation
   let initialSessionId: string | null = null;
@@ -58,7 +60,7 @@ export default async function AiAssistantPage() {
           </div>
         ) : (
           <div className="hidden md:block">
-            <AiAssistantView initialMessages={initialMessages} initialSessionId={initialSessionId} />
+            <AiAssistantView initialMessages={initialMessages} initialSessionId={initialSessionId} profile={profile} />
           </div>
         )}
         {!aiAllowed ? (

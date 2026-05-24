@@ -236,35 +236,35 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">
         <KpiCard
-          label={`${followUpPlural} due`}
-          value={followUpSchedule.length}
-          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
-          delta={overdueCount > 0 ? `${overdueCount} over` : undefined}
-          deltaTone={overdueCount > 0 ? "down" : "flat"}
-        />
-        <KpiCard
-          label={`${jobPlural} today`}
+          label={`Active ${jobPlural}`}
           value={activeWork.length}
-          helper={activeWork.length > 0 ? `${activeWork.length} active` : "None scheduled"}
+          helper={activeWork.length > 0 ? `${activeWork.length} in progress` : "None scheduled"}
         />
         <KpiCard
-          label="Revenue MTD"
-          value={formatCurrency(revenueMTD)}
-          helper="This month"
-          delta={revenueMTD > 0 ? "this month" : undefined}
-          deltaTone={revenueMTD > 0 ? "up" : "flat"}
-        />
-        <KpiCard
-          label="Open pipeline"
+          label="Open Pipeline"
           value={formatCurrency(openPipelineValue)}
           helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
         />
         <KpiCard
-          label={`Unpaid ${salePlural.toLowerCase()}`}
+          label="Unpaid Revenue"
           value={formatCurrency(unpaidRevenueValue)}
           helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
           delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
           deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
+        />
+        <KpiCard
+          label={`${followUpPlural} Due`}
+          value={followUpSchedule.length}
+          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
+          delta={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
+          deltaTone={overdueCount > 0 ? "down" : "flat"}
+        />
+        <KpiCard
+          label="Revenue This Month"
+          value={formatCurrency(revenueMTD)}
+          helper="Month to date"
+          delta={revenueMTD > 0 ? "this month" : undefined}
+          deltaTone={revenueMTD > 0 ? "up" : "flat"}
         />
       </div>
 
