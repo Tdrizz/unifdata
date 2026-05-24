@@ -8,6 +8,7 @@ import { runRevenueWorker } from "./workers/revenue-worker";
 import { runDataQualityWorker } from "./workers/data-quality-worker";
 import { runAlertFormatterWorker } from "./workers/alert-formatter-worker";
 import { runChurnSignalAgent } from "./customer-health-agent";
+import { createNightlyTrace, startSpan, endSpan, flushLangfuse } from "@/lib/observability/tracing";
 
 export async function runNightlyCoordinator(orgId: string): Promise<void> {
   const supabase = createAdminClient();
@@ -22,17 +23,23 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
 
   const profile = getIndustryProfile(company.business_sector);
 
+  const date = new Date().toISOString().split("T")[0];
+  const ctx = createNightlyTrace(orgId, date);
+
   let eventsFireable = 0;
   let runError: string | undefined;
 
   try {
+    const telemetrySpan = startSpan(ctx, "telemetry-compilation", { orgId });
     const snapshot = await compileTelemetry(orgId, supabase);
+    endSpan(telemetrySpan, { signalCount: Object.keys(snapshot).length });
 
     let blueprint;
     try {
-      blueprint = await runManagerAgent(snapshot, profile, company as { name: string });
+      blueprint = await runManagerAgent(snapshot, profile, company as { name: string }, ctx);
     } catch (err) {
       const raw = (err as { rawResponse?: string }).rawResponse ?? String(err);
+      ctx.trace.update({ metadata: { managerError: raw.slice(0, 500) } });
       await supabase.from("agent_logs").insert({
         organization_id: orgId,
         agent_name: "manager-agent",
@@ -41,7 +48,6 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
       return;
     }
 
-    // Run churn signal detection alongside worker tasks
     let churnError: string | undefined;
     const churnTask = runChurnSignalAgent(orgId, supabase).catch((err: unknown) => {
       churnError = err instanceof Error ? err.message : String(err);
@@ -56,15 +62,17 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               company as { id: string; name: string; preferences?: Record<string, unknown> },
               supabase,
               profile,
+              ctx,
             );
             break;
           case "revenue":
-            await runRevenueWorker(snapshot, orgId, supabase, profile);
+            await runRevenueWorker(snapshot, orgId, supabase, profile, ctx);
             break;
           case "data_quality":
             await runDataQualityWorker(
               company as { id: string; preferences?: Record<string, unknown> },
               supabase,
+              ctx,
             );
             break;
           case "alert_formatter":
@@ -73,6 +81,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
               orgId,
               supabase,
               profile,
+              ctx,
             );
             break;
         }
@@ -92,6 +101,9 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     }
   } catch (err) {
     runError = err instanceof Error ? err.message : String(err);
+    ctx.trace.update({ metadata: { error: runError } });
+  } finally {
+    await flushLangfuse();
   }
 
   await supabase.from("agent_logs").insert({

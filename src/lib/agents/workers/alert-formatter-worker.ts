@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { buildAlertFormatterPrompt, buildAlertFormatterUserMessage } from "@/lib/ai/prompts";
+import { logGeneration } from "@/lib/observability/tracing";
+import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
 const AgentAlertSchema = z.object({
@@ -24,7 +26,6 @@ type AlertPayload = Record<string, unknown>;
 function normalizeSignals(
   payload: AlertPayload,
 ): Array<{ type: string; value: number; context: string }> {
-  // Support both the new spec format and the legacy key-value format
   if (payload.signal_type !== undefined && payload.signal_value !== undefined) {
     return [
       {
@@ -44,22 +45,38 @@ export async function runAlertFormatterWorker(
   orgId: string,
   supabase: SupabaseClient,
   profile: IndustryProfile,
+  ctx: TraceContext,
 ): Promise<void> {
   const signals = normalizeSignals(payload);
   if (signals.length === 0) return;
+
+  const start = Date.now();
+  const systemPrompt = buildAlertFormatterPrompt(profile);
 
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.alertFormatter,
     temperature: 0.3,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: buildAlertFormatterPrompt(profile) },
+      { role: "system", content: systemPrompt },
       { role: "user", content: buildAlertFormatterUserMessage(signals) },
     ],
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
   const parsed = AgentAlertSchema.safeParse(JSON.parse(raw));
+
+  logGeneration(ctx, {
+    name: "alert-cards",
+    model: AI_MODELS.alertFormatter,
+    prompt: systemPrompt,
+    completion: raw,
+    inputTokens: response.usage?.prompt_tokens ?? 0,
+    outputTokens: response.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - start,
+    zodPassed: parsed.success,
+    error: parsed.success ? undefined : parsed.error.message,
+  });
 
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 

@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { isAutopilot } from "@/lib/feature-gates";
 import { buildDataQualityPrompt, buildDataQualityUserMessage } from "@/lib/ai/prompts";
+import { logGeneration } from "@/lib/observability/tracing";
+import type { TraceContext } from "@/lib/observability/tracing";
 
 const DataQualityDecisionSchema = z.object({
   decisions: z.array(
@@ -18,6 +20,7 @@ const DataQualityDecisionSchema = z.object({
 export async function runDataQualityWorker(
   company: { id: string; preferences?: Record<string, unknown> },
   supabase: SupabaseClient,
+  ctx: TraceContext,
 ): Promise<void> {
   const { data: proposals } = await supabase
     .from("data_reconciliation_proposals")
@@ -29,18 +32,33 @@ export async function runDataQualityWorker(
 
   if (!proposals || proposals.length === 0) return;
 
+  const start = Date.now();
+  const systemPrompt = buildDataQualityPrompt();
+
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.dataQuality,
     temperature: 0.0,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: buildDataQualityPrompt() },
+      { role: "system", content: systemPrompt },
       { role: "user", content: buildDataQualityUserMessage(proposals) },
     ],
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
   const parsed = DataQualityDecisionSchema.safeParse(JSON.parse(raw));
+
+  logGeneration(ctx, {
+    name: "data-quality-decisions",
+    model: AI_MODELS.dataQuality,
+    prompt: systemPrompt,
+    completion: raw,
+    inputTokens: response.usage?.prompt_tokens ?? 0,
+    outputTokens: response.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - start,
+    zodPassed: parsed.success,
+    error: parsed.success ? undefined : parsed.error.message,
+  });
 
   if (!parsed.success) return;
 

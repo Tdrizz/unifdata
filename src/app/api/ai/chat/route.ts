@@ -14,6 +14,7 @@ import { CHAT_TOOLS } from "@/lib/ai/tools";
 import { executeTool } from "@/lib/ai/tool-executor";
 import { buildChatSystemPrompt, buildChatUserMessage, serializeContextForChat } from "@/lib/ai/prompts";
 import { semanticSearch } from "@/lib/embeddings/sync";
+import { createChatTrace, startSpan, endSpan, logGeneration, flushLangfuse } from "@/lib/observability/tracing";
 
 type Topic = "sales" | "customers" | "jobs" | "leads" | "followups" | "all";
 
@@ -99,8 +100,23 @@ export async function POST(request: Request) {
   const userText = lastMessage.text.trim();
   const topic = detectTopic(userText);
 
+  // Create a Langfuse trace for this chat message
+  const chatCtx = createChatTrace(company.id, session.id);
+
+  // Topic detection span
+  const topicSpan = startSpan(chatCtx, "topic-detection", { message: userText });
+  endSpan(topicSpan, { topic });
+
   // Try semantic search (falls back to recency on any failure)
   const semanticIds: Partial<Record<"customers" | "jobs" | "sales", string[]>> = {};
+  const topicTables: Array<"customers" | "jobs" | "sales"> =
+    topic === "customers" ? ["customers"] :
+    topic === "jobs" ? ["jobs"] :
+    topic === "sales" ? ["sales"] :
+    ["customers", "jobs", "sales"];
+
+  const retrievalSpan = startSpan(chatCtx, "semantic-retrieval", { topic, tables: topicTables });
+  let retrievalMethod = "semantic";
   try {
     const { count: hasEmbeddings } = await supabase
       .from("customers")
@@ -109,20 +125,23 @@ export async function POST(request: Request) {
       .not("embedding", "is", null);
 
     if ((hasEmbeddings ?? 0) > 0) {
-      const topicTables: Array<"customers" | "jobs" | "sales"> =
-        topic === "customers" ? ["customers"] :
-        topic === "jobs" ? ["jobs"] :
-        topic === "sales" ? ["sales"] :
-        ["customers", "jobs", "sales"];
-
       const semResults = await Promise.all(
         topicTables.map((t) => semanticSearch(t, company.id, userText, 20)),
       );
       topicTables.forEach((t, i) => {
         if (semResults[i].length > 0) semanticIds[t] = semResults[i];
       });
+      endSpan(retrievalSpan, {
+        matchCount: topicTables.reduce((sum, t, i) => sum + (semResults[i].length), 0),
+        retrievalMethod,
+      });
+    } else {
+      retrievalMethod = "fallback-no-embeddings";
+      endSpan(retrievalSpan, { retrievalMethod });
     }
   } catch (err) {
+    retrievalMethod = "fallback-json";
+    endSpan(retrievalSpan, { retrievalMethod, error: err instanceof Error ? err.message : String(err) });
     console.error("[chat] Semantic search failed, using recency fallback:", err instanceof Error ? err.message : err);
   }
 
@@ -292,6 +311,8 @@ export async function POST(request: Request) {
       { role: "user", content: buildChatUserMessage(serializedContext, userText) },
     ];
 
+    const chatStart = Date.now();
+
     // First call (non-streaming) to detect tool calls
     const firstResponse = await aiRouter.chat.completions.create({
       model: AI_MODELS.chat,
@@ -312,6 +333,8 @@ export async function POST(request: Request) {
       async start(controller) {
         let fullText = "";
         let toolActionSummary: string | null = null;
+        let completionInputTokens = firstResponse.usage?.prompt_tokens ?? 0;
+        let completionOutputTokens = firstResponse.usage?.completion_tokens ?? 0;
 
         if (toolCalls && toolCalls.length > 0) {
           // Execute each tool call and collect results
@@ -326,7 +349,9 @@ export async function POST(request: Request) {
             } catch {
               args = {};
             }
+            const toolSpan = startSpan(chatCtx, `tool-${tc.function.name}`, { args });
             const result = await executeTool(tc.function.name, args, supabase, company.id);
+            endSpan(toolSpan, { success: result.success, message: result.message });
             toolResults.push({ tool_call_id: tc.id, result: result.message });
             if (result.success) actionLines.push(`✓ ${result.message}`);
           }
@@ -368,6 +393,10 @@ export async function POST(request: Request) {
                 fullText += delta;
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
               }
+              if (chunk.usage) {
+                completionInputTokens += chunk.usage.prompt_tokens ?? 0;
+                completionOutputTokens += chunk.usage.completion_tokens ?? 0;
+              }
             }
           } catch {
             controller.enqueue(
@@ -398,6 +427,10 @@ export async function POST(request: Request) {
                   fullText += delta;
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
                 }
+                if (chunk.usage) {
+                  completionInputTokens += chunk.usage.prompt_tokens ?? 0;
+                  completionOutputTokens += chunk.usage.completion_tokens ?? 0;
+                }
               }
             } catch {
               controller.enqueue(
@@ -408,6 +441,17 @@ export async function POST(request: Request) {
             }
           }
         }
+
+        // Log the full completion to Langfuse
+        logGeneration(chatCtx, {
+          name: "chat-completion",
+          model: AI_MODELS.chat,
+          prompt: systemContent,
+          completion: fullText || toolActionSummary || "",
+          inputTokens: completionInputTokens,
+          outputTokens: completionOutputTokens,
+          latencyMs: Date.now() - chatStart,
+        });
 
         // Persist session
         const updatedMessages: StoredMessage[] = [
@@ -423,6 +467,7 @@ export async function POST(request: Request) {
           encoder.encode(`data: ${JSON.stringify({ event: "session", sessionId: session.id })}\n\n`),
         );
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        await flushLangfuse();
         controller.close();
       },
     });
