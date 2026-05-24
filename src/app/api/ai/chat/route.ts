@@ -13,6 +13,7 @@ import type { StoredMessage } from "@/features/ai-assistant/queries";
 import { CHAT_TOOLS } from "@/lib/ai/tools";
 import { executeTool } from "@/lib/ai/tool-executor";
 import { buildChatSystemPrompt, buildChatUserMessage, serializeContextForChat } from "@/lib/ai/prompts";
+import { semanticSearch } from "@/lib/embeddings/sync";
 
 type Topic = "sales" | "customers" | "jobs" | "leads" | "followups" | "all";
 
@@ -66,10 +67,21 @@ export async function POST(request: Request) {
   const rateLimit_ = isPro(company as { tier: string }) ? 20 : 5;
 
   if (!await rateLimit(`ai:${company.id}`, rateLimit_)) {
-    return NextResponse.json(
-      { error: "Too many requests. Try again in a moment." },
-      { status: 429 },
-    );
+    const isStandard = !isPro(company as { tier: string });
+    const msg = isStandard
+      ? "You're sending messages quickly. Wait a moment and try again. Pro accounts have higher limits — upgrade in Settings."
+      : "You're sending messages quickly. Wait a moment and try again.";
+    const enc = new TextEncoder();
+    const rl = new ReadableStream({
+      start(controller) {
+        controller.enqueue(enc.encode(`data: ${JSON.stringify({ delta: msg })}\n\n`));
+        controller.enqueue(enc.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    return new Response(rl, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   }
 
   const supabase = await createClient();
@@ -87,21 +99,72 @@ export async function POST(request: Request) {
   const userText = lastMessage.text.trim();
   const topic = detectTopic(userText);
 
+  // Try semantic search (falls back to recency on any failure)
+  let semanticIds: Partial<Record<"customers" | "jobs" | "sales", string[]>> = {};
+  try {
+    const { count: hasEmbeddings } = await supabase
+      .from("customers")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .not("embedding", "is", null);
+
+    if ((hasEmbeddings ?? 0) > 0) {
+      const topicTables: Array<"customers" | "jobs" | "sales"> =
+        topic === "customers" ? ["customers"] :
+        topic === "jobs" ? ["jobs"] :
+        topic === "sales" ? ["sales"] :
+        ["customers", "jobs", "sales"];
+
+      const semResults = await Promise.all(
+        topicTables.map((t) => semanticSearch(t, company.id, userText, 20)),
+      );
+      topicTables.forEach((t, i) => {
+        if (semResults[i].length > 0) semanticIds[t] = semResults[i];
+      });
+    }
+  } catch (err) {
+    console.error("[chat] Semantic search failed, using recency fallback:", err instanceof Error ? err.message : err);
+  }
+
   // Fetch relevant data rows + exact counts in parallel.
   // Counts always run so totals are accurate even when rows are capped.
   const fetchAll = topic === "all";
+
+  function customersQuery() {
+    const base = supabase
+      .from("customers")
+      .select("id, name, phone, email, address, customer_type, created_at")
+      .eq("company_id", company.id);
+    return semanticIds.customers?.length
+      ? base.in("id", semanticIds.customers)
+      : base.order("created_at", { ascending: false }).limit(fetchAll ? 50 : 20);
+  }
+
+  function jobsQuery() {
+    const base = supabase
+      .from("jobs")
+      .select("id, customer_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
+      .eq("company_id", company.id);
+    return semanticIds.jobs?.length
+      ? base.in("id", semanticIds.jobs)
+      : base.order("created_at", { ascending: false }).limit(fetchAll ? 50 : 20);
+  }
+
+  function salesQuery() {
+    const base = supabase
+      .from("sales")
+      .select("id, amount, payment_status, sale_date, service_type, source, created_at")
+      .eq("company_id", company.id);
+    return semanticIds.sales?.length
+      ? base.in("id", semanticIds.sales)
+      : base.order("created_at", { ascending: false }).limit(fetchAll ? 50 : 20);
+  }
+
   const [
     customersResult, leadsResult, jobsResult, salesResult, followUpsResult,
     customerCount, leadCount, jobCount, followUpCount,
   ] = await Promise.all([
-    (fetchAll || topic === "customers")
-      ? supabase
-          .from("customers")
-          .select("id, name, phone, email, address, customer_type, created_at")
-          .eq("company_id", company.id)
-          .order("created_at", { ascending: false })
-          .limit(fetchAll ? 50 : 20)
-      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "customers") ? customersQuery() : Promise.resolve({ data: [] }),
     (fetchAll || topic === "leads")
       ? supabase
           .from("leads")
@@ -110,22 +173,8 @@ export async function POST(request: Request) {
           .order("created_at", { ascending: false })
           .limit(fetchAll ? 50 : 20)
       : Promise.resolve({ data: [] }),
-    (fetchAll || topic === "jobs")
-      ? supabase
-          .from("jobs")
-          .select("id, customer_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
-          .eq("company_id", company.id)
-          .order("created_at", { ascending: false })
-          .limit(fetchAll ? 50 : 20)
-      : Promise.resolve({ data: [] }),
-    (fetchAll || topic === "sales")
-      ? supabase
-          .from("sales")
-          .select("id, amount, payment_status, sale_date, service_type, source, created_at")
-          .eq("company_id", company.id)
-          .order("created_at", { ascending: false })
-          .limit(fetchAll ? 50 : 20)
-      : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "jobs") ? jobsQuery() : Promise.resolve({ data: [] }),
+    (fetchAll || topic === "sales") ? salesQuery() : Promise.resolve({ data: [] }),
     (fetchAll || topic === "followups")
       ? supabase
           .from("follow_ups")
@@ -387,18 +436,20 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to get response.";
-    const isOverloaded =
-      message.includes("503") ||
-      message.toLowerCase().includes("unavailable") ||
-      message.toLowerCase().includes("high demand") ||
-      message.toLowerCase().includes("try again later");
-
-    if (isOverloaded) {
-      return NextResponse.json(
-        { error: "AI service is under high demand. Wait a moment and try again." },
-        { status: 503 },
-      );
-    }
-    return NextResponse.json({ error: message }, { status: 500 });
+    const isOverloaded = message.includes("503") || message.toLowerCase().includes("unavailable") || message.toLowerCase().includes("high demand") || message.toLowerCase().includes("try again later");
+    const userMsg = isOverloaded
+      ? "The AI assistant is temporarily unavailable. Please try again in a moment."
+      : "Something went wrong. Try sending your message again.";
+    const enc2 = new TextEncoder();
+    const errStream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(enc2.encode(`data: ${JSON.stringify({ delta: userMsg })}\n\n`));
+        controller.enqueue(enc2.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+    return new Response(errStream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" },
+    });
   }
 }

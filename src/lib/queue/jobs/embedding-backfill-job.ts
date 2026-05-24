@@ -7,6 +7,7 @@ export type EmbeddingBackfillJobData = {
 };
 
 const BATCH_SIZE = 50;
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export async function processEmbeddingBackfillJob(
   data: EmbeddingBackfillJobData,
@@ -40,6 +41,7 @@ export async function processEmbeddingBackfillJob(
 
         if (!text.trim()) continue;
 
+        await sleep(150);
         const embedding = await generateEmbedding(text);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)

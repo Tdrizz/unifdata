@@ -66,6 +66,7 @@ export function getAutomationQueue(): Queue {
 
 export const QUEUE_DATA_KEEPER = "data-keeper";
 export const JOB_ANALYZE_DATA_FRAGMENT = "analyze-data-fragment";
+export const JOB_EMBEDDING_BACKFILL = "run-embedding-backfill";
 
 // ── Sweeper queue ─────────────────────────────────────────────────────────────
 

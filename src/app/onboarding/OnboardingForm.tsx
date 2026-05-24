@@ -314,6 +314,10 @@ export function OnboardingForm() {
     return (
       <>
         <ProgressBar step={1} />
+        <div className="mb-5">
+          <p className="text-[17px] font-semibold text-ud-ink">Let&apos;s set up your workspace</p>
+          <p className="mt-1 text-sm text-ud-faint">Tell us about your business so we can use the right language throughout.</p>
+        </div>
         <form onSubmit={handleStep1} className="space-y-5">
           <div>
             <label className="text-sm font-medium text-ud-ink">Company name</label>
@@ -685,10 +689,9 @@ export function OnboardingForm() {
             />
           </svg>
         </div>
-        <p className="text-[15px] font-semibold text-ud-ink">Generating your Operating Brief…</p>
+        <p className="text-[15px] font-semibold text-ud-ink">Building your workspace…</p>
         <p className="mt-2 text-sm text-ud-faint">
-          Your workspace is ready. We&apos;re putting together a first-day briefing — this takes a
-          few seconds.
+          We&apos;re generating your first operating brief using the data you just entered.
         </p>
       </div>
     </>

@@ -21,7 +21,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
 import { AgentInbox } from "./AgentInbox";
 import { RevenueForecast } from "./RevenueForecast";
-import type { RevenueForecast as ForecastData } from "@/lib/analytics/revenue-forecast";
+import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -74,7 +74,7 @@ type Props = WorkspaceData & {
   drafts?: Draft[];
   alerts?: Alert[];
   isPro?: boolean;
-  revenueForecast?: ForecastData;
+  revenueForecast?: RevenueForecastResult;
 };
 
 export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, revenueForecast }: Props) {
@@ -201,7 +201,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       {/* Revenue forecast (Pro only) */}
       {isPro && revenueForecast && (
         <div className="px-4 pt-4">
-          <RevenueForecast forecast={revenueForecast} />
+          <RevenueForecast result={revenueForecast} />
         </div>
       )}
 

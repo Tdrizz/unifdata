@@ -8,13 +8,18 @@ export type RevenueForecast = {
   dataPoints: number;
 };
 
+export type RevenueForecastResult =
+  | { status: "ready"; forecast: RevenueForecast }
+  | { status: "insufficient_data"; daysOfData: number }
+  | { status: "no_sales"; daysOfData: 0 };
+
 const MIN_DATA_POINTS = 14;
 const LOOKBACK_DAYS = 90;
 
 export async function computeRevenueForecast(
   supabase: SupabaseClient,
   companyId: string,
-): Promise<RevenueForecast | null> {
+): Promise<RevenueForecastResult> {
   const since = new Date();
   since.setDate(since.getDate() - LOOKBACK_DAYS);
   const sinceStr = since.toISOString().slice(0, 10);
@@ -25,10 +30,10 @@ export async function computeRevenueForecast(
     .eq("company_id", companyId)
     .gte("sale_date", sinceStr)
     .not("sale_date", "is", null)
-    .gt("amount", 0)       // skip $0 adjustments — they skew the epoch and regression
+    .gt("amount", 0)
     .order("sale_date", { ascending: true });
 
-  if (!rows || rows.length < MIN_DATA_POINTS) return null;
+  if (!rows || rows.length === 0) return { status: "no_sales", daysOfData: 0 };
 
   // Epoch anchored to the first non-zero sale to avoid bias from $0 records
   const epoch = new Date(rows[0].sale_date!).getTime();
@@ -44,21 +49,19 @@ export async function computeRevenueForecast(
     ([a], [b]) => a - b,
   );
 
-  if (points.length < MIN_DATA_POINTS) return null;
+  if (points.length < MIN_DATA_POINTS) {
+    return { status: "insufficient_data", daysOfData: points.length };
+  }
 
   const { m: slope, b: intercept } = linearRegression(points);
   const predict = linearRegressionLine({ m: slope, b: intercept });
 
-  // Estimate next 30 days from today
   const todayOffset = Math.round((Date.now() - epoch) / 86_400_000);
   let nextMonthEstimate = 0;
   for (let d = todayOffset + 1; d <= todayOffset + 30; d++) {
     nextMonthEstimate += Math.max(0, predict(d));
   }
 
-  // Derive trend from the regression slope instead of last-30-day comparison.
-  // Slope comparison is more robust: it works even when last30Actual=0 (seasonal gaps).
-  // A slope covering 30 days = projected change over the next month.
   const projectedChange = slope * 30;
   const last30Actual = points
     .filter(([x]) => x >= todayOffset - 30)
@@ -68,10 +71,9 @@ export async function computeRevenueForecast(
   if (last30Actual > 0) {
     trendPercent = Math.round(((nextMonthEstimate - last30Actual) / last30Actual) * 100);
   } else {
-    // No recent actuals — use slope direction: +slope means growth
     trendPercent = Math.round(
       last30Actual === 0 && nextMonthEstimate > 0
-        ? projectedChange > 0 ? 10 : -10   // directional signal, not a % vs 0
+        ? projectedChange > 0 ? 10 : -10
         : 0,
     );
   }
@@ -80,9 +82,12 @@ export async function computeRevenueForecast(
     trendPercent > 2 ? "up" : trendPercent < -2 ? "down" : "flat";
 
   return {
-    nextMonthEstimate: Math.round(nextMonthEstimate),
-    trendDirection,
-    trendPercent: Math.abs(trendPercent),
-    dataPoints: points.length,
+    status: "ready",
+    forecast: {
+      nextMonthEstimate: Math.round(nextMonthEstimate),
+      trendDirection,
+      trendPercent: Math.abs(trendPercent),
+      dataPoints: points.length,
+    },
   };
 }

@@ -8,6 +8,7 @@ import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
 import { isPro, isAiAllowed } from "@/lib/feature-gates";
 import { computeRevenueForecast } from "@/lib/analytics/revenue-forecast";
+import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function WorkspacePage() {
       .eq("status", "unread")
       .order("created_at", { ascending: false })
       .limit(10),
-    isProTier ? computeRevenueForecast(supabase, company.id) : Promise.resolve(null),
+    isProTier ? computeRevenueForecast(supabase, company.id) : Promise.resolve(undefined as RevenueForecastResult | undefined),
   ]);
 
   const drafts = (draftsResult.data ?? []) as unknown as Array<{
@@ -96,7 +97,7 @@ export default async function WorkspacePage() {
           alerts={alerts}
           isPro={isProTier}
           roiTotal={roiTotal}
-          revenueForecast={revenueForecast ?? undefined}
+          revenueForecast={revenueForecast}
         />
         <MobileWorkspaceView
           {...data}
@@ -105,7 +106,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           isPro={isProTier}
-          revenueForecast={revenueForecast ?? undefined}
+          revenueForecast={revenueForecast}
         />
       </>
     </AppShell>

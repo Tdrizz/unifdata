@@ -25,7 +25,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { AgentInbox } from "./AgentInbox";
 import { RoiCounter } from "./RoiCounter";
 import { RevenueForecast } from "./RevenueForecast";
-import type { RevenueForecast as ForecastData } from "@/lib/analytics/revenue-forecast";
+import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -79,7 +79,7 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   isPro?: boolean;
   roiTotal?: number;
-  revenueForecast?: ForecastData;
+  revenueForecast?: RevenueForecastResult;
 };
 
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0, revenueForecast }: Props) {
@@ -226,10 +226,10 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       {/* ROI counter (Pro tier, only if recovered > 0) */}
       {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
 
-      {/* Revenue forecast (Pro only, when enough data) */}
+      {/* Revenue forecast (Pro only) */}
       {isPro && revenueForecast && (
         <div className="mb-3">
-          <RevenueForecast forecast={revenueForecast} />
+          <RevenueForecast result={revenueForecast} />
         </div>
       )}
 

@@ -1,9 +1,9 @@
 import { KpiCard } from "@/components/ui/KpiCard";
 import { formatCurrency } from "@/lib/utils";
-import type { RevenueForecast as ForecastData } from "@/lib/analytics/revenue-forecast";
+import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type Props = {
-  forecast: ForecastData;
+  result: RevenueForecastResult;
 };
 
 const trendLabels: Record<string, string> = {
@@ -18,17 +18,37 @@ const trendDeltaTone: Record<string, "up" | "down" | "flat"> = {
   flat: "flat",
 };
 
-export function RevenueForecast({ forecast }: Props) {
-  const { nextMonthEstimate, trendDirection, trendPercent } = forecast;
-  const absPercent = Math.abs(trendPercent);
+export function RevenueForecast({ result }: Props) {
+  if (result.status === "ready") {
+    const { nextMonthEstimate, trendDirection, trendPercent } = result.forecast;
+    const absPercent = Math.abs(trendPercent);
+    return (
+      <KpiCard
+        label="Revenue Forecast"
+        value={`~${formatCurrency(nextMonthEstimate)} this month`}
+        helper={`Based on last 90 days · ${absPercent}% trend`}
+        delta={trendLabels[trendDirection]}
+        deltaTone={trendDeltaTone[trendDirection]}
+      />
+    );
+  }
 
+  if (result.status === "insufficient_data") {
+    return (
+      <KpiCard
+        label="Revenue Forecast"
+        value={`${result.daysOfData}/14 days`}
+        helper={`Forecast available after 14 days of sales data`}
+      />
+    );
+  }
+
+  // no_sales — show placeholder
   return (
     <KpiCard
-      label="Revenue forecast (30d)"
-      value={formatCurrency(nextMonthEstimate)}
-      helper={`Based on last 90 days · ${absPercent}% trend`}
-      delta={trendLabels[trendDirection]}
-      deltaTone={trendDeltaTone[trendDirection]}
+      label="Revenue Forecast"
+      value="0/14 days"
+      helper="Log sales to unlock revenue forecasting"
     />
   );
 }
