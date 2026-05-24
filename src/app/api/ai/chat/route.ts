@@ -100,7 +100,7 @@ export async function POST(request: Request) {
   const topic = detectTopic(userText);
 
   // Try semantic search (falls back to recency on any failure)
-  let semanticIds: Partial<Record<"customers" | "jobs" | "sales", string[]>> = {};
+  const semanticIds: Partial<Record<"customers" | "jobs" | "sales", string[]>> = {};
   try {
     const { count: hasEmbeddings } = await supabase
       .from("customers")
