@@ -178,7 +178,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const jobPlural = profile.labels.jobPlural;
   const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
-  const salePlural = profile.labels.salePlural;
   const customerSingular = profile.labels.customerSingular;
   const followUpPlural = profile.labels.followUpPlural;
 
@@ -225,13 +224,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
       {/* ROI counter (Pro tier, only if recovered > 0) */}
       {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
-
-      {/* Revenue forecast (Pro only) */}
-      {isPro && revenueForecast && (
-        <div className="mb-3">
-          <RevenueForecast result={revenueForecast} />
-        </div>
-      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">
@@ -344,6 +336,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               ))
             )}
           </Card>
+
+          {/* Revenue forecast */}
+          {isPro && revenueForecast && <RevenueForecast result={revenueForecast} />}
 
           {/* Quick actions */}
           <Card padding={16} radius="md">
