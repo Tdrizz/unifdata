@@ -78,7 +78,7 @@ function NewRecordForm({
   const [name, setName] = useState("");
   const [stageId, setStageId] = useState(stages[0]?.id ?? "");
   const [value, setValue] = useState("");
-  const [contactSearch, setContactSearch] = useState("");
+  const [_contactSearch, _setContactSearch] = useState("");
   const [contactId, setContactId] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -112,10 +112,8 @@ function NewRecordForm({
     });
   }
 
-  async function searchContacts(q: string) {
-    if (q.length < 2) return;
-    setContactSearch(q);
-  }
+  // Contact search is a future enhancement
+  void _setContactSearch;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>

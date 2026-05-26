@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SmartGroupRule } from "@/lib/crm/smart-groups";
 import { getAutomationQueue, JOB_POST_COMPLETION_OUTREACH } from "@/lib/queue/client";

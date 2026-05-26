@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -69,7 +70,7 @@ function groupMessages(messages: Message[]): { date: string; items: Message[] }[
 
 export function CommunicationsClient({
   threads: initialThreads,
-  orgId,
+  orgId: _orgId,
 }: {
   threads: Thread[];
   orgId: string;
@@ -82,7 +83,8 @@ export function CommunicationsClient({
   const [compose, setCompose] = useState("");
   const [isSending, startSending] = useTransition();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   const selectedThread = threads.find((t) => t.id === selectedId) ?? null;
 

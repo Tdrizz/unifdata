@@ -115,12 +115,12 @@ export function ContactsTableClient({
           <h1 className="text-[22px] font-bold text-ud-ink">All contacts</h1>
           <div className="text-[13px] text-ud-muted mt-0.5">{customers.length} contacts</div>
         </div>
-        <a
+        <Link
           href="/customers"
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
         >
           Legacy view →
-        </a>
+        </Link>
       </div>
 
       {/* Search */}
