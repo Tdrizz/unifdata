@@ -9,6 +9,7 @@ import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { useProfile } from "@/lib/profile-context";
 import type { ImportsPageData } from "../queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
@@ -142,6 +143,7 @@ const INTEGRATIONS = [
 
 function PublicSheetsFlow() {
   const router = useRouter();
+  const profile = useProfile();
   const [url, setUrl] = useState("");
   const [recordType, setRecordType] = useState<ImportRecordType>("relationships");
   const [step, setStep] = useState<"input" | "mapping">("input");
