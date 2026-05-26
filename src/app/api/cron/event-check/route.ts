@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   if (proOrgs && proOrgs.length > 0) {
     const queue = getAutomationQueue();
-    const hourTag = Math.floor(Date.now() / 7_200_000); // changes every 2 hours
+    const hourTag = new Date().toISOString().slice(0, 10); // changes daily
 
     await Promise.all(
       proOrgs.map((org) =>
