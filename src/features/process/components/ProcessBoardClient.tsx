@@ -1,6 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+  type DragStartEvent,
+  type DragOverEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 
 type Stage = {
   id: string;
@@ -112,7 +125,6 @@ function NewRecordForm({
     });
   }
 
-  // Contact search is a future enhancement
   void _setContactSearch;
 
   return (
@@ -200,22 +212,13 @@ function NewRecordForm({
   );
 }
 
-function RecordCard({
-  record,
-  stages,
-  onStageChange,
-}: {
-  record: ProcessRecord;
-  stages: Stage[];
-  onStageChange: (recordId: string, newStageId: string) => void;
-}) {
-  const [showMove, setShowMove] = useState(false);
+function CardContent({ record }: { record: ProcessRecord }) {
   const days = daysInStage(record.created_at);
   const color = daysColor(days);
   const contactName = getContactName(record);
 
   return (
-    <div className="bg-ud-surface border border-ud rounded-[10px] p-3 shadow-sm hover:border-ud-hard transition-colors">
+    <>
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
           <div className="text-[13px] font-semibold text-ud-ink truncate">{record.name}</div>
@@ -227,42 +230,164 @@ function RecordCard({
           </div>
         )}
       </div>
-
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
         <span
           className="text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] text-white"
           style={{ backgroundColor: color }}
         >
           {days}d
         </span>
+      </div>
+    </>
+  );
+}
 
-        <div className="relative">
+function DraggableCard({ record }: { record: ProcessRecord }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: record.id,
+    data: { record },
+  });
+
+  const style = transform
+    ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.3 : 1 }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="bg-ud-surface border border-ud rounded-[10px] p-3 shadow-sm hover:border-ud-hard transition-colors cursor-grab active:cursor-grabbing touch-none"
+    >
+      <CardContent record={record} />
+    </div>
+  );
+}
+
+function GhostCard({ record }: { record: ProcessRecord }) {
+  return (
+    <div className="bg-ud-surface border border-ud-accent rounded-[10px] p-3 shadow-xl rotate-2 opacity-90">
+      <CardContent record={record} />
+    </div>
+  );
+}
+
+function DroppableColumn({
+  stage,
+  records,
+  isOver,
+}: {
+  stage: Stage;
+  records: ProcessRecord[];
+  isOver: boolean;
+}) {
+  const { setNodeRef } = useDroppable({ id: stage.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex-1 space-y-2 rounded-[10px] p-2 min-h-[100px] transition-colors ${
+        isOver ? "bg-ud-accent/10 ring-1 ring-ud-accent/40" : "bg-ud-surface-sunk"
+      }`}
+    >
+      {records.length === 0 && (
+        <div className="py-4 text-center text-[11px] text-ud-faint">
+          {isOver ? "Drop here" : "Empty"}
+        </div>
+      )}
+      {records.map((record) => (
+        <DraggableCard key={record.id} record={record} />
+      ))}
+    </div>
+  );
+}
+
+type ConfirmSheet = {
+  recordId: string;
+  stage: Stage;
+  previousStageId: string;
+};
+
+function TerminalConfirmSheet({
+  sheet,
+  onConfirm,
+  onCancel,
+}: {
+  sheet: ConfirmSheet;
+  onConfirm: (recordId: string, stage: Stage, extra: { finalValue?: number; closedReason?: string }) => void;
+  onCancel: () => void;
+}) {
+  const [finalValue, setFinalValue] = useState("");
+  const [closedReason, setClosedReason] = useState("");
+  const isCompleted = sheet.stage.stage_type === "completed";
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-ud-surface border border-ud rounded-[14px] p-6 w-full max-w-sm shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-[16px] font-bold text-ud-ink mb-1">
+          Mark as {sheet.stage.name}?
+        </h2>
+        <p className="text-[12px] text-ud-muted mb-4">
+          This record will be moved to a terminal stage.
+        </p>
+
+        {isCompleted && (
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+              Final value (optional)
+            </label>
+            <input
+              type="number"
+              value={finalValue}
+              onChange={(e) => setFinalValue(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
+            />
+          </div>
+        )}
+
+        {!isCompleted && (
+          <div className="mb-4">
+            <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+              Reason (optional)
+            </label>
+            <textarea
+              value={closedReason}
+              onChange={(e) => setClosedReason(e.target.value)}
+              placeholder="Why was this cancelled?"
+              rows={3}
+              className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent resize-none"
+            />
+          </div>
+        )}
+
+        <div className="flex gap-2">
           <button
-            onClick={() => setShowMove(!showMove)}
-            className="text-[11px] text-ud-faint hover:text-ud-accent transition-colors px-1.5 py-0.5 rounded-[4px] hover:bg-ud-surface-sunk"
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-3 py-2 bg-ud-surface border border-ud text-[13px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink transition-colors"
           >
-            Move ▾
+            Cancel
           </button>
-          {showMove && (
-            <div className="absolute right-0 bottom-full mb-1 bg-ud-surface border border-ud rounded-[8px] shadow-xl z-10 min-w-[140px] overflow-hidden">
-              {stages.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    onStageChange(record.id, s.id);
-                    setShowMove(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 text-[12px] text-ud-ink hover:bg-ud-surface-sunk transition-colors"
-                >
-                  <span
-                    className="inline-block w-2 h-2 rounded-full mr-2"
-                    style={{ backgroundColor: s.color }}
-                  />
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() =>
+              onConfirm(sheet.recordId, sheet.stage, {
+                finalValue: finalValue ? Number(finalValue) : undefined,
+                closedReason: closedReason || undefined,
+              })
+            }
+            className="flex-1 px-3 py-2 bg-ud-accent text-white text-[13px] font-semibold rounded-[8px] hover:opacity-90 transition-opacity"
+          >
+            Confirm
+          </button>
         </div>
       </div>
     </div>
@@ -273,6 +398,13 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   const [records, setRecords] = useState<ProcessRecord[]>(initialRecords);
   const [showTerminal, setShowTerminal] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [activeRecord, setActiveRecord] = useState<ProcessRecord | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [confirmSheet, setConfirmSheet] = useState<ConfirmSheet | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   const activeStages = stages.filter(
     (s) => s.stage_type === "active" || s.stage_type === "on_hold"
@@ -282,30 +414,125 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   );
   const visibleStages = showTerminal ? stages : activeStages;
 
-  async function handleStageChange(recordId: string, newStageId: string) {
-    const stage = stages.find((s) => s.id === newStageId);
+  function getStageRecords(stage: Stage): ProcessRecord[] {
+    const stageRecords = records.filter((r) => r.stage_id === stage.id && r.status !== "cancelled" && r.status !== "completed");
+    const terminalRecords = records.filter(
+      (r) => r.stage_id === stage.id && (r.status === "cancelled" || r.status === "completed")
+    );
+    return stage.stage_type === "completed" || stage.stage_type === "cancelled"
+      ? [...stageRecords, ...terminalRecords]
+      : stageRecords;
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    const record = records.find((r) => r.id === event.active.id);
+    setActiveRecord(record ?? null);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    setOverId(event.over?.id ? String(event.over.id) : null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveRecord(null);
+    setOverId(null);
+
+    const { active, over } = event;
+    if (!over) return;
+
+    const recordId = String(active.id);
+    const targetStageId = String(over.id);
+    const record = records.find((r) => r.id === recordId);
+    if (!record) return;
+    if (record.stage_id === targetStageId) return;
+
+    const targetStage = stages.find((s) => s.id === targetStageId);
+    if (!targetStage) return;
+
+    const isTerminal =
+      targetStage.stage_type === "completed" || targetStage.stage_type === "cancelled";
+
+    if (isTerminal) {
+      setConfirmSheet({ recordId, stage: targetStage, previousStageId: record.stage_id });
+      setRecords((prev) =>
+        prev.map((r) => (r.id === recordId ? { ...r, stage_id: targetStageId } : r))
+      );
+      return;
+    }
+
     const newStatus =
-      stage?.stage_type === "completed"
-        ? "completed"
-        : stage?.stage_type === "cancelled"
-        ? "cancelled"
-        : stage?.stage_type === "on_hold"
-        ? "on_hold"
-        : "active";
+      targetStage.stage_type === "on_hold" ? "on_hold" : "active";
+
+    setRecords((prev) =>
+      prev.map((r) =>
+        r.id === recordId ? { ...r, stage_id: targetStageId, status: newStatus } : r
+      )
+    );
+
+    fetch(`/api/process/records/${recordId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stageId: targetStageId, status: newStatus }),
+    }).then((res) => {
+      if (!res.ok) {
+        setRecords((prev) =>
+          prev.map((r) =>
+            r.id === recordId ? { ...r, stage_id: record.stage_id, status: record.status } : r
+          )
+        );
+      }
+    });
+  }
+
+  async function handleTerminalConfirm(
+    recordId: string,
+    stage: Stage,
+    extra: { finalValue?: number; closedReason?: string }
+  ) {
+    const status = stage.stage_type === "completed" ? "completed" : "cancelled";
+    const body: Record<string, unknown> = { stageId: stage.id, status };
+    if (extra.closedReason) body.closed_reason = extra.closedReason;
+    if (extra.finalValue != null) body.value = extra.finalValue;
 
     const res = await fetch(`/api/process/records/${recordId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stageId: newStageId, status: newStatus }),
+      body: JSON.stringify(body),
     });
 
     if (res.ok) {
       setRecords((prev) =>
         prev.map((r) =>
-          r.id === recordId ? { ...r, stage_id: newStageId, status: newStatus } : r
+          r.id === recordId
+            ? {
+                ...r,
+                stage_id: stage.id,
+                status,
+                ...(extra.finalValue != null ? { value: extra.finalValue } : {}),
+              }
+            : r
+        )
+      );
+    } else if (confirmSheet) {
+      setRecords((prev) =>
+        prev.map((r) =>
+          r.id === recordId
+            ? { ...r, stage_id: confirmSheet.previousStageId }
+            : r
         )
       );
     }
+
+    setConfirmSheet(null);
+  }
+
+  function handleTerminalCancel() {
+    if (!confirmSheet) return;
+    const { recordId, previousStageId } = confirmSheet;
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, stage_id: previousStageId } : r))
+    );
+    setConfirmSheet(null);
   }
 
   function handleRecordCreated(record: ProcessRecord) {
@@ -324,79 +551,70 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   }
 
   return (
-    <div className="hidden md:flex flex-col h-full px-7 pt-7 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-0.5">
-            Process Board
-          </div>
-          <h1 className="text-[22px] font-bold text-ud-ink">{board.name}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowTerminal(!showTerminal)}
-            className="px-3 py-2 text-[12px] font-medium bg-ud-surface border border-ud rounded-[8px] text-ud-muted hover:text-ud-ink transition-colors"
-          >
-            {showTerminal ? "Hide closed" : `Show closed (${terminalStages.length})`}
-          </button>
-          <button
-            onClick={() => setShowNewForm(true)}
-            className="px-3 py-2 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-          >
-            + New Record
-          </button>
-        </div>
-      </div>
-
-      {/* Board columns */}
-      <div className="flex gap-4 overflow-x-auto flex-1 pb-4">
-        {visibleStages.map((stage) => {
-          const stageRecords = records.filter((r) => r.stage_id === stage.id && r.status !== "cancelled" && r.status !== "completed");
-          const terminalRecords = records.filter(
-            (r) =>
-              r.stage_id === stage.id &&
-              (r.status === "cancelled" || r.status === "completed")
-          );
-          const displayRecords =
-            stage.stage_type === "completed" || stage.stage_type === "cancelled"
-              ? [...stageRecords, ...terminalRecords]
-              : stageRecords;
-
-          return (
-            <div key={stage.id} className="flex-shrink-0 w-[260px] flex flex-col">
-              {/* Stage header */}
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: stage.color }}
-                />
-                <span className="text-[12px] font-semibold text-ud-ink uppercase tracking-[0.05em]">
-                  {stage.name}
-                </span>
-                <span className="ml-auto text-[11px] text-ud-faint bg-ud-surface-sunk px-1.5 py-0.5 rounded-[4px]">
-                  {displayRecords.length}
-                </span>
-              </div>
-
-              {/* Cards */}
-              <div className="flex-1 space-y-2 bg-ud-surface-sunk rounded-[10px] p-2 min-h-[100px]">
-                {displayRecords.length === 0 && (
-                  <div className="py-4 text-center text-[11px] text-ud-faint">Empty</div>
-                )}
-                {displayRecords.map((record) => (
-                  <RecordCard
-                    key={record.id}
-                    record={record}
-                    stages={stages}
-                    onStageChange={handleStageChange}
-                  />
-                ))}
-              </div>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="hidden md:flex flex-col h-full px-7 pt-7 pb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-0.5">
+              Process Board
             </div>
-          );
-        })}
+            <h1 className="text-[22px] font-bold text-ud-ink">{board.name}</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTerminal(!showTerminal)}
+              className="px-3 py-2 text-[12px] font-medium bg-ud-surface border border-ud rounded-[8px] text-ud-muted hover:text-ud-ink transition-colors"
+            >
+              {showTerminal ? "Hide closed" : `Show closed (${terminalStages.length})`}
+            </button>
+            <button
+              onClick={() => setShowNewForm(true)}
+              className="px-3 py-2 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+            >
+              + New Record
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-4 overflow-x-auto flex-1 pb-4">
+          {visibleStages.map((stage) => {
+            const displayRecords = getStageRecords(stage);
+            const isOver = overId === stage.id;
+
+            return (
+              <div key={stage.id} className="flex-shrink-0 w-[260px] flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: stage.color }}
+                  />
+                  <span className="text-[12px] font-semibold text-ud-ink uppercase tracking-[0.05em]">
+                    {stage.name}
+                  </span>
+                  <span className="ml-auto text-[11px] text-ud-faint bg-ud-surface-sunk px-1.5 py-0.5 rounded-[4px]">
+                    {displayRecords.length}
+                  </span>
+                </div>
+
+                <DroppableColumn
+                  stage={stage}
+                  records={displayRecords}
+                  isOver={isOver}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      <DragOverlay>
+        {activeRecord ? <GhostCard record={activeRecord} /> : null}
+      </DragOverlay>
 
       {showNewForm && (
         <NewRecordForm
@@ -407,6 +625,14 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
           onClose={() => setShowNewForm(false)}
         />
       )}
-    </div>
+
+      {confirmSheet && (
+        <TerminalConfirmSheet
+          sheet={confirmSheet}
+          onConfirm={handleTerminalConfirm}
+          onCancel={handleTerminalCancel}
+        />
+      )}
+    </DndContext>
   );
 }
