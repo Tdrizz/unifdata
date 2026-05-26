@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { useProfile } from "@/lib/profile-context";
 import type { SaleRow, CustomerRow } from "../types";
 import { SaleCreateForm } from "./SaleCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -91,11 +92,13 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function SalesList({ sales, count: _count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
+  const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
   );
-  const saleSingular = profile?.labels.saleSingular ?? "Invoice";
-  const salePlural = profile?.labels.salePlural ?? "Invoices";
+  const saleSingular = profile?.labels.saleSingular ?? p.labels.saleSingular;
+  const salePlural = profile?.labels.salePlural ?? p.labels.salePlural;
+  const customerSingular = profile?.labels.customerSingular ?? p.labels.customerSingular;
 
   const customerById = new Map(customers.map((c) => [c.id, c]));
   const now = new Date();
@@ -274,7 +277,7 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
         <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              {[saleSingular, profile?.labels.customerSingular ?? "Client", "Amount", "Issued", "Due", "Status", ""].map((h) => (
+              {[saleSingular, customerSingular, "Amount", "Issued", "Due", "Status", ""].map((h) => (
                 <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
               ))}
             </tr>

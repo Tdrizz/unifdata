@@ -6,6 +6,8 @@ import { importFieldDefinitions } from "@/lib/import-engine-fields";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
 import { acceptedFileExtensions } from "@/lib/imports/parser";
+import { useProfile } from "@/lib/profile-context";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type RecordType =
   | "relationships"
@@ -16,41 +18,43 @@ type RecordType =
 
 type Step = "upload" | "mapping";
 
-const recordTypes: {
+function getRecordTypes(profile: IndustryProfile): {
   value: RecordType;
   label: string;
   description: string;
-}[] = [
-  {
-    value: "relationships",
-    label: "Relationships",
-    description:
-      "People, clients, customers, patients, companies, or accounts.",
-  },
-  {
-    value: "opportunities",
-    label: "Opportunities",
-    description:
-      "Quotes, inquiries, proposals, treatment plans, policies, or deals.",
-  },
-  {
-    value: "work",
-    label: "Work",
-    description:
-      "Jobs, appointments, projects, service visits, orders, or tasks.",
-  },
-  {
-    value: "revenue",
-    label: "Revenue",
-    description:
-      "Payments, invoices, collections, commissions, sales, or balances.",
-  },
-  {
-    value: "actions",
-    label: "Actions",
-    description: "Follow-ups, reminders, callbacks, renewals, or next steps.",
-  },
-];
+}[] {
+  return [
+    {
+      value: "relationships",
+      label: "Relationships",
+      description:
+        "People, clients, customers, patients, companies, or accounts.",
+    },
+    {
+      value: "opportunities",
+      label: profile.labels.leadPlural,
+      description:
+        "Quotes, inquiries, proposals, treatment plans, policies, or deals.",
+    },
+    {
+      value: "work",
+      label: profile.labels.jobPlural,
+      description:
+        "Jobs, appointments, projects, service visits, orders, or tasks.",
+    },
+    {
+      value: "revenue",
+      label: "Revenue",
+      description:
+        "Payments, invoices, collections, commissions, sales, or balances.",
+    },
+    {
+      value: "actions",
+      label: "Actions",
+      description: "Follow-ups, reminders, callbacks, renewals, or next steps.",
+    },
+  ];
+}
 
 function getFieldOptions(recordType: string) {
   return (
@@ -62,6 +66,8 @@ void getFieldOptions; // used by legacy mapping UI, kept for reference
 
 export function CsvImportSessionFlow() {
   const router = useRouter();
+  const profile = useProfile();
+  const recordTypes = getRecordTypes(profile);
 
   const [recordType, setRecordType] = useState<RecordType>("relationships");
   const [file, setFile] = useState<File | null>(null);

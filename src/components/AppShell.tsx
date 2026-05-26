@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ProfileProvider } from "@/lib/profile-context";
 import { AppNav } from "@/components/AppNav";
 import { CommandPalette } from "@/components/CommandPalette";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -66,6 +67,7 @@ export async function AppShell({
   );
 
   return (
+    <ProfileProvider businessSector={businessSector}>
     <>
       {/* ── Desktop shell ─────────────────────────────────────────────────── */}
       <div className="shell hidden md:flex">
@@ -162,5 +164,6 @@ export async function AppShell({
       {/* Command palette */}
       <CommandPalette businessSector={businessSector} />
     </>
+    </ProfileProvider>
   );
 }

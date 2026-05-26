@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { CustomerRow } from "../types";
 import type { Database } from "@/types/db";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { CustomerCreateForm } from "./CustomerCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -89,9 +90,10 @@ export function CustomersTableClient({
   sales = [],
   profile,
 }: Props) {
-  const custPlural = profile?.labels.customerPlural ?? "Clients";
-  const custSingular = profile?.labels.customerSingular ?? "Client";
-  const jobPlural = profile?.labels.jobPlural ?? "Jobs";
+  const p = profile ?? getIndustryProfile();
+  const custPlural = p.labels.customerPlural;
+  const custSingular = p.labels.customerSingular;
+  const jobPlural = p.labels.jobPlural;
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 

@@ -222,7 +222,7 @@ export function CustomerForm({
           <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-between">
             <SendMessageModal
               customerId={customer.id}
-              customerName={customer.name || "Customer"}
+              customerName={customer.name || profile.labels.customerSingular}
               phone={customer.phone ?? null}
               email={customer.email ?? null}
             />

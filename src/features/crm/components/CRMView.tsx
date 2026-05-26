@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { LeadsTableClient } from "@/features/leads/components/LeadsTableClient";
 import { LeadCreateForm } from "@/features/leads/components/LeadCreateForm";
 import type { CRMPageData } from "../queries";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { STAGES, mapToStage, isOpenLead } from "../stages";
 
@@ -44,9 +45,10 @@ const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibo
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function CRMView({ leads, customers, profile }: Props) {
-  const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
-  const leadPlural = profile?.labels.leadPlural ?? "Opportunities";
-  const customerSingular = profile?.labels.customerSingular ?? "Client";
+  const p = profile ?? getIndustryProfile();
+  const leadSingular = p.labels.leadSingular;
+  const leadPlural = p.labels.leadPlural;
+  const customerSingular = p.labels.customerSingular;
   const customerById = new Map(customers.map((c) => [c.id, { name: c.name }]));
 
   const openLeads = leads.filter((l) => isOpenLead(l.status));
@@ -123,7 +125,7 @@ export function CRMView({ leads, customers, profile }: Props) {
 
       {/* Kanban */}
       <div className="grid grid-cols-4 gap-3.5 items-start mb-8">
-        {STAGES.filter((s) => s.name !== "Lost").map((stage) => {
+        {STAGES.filter((s) => !s.keys.some((k) => k === "lost")).map((stage) => {
           const stageLeads = leadsByStage.get(stage.name) ?? [];
           const totalValue = stageLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
           return (

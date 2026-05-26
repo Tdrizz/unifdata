@@ -44,7 +44,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
     ? jobs
     : jobs.filter((job) => matchesFilter(job.status, activeFilter));
 
-  const eyebrow = profile.labels.jobPlural || "Jobs";
+  const eyebrow = profile.labels.jobPlural;
 
   return (
     <div className="pb-8">

@@ -7,6 +7,7 @@ import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { ImportsPageData } from "../queries";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -43,14 +44,26 @@ function formatSyncTime(date: string | null) {
 }
 
 function getRecordTypeLabel(rt: string | null, profile?: IndustryProfile) {
+  const p = profile ?? getIndustryProfile();
   const map: Record<string, string> = {
-    relationships: profile?.labels.customerPlural ?? "Contacts",
-    opportunities: profile?.labels.leadPlural ?? "Opportunities",
-    work: profile?.labels.jobPlural ?? "Work",
-    revenue: profile?.labels.salePlural ?? "Revenue",
-    actions: profile?.labels.followUpPlural ?? "Follow-ups",
+    relationships: p.labels.customerPlural,
+    opportunities: p.labels.leadPlural,
+    work: p.labels.jobPlural,
+    revenue: p.labels.salePlural,
+    actions: p.labels.followUpPlural,
   };
   return map[rt || ""] || rt || "Records";
+}
+
+function getRecordTypes(profile?: IndustryProfile): { value: ImportRecordType; label: string }[] {
+  const p = profile ?? getIndustryProfile();
+  return [
+    { value: "relationships", label: "Relationships" },
+    { value: "opportunities", label: p.labels.leadPlural },
+    { value: "work", label: p.labels.jobPlural },
+    { value: "revenue", label: p.labels.salePlural },
+    { value: "actions", label: p.labels.followUpPlural },
+  ];
 }
 
 function sessionStatusBadge(status: string | null) {
@@ -126,13 +139,6 @@ const INTEGRATIONS = [
   },
 ];
 
-const RECORD_TYPES: { value: ImportRecordType; label: string }[] = [
-  { value: "relationships", label: "Relationships" },
-  { value: "opportunities", label: "Opportunities" },
-  { value: "work", label: "Work" },
-  { value: "revenue", label: "Revenue" },
-  { value: "actions", label: "Actions" },
-];
 
 function PublicSheetsFlow() {
   const router = useRouter();
@@ -228,7 +234,7 @@ function PublicSheetsFlow() {
             onChange={(e) => setRecordType(e.target.value as ImportRecordType)}
             className="w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none"
           >
-            {RECORD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {getRecordTypes(profile).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <input
             type="url"

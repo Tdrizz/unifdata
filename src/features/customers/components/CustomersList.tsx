@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { cn, formatCurrency } from "@/lib/utils";
 import { CustomerCreateForm } from "./CustomerCreateForm";
 import type { CustomerRow } from "../types";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { Database } from "@/types/db";
 
@@ -93,6 +94,7 @@ export function CustomersList({
   sales = [],
   profile,
 }: Props) {
+  const p = profile ?? getIndustryProfile();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 
@@ -142,11 +144,11 @@ export function CustomersList({
       {/* 1. Title block */}
       <div className="px-4 pt-[22px] pb-[14px]">
         <p className="text-[12px] font-semibold uppercase tracking-eyebrow text-ud-muted mb-1">
-          {profile?.labels.customerPlural ?? "Clients"}
+          {p.labels.customerPlural}
         </p>
         <span className="flex items-baseline gap-2">
           <Display size={36}>{customers.length}</Display>
-          <span className="text-[20px] text-ud-muted font-medium">{(profile?.labels.customerPlural ?? "Clients").toLowerCase()}</span>
+          <span className="text-[20px] text-ud-muted font-medium">{(p.labels.customerPlural).toLowerCase()}</span>
         </span>
 
         {/* Search */}
