@@ -28,11 +28,18 @@ export async function runOutreachWorker(
 ): Promise<void> {
   const customerId = payload.customer_id as string | undefined;
 
-  // Memory guard: skip if we recently fired an outreach for this customer that was rejected
+  // Memory guard
   if (customerId) {
     const mem = await getMemory(company.id, "outreach", customerId);
-    if (mem && mem.last_outcome === "rejected" && hoursSince(mem.last_fired_at) < OUTREACH_COOLDOWN_HOURS) {
-      return;
+    if (mem) {
+      // Permanently deprioritize contacts dismissed 3+ times with no approval
+      if (mem.fire_count >= 3 && mem.last_outcome === "rejected") {
+        return;
+      }
+      // Normal cooldown: don't re-fire within 7 days regardless of outcome
+      if (hoursSince(mem.last_fired_at) < OUTREACH_COOLDOWN_HOURS) {
+        return;
+      }
     }
   }
 

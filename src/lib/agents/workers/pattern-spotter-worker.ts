@@ -1,16 +1,11 @@
-import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { isPro } from "@/lib/feature-gates";
-import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
-import { buildVocabularyBlock } from "@/lib/ai/prompts/shared";
+import { flushLangfuse } from "@/lib/observability/tracing";
 
-const PatternAlertSchema = z.object({
-  title: z.string().max(100),
-  body: z.string().max(500),
-  severity: z.enum(["info", "warning"]),
-});
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 export async function runPatternSpotterWorker(
   orgId: string,
@@ -24,94 +19,92 @@ export async function runPatternSpotterWorker(
 
   if (!company || !isPro(company as { tier: string })) return;
 
-  // Revenue aggregates are org-level; no per-contact filtering needed here.
-  // Exclude closed contacts from any future per-contact analysis (unaffected here).
-
-  // Fetch 12 weeks of weekly revenue buckets
-  const twelveWeeksAgo = new Date(Date.now() - 84 * 86400000).toISOString().slice(0, 10);
-  const { data: salesData } = await supabase
-    .from("sales")
-    .select("sale_date, amount")
+  // Fetch all completed jobs that have a service type and a linked customer
+  const { data: jobs } = await supabase
+    .from("jobs")
+    .select("customer_id, service_type, completed_date")
     .eq("company_id", orgId)
-    .gte("sale_date", twelveWeeksAgo)
-    .order("sale_date");
+    .eq("status", "completed")
+    .not("service_type", "is", null)
+    .not("customer_id", "is", null)
+    .order("customer_id")
+    .order("completed_date");
 
-  if (!salesData || salesData.length < 4) return;
+  if (!jobs || jobs.length < 5) return;
 
-  // Bucket by ISO week
-  const weeklyTotals: Record<string, number> = {};
-  for (const row of salesData) {
-    const date = new Date(row.sale_date);
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const weekNum = Math.ceil(((date.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
-    const key = `${date.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
-    weeklyTotals[key] = (weeklyTotals[key] ?? 0) + Number(row.amount || 0);
+  // Build ordered service list per customer (unique services in first-seen order)
+  const customerServices = new Map<string, string[]>();
+  for (const job of jobs) {
+    const cid = job.customer_id as string;
+    const svc = (job.service_type as string).trim().toLowerCase();
+    if (!customerServices.has(cid)) customerServices.set(cid, []);
+    const list = customerServices.get(cid)!;
+    if (!list.includes(svc)) list.push(svc);
   }
 
-  const weekSummary = Object.entries(weeklyTotals)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([week, total]) => `${week}: $${Math.round(total)}`)
-    .join("\n");
+  // Need enough distinct customers for patterns to be meaningful
+  if (customerServices.size < 5) return;
+
+  // Count A→B transitions (one count per customer that had A then B in order)
+  const transitions = new Map<string, Map<string, number>>();
+  for (const services of customerServices.values()) {
+    for (let i = 0; i < services.length - 1; i++) {
+      const a = services[i];
+      const b = services[i + 1];
+      if (!transitions.has(a)) transitions.set(a, new Map());
+      const inner = transitions.get(a)!;
+      inner.set(b, (inner.get(b) ?? 0) + 1);
+    }
+  }
+
+  // Find patterns that appear in at least 3 customers
+  const MIN_PATTERN_COUNT = 3;
+  const patterns: { a: string; b: string; count: number; candidateCount: number }[] = [];
+
+  for (const [a, bMap] of transitions) {
+    for (const [b, count] of bMap) {
+      if (count < MIN_PATTERN_COUNT) continue;
+      // Candidates: customers who had A but haven't had B yet
+      const candidateCount = [...customerServices.values()].filter(
+        (svcs) => svcs.includes(a) && !svcs.includes(b),
+      ).length;
+      if (candidateCount > 0) {
+        patterns.push({ a, b, count, candidateCount });
+      }
+    }
+  }
+
+  if (patterns.length === 0) return;
+
+  // Pick the pattern with the most follow-on candidates (tie-break: frequency)
+  patterns.sort((x, y) =>
+    y.candidateCount !== x.candidateCount
+      ? y.candidateCount - x.candidateCount
+      : y.count - x.count,
+  );
+  const top = patterns[0];
 
   const profile = getIndustryProfile(company.business_sector);
-  const systemPrompt = `You analyze revenue patterns for small service businesses.
-Identify 1 meaningful pattern (seasonal dip, growth trend, or anomaly) from the weekly revenue data.
-If the data shows no notable pattern, say so clearly in the body.
-Keep it factual — cite specific weeks and amounts.
+  const custPlural = profile.labels.customerPlural;
+  const custSingular = profile.labels.customerSingular;
+  const jobPlural = profile.labels.jobPlural.toLowerCase();
+  const subjectLabel = top.candidateCount === 1 ? custSingular : custPlural;
 
-${buildVocabularyBlock(profile)}
+  await supabase.from("agent_alerts").insert({
+    organization_id: orgId,
+    alert_type: "service_cooccurrence",
+    severity: top.candidateCount >= 5 ? "warning" : "info",
+    title: `${top.candidateCount} ${subjectLabel} may need ${capitalize(top.b)}`,
+    body: `${top.candidateCount} ${subjectLabel.toLowerCase()} received "${capitalize(top.a)}" but haven't had "${capitalize(top.b)}" — a follow-on sequence seen ${top.count}× in your ${jobPlural} history.`,
+    reasoning: `Co-occurrence pattern: "${top.a}" → "${top.b}" (${top.count} occurrences, ${top.candidateCount} eligible ${custPlural.toLowerCase()}).`,
+    escalation_level: 0,
+  });
 
-Respond ONLY with valid JSON:
-{ "title": string, "body": string, "severity": "info" | "warning" }`;
+  await supabase.from("agent_logs").insert({
+    organization_id: orgId,
+    agent_name: "pattern-spotter",
+    events_fired: 1,
+  });
 
-  const userMessage = `Weekly revenue for ${company.name} (last 12 weeks):\n\n${weekSummary}`;
-
-  const ctx = createNightlyTrace(orgId, new Date().toISOString().split("T")[0]);
-  const start = Date.now();
-
-  try {
-    const response = await aiRouter.chat.completions.create({
-      model: AI_MODELS.manager,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
-    });
-
-    const raw = response.choices[0]?.message?.content ?? "{}";
-    const parsed = PatternAlertSchema.safeParse(JSON.parse(raw));
-
-    logGeneration(ctx, {
-      name: "pattern-spotter",
-      model: AI_MODELS.manager,
-      prompt: systemPrompt,
-      completion: raw,
-      inputTokens: response.usage?.prompt_tokens ?? 0,
-      outputTokens: response.usage?.completion_tokens ?? 0,
-      latencyMs: Date.now() - start,
-      zodPassed: parsed.success,
-    });
-
-    if (!parsed.success) return;
-
-    await supabase.from("agent_alerts").insert({
-      organization_id: orgId,
-      alert_type: "revenue_pattern",
-      severity: parsed.data.severity,
-      title: parsed.data.title,
-      body: parsed.data.body,
-      reasoning: "Monthly pattern analysis across 12 weeks of revenue data.",
-      escalation_level: 0,
-    });
-
-    await supabase.from("agent_logs").insert({
-      organization_id: orgId,
-      agent_name: "pattern-spotter",
-      events_fired: 1,
-    });
-  } finally {
-    await flushLangfuse();
-  }
+  await flushLangfuse();
 }

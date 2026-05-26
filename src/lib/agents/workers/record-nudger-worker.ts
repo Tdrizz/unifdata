@@ -4,7 +4,11 @@ import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { isPro } from "@/lib/feature-gates";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince } from "@/lib/agents/memory";
-import { buildRecordNudgerPrompt, buildRecordNudgerUserMessage } from "@/lib/ai/prompts/record-nudger";
+import {
+  buildRecordNudgerPrompt,
+  buildRecordNudgerUserMessage,
+  getToneStage,
+} from "@/lib/ai/prompts/record-nudger";
 import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
 
 const NudgerAlertSchema = z.array(
@@ -35,25 +39,43 @@ export async function runRecordNudgerWorker(
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
   const tenDaysAgo = new Date(now.getTime() - 10 * 86400000).toISOString();
 
+  // Fetch actual records (not just counts) so we can compute max days overdue
   const [overdueResult, staleResult] = await Promise.all([
     supabase
       .from("follow_ups")
-      .select("id", { count: "exact", head: true })
+      .select("due_date")
       .eq("company_id", orgId)
       .neq("status", "complete")
-      .lt("due_date", sevenDaysAgo),
+      .lt("due_date", sevenDaysAgo)
+      .order("due_date"),
     supabase
       .from("jobs")
-      .select("id", { count: "exact", head: true })
+      .select("updated_at")
       .eq("company_id", orgId)
       .not("status", "in", "(completed,cancelled)")
-      .lt("updated_at", tenDaysAgo),
+      .lt("updated_at", tenDaysAgo)
+      .order("updated_at"),
   ]);
 
-  const overdueFollowUpCount = overdueResult.count ?? 0;
-  const staleJobCount = staleResult.count ?? 0;
+  const overdueFollowUps = overdueResult.data ?? [];
+  const staleJobs = staleResult.data ?? [];
+  const overdueFollowUpCount = overdueFollowUps.length;
+  const staleJobCount = staleJobs.length;
 
   if (overdueFollowUpCount === 0 && staleJobCount === 0) return;
+
+  // Compute max days overdue for the oldest record in each set
+  const maxDaysOverdue =
+    overdueFollowUps.length > 0
+      ? Math.floor((now.getTime() - new Date(overdueFollowUps[0].due_date).getTime()) / 86400000)
+      : 0;
+  const maxStaleDays =
+    staleJobs.length > 0
+      ? Math.floor((now.getTime() - new Date(staleJobs[0].updated_at).getTime()) / 86400000)
+      : 0;
+
+  // Determine tone from the most overdue record across both sets
+  const toneStage = getToneStage(Math.max(maxDaysOverdue, maxStaleDays));
 
   // Check cooldown — skip signals that fired within the last 24 hours
   const [overdueMem, staleMem] = await Promise.all([
@@ -69,11 +91,13 @@ export async function runRecordNudgerWorker(
   if (!shouldFireOverdue && !shouldFireStale) return;
 
   const profile = getIndustryProfile(company.business_sector);
-  const systemPrompt = buildRecordNudgerPrompt(profile);
+  const systemPrompt = buildRecordNudgerPrompt(profile, toneStage);
   const userMessage = buildRecordNudgerUserMessage(
     shouldFireStale ? staleJobCount : 0,
     shouldFireOverdue ? overdueFollowUpCount : 0,
     profile,
+    shouldFireOverdue ? maxDaysOverdue : undefined,
+    shouldFireStale ? maxStaleDays : undefined,
   );
 
   const ctx = createNightlyTrace(orgId, now.toISOString().split("T")[0]);
@@ -111,11 +135,9 @@ export async function runRecordNudgerWorker(
     });
 
     if (parsed && parsed.length > 0) {
-      // Compute escalation levels and build inserts
       const alertInserts = await Promise.all(
         parsed.map(async (alert) => {
-          const signalType = alert.alert_type;
-          const escalationLevel = await getEscalationLevel(orgId, signalType);
+          const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
           return {
             organization_id: orgId,
             alert_type: alert.alert_type,
@@ -127,11 +149,9 @@ export async function runRecordNudgerWorker(
           };
         }),
       );
-
       await supabase.from("agent_alerts").insert(alertInserts);
     }
 
-    // Record signal fires after successful insert
     await Promise.all([
       shouldFireOverdue && recordSignalFired(orgId, "overdue_followups"),
       shouldFireStale && recordSignalFired(orgId, "stale_jobs"),
