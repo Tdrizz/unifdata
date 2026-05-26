@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
-import { businessSectorOptions, getIndustryProfile } from "@/lib/industry-profiles";
+import { businessSectorOptions as businessSectorGroups, getIndustryProfile } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
@@ -176,10 +176,12 @@ export function MobileSettingsView({
                 defaultValue={company.business_sector || "general"}
                 className="mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[10px] text-[13.5px] text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/20"
               >
-                {businessSectorOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                {businessSectorGroups.map((group) => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.options.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               <span className="mt-2 block text-[12px] leading-5 text-ud-muted">

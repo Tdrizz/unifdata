@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { businessSectorOptions, getIndustryProfile } from "@/lib/industry-profiles";
+import { businessSectorOptionsFlat, getIndustryProfile } from "@/lib/industry-profiles";
 import {
   createCompanyStepAction,
   createWizardCustomersAction,
@@ -338,7 +338,7 @@ export function OnboardingForm() {
               This controls the language and priorities shown across your workspace.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {businessSectorOptions.map((option) => (
+              {businessSectorOptionsFlat.map((option) => (
                 <label
                   key={option.value}
                   className="flex flex-col items-start gap-2 rounded-[10px] border border-white/10 bg-ud-surface/5 p-3.5 text-left transition-[border-color,background-color,box-shadow] duration-[120ms] ease-out cursor-pointer hover:border-white/20 hover:bg-white/10 has-[:checked]:border-ud-accent has-[:checked]:bg-[rgba(74,63,168,0.15)] has-[:checked]:ring-1 has-[:checked]:ring-ud-accent"

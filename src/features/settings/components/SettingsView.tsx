@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { formatTimestampDate } from "@/lib/date-format";
-import { businessSectorOptions } from "@/lib/industry-profiles";
+import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { LogoutButton } from "@/components/LogoutButton";
 import { updateWorkspaceAction, removeMember, disconnectIntegrationAction } from "../actions";
@@ -97,8 +97,12 @@ export function SettingsView({
               <div>
                 <label className="form-label">Industry</label>
                 <select name="business_sector" defaultValue={company.business_sector || "general"} className="form-input">
-                  {businessSectorOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                  {businessSectorGroups.map((group) => (
+                    <optgroup key={group.group} label={group.group}>
+                      {group.options.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
