@@ -1,0 +1,95 @@
+import { redirect } from "next/navigation";
+import { AppShell } from "@/components/AppShell";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCompany } from "@/lib/current-company";
+import { getSettingsIntegrations, getTeamMembers, getNotificationPreferences } from "@/features/settings/queries";
+import { getCurrentUserRole } from "@/lib/current-company";
+import { SettingsView } from "@/features/settings/components/SettingsView";
+import { MobileSettingsView } from "@/features/settings/components/MobileSettingsView";
+import { industryProfiles } from "@/lib/industry-profiles";
+
+export const dynamic = 'force-dynamic';
+
+export default async function SettingsPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  const currentCompany = await getCurrentCompany();
+
+  if (!currentCompany) {
+    redirect("/onboarding");
+  }
+
+  const { company } = currentCompany;
+
+  const thisMonthStart = new Date();
+  thisMonthStart.setDate(1);
+  const thisMonthStartStr = thisMonthStart.toISOString().slice(0, 10);
+
+  const [integrations, members, notificationPrefs, currentMonthSalesResult] = await Promise.all([
+    getSettingsIntegrations(supabase, company.id),
+    getTeamMembers(company.id),
+    getNotificationPreferences(company.id),
+    supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
+  ]);
+
+  const currentMonthRevenue = (currentMonthSalesResult.data ?? []).reduce(
+    (sum, row) => sum + Number(row.amount || 0),
+    0,
+  );
+
+  const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
+  const currentUserRole = await getCurrentUserRole();
+
+  return (
+    <AppShell
+      companyName={company.name}
+      userEmail={user.email || ""}
+      businessSector={company.business_sector}
+    >
+      <>
+        <div className="hidden md:block">
+          <SettingsView
+            company={{
+              id: company.id,
+              name: company.name,
+              business_sector: company.business_sector,
+              tier: company.tier,
+              preferences: company.preferences as Record<string, unknown> | undefined,
+            }}
+            user={{ email: user.email || "" }}
+            integrations={integrations}
+            geminiEnabled={geminiEnabled}
+            members={members}
+            currentUserRole={currentUserRole}
+            notificationPrefs={notificationPrefs}
+            currentMonthRevenue={currentMonthRevenue}
+          />
+        </div>
+        <div className="block md:hidden">
+          <MobileSettingsView
+            company={{
+              id: company.id,
+              name: company.name,
+              business_sector: company.business_sector,
+              brand_color: company.brand_color || "#1D2D3E",
+              accent_color: company.accent_color || "#4A3FA8",
+            }}
+            user={{ email: user.email || "" }}
+            integrations={integrations}
+            geminiEnabled={geminiEnabled}
+            members={members}
+            currentUserRole={currentUserRole}
+          />
+        </div>
+      </>
+    </AppShell>
+  );
+}

@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { businessSectorOptionsFlat, getIndustryProfile } from "@/lib/industry-profiles";
+import type { BusinessSector } from "@/lib/industry-profiles";
 import {
   createCompanyStepAction,
   createWizardCustomersAction,
@@ -13,21 +14,14 @@ import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { acceptedFileExtensions } from "@/lib/imports/parser";
 import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
 
-const INDUSTRY_ICONS: Record<string, string> = {
-  general: "📊",
-  medical: "🩺",
-  construction: "🏗️",
-  home_services: "⚙️",
-  professional_services: "💼",
-};
-
-const INDUSTRY_DESCRIPTIONS: Record<string, string> = {
-  general: "Any other business type",
-  medical: "Medical, dental, chiropractic, veterinary",
-  construction: "Contractors, builders, tradespeople",
-  home_services: "HVAC, plumbing, landscaping, cleaning",
-  professional_services: "Consulting, accounting, legal, IT",
-};
+const SECTOR_CATEGORIES = [
+  { key: "healthcare", label: "Healthcare", icon: "🩺", description: "Medical, dental, chiropractic, veterinary", sectors: ["dental","physical_therapy","mental_health","chiropractic","medical","veterinary"] },
+  { key: "trades", label: "Trades", icon: "🔧", description: "Construction, electrical, plumbing, HVAC, roofing", sectors: ["construction","electrical","plumbing","hvac","roofing","general_contractor"] },
+  { key: "home", label: "Home Services", icon: "🏠", description: "Landscaping, cleaning, pest control, painting", sectors: ["home_services","landscaping","cleaning","pest_control","painting"] },
+  { key: "professional", label: "Professional Services", icon: "💼", description: "Legal, accounting, consulting, agency, IT", sectors: ["professional_services","legal","accounting","consulting","agency","it_services","financial_advisory"] },
+  { key: "personal", label: "Personal Services", icon: "✂️", description: "Fitness, photography, beauty, auto, tattoo", sectors: ["fitness","photography","beauty","auto_repair","tattoo","auto_detailing"] },
+  { key: "other", label: "Other", icon: "📊", description: "General, insurance, real estate, and more", sectors: ["general","insurance","real_estate"] },
+] as const;
 
 const STEP_LABELS = [
   "Your business",
@@ -109,6 +103,10 @@ function CustomerSelect({
 export function OnboardingForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [substep, setSubstep] = useState<1 | 2 | 3>(1);
+  const [selectedCategory, setSelectedCategory] = useState<typeof SECTOR_CATEGORIES[number] | null>(null);
+  const [selectedSector, setSelectedSector] = useState<BusinessSector>("general");
+  const [companyName, setCompanyName] = useState("");
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [sector, setSector] = useState("general");
   const [createdCustomers, setCreatedCustomers] = useState<MiniCustomer[]>([]);
@@ -232,12 +230,29 @@ export function OnboardingForm() {
     });
   }
 
+  async function handleNameBlur(name: string) {
+    if (name.length < 3) return;
+    try {
+      const res = await fetch("/api/onboarding/detect-sector", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const { sector: detected } = (await res.json()) as { sector: string | null };
+      if (detected && selectedSector === "general") {
+        setSelectedSector(detected as BusinessSector);
+      }
+    } catch {
+      // detection is best-effort — ignore failures
+    }
+  }
+
   // Step 1
-  function handleStep1(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function handleStep1Submit() {
     setStepError(null);
-    const fd = new FormData(e.currentTarget);
-    const selectedSector = String(fd.get("businessSector") || "general");
+    const fd = new FormData();
+    fd.append("companyName", companyName);
+    fd.append("businessSector", selectedSector);
     startTransition(async () => {
       const result = await createCompanyStepAction(fd);
       if (result.error) {
@@ -314,78 +329,161 @@ export function OnboardingForm() {
 
   // ── Step 1 ──────────────────────────────────────────────────────────────
   if (step === 1) {
+    // Substep 1: pick a category
+    if (substep === 1) {
+      return (
+        <>
+          <ProgressBar step={1} />
+          <div className="mb-5">
+            <p className="text-[17px] font-semibold text-ud-ink">What kind of business do you run?</p>
+            <p className="mt-1 text-sm text-ud-faint">We&apos;ll tailor the language and workflow to fit your industry.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {SECTOR_CATEGORIES.map((cat) => (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setSubstep(2);
+                }}
+                className="flex flex-col items-start gap-2 rounded-[10px] border border-white/10 bg-ud-surface/5 p-3.5 text-left transition-[border-color,background-color,box-shadow] duration-[120ms] ease-out cursor-pointer hover:border-white/20 hover:bg-white/10"
+              >
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-xl text-lg"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                >
+                  {cat.icon}
+                </span>
+                <div>
+                  <p className="text-[13px] font-semibold leading-snug text-ud-ink">{cat.label}</p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-ud-faint">{cat.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    // Substep 2: pick specific sector + preview vocabulary
+    if (substep === 2 && selectedCategory) {
+      const sectorOptions = businessSectorOptionsFlat.filter((o) =>
+        (selectedCategory.sectors as readonly string[]).includes(o.value)
+      );
+      const previewProfile = getIndustryProfile(selectedSector);
+      const sectorInCategory = (selectedCategory.sectors as readonly string[]).includes(selectedSector);
+
+      return (
+        <>
+          <ProgressBar step={1} />
+          <button
+            type="button"
+            onClick={() => setSubstep(1)}
+            className="mb-4 flex items-center gap-1 text-sm text-ud-muted hover:text-ud-ink"
+          >
+            ← Back
+          </button>
+          <div className="mb-5">
+            <p className="text-[17px] font-semibold text-ud-ink">{selectedCategory.icon} {selectedCategory.label}</p>
+            <p className="mt-1 text-sm text-ud-faint">Select the option that best matches your practice.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {sectorOptions.map((option) => (
+              <label
+                key={option.value}
+                className="flex flex-col items-start gap-2 rounded-[10px] border border-white/10 bg-ud-surface/5 p-3.5 text-left transition-[border-color,background-color,box-shadow] duration-[120ms] ease-out cursor-pointer hover:border-white/20 hover:bg-white/10 has-[:checked]:border-ud-accent has-[:checked]:bg-[rgba(74,63,168,0.15)] has-[:checked]:ring-1 has-[:checked]:ring-ud-accent"
+              >
+                <input
+                  type="radio"
+                  name="sectorSubstep2"
+                  value={option.value}
+                  checked={selectedSector === option.value}
+                  onChange={() => setSelectedSector(option.value as BusinessSector)}
+                  className="sr-only"
+                />
+                <p className="text-[13px] font-semibold leading-snug text-ud-ink">{option.label}</p>
+              </label>
+            ))}
+          </div>
+
+          {sectorInCategory && (
+            <div className="mt-4 rounded-[10px] border border-white/10 bg-ud-surface/10 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ud-faint">Vocabulary preview</p>
+              <div className="space-y-1 text-sm text-ud-muted">
+                <p>Contacts are called: <span className="text-ud-ink">{previewProfile.labels.customerSingular}</span></p>
+                <p>Work records: <span className="text-ud-ink">{previewProfile.labels.jobSingular}</span></p>
+                <p>Pipeline: <span className="text-ud-ink">{previewProfile.pipelineLabel}</span></p>
+                <p>A process record: <span className="text-ud-ink">{previewProfile.recordLabel}</span></p>
+                <p>Completed stage: <span className="text-ud-ink">{previewProfile.completedLabel}</span></p>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setSubstep(3)}
+            disabled={!sectorInCategory}
+            className={`mt-5 ${BTN_PRIMARY}`}
+          >
+            Continue →
+          </button>
+        </>
+      );
+    }
+
+    // Substep 3: company name
+    const currentCatForSector = SECTOR_CATEGORIES.find((c) =>
+      (c.sectors as readonly string[]).includes(selectedSector)
+    );
+    const sectorLabel = getIndustryProfile(selectedSector).label;
+    const categoryIcon = currentCatForSector?.icon ?? "📊";
+
     return (
       <>
         <ProgressBar step={1} />
         <div className="mb-5">
-          <p className="text-[17px] font-semibold text-ud-ink">Let&apos;s set up your workspace</p>
-          <p className="mt-1 text-sm text-ud-faint">Tell us about your business so we can use the right language throughout.</p>
+          <p className="text-[17px] font-semibold text-ud-ink">Name your workspace</p>
+          <p className="mt-1 text-sm text-ud-faint">Enter your business name to finish setting up your workspace.</p>
         </div>
-        <form onSubmit={handleStep1} className="space-y-5">
+
+        <div className="mb-5 flex items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-full border border-ud-accent/40 bg-ud-accent/10 px-3 py-1 text-sm text-ud-ink">
+            {categoryIcon} {sectorLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSubstep(1)}
+            className="text-xs text-ud-muted hover:text-ud-ink"
+          >
+            Change
+          </button>
+        </div>
+
+        <div className="space-y-5">
           <div>
             <label className="text-sm font-medium text-ud-ink">Company name</label>
             <input
-              name="companyName"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              onBlur={(e) => handleNameBlur(e.target.value)}
               className={INPUT_CLS}
               placeholder="Arctic Ridge Services"
               required
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-ud-ink">Business type</label>
-            <p className="mt-1 text-xs leading-5 text-ud-faint">
-              This controls the language and priorities shown across your workspace.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {businessSectorOptionsFlat.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex flex-col items-start gap-2 rounded-[10px] border border-white/10 bg-ud-surface/5 p-3.5 text-left transition-[border-color,background-color,box-shadow] duration-[120ms] ease-out cursor-pointer hover:border-white/20 hover:bg-white/10 has-[:checked]:border-ud-accent has-[:checked]:bg-[rgba(74,63,168,0.15)] has-[:checked]:ring-1 has-[:checked]:ring-ud-accent"
-                >
-                  <input
-                    type="radio"
-                    name="businessSector"
-                    value={option.value}
-                    defaultChecked={option.value === "general"}
-                    className="sr-only"
-                  />
-                  <span
-                    className="flex h-8 w-8 items-center justify-center rounded-xl text-lg"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
-                  >
-                    {INDUSTRY_ICONS[option.value] ?? "📊"}
-                  </span>
-                  <div>
-                    <p className="text-[13px] font-semibold leading-snug text-ud-ink">
-                      {option.label}
-                    </p>
-                    <p className="mt-0.5 text-[11px] leading-4 text-ud-faint">
-                      {INDUSTRY_DESCRIPTIONS[option.value] ?? ""}
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-ud-ink">
-              Describe your work <span className="text-ud-faint">(optional)</span>
-            </label>
-            <input
-              name="industry"
-              className={INPUT_CLS}
-              placeholder="Excavation, dental office, landscaping..."
-            />
-          </div>
-
           {stepError && <ErrorBox message={stepError} />}
 
-          <button type="submit" disabled={isPending} className={BTN_PRIMARY}>
+          <button
+            type="button"
+            disabled={isPending || !companyName.trim()}
+            onClick={handleStep1Submit}
+            className={BTN_PRIMARY}
+          >
             {isPending ? "Creating workspace…" : "Continue →"}
           </button>
-        </form>
+        </div>
       </>
     );
   }

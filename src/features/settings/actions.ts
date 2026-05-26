@@ -382,3 +382,450 @@ export async function removeMember(targetUserId: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }
+
+export async function createTagAction(orgId: string, name: string, color: string): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("tags")
+    .insert({ organization_id: orgId, name: name.trim(), color });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function renameTagAction(tagId: string, name: string): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const { data: tag } = await (supabase as any)
+    .from("tags")
+    .select("organization_id")
+    .eq("id", tagId)
+    .single();
+
+  if (!tag || tag.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("tags")
+    .update({ name: name.trim() })
+    .eq("id", tagId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function deleteTagAction(tagId: string): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const { data: tag } = await (supabase as any)
+    .from("tags")
+    .select("organization_id")
+    .eq("id", tagId)
+    .single();
+
+  if (!tag || tag.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("tags")
+    .delete()
+    .eq("id", tagId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function createCustomFieldAction(
+  orgId: string,
+  entityType: string,
+  label: string,
+  fieldType: string,
+  options: string[] | null,
+  required: boolean,
+): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
+
+  const { data: existing } = await (supabase as any)
+    .from("custom_field_definitions")
+    .select("position")
+    .eq("organization_id", orgId)
+    .eq("entity_type", entityType)
+    .order("position", { ascending: false })
+    .limit(1);
+
+  const nextPosition = existing && existing.length > 0 ? (existing[0].position as number) + 1 : 0;
+  const fieldKey = label.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+  const { error } = await (supabase as any)
+    .from("custom_field_definitions")
+    .insert({
+      organization_id: orgId,
+      entity_type: entityType,
+      label: label.trim(),
+      field_key: fieldKey,
+      field_type: fieldType,
+      options: options ?? null,
+      required,
+      position: nextPosition,
+    });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function updateCustomFieldAction(
+  fieldId: string,
+  label: string,
+  fieldType: string,
+  options: string[] | null,
+  required: boolean,
+): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const { data: field } = await (supabase as any)
+    .from("custom_field_definitions")
+    .select("organization_id")
+    .eq("id", fieldId)
+    .single();
+
+  if (!field || field.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("custom_field_definitions")
+    .update({ label: label.trim(), field_type: fieldType, options: options ?? null, required })
+    .eq("id", fieldId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function deleteCustomFieldAction(fieldId: string): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const { data: field } = await (supabase as any)
+    .from("custom_field_definitions")
+    .select("organization_id")
+    .eq("id", fieldId)
+    .single();
+
+  if (!field || field.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("custom_field_definitions")
+    .delete()
+    .eq("id", fieldId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function reorderCustomFieldAction(
+  fieldId: string,
+  orgId: string,
+  entityType: string,
+  direction: "up" | "down",
+): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
+
+  const { data: fields } = await (supabase as any)
+    .from("custom_field_definitions")
+    .select("id, position")
+    .eq("organization_id", orgId)
+    .eq("entity_type", entityType)
+    .order("position", { ascending: true });
+
+  if (!fields) throw new Error("Could not load fields");
+
+  const idx = (fields as Array<{ id: string; position: number }>).findIndex((f) => f.id === fieldId);
+  if (idx === -1) throw new Error("Field not found");
+
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= fields.length) return;
+
+  const current = fields[idx] as { id: string; position: number };
+  const swap = fields[swapIdx] as { id: string; position: number };
+
+  await Promise.all([
+    (supabase as any).from("custom_field_definitions").update({ position: swap.position }).eq("id", current.id),
+    (supabase as any).from("custom_field_definitions").update({ position: current.position }).eq("id", swap.id),
+  ]);
+
+  revalidatePath("/settings");
+}
+
+export async function createBoardAction(orgId: string, name: string): Promise<{ id: string } | { error: string }> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) return { error: "Unauthorized" };
+
+  const { data: board, error } = await (supabase as any)
+    .from("process_boards")
+    .insert({ organization_id: orgId, name: name.trim() })
+    .select("id")
+    .single();
+
+  if (error || !board) return { error: error?.message ?? "Failed to create board" };
+
+  const defaultStages = [
+    { name: "New", color: "#3B82F6", stage_type: "active", position: 0 },
+    { name: "In Progress", color: "#F59E0B", stage_type: "active", position: 1 },
+    { name: "Under Review", color: "#8B5CF6", stage_type: "active", position: 2 },
+    { name: "Completed", color: "#22C55E", stage_type: "completed", position: 3 },
+    { name: "Cancelled", color: "#6B7280", stage_type: "cancelled", position: 4 },
+  ];
+
+  await (supabase as any)
+    .from("board_stages")
+    .insert(defaultStages.map((s) => ({ ...s, board_id: (board as { id: string }).id })));
+
+  revalidatePath("/settings");
+  return { id: (board as { id: string }).id };
+}
+
+export async function renameBoardAction(boardId: string, name: string): Promise<void> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  const { data: board } = await (supabase as any)
+    .from("process_boards")
+    .select("organization_id")
+    .eq("id", boardId)
+    .single();
+
+  if (!board || board.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
+
+  const { error } = await (supabase as any)
+    .from("process_boards")
+    .update({ name: name.trim() })
+    .eq("id", boardId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function deleteBoardAction(boardId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return { error: "Unauthorized" };
+
+  const { data: board } = await (supabase as any)
+    .from("process_boards")
+    .select("organization_id")
+    .eq("id", boardId)
+    .single();
+
+  if (!board || board.organization_id !== currentCompany.company.id) return { error: "Unauthorized" };
+
+  const { count } = await (supabase as any)
+    .from("process_records")
+    .select("id", { count: "exact", head: true })
+    .eq("board_id", boardId)
+    .eq("status", "active");
+
+  if (count && count > 0) return { error: "Move or close active records first" };
+
+  const { error } = await (supabase as any)
+    .from("process_boards")
+    .delete()
+    .eq("id", boardId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings");
+  return {};
+}
+
+export async function createStageAction(
+  boardId: string,
+  orgId: string,
+  name: string,
+  color: string,
+  stageType: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) return { error: "Unauthorized" };
+
+  const { data: existingStages } = await (supabase as any)
+    .from("board_stages")
+    .select("id, stage_type, position")
+    .eq("board_id", boardId)
+    .order("position", { ascending: false });
+
+  const stages = (existingStages ?? []) as Array<{ id: string; stage_type: string; position: number }>;
+
+  if (stageType === "completed" && stages.filter((s) => s.stage_type === "completed").length >= 1) {
+    return { error: "Only 1 completed stage allowed per board" };
+  }
+  if (stageType === "cancelled" && stages.filter((s) => s.stage_type === "cancelled").length >= 1) {
+    return { error: "Only 1 cancelled stage allowed per board" };
+  }
+
+  const nextPosition = stages.length > 0 ? stages[0].position + 1 : 0;
+
+  const { error } = await (supabase as any)
+    .from("board_stages")
+    .insert({ board_id: boardId, name: name.trim(), color, stage_type: stageType, position: nextPosition });
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings");
+  return {};
+}
+
+export async function renameStageAction(stageId: string, name: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await (supabase as any)
+    .from("board_stages")
+    .update({ name: name.trim() })
+    .eq("id", stageId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function updateStageColorAction(stageId: string, color: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await (supabase as any)
+    .from("board_stages")
+    .update({ color })
+    .eq("id", stageId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
+export async function updateStageTypeAction(stageId: string, stageType: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const { data: stage } = await (supabase as any)
+    .from("board_stages")
+    .select("board_id")
+    .eq("id", stageId)
+    .single();
+
+  if (!stage) return { error: "Stage not found" };
+
+  const { data: siblings } = await (supabase as any)
+    .from("board_stages")
+    .select("id, stage_type")
+    .eq("board_id", stage.board_id)
+    .neq("id", stageId);
+
+  const others = (siblings ?? []) as Array<{ id: string; stage_type: string }>;
+
+  if (stageType === "completed" && others.filter((s) => s.stage_type === "completed").length >= 1) {
+    return { error: "Only 1 completed stage allowed per board" };
+  }
+  if (stageType === "cancelled" && others.filter((s) => s.stage_type === "cancelled").length >= 1) {
+    return { error: "Only 1 cancelled stage allowed per board" };
+  }
+
+  const { error } = await (supabase as any)
+    .from("board_stages")
+    .update({ stage_type: stageType })
+    .eq("id", stageId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings");
+  return {};
+}
+
+export async function reorderStageAction(stageId: string, boardId: string, direction: "up" | "down"): Promise<void> {
+  const supabase = await createClient();
+
+  const { data: stages } = await (supabase as any)
+    .from("board_stages")
+    .select("id, position")
+    .eq("board_id", boardId)
+    .order("position", { ascending: true });
+
+  if (!stages) throw new Error("Could not load stages");
+
+  const stagesTyped = stages as Array<{ id: string; position: number }>;
+  const idx = stagesTyped.findIndex((s) => s.id === stageId);
+  if (idx === -1) throw new Error("Stage not found");
+
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= stagesTyped.length) return;
+
+  await Promise.all([
+    (supabase as any).from("board_stages").update({ position: stagesTyped[swapIdx].position }).eq("id", stagesTyped[idx].id),
+    (supabase as any).from("board_stages").update({ position: stagesTyped[idx].position }).eq("id", stagesTyped[swapIdx].id),
+  ]);
+
+  revalidatePath("/settings");
+}
+
+export async function deleteStageAction(stageId: string, reassignToStageId?: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const { data: stage } = await (supabase as any)
+    .from("board_stages")
+    .select("board_id")
+    .eq("id", stageId)
+    .single();
+
+  if (!stage) return { error: "Stage not found" };
+
+  const { count } = await (supabase as any)
+    .from("process_records")
+    .select("id", { count: "exact", head: true })
+    .eq("stage_id", stageId)
+    .eq("status", "active");
+
+  if (count && count > 0) {
+    if (!reassignToStageId) return { error: "Active records exist — choose a stage to reassign them to" };
+
+    const { error: reassignError } = await (supabase as any)
+      .from("process_records")
+      .update({ stage_id: reassignToStageId })
+      .eq("stage_id", stageId)
+      .eq("status", "active");
+
+    if (reassignError) return { error: reassignError.message };
+  }
+
+  const { error } = await (supabase as any)
+    .from("board_stages")
+    .delete()
+    .eq("id", stageId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings");
+  return {};
+}
+
+export async function updateLabelOverrideAction(orgId: string, key: string, value: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: co } = await supabase
+    .from("companies")
+    .select("profile_overrides")
+    .eq("id", orgId)
+    .single();
+  const current = ((co as any)?.profile_overrides as Record<string, string>) ?? {};
+  await supabase
+    .from("companies")
+    .update({ profile_overrides: { ...current, [key]: value } } as any)
+    .eq("id", orgId);
+  revalidatePath("/settings");
+}
+
+export async function resetLabelOverridesAction(orgId: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase
+    .from("companies")
+    .update({ profile_overrides: {} } as any)
+    .eq("id", orgId);
+  revalidatePath("/settings");
+}

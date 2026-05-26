@@ -128,7 +128,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
         <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              {["Client", "Service", "Date & time", "Location", "Assigned to", "Status", ""].map((h) => (
+              {[profile?.labels.customerSingular ?? "Client", "Service", "Date & time", "Location", "Assigned to", "Status", ""].map((h) => (
                 <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
               ))}
             </tr>

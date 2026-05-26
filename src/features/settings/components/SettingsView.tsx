@@ -12,6 +12,10 @@ import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AiSettingsToggles } from "./AiSettingsToggles";
 import { MonthlyGoalForm } from "./MonthlyGoalForm";
+import { TagsSettings, type TagItem } from "./TagsSettings";
+import { CustomFieldsSettings, type CustomFieldDef } from "./CustomFieldsSettings";
+import { ProcessBoardsSettings, type Board } from "./ProcessBoardsSettings";
+import { LabelsSettings } from "./LabelsSettings";
 
 interface Company {
   id: string;
@@ -34,6 +38,25 @@ interface SettingsViewProps {
   currentUserRole: string | null;
   notificationPrefs: Record<string, boolean>;
   currentMonthRevenue?: number;
+  tags: TagItem[];
+  contactFields: CustomFieldDef[];
+  recordFields: CustomFieldDef[];
+  boards: Board[];
+  profileOverrides: Record<string, string>;
+  defaultLabels: {
+    customerSingular: string;
+    customerPlural: string;
+    jobSingular: string;
+    jobPlural: string;
+    pipelineLabel: string;
+    recordLabel: string;
+    recordPlural: string;
+    completedLabel: string;
+    cancelledLabel: string;
+    valueLabel: string;
+    activeStatusLabel: string;
+    inactiveStatusLabel: string;
+  };
 }
 
 function isConnected(integration: SettingsIntegration | undefined) {
@@ -54,6 +77,12 @@ export function SettingsView({
   currentUserRole,
   notificationPrefs,
   currentMonthRevenue,
+  tags,
+  contactFields,
+  recordFields,
+  boards,
+  profileOverrides,
+  defaultLabels,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((i) =>
     String(i.provider || "").toLowerCase().includes("google"),
@@ -275,6 +304,42 @@ export function SettingsView({
             />
           </div>
         )}
+
+        {/* Tags */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Tags</p>
+            <p className="text-[12px] text-ud-muted">Organize contacts with color-coded labels.</p>
+          </div>
+          <TagsSettings orgId={company.id} initialTags={tags} />
+        </div>
+
+        {/* Custom fields */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Custom fields</p>
+            <p className="text-[12px] text-ud-muted">Add extra data fields to contacts and process records.</p>
+          </div>
+          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} recordFields={recordFields} />
+        </div>
+
+        {/* Process boards */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Process boards</p>
+            <p className="text-[12px] text-ud-muted">Define the stages records move through in your workflow.</p>
+          </div>
+          <ProcessBoardsSettings orgId={company.id} boards={boards} />
+        </div>
+
+        {/* Labels */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Labels</p>
+            <p className="text-[12px] text-ud-muted">Customize terminology used across your workspace.</p>
+          </div>
+          <LabelsSettings orgId={company.id} profileOverrides={profileOverrides} defaultLabels={defaultLabels} />
+        </div>
 
         {/* Danger zone */}
         <div className="py-[26px]" style={{ paddingBottom: "8px" }}>

@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+
+const KEYWORDS: Record<string, string[]> = {
+  dental: ["dental", "dentist", "orthodont", "smile"],
+  veterinary: ["vet", "animal", "pet ", "paws", "clinic"],
+  legal: ["law ", "legal", "attorney", "lawyer", "firm"],
+  accounting: ["account", "cpa ", "bookkeep", "tax ", "payroll"],
+  hvac: ["hvac", "heating", "cooling", "air condition"],
+  plumbing: ["plumb", "pipe"],
+  electrical: ["electric", "wiring"],
+  roofing: ["roof"],
+  landscaping: ["landscap", "lawn", "garden"],
+  cleaning: ["clean", "maid", "janitorial"],
+  fitness: ["fitness", "gym", "personal train", "yoga", "pilates"],
+  photography: ["photo", "studio", "portrait"],
+  beauty: ["salon", "spa", "nail", "hair", "barber", "beauty"],
+  tattoo: ["tattoo", "ink", "piercing"],
+  auto_repair: ["auto ", "car ", "mechanic", "garage", "automotive"],
+  auto_detailing: ["detail", "car wash", "wax "],
+  insurance: ["insurance", "agency ", "broker"],
+  real_estate: ["real estate", "realty", "realtor", "property"],
+  consulting: ["consult", "advisory", "strategy"],
+  construction: ["construct", "contractor", "builder", "remodel"],
+};
+
+export async function POST(req: Request) {
+  const { name } = (await req.json()) as { name: string };
+  const lower = name.toLowerCase();
+  for (const [sector, keywords] of Object.entries(KEYWORDS)) {
+    if (keywords.some((kw) => lower.includes(kw))) {
+      return NextResponse.json({ sector });
+    }
+  }
+  return NextResponse.json({ sector: null });
+}
