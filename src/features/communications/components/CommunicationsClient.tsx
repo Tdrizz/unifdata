@@ -28,7 +28,7 @@ function getContactDisplayName(thread: Thread): string {
   const c = thread.contact;
   if (!c) return thread.contact_phone ?? "Unknown";
   if (c.name) return c.name;
-  return `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || thread.contact_phone ?? "Unknown";
+  return (`${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || thread.contact_phone) ?? "Unknown";
 }
 
 function formatTime(iso: string | null): string {

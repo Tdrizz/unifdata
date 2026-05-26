@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import type { IndustryProfile } from "@/lib/industry-profiles";
 
 // ── Icons (16px, strokeWidth 1.7) ──────────────────────────────────────────
 function IconHome() {

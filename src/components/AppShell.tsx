@@ -98,7 +98,7 @@ export async function AppShell({
 
           {/* Nav */}
           <nav className="sidebar-nav">
-            <AppNav businessSector={businessSector} pendingProposals={pendingProposals} agentInboxCount={agentInboxCount} />
+            <AppNav businessSector={businessSector} pendingProposals={pendingProposals} agentInboxCount={agentInboxCount} unreadComms={unreadComms} />
           </nav>
 
           {/* Footer */}
