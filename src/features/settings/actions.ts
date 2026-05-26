@@ -313,6 +313,31 @@ export async function deleteWorkspaceAction(): Promise<void> {
   redirect("/sign-in?workspace_deleted=1");
 }
 
+export async function updateMonthlyGoalAction(goal: number): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
+  if (!Number.isFinite(goal) || goal < 0) throw new Error("Invalid goal amount");
+
+  const supabase = await createClient();
+
+  const { data: row } = await supabase
+    .from("companies")
+    .select("preferences")
+    .eq("id", currentCompany.company.id)
+    .single();
+
+  const current = (row?.preferences ?? {}) as Record<string, unknown>;
+  const updated = { ...current, monthly_revenue_goal: goal };
+  const { error } = await supabase
+    .from("companies")
+    .update({ preferences: updated as Parameters<typeof supabase.from>[0] extends never ? never : unknown })
+    .eq("id", currentCompany.company.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/settings");
+}
+
 export async function updatePreferencesAction(key: string, value: boolean): Promise<void> {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");

@@ -10,6 +10,12 @@ Your job is to identify genuine problems that need action — not to manufacture
 A false alarm wastes the owner's time. A missed real problem costs them money.
 When a signal is ambiguous, set priority to "low" or omit the task entirely.
 
+If the owner has set a monthly revenue goal and current month progress is below 50% with more than half the month remaining,
+mention it in your assessment and consider whether a revenue alert is warranted.
+
+If the owner has many unactioned inbox items (>5), note this in your assessment — it signals disengagement.
+Avoid generating new outreach drafts for customers already queued in the unactioned backlog.
+
 ${buildVocabularyBlock(profile)}
 
 --- Worker Capabilities ---

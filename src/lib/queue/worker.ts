@@ -12,6 +12,11 @@ import {
   JOB_EMBEDDING_BACKFILL,
   JOB_SWEEP_BATCH,
   JOB_RUN_NIGHTLY_COORDINATOR,
+  JOB_POST_COMPLETION_OUTREACH,
+  JOB_NEW_CONTACT_FOLLOWUP,
+  JOB_RECORD_NUDGER,
+  JOB_PATTERN_SPOTTER,
+  JOB_VOLUME_ANTICIPATOR,
 } from "@/lib/queue/client";
 import { processOverdueInvoice, type OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
 import { processLostQuoteEmail, processLostQuoteSms, type LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
@@ -19,6 +24,11 @@ import { processDataKeeperJob } from "@/lib/queue/jobs/data-keeper-job";
 import { processEmbeddingBackfillJob, type EmbeddingBackfillJobData } from "@/lib/queue/jobs/embedding-backfill-job";
 import { processSweeperJob, type SweeperJobData } from "@/lib/queue/jobs/sweeper-job";
 import { processNightlyCoordinatorJob, type NightlyCoordinatorJobData } from "@/lib/queue/jobs/nightly-coordinator-job";
+import { processPostCompletionOutreachJob, type PostCompletionOutreachJobData } from "@/lib/queue/jobs/post-completion-outreach-job";
+import { processNewContactFollowupJob, type NewContactFollowupJobData } from "@/lib/queue/jobs/new-contact-followup-job";
+import { processRecordNudgerJob, type RecordNudgerJobData } from "@/lib/queue/jobs/record-nudger-job";
+import { processPatternSpotterJob, type PatternSpotterJobData } from "@/lib/queue/jobs/pattern-spotter-job";
+import { processVolumeAnticipatorJob, type VolumeAnticipatorJobData } from "@/lib/queue/jobs/volume-anticipator-job";
 import type { DataKeeperJobData } from "@/lib/data-keeper/types";
 
 // ── Worker ────────────────────────────────────────────────────────────────────
@@ -62,6 +72,21 @@ export function createAutomationWorker() {
           );
           return result;
         }
+
+        case JOB_POST_COMPLETION_OUTREACH:
+          return await processPostCompletionOutreachJob(job.data as PostCompletionOutreachJobData);
+
+        case JOB_NEW_CONTACT_FOLLOWUP:
+          return await processNewContactFollowupJob(job.data as NewContactFollowupJobData);
+
+        case JOB_RECORD_NUDGER:
+          return await processRecordNudgerJob(job.data as RecordNudgerJobData);
+
+        case JOB_PATTERN_SPOTTER:
+          return await processPatternSpotterJob(job.data as PatternSpotterJobData);
+
+        case JOB_VOLUME_ANTICIPATOR:
+          return await processVolumeAnticipatorJob(job.data as VolumeAnticipatorJobData);
 
         default:
           throw new Error(`Unknown job name: ${job.name}`);

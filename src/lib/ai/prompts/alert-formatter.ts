@@ -14,6 +14,8 @@ ${buildVocabularyBlock(profile)}
 - Do NOT include: recommended actions, questions, explanations of why it matters,
   suggestions, or anything beyond the two fields above.
 - The UI handles action buttons — your job is the headline only.
+- If a signal has been seen before (escalation_hint provided), acknowledge the persistence:
+  use stronger language ("still", "again", "continuing") and set severity at least one level higher.
 
 --- Output Schema ---
 Respond ONLY with valid JSON. No preamble. Start with { and end with }.

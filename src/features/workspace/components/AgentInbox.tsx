@@ -9,6 +9,7 @@ type Draft = {
   body: string;
   action_label?: string | null;
   reasoning?: string | null;
+  escalation_level?: number | null;
 };
 
 type Alert = {
@@ -18,6 +19,7 @@ type Alert = {
   title: string;
   body: string;
   reasoning?: string | null;
+  escalation_level?: number | null;
 };
 
 type Props = {
@@ -134,12 +136,23 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
           const approveLabel = draft.draft_type === "outreach_email" || draft.draft_type === "outreach_sms"
             ? "Send"
             : draft.action_label ?? "Approve";
+          const escalLevel = draft.escalation_level ?? 0;
+          const escalBorder = escalLevel >= 2
+            ? "border-l-4 border-l-red-400"
+            : escalLevel === 1
+            ? "border-l-4 border-l-amber-400"
+            : "";
           return (
-            <div key={draft.id} className="px-5 py-4 flex gap-4 items-start">
+            <div key={draft.id} className={`px-5 py-4 flex gap-4 items-start ${escalBorder}`}>
               <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#8B80E0]/10 flex items-center justify-center text-[12px]">
                 {draft.draft_type === "outreach_email" ? "✉" : "💬"}
               </div>
               <div className="flex-1 min-w-0">
+                {escalLevel > 0 && (
+                  <p className={`text-[10.5px] font-bold uppercase tracking-wide mb-0.5 ${escalLevel >= 2 ? "text-red-500" : "text-amber-500"}`}>
+                    Flagged {escalLevel + 1} time{escalLevel + 1 !== 1 ? "s" : ""}
+                  </p>
+                )}
                 {draft.subject && (
                   <p className="text-[12.5px] font-semibold text-ud-ink mb-0.5 truncate">{draft.subject}</p>
                 )}
@@ -170,13 +183,26 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
 
         {alerts.map((alert) => {
           const isDismissing = dismissingIds.has(alert.id);
+          const escalLevel = alert.escalation_level ?? 0;
+          const escalBorder = escalLevel >= 2
+            ? "border-l-4 border-l-red-400"
+            : escalLevel === 1
+            ? "border-l-4 border-l-amber-400"
+            : "";
           return (
-            <div key={alert.id} className="px-5 py-4 flex gap-4 items-start">
+            <div key={alert.id} className={`px-5 py-4 flex gap-4 items-start ${escalBorder}`}>
               <div className={`shrink-0 mt-0.5 w-7 h-7 rounded-full flex items-center justify-center text-[12px] border ${severityColors[alert.severity]}`}>
                 {severityIcon[alert.severity]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ud-muted mb-0.5">{severityLabel[alert.severity]}</p>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ud-muted">{severityLabel[alert.severity]}</p>
+                  {escalLevel > 0 && (
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${escalLevel >= 2 ? "text-red-500" : "text-amber-500"}`}>
+                      · Flagged {escalLevel + 1}×
+                    </span>
+                  )}
+                </div>
                 <p className="text-[12.5px] font-semibold text-ud-ink mb-0.5">{alert.title}</p>
                 <p className="text-[12.5px] text-ud-text leading-relaxed">{alert.body}</p>
                 {alert.reasoning && (

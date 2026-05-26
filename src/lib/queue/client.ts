@@ -77,6 +77,14 @@ export const JOB_SWEEP_BATCH = "sweep-batch";
 
 export const JOB_RUN_NIGHTLY_COORDINATOR = "run-nightly-coordinator";
 
+// ── Event-triggered jobs ───────────────────────────────────────────────────────
+
+export const JOB_POST_COMPLETION_OUTREACH = "post-completion-outreach";
+export const JOB_NEW_CONTACT_FOLLOWUP = "new-contact-followup";
+export const JOB_RECORD_NUDGER = "run-record-nudger";
+export const JOB_PATTERN_SPOTTER = "run-pattern-spotter";
+export const JOB_VOLUME_ANTICIPATOR = "run-volume-anticipator";
+
 let dataKeeperQueue: Queue | null = null;
 
 export function getDataKeeperQueue(): Queue {

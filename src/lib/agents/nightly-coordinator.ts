@@ -28,10 +28,15 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
 
   let eventsFireable = 0;
   let runError: string | undefined;
+  let assessment: string | null = null;
 
   try {
     const telemetrySpan = startSpan(ctx, "telemetry-compilation", { orgId });
-    const snapshot = await compileTelemetry(orgId, supabase);
+    const snapshot = await compileTelemetry(
+      orgId,
+      supabase,
+      company.preferences as Record<string, unknown> | undefined,
+    );
     endSpan(telemetrySpan, { signalCount: Object.keys(snapshot).length });
 
     let blueprint;
@@ -47,6 +52,8 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
       });
       return;
     }
+
+    assessment = blueprint.assessment;
 
     let churnError: string | undefined;
     const churnTask = runChurnSignalAgent(orgId, supabase).catch((err: unknown) => {
@@ -106,7 +113,8 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     await flushLangfuse();
   }
 
-  await supabase.from("agent_logs").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any).from("agent_logs").insert({
     organization_id: orgId,
     agent_name: "nightly-coordinator",
     signals_checked: 6,
@@ -114,5 +122,6 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     autopilot:
       (company.preferences as Record<string, unknown> | null)?.autopilot === true,
     error: runError ?? null,
+    assessment,
   });
 }

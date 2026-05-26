@@ -6,6 +6,7 @@ import { buildOutreachPrompt, buildOutreachUserMessage } from "@/lib/ai/prompts"
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { getMemory, recordSignalFired, getEscalationLevel, hoursSince } from "@/lib/agents/memory";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
@@ -16,6 +17,8 @@ const OutreachDraftSchema = z.object({
 
 type OutreachPayload = Record<string, unknown>;
 
+const OUTREACH_COOLDOWN_HOURS = 7 * 24; // 7 days
+
 export async function runOutreachWorker(
   payload: OutreachPayload,
   company: { id: string; name: string; preferences?: Record<string, unknown> },
@@ -23,6 +26,18 @@ export async function runOutreachWorker(
   profile: IndustryProfile,
   ctx: TraceContext,
 ): Promise<void> {
+  const customerId = payload.customer_id as string | undefined;
+
+  // Memory guard: skip if we recently fired an outreach for this customer that was rejected
+  if (customerId) {
+    const mem = await getMemory(company.id, "outreach", customerId);
+    if (mem && mem.last_outcome === "rejected" && hoursSince(mem.last_fired_at) < OUTREACH_COOLDOWN_HOURS) {
+      return;
+    }
+  }
+
+  const escalationLevel = await getEscalationLevel(company.id, "outreach", customerId);
+
   const start = Date.now();
   const systemPrompt = buildOutreachPrompt(profile);
 
@@ -87,6 +102,9 @@ export async function runOutreachWorker(
       events_fired: 1,
       autopilot: true,
     });
+    if (customerId) {
+      await recordSignalFired(company.id, "outreach", customerId);
+    }
     return;
   }
 
@@ -100,5 +118,11 @@ export async function runOutreachWorker(
     approve_action: draft.draft_type === "outreach_email" ? "send_email" : "send_sms",
     approve_args: recipientInfo,
     reasoning: draft.reasoning ?? null,
+    signal_type: "outreach",
+    escalation_level: escalationLevel,
   });
+
+  if (customerId) {
+    await recordSignalFired(company.id, "outreach", customerId);
+  }
 }

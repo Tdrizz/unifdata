@@ -11,6 +11,7 @@ import { NotificationToggles } from "./NotificationToggles";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AiSettingsToggles } from "./AiSettingsToggles";
+import { MonthlyGoalForm } from "./MonthlyGoalForm";
 
 interface Company {
   id: string;
@@ -32,6 +33,7 @@ interface SettingsViewProps {
   members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
   currentUserRole: string | null;
   notificationPrefs: Record<string, boolean>;
+  currentMonthRevenue?: number;
 }
 
 function isConnected(integration: SettingsIntegration | undefined) {
@@ -51,6 +53,7 @@ export function SettingsView({
   members,
   currentUserRole,
   notificationPrefs,
+  currentMonthRevenue,
 }: SettingsViewProps) {
   const googleIntegration = integrations.find((i) =>
     String(i.provider || "").toLowerCase().includes("google"),
@@ -254,6 +257,20 @@ export function SettingsView({
             isPro={company.tier === "pro"}
           />
         </div>
+
+        {/* Revenue goal */}
+        {company.tier === "pro" && (
+          <div className="py-[26px] border-b border-ud">
+            <div className="mb-[18px]">
+              <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Revenue goal</p>
+              <p className="text-[12px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
+            </div>
+            <MonthlyGoalForm
+              currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
+              currentMonthRevenue={currentMonthRevenue}
+            />
+          </div>
+        )}
 
         {/* Danger zone */}
         <div className="py-[26px]" style={{ paddingBottom: "8px" }}>

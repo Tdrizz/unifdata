@@ -27,11 +27,23 @@ export default async function SettingsPage() {
   }
 
   const { company } = currentCompany;
-  const [integrations, members, notificationPrefs] = await Promise.all([
+
+  const thisMonthStart = new Date();
+  thisMonthStart.setDate(1);
+  const thisMonthStartStr = thisMonthStart.toISOString().slice(0, 10);
+
+  const [integrations, members, notificationPrefs, currentMonthSalesResult] = await Promise.all([
     getSettingsIntegrations(supabase, company.id),
     getTeamMembers(company.id),
     getNotificationPreferences(company.id),
+    supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
   ]);
+
+  const currentMonthRevenue = (currentMonthSalesResult.data ?? []).reduce(
+    (sum, row) => sum + Number(row.amount || 0),
+    0,
+  );
+
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
   const currentUserRole = await getCurrentUserRole();
 
@@ -57,6 +69,7 @@ export default async function SettingsPage() {
             members={members}
             currentUserRole={currentUserRole}
             notificationPrefs={notificationPrefs}
+            currentMonthRevenue={currentMonthRevenue}
           />
         </div>
         <div className="block md:hidden">

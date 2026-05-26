@@ -5,6 +5,7 @@ import { buildAlertFormatterPrompt, buildAlertFormatterUserMessage } from "@/lib
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { getEscalationLevel, recordSignalFired } from "@/lib/agents/memory";
 
 const AgentAlertSchema = z.object({
   alerts: z
@@ -80,15 +81,24 @@ export async function runAlertFormatterWorker(
 
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 
-  await supabase.from("agent_alerts").insert(
-    parsed.data.alerts.map((alert) => ({
-      organization_id: orgId,
-      alert_type: alert.alert_type,
-      severity: alert.severity,
-      title: alert.title,
-      body: alert.body,
-      record_id: alert.record_id ?? null,
-      reasoning: alert.reasoning ?? null,
-    })),
+  const primarySignalType = signals[0]?.type ?? "alert";
+
+  const alertInserts = await Promise.all(
+    parsed.data.alerts.map(async (alert) => {
+      const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
+      return {
+        organization_id: orgId,
+        alert_type: alert.alert_type,
+        severity: alert.severity,
+        title: alert.title,
+        body: alert.body,
+        record_id: alert.record_id ?? null,
+        reasoning: alert.reasoning ?? null,
+        escalation_level: escalationLevel,
+      };
+    }),
   );
+
+  await supabase.from("agent_alerts").insert(alertInserts);
+  await recordSignalFired(orgId, primarySignalType);
 }
