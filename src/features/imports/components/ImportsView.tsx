@@ -270,7 +270,7 @@ function PublicSheetsFlow() {
   );
 }
 
-export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
+export function ImportsView({ importSessions, integrations, syncRuns, profile }: Props) {
   const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
   const googleConnected = integrations.some((i) =>
     String(i.provider ?? "").toLowerCase().includes("google"),
@@ -409,7 +409,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                     <div className="w-full flex flex-col gap-[6px]">
                       {allSessions.map((session) => {
                         if (!session) return null;
-                        const label = getRecordTypeLabel(session.record_type);
+                        const label = getRecordTypeLabel(session.record_type, profile);
                         const added = session.created_rows ?? 0;
                         const updated = session.updated_rows ?? 0;
                         const skipped = session.duplicate_rows ?? 0;
@@ -495,7 +495,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                         {session.file_name || session.source_name || "—"}
                       </Link>
                     </td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{getRecordTypeLabel(session.record_type)}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{getRecordTypeLabel(session.record_type, profile)}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{session.total_rows ?? "—"} records</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">

@@ -62,6 +62,43 @@ export default async function SettingsPage() {
     0,
   );
 
+  const rawTags = (tagsResult?.data ?? []) as Array<{ id: string; name: string; color: string }>;
+  const tags = rawTags.map((t) => ({ ...t, contactCount: 0 }));
+
+  const contactFields = (contactFieldsResult?.data ?? []) as Array<{
+    id: string; label: string; field_key: string; field_type: string;
+    options: string[] | null; required: boolean; position: number; entity_type: string;
+  }>;
+  const recordFields = (recordFieldsResult?.data ?? []) as typeof contactFields;
+
+  const rawBoards = (boardsResult?.data ?? []) as Array<{ id: string; name: string; is_default: boolean }>;
+  const rawStages = (boardStagesResult?.data ?? []) as Array<{
+    id: string; board_id: string; name: string; position: number; color: string; stage_type: string;
+  }>;
+  const boards = rawBoards.map((b) => ({
+    ...b,
+    stages: rawStages.filter((s) => s.board_id === b.id),
+  }));
+
+  const profileOverrides = ((companyOverridesResult?.data as any)?.profile_overrides as Record<string, string>) ?? {};
+
+  const sector = (company.business_sector ?? "general") as keyof typeof industryProfiles;
+  const profile = industryProfiles[sector] ?? industryProfiles.general;
+  const defaultLabels = {
+    customerSingular: profile.labels.customerSingular,
+    customerPlural: profile.labels.customerPlural,
+    jobSingular: profile.labels.jobSingular,
+    jobPlural: profile.labels.jobPlural,
+    pipelineLabel: profile.pipelineLabel,
+    recordLabel: profile.recordLabel,
+    recordPlural: profile.recordPlural,
+    completedLabel: profile.completedLabel,
+    cancelledLabel: profile.cancelledLabel,
+    valueLabel: profile.valueLabel,
+    activeStatusLabel: profile.activeStatusLabel,
+    inactiveStatusLabel: profile.inactiveStatusLabel,
+  };
+
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
   const currentUserRole = await getCurrentUserRole();
 
@@ -88,6 +125,12 @@ export default async function SettingsPage() {
             currentUserRole={currentUserRole}
             notificationPrefs={notificationPrefs}
             currentMonthRevenue={currentMonthRevenue}
+            tags={tags}
+            contactFields={contactFields}
+            recordFields={recordFields}
+            boards={boards}
+            profileOverrides={profileOverrides}
+            defaultLabels={defaultLabels}
           />
         </div>
         <div className="block md:hidden">
