@@ -18,6 +18,7 @@ export type TelemetrySnapshot = {
   pendingDraftCount?: number;
   draftApprovalRate30d?: number;
   topContactsByLtv?: Array<{ id: string; name: string; ltv: number }>;
+  processBoardSnapshot?: Array<{ stageName: string; stageType: string; recordCount: number; stageValue: number }>;
 };
 
 export async function compileTelemetry(
@@ -224,6 +225,42 @@ export async function compileTelemetry(
     }));
   }
 
+  let processBoardSnapshot: TelemetrySnapshot["processBoardSnapshot"];
+  try {
+    const { data: defaultBoard } = await (supabase as any)
+      .from("process_boards")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("is_default", true)
+      .maybeSingle();
+    if (defaultBoard) {
+      const { data: stages } = await (supabase as any)
+        .from("board_stages")
+        .select("id, name, stage_type")
+        .eq("board_id", defaultBoard.id)
+        .neq("stage_type", "cancelled")
+        .order("position");
+      if (stages?.length) {
+        const { data: records } = await (supabase as any)
+          .from("process_records")
+          .select("stage_id, value")
+          .eq("organization_id", orgId)
+          .eq("status", "active");
+        processBoardSnapshot = stages.map((s: { id: string; name: string; stage_type: string }) => {
+          const stageRecords = (records ?? []).filter((r: { stage_id: string }) => r.stage_id === s.id);
+          return {
+            stageName: s.name,
+            stageType: s.stage_type,
+            recordCount: stageRecords.length,
+            stageValue: stageRecords.reduce((sum: number, r: { value: number | null }) => sum + (r.value ?? 0), 0),
+          };
+        });
+      }
+    }
+  } catch {
+    // non-critical — skip if tables don't exist yet
+  }
+
   return {
     overdueFollowUpCount: overdueResult.count ?? 0,
     revenueThisWeek,
@@ -241,5 +278,6 @@ export async function compileTelemetry(
     pendingDraftCount,
     draftApprovalRate30d,
     topContactsByLtv,
+    processBoardSnapshot,
   };
 }

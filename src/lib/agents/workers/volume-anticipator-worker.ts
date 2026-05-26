@@ -24,6 +24,9 @@ export async function runVolumeAnticipatorWorker(
 
   if (!company || !isPro(company as { tier: string })) return;
 
+  // Monthly counts are org-level aggregates; no per-contact filtering needed here.
+  // Exclude closed contacts from any future per-contact analysis (unaffected here).
+
   // Monthly job and customer counts for last 6 months
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);

@@ -38,6 +38,48 @@ export async function runOutreachWorker(
 
   const escalationLevel = await getEscalationLevel(company.id, "outreach", customerId);
 
+  let activityBlock = "";
+  if (customerId) {
+    const { data: recentActivity } = await (supabase as any)
+      .from("contact_activity")
+      .select("event_label, event_detail, created_at")
+      .eq("contact_id", customerId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (recentActivity?.length) {
+      activityBlock = `Recent contact activity:\n${recentActivity
+        .map((e: { event_label: string; event_detail?: string; created_at: string }) =>
+          `- ${e.event_label}${e.event_detail ? `: ${e.event_detail}` : ""} (${new Date(e.created_at).toLocaleDateString()})`
+        ).join("\n")}`;
+    }
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: thread } = await (supabase as any)
+      .from("communications")
+      .select("id")
+      .eq("organization_id", company.id)
+      .eq("contact_id", customerId)
+      .maybeSingle();
+    if (thread) {
+      const { data: latestMsg } = await (supabase as any)
+        .from("communication_messages")
+        .select("direction, sent_at")
+        .eq("communication_id", thread.id)
+        .order("sent_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latestMsg?.direction === "inbound" && new Date(latestMsg.sent_at) > new Date(sevenDaysAgo)) {
+        await supabase.from("agent_alerts").insert({
+          organization_id: company.id,
+          title: "Unanswered reply",
+          body: `${String(payload.customer_name ?? "A contact")} replied but hasn't received a response.`,
+          severity: "warning",
+          read: false,
+        });
+        return;
+      }
+    }
+  }
+
   const start = Date.now();
   const systemPrompt = buildOutreachPrompt(profile);
 
@@ -47,7 +89,7 @@ export async function runOutreachWorker(
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: buildOutreachUserMessage(payload) },
+      { role: "user", content: buildOutreachUserMessage(payload, activityBlock) },
     ],
   });
 

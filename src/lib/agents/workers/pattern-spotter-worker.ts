@@ -24,6 +24,9 @@ export async function runPatternSpotterWorker(
 
   if (!company || !isPro(company as { tier: string })) return;
 
+  // Revenue aggregates are org-level; no per-contact filtering needed here.
+  // Exclude closed contacts from any future per-contact analysis (unaffected here).
+
   // Fetch 12 weeks of weekly revenue buckets
   const twelveWeeksAgo = new Date(Date.now() - 84 * 86400000).toISOString().slice(0, 10);
   const { data: salesData } = await supabase
