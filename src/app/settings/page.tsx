@@ -6,6 +6,7 @@ import { getSettingsIntegrations, getTeamMembers, getNotificationPreferences } f
 import { getCurrentUserRole } from "@/lib/current-company";
 import { SettingsView } from "@/features/settings/components/SettingsView";
 import { MobileSettingsView } from "@/features/settings/components/MobileSettingsView";
+import { industryProfiles } from "@/lib/industry-profiles";
 
 export const dynamic = 'force-dynamic';
 
@@ -32,11 +33,28 @@ export default async function SettingsPage() {
   thisMonthStart.setDate(1);
   const thisMonthStartStr = thisMonthStart.toISOString().slice(0, 10);
 
-  const [integrations, members, notificationPrefs, currentMonthSalesResult] = await Promise.all([
+  const [
+    integrations,
+    members,
+    notificationPrefs,
+    currentMonthSalesResult,
+    tagsResult,
+    contactFieldsResult,
+    recordFieldsResult,
+    boardsResult,
+    boardStagesResult,
+    companyOverridesResult,
+  ] = await Promise.all([
     getSettingsIntegrations(supabase, company.id),
     getTeamMembers(company.id),
     getNotificationPreferences(company.id),
     supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
+    (supabase as any).from("tags").select("id, name, color").eq("organization_id", company.id).order("name"),
+    (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "contact").order("position"),
+    (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "process_record").order("position"),
+    (supabase as any).from("process_boards").select("id, name, is_default").eq("organization_id", company.id).order("created_at"),
+    (supabase as any).from("board_stages").select("id, board_id, name, position, color, stage_type").order("position"),
+    supabase.from("companies").select("profile_overrides").eq("id", company.id).single(),
   ]);
 
   const currentMonthRevenue = (currentMonthSalesResult.data ?? []).reduce(

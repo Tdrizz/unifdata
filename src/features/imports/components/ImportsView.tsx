@@ -42,13 +42,13 @@ function formatSyncTime(date: string | null) {
   return new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-function getRecordTypeLabel(rt: string | null) {
+function getRecordTypeLabel(rt: string | null, profile?: IndustryProfile) {
   const map: Record<string, string> = {
-    relationships: "Clients",
-    opportunities: "Opportunities",
-    work: "Visits",
-    revenue: "Revenue",
-    actions: "Follow-ups",
+    relationships: profile?.labels.customerPlural ?? "Contacts",
+    opportunities: profile?.labels.leadPlural ?? "Opportunities",
+    work: profile?.labels.jobPlural ?? "Work",
+    revenue: profile?.labels.salePlural ?? "Revenue",
+    actions: profile?.labels.followUpPlural ?? "Follow-ups",
   };
   return map[rt || ""] || rt || "Records";
 }
