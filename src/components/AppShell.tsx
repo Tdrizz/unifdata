@@ -32,7 +32,7 @@ export async function AppShell({
   const supabase = await createClient();
   const companyId = await getCurrentCompanyId();
 
-  const [notificationsResult, proposalsResult] = await Promise.all([
+  const [notificationsResult, proposalsResult, unreadCommsResult] = await Promise.all([
     companyId
       ? supabase
           .from("notifications")
@@ -48,10 +48,21 @@ export async function AppShell({
           .eq("organization_id", companyId)
           .eq("status", "PENDING")
       : Promise.resolve({ count: 0 }),
+    companyId
+      ? (supabase as any)
+          .from("communications")
+          .select("unread_count")
+          .eq("organization_id", companyId)
+          .gt("unread_count", 0)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const initialNotifications = notificationsResult.data;
   const pendingProposals = proposalsResult.count ?? 0;
+  const unreadComms = (unreadCommsResult.data ?? []).reduce(
+    (sum: number, r: { unread_count: number }) => sum + (r.unread_count ?? 0),
+    0
+  );
 
   return (
     <>

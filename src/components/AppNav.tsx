@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 // ── Icons (16px, strokeWidth 1.7) ──────────────────────────────────────────
 function IconHome() {
@@ -92,6 +93,29 @@ function IconSettings() {
     </svg>
   );
 }
+function IconKanban() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="5" height="12" rx="1" />
+      <rect x="10" y="3" width="5" height="8" rx="1" />
+      <rect x="17" y="3" width="4" height="16" rx="1" />
+    </svg>
+  );
+}
+function IconMessageSquare() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+function IconZap() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
 
 // ── Nav config ─────────────────────────────────────────────────────────────
 type NavItem = {
@@ -103,17 +127,24 @@ type NavItem = {
 };
 type NavGroup = { label: string; items: NavItem[] };
 
-function buildNavGroups(profile: ReturnType<typeof getIndustryProfile>): NavGroup[] {
+function buildNavGroups(
+  profile: ReturnType<typeof getIndustryProfile>,
+  unreadComms: number
+): NavGroup[] {
+  const pipelineLabel = (profile as any).pipelineLabel ?? "Process Board";
   return [
     {
       label: "Workspace",
       items: [
-        { href: "/workspace",  label: "Today",                                       icon: IconHome },
-        { href: "/customers",  label: profile.labels.customerPlural,                 icon: IconUsers },
-        { href: "/crm",        label: "Pipeline",                                    icon: IconBriefcase },
-        { href: "/jobs",       label: profile.labels.jobPlural ?? "Visits",          icon: IconCalendar },
-        { href: "/sales",      label: profile.labels.salePlural ?? "Revenue",        icon: IconDollar },
-        { href: "/follow-ups", label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
+        { href: "/workspace",       label: "Today",                                       icon: IconHome },
+        { href: "/contacts",        label: profile.labels.customerPlural,                 icon: IconUsers },
+        { href: "/crm",             label: "Pipeline",                                    icon: IconBriefcase },
+        { href: "/process",         label: pipelineLabel,                                 icon: IconKanban },
+        { href: "/jobs",            label: profile.labels.jobPlural ?? "Visits",          icon: IconCalendar },
+        { href: "/sales",           label: profile.labels.salePlural ?? "Revenue",        icon: IconDollar },
+        { href: "/follow-ups",      label: profile.labels.followUpPlural ?? "Follow-ups", icon: IconCheck },
+        { href: "/communications",  label: "Communications",                              icon: IconMessageSquare, badge: unreadComms > 0 ? String(unreadComms) : undefined },
+        { href: "/automations",     label: "Automations",                                 icon: IconZap },
       ],
     },
     {
@@ -143,14 +174,16 @@ export function AppNav({
   businessSector,
   pendingProposals = 0,
   agentInboxCount = 0,
+  unreadComms = 0,
 }: {
   businessSector?: string | null;
   pendingProposals?: number;
   agentInboxCount?: number;
+  unreadComms?: number;
 }) {
   const pathname = usePathname();
   const profile = getIndustryProfile(businessSector);
-  const groups = buildNavGroups(profile);
+  const groups = buildNavGroups(profile, unreadComms);
 
   return (
     <>
@@ -173,6 +206,8 @@ export function AppNav({
                   <span className="nav-badge">{agentInboxCount}</span>
                 ) : item.href === "/data-hub" && pendingProposals > 0 ? (
                   <span className="nav-badge">{pendingProposals}</span>
+                ) : item.href === "/communications" && unreadComms > 0 ? (
+                  <span className="nav-badge">{unreadComms}</span>
                 ) : item.badge ? (
                   <span className="nav-badge">{item.badge}</span>
                 ) : null}
