@@ -67,7 +67,8 @@ GOOD email (use as format reference):
 }`;
 }
 
-export function buildOutreachUserMessage(payload: Record<string, unknown>): string {
+export function buildOutreachUserMessage(payload: Record<string, unknown>, activityContext?: string): string {
+  const extra = activityContext ? `\n\n${activityContext}` : "";
   return `--- Customer Context ---
 Name: ${payload.customer_name ?? "Unknown"}
 Last service: ${payload.last_service_type ?? "Unknown"}
@@ -75,5 +76,5 @@ Days since last contact: ${payload.days_since_contact ?? "Unknown"}
 Open invoice amount: $${payload.open_invoice_amount ?? 0}
 ------------------------
 
-Draft a ${Number(payload.open_invoice_amount ?? 0) > 0 ? "email" : "sms"} outreach message for this customer.`;
+Draft a ${Number(payload.open_invoice_amount ?? 0) > 0 ? "email" : "sms"} outreach message for this customer.${extra}`;
 }

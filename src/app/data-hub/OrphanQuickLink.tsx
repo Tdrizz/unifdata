@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useProfile } from "@/lib/profile-context";
 
 export type OrphanGroup = {
   customer_id: string;
@@ -12,6 +13,7 @@ export type OrphanGroup = {
 
 export function OrphanQuickLink({ groups }: { groups: OrphanGroup[] }) {
   const router = useRouter();
+  const profile = useProfile();
   const [applying, setApplying] = useState(false);
   const [message, setMessage] = useState("");
   const [dismissed, setDismissed] = useState(false);
@@ -101,7 +103,7 @@ export function OrphanQuickLink({ groups }: { groups: OrphanGroup[] }) {
           <div key={group.customer_id} className="py-3">
             <p className="text-sm font-semibold text-ud-ink">{group.customer_name}</p>
             <p className="mt-0.5 text-xs text-[#4A3FA8] font-medium">
-              {group.jobs.length} job{group.jobs.length !== 1 ? "s" : ""} → {group.suggested_lead!.service_requested ?? "Opportunity"}
+              {group.jobs.length} {group.jobs.length !== 1 ? profile.labels.jobPlural.toLowerCase() : profile.labels.jobSingular.toLowerCase()} → {group.suggested_lead!.service_requested ?? profile.labels.leadSingular}
             </p>
             <p className="mt-0.5 text-xs text-ud-faint">These jobs and opportunities share the same customer — linking them connects your data automatically.</p>
           </div>

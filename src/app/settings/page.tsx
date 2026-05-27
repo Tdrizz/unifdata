@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +7,7 @@ import { getSettingsIntegrations, getTeamMembers, getNotificationPreferences } f
 import { getCurrentUserRole } from "@/lib/current-company";
 import { SettingsView } from "@/features/settings/components/SettingsView";
 import { MobileSettingsView } from "@/features/settings/components/MobileSettingsView";
+import { industryProfiles } from "@/lib/industry-profiles";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,11 +29,77 @@ export default async function SettingsPage() {
   }
 
   const { company } = currentCompany;
-  const [integrations, members, notificationPrefs] = await Promise.all([
+
+  const thisMonthStart = new Date();
+  thisMonthStart.setDate(1);
+  const thisMonthStartStr = thisMonthStart.toISOString().slice(0, 10);
+
+  const [
+    integrations,
+    members,
+    notificationPrefs,
+    currentMonthSalesResult,
+    tagsResult,
+    contactFieldsResult,
+    recordFieldsResult,
+    boardsResult,
+    boardStagesResult,
+    companyOverridesResult,
+  ] = await Promise.all([
     getSettingsIntegrations(supabase, company.id),
     getTeamMembers(company.id),
     getNotificationPreferences(company.id),
+    supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
+    (supabase as any).from("tags").select("id, name, color").eq("organization_id", company.id).order("name"),
+    (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "contact").order("position"),
+    (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "process_record").order("position"),
+    (supabase as any).from("process_boards").select("id, name, is_default").eq("organization_id", company.id).order("created_at"),
+    (supabase as any).from("board_stages").select("id, board_id, name, position, color, stage_type").order("position"),
+    supabase.from("companies").select("profile_overrides").eq("id", company.id).single(),
   ]);
+
+  const currentMonthRevenue = (currentMonthSalesResult.data ?? []).reduce(
+    (sum, row) => sum + Number(row.amount || 0),
+    0,
+  );
+
+  const rawTags = (tagsResult?.data ?? []) as Array<{ id: string; name: string; color: string }>;
+  const tags = rawTags.map((t) => ({ ...t, contactCount: 0 }));
+
+  const contactFields = (contactFieldsResult?.data ?? []) as Array<{
+    id: string; label: string; field_key: string; field_type: string;
+    options: string[] | null; required: boolean; position: number; entity_type: string;
+  }>;
+  const recordFields = (recordFieldsResult?.data ?? []) as typeof contactFields;
+
+  const rawBoards = (boardsResult?.data ?? []) as Array<{ id: string; name: string; is_default: boolean }>;
+  const rawStages = (boardStagesResult?.data ?? []) as Array<{
+    id: string; board_id: string; name: string; position: number; color: string; stage_type: string;
+  }>;
+  const boards = rawBoards.map((b) => ({
+    ...b,
+    stages: rawStages.filter((s) => s.board_id === b.id),
+  }));
+
+  const profileOverrides = ((companyOverridesResult?.data as any)?.profile_overrides as Record<string, string>) ?? {};
+
+  const sector = (company.business_sector ?? "general") as keyof typeof industryProfiles;
+  const profile = industryProfiles[sector] ?? industryProfiles.general;
+  const defaultLabels = {
+    customerSingular: profile.labels.customerSingular,
+    customerPlural: profile.labels.customerPlural,
+    jobSingular: profile.labels.jobSingular,
+    jobPlural: profile.labels.jobPlural,
+    pipelineLabel: profile.pipelineLabel,
+    recordLabel: profile.recordLabel,
+    recordPlural: profile.recordPlural,
+    completedLabel: profile.completedLabel,
+    cancelledLabel: profile.cancelledLabel,
+    valueLabel: profile.valueLabel,
+    activeStatusLabel: profile.activeStatusLabel,
+    inactiveStatusLabel: profile.inactiveStatusLabel,
+  };
+
   const geminiEnabled = Boolean(process.env.GEMINI_API_KEY);
   const currentUserRole = await getCurrentUserRole();
 
@@ -57,6 +125,13 @@ export default async function SettingsPage() {
             members={members}
             currentUserRole={currentUserRole}
             notificationPrefs={notificationPrefs}
+            currentMonthRevenue={currentMonthRevenue}
+            tags={tags}
+            contactFields={contactFields}
+            recordFields={recordFields}
+            boards={boards}
+            profileOverrides={profileOverrides}
+            defaultLabels={defaultLabels}
           />
         </div>
         <div className="block md:hidden">

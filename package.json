@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@e965/xlsx": "^0.20.3",
     "@google/genai": "^2.5.0",
     "@stripe/react-stripe-js": "^6.3.0",
@@ -23,6 +26,7 @@
     "bullmq": "^5.76.10",
     "cmdk": "^1.1.1",
     "ioredis": "^5.10.1",
+    "langfuse": "^3.38.20",
     "next": "15.5.18",
     "openai": "^6.39.0",
     "react": "^19.2.5",

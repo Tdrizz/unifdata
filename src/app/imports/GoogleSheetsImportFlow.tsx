@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useProfile } from "@/lib/profile-context";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type RecordType =
   | "relationships"
@@ -66,16 +68,15 @@ type GoogleWindow = Window &
     };
   };
 
-const recordTypes: {
-  value: RecordType;
-  label: string;
-}[] = [
-  { value: "relationships", label: "Relationships" },
-  { value: "opportunities", label: "Opportunities" },
-  { value: "work", label: "Work" },
-  { value: "revenue", label: "Revenue" },
-  { value: "actions", label: "Actions" },
-];
+function getRecordTypes(profile: IndustryProfile): { value: RecordType; label: string }[] {
+  return [
+    { value: "relationships", label: "Relationships" },
+    { value: "opportunities", label: profile.labels.leadPlural },
+    { value: "work", label: profile.labels.jobPlural },
+    { value: "revenue", label: "Revenue" },
+    { value: "actions", label: "Actions" },
+  ];
+}
 
 const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 const googlePickerAppId = process.env.NEXT_PUBLIC_GOOGLE_PICKER_APP_ID;
@@ -120,6 +121,8 @@ async function loadPickerApi() {
 
 export function GoogleSheetsImportFlow() {
   const router = useRouter();
+  const profile = useProfile();
+  const recordTypes = getRecordTypes(profile);
 
   const [spreadsheetInput, setSpreadsheetInput] = useState("");
   const [spreadsheetTitle, setSpreadsheetTitle] = useState("");

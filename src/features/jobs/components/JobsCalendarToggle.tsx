@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { WeeklyCalendar } from "@/components/WeeklyCalendar";
 import type { CalendarEvent } from "@/components/WeeklyCalendar";
+import { useProfile } from "@/lib/profile-context";
 
 type View = "list" | "calendar";
 
@@ -12,7 +13,9 @@ interface JobsCalendarToggleProps {
   jobPlural?: string;
 }
 
-export function JobsCalendarToggle({ calendarEvents, children, jobPlural = "Jobs" }: JobsCalendarToggleProps) {
+export function JobsCalendarToggle({ calendarEvents, children, jobPlural }: JobsCalendarToggleProps) {
+  const profile = useProfile();
+  const resolvedJobPlural = jobPlural ?? profile.labels.jobPlural;
   const [view, setView] = useState<View>("list");
 
   return (
@@ -46,7 +49,7 @@ export function JobsCalendarToggle({ calendarEvents, children, jobPlural = "Jobs
         <div className="rounded-[10px] border border-ud bg-ud-surface p-4">
           {calendarEvents.length === 0 ? (
             <p className="py-8 text-center text-sm text-ud-faint">
-              {`No ${jobPlural.toLowerCase()} with a start date to show on the calendar.`}
+              {`No ${resolvedJobPlural.toLowerCase()} with a start date to show on the calendar.`}
             </p>
           ) : (
             <WeeklyCalendar events={calendarEvents} />

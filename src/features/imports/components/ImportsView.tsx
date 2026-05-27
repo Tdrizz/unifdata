@@ -7,7 +7,9 @@ import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { useProfile } from "@/lib/profile-context";
 import type { ImportsPageData } from "../queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
@@ -42,15 +44,27 @@ function formatSyncTime(date: string | null) {
   return new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-function getRecordTypeLabel(rt: string | null) {
+function getRecordTypeLabel(rt: string | null, profile?: IndustryProfile) {
+  const p = profile ?? getIndustryProfile();
   const map: Record<string, string> = {
-    relationships: "Clients",
-    opportunities: "Opportunities",
-    work: "Visits",
-    revenue: "Revenue",
-    actions: "Follow-ups",
+    relationships: p.labels.customerPlural,
+    opportunities: p.labels.leadPlural,
+    work: p.labels.jobPlural,
+    revenue: p.labels.salePlural,
+    actions: p.labels.followUpPlural,
   };
   return map[rt || ""] || rt || "Records";
+}
+
+function getRecordTypes(profile?: IndustryProfile): { value: ImportRecordType; label: string }[] {
+  const p = profile ?? getIndustryProfile();
+  return [
+    { value: "relationships", label: "Relationships" },
+    { value: "opportunities", label: p.labels.leadPlural },
+    { value: "work", label: p.labels.jobPlural },
+    { value: "revenue", label: p.labels.salePlural },
+    { value: "actions", label: p.labels.followUpPlural },
+  ];
 }
 
 function sessionStatusBadge(status: string | null) {
@@ -126,16 +140,10 @@ const INTEGRATIONS = [
   },
 ];
 
-const RECORD_TYPES: { value: ImportRecordType; label: string }[] = [
-  { value: "relationships", label: "Relationships" },
-  { value: "opportunities", label: "Opportunities" },
-  { value: "work", label: "Work" },
-  { value: "revenue", label: "Revenue" },
-  { value: "actions", label: "Actions" },
-];
 
 function PublicSheetsFlow() {
   const router = useRouter();
+  const profile = useProfile();
   const [url, setUrl] = useState("");
   const [recordType, setRecordType] = useState<ImportRecordType>("relationships");
   const [step, setStep] = useState<"input" | "mapping">("input");
@@ -228,7 +236,7 @@ function PublicSheetsFlow() {
             onChange={(e) => setRecordType(e.target.value as ImportRecordType)}
             className="w-full rounded-[12px] border border-ud bg-ud-surface px-4 py-3 text-sm text-ud-ink outline-none"
           >
-            {RECORD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {getRecordTypes(profile).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <input
             type="url"
@@ -270,7 +278,7 @@ function PublicSheetsFlow() {
   );
 }
 
-export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
+export function ImportsView({ importSessions, integrations, syncRuns, profile }: Props) {
   const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
   const googleConnected = integrations.some((i) =>
     String(i.provider ?? "").toLowerCase().includes("google"),
@@ -409,7 +417,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                     <div className="w-full flex flex-col gap-[6px]">
                       {allSessions.map((session) => {
                         if (!session) return null;
-                        const label = getRecordTypeLabel(session.record_type);
+                        const label = getRecordTypeLabel(session.record_type, profile);
                         const added = session.created_rows ?? 0;
                         const updated = session.updated_rows ?? 0;
                         const skipped = session.duplicate_rows ?? 0;
@@ -495,7 +503,7 @@ export function ImportsView({ importSessions, integrations, syncRuns }: Props) {
                         {session.file_name || session.source_name || "—"}
                       </Link>
                     </td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{getRecordTypeLabel(session.record_type)}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{getRecordTypeLabel(session.record_type, profile)}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{session.total_rows ?? "—"} records</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{formatImportDate(session.committed_at || session.created_at)}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">

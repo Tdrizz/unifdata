@@ -53,8 +53,8 @@ export function LeadCreateForm({ customers, profile }: Props) {
               <option value="Contacted">Contacted</option>
               <option value="Estimate Sent">Estimate Sent</option>
               <option value="Follow Up">Follow Up</option>
-              <option value="Won">Won</option>
-              <option value="Lost">Lost</option>
+              <option value="Won">{profile.completedLabel}</option>
+              <option value="Lost">{profile.cancelledLabel}</option>
             </select>
           </label>
         </div>

@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { buildRevenuePrompt, buildRevenueUserMessage, buildTelemetryBlock } from "@/lib/ai/prompts";
+import { logGeneration } from "@/lib/observability/tracing";
+import type { TraceContext } from "@/lib/observability/tracing";
 import type { TelemetrySnapshot } from "../telemetry";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
@@ -24,8 +26,8 @@ export async function runRevenueWorker(
   orgId: string,
   supabase: SupabaseClient,
   profile: IndustryProfile,
+  ctx: TraceContext,
 ): Promise<void> {
-  // Fetch the top unpaid invoices for supplementary detail
   const { data: invoiceDetails } = await supabase
     .from("sales")
     .select("id, amount, payment_status, sale_date, service_type")
@@ -34,12 +36,15 @@ export async function runRevenueWorker(
     .order("amount", { ascending: false })
     .limit(5);
 
+  const start = Date.now();
+  const systemPrompt = buildRevenuePrompt(profile);
+
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.revenue,
     temperature: 0.2,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: buildRevenuePrompt(profile) },
+      { role: "system", content: systemPrompt },
       {
         role: "user",
         content: buildRevenueUserMessage(
@@ -52,6 +57,18 @@ export async function runRevenueWorker(
 
   const raw = response.choices[0]?.message?.content ?? "{}";
   const parsed = RevenueAlertSchema.safeParse(JSON.parse(raw));
+
+  logGeneration(ctx, {
+    name: "revenue-alerts",
+    model: AI_MODELS.revenue,
+    prompt: systemPrompt,
+    completion: raw,
+    inputTokens: response.usage?.prompt_tokens ?? 0,
+    outputTokens: response.usage?.completion_tokens ?? 0,
+    latencyMs: Date.now() - start,
+    zodPassed: parsed.success,
+    error: parsed.success ? undefined : parsed.error.message,
+  });
 
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 

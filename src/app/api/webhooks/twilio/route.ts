@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-validation";
 import { checkAndDropEchoWebhook } from "@/lib/conflict-resolver";
+import { normalizePhone } from "@/lib/crm/phone";
+import { logActivity } from "@/lib/crm/activity";
 
 export const runtime = "nodejs";
 
@@ -88,7 +91,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // Write to communications_log.
+  // Write to communications_log (backwards compat).
   if (customer) {
     await supabase.from("communications_log").insert({
       organization_id: customer.organization_id,
@@ -104,6 +107,99 @@ export async function POST(request: Request) {
   } else {
     // Unknown sender — log without a customer link so nothing is silently dropped.
     console.info("[twilio.webhook] Unmatched phone, logged without customer link", { from: fromE164 });
+  }
+
+  // Write to new communications + communication_messages tables.
+  const normalizedPhone = normalizePhone(fromRaw);
+  const orgId = customer?.organization_id ?? null;
+
+  if (orgId) {
+    // Find or create communications thread
+    const { data: existingThread } = await (supabase as any)
+      .from("communications")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("contact_id", customer!.id)
+      .eq("channel", "sms")
+      .maybeSingle();
+
+    let threadId: string;
+
+    if (existingThread) {
+      threadId = existingThread.id;
+    } else {
+      const { data: newThread } = await (supabase as any)
+        .from("communications")
+        .insert({
+          organization_id: orgId,
+          contact_id: customer!.id,
+          contact_phone: normalizedPhone,
+          channel: "sms",
+          status: "open",
+        })
+        .select("id")
+        .single();
+      threadId = newThread?.id;
+    }
+
+    if (threadId) {
+      const now = new Date().toISOString();
+
+      // Insert inbound message
+      await (supabase as any).from("communication_messages").insert({
+        communication_id: threadId,
+        organization_id: orgId,
+        direction: "inbound",
+        body,
+        status: "received",
+        twilio_sid: messageSid || null,
+        sent_at: now,
+      });
+
+      // Update thread metadata
+      await (supabase as any)
+        .from("communications")
+        .update({
+          last_message_at: now,
+          last_message_preview: body.slice(0, 100),
+          unread_count: (supabase as any).rpc
+            ? undefined // avoid rpc here, just increment with a follow-up
+            : undefined,
+        })
+        .eq("id", threadId);
+
+      // Increment unread count separately
+      await (supabase as any).rpc("increment_unread", { thread_id: threadId }).catch(() => {
+        // If RPC doesn't exist, do a manual fetch+update
+        (supabase as any)
+          .from("communications")
+          .select("unread_count")
+          .eq("id", threadId)
+          .maybeSingle()
+          .then(({ data }: { data: { unread_count: number } | null }) => {
+            if (data) {
+              (supabase as any)
+                .from("communications")
+                .update({ unread_count: (data.unread_count ?? 0) + 1 })
+                .eq("id", threadId);
+            }
+          });
+      });
+
+      // Log activity on the contact
+      try {
+        await logActivity(supabase, orgId, customer!.id, {
+          type: "message_received",
+          label: "SMS received",
+          detail: body.slice(0, 100),
+          referenceId: threadId,
+          referenceType: "communication",
+          source: "integration",
+        });
+      } catch {
+        // Non-fatal
+      }
+    }
   }
 
   // Return empty TwiML — we don't auto-reply.

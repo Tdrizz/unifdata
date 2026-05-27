@@ -9,6 +9,14 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/event-check",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-agents",
+      "schedule": "0 7 1 * *"
+    },
+    {
       "path": "/api/cron/weekly-summary",
       "schedule": "0 8 * * 1"
     },

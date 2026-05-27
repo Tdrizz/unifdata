@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { parseDateOnly, formatDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { isClosedOpportunity, getGenericTone } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { FollowUpRow, LeadRow, CustomerRow, FollowUpItem } from "../types";
 
@@ -113,7 +114,7 @@ function getSortDateTime(action: FollowUpItem) {
 function buildFollowUpItems(
   followUps: FollowUpRow[],
   opportunities: LeadRow[],
-  leadSingularLabel: string = "Opportunity",
+  leadSingularLabel: string = "",
   followUpSingularLabel: string = "follow-up",
 ): { manualItems: FollowUpItem[]; opportunityItems: FollowUpItem[] } {
   const manualItems: FollowUpItem[] = followUps.map((action) => ({
@@ -150,8 +151,9 @@ function buildFollowUpItems(
 }
 
 export function FollowUpList({ followUps, opportunities, people, filters, profile }: Props) {
-  const leadSingular = profile?.labels.leadSingular ?? "Opportunity";
-  const leadPlural = profile?.labels.leadPlural ?? "Opportunities";
+  const p = profile ?? getIndustryProfile();
+  const leadSingular = p.labels.leadSingular;
+  const leadPlural = p.labels.leadPlural;
   const selectedStatus = filters.status ? decodeURIComponent(filters.status) : "";
   const selectedDue = filters.due ? decodeURIComponent(filters.due) : "";
   const selectedSource = filters.source ? decodeURIComponent(filters.source) : "";

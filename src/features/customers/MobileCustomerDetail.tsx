@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 import type { Database } from "@/types/db";
+import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
@@ -61,8 +62,9 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
   const jobLabel = profile?.labels.jobPlural ?? "Visits";
   const saleLabel = profile?.labels.salePlural ?? "Payments";
   const saleSingular = profile?.labels.saleSingular ?? "Payment";
-  const custLabel = profile?.labels.customerPlural ?? "Clients";
-  const custSingular = profile?.labels.customerSingular ?? "Client";
+  const p = profile ?? getIndustryProfile();
+  const custLabel = p.labels.customerPlural;
+  const custSingular = p.labels.customerSingular;
   const TABS = ["Overview", leadLabel, jobLabel, saleLabel, "Activity"] as const;
   const [activeTab, setActiveTab] = useState<string>("Overview");
 
@@ -135,7 +137,7 @@ export function MobileCustomerDetail({ customer, leads, jobs, sales, profile }: 
           <div className="flex flex-col items-center justify-center gap-[6px] rounded-[12px] border border-ud bg-ud-surface py-[12px] px-[4px] text-center active:opacity-60 active:scale-[0.97] transition-[opacity,transform] duration-75">
             <SendMessageModal
               customerId={customer.id}
-              customerName={customer.name || "Customer"}
+              customerName={customer.name || custSingular}
               phone={phone ?? null}
               email={email ?? null}
               compact

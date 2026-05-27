@@ -69,10 +69,14 @@ export function MobileTabBar({
       match: (p: string) => p === "/workspace",
     },
     {
-      href: "/customers",
+      href: "/contacts",
       label: profile.labels.customerPlural,
       Icon: SvgUsers,
-      match: (p: string) => p === "/customers" || p.startsWith("/customers/"),
+      match: (p: string) =>
+        p === "/contacts" ||
+        p.startsWith("/contacts/") ||
+        p === "/customers" ||
+        p.startsWith("/customers/"),
     },
     {
       href: "/crm",
@@ -100,7 +104,10 @@ export function MobileTabBar({
         p.startsWith("/ai-assistant/") ||
         p === "/follow-ups" ||
         p.startsWith("/follow-ups/") ||
-        p === "/data-hub",
+        p === "/data-hub" ||
+        p === "/communications" ||
+        p === "/automations" ||
+        p === "/process",
     },
   ];
 
