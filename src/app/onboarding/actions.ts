@@ -64,7 +64,6 @@ export async function createCompanyStepAction(
       { name: "Cancelled", stageType: "cancelled", position: 5, color: "#EF4444" },
     ];
     await (supabase as any).from("board_stages").insert(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       defaultStages.map((s: any) => ({
         board_id: board.id,
         organization_id: company.id,

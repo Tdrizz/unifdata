@@ -123,7 +123,7 @@ export function CommunicationsClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedId]);
+  }, [selectedId, supabase]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -140,7 +140,7 @@ export function CommunicationsClient({
       .from("communications")
       .update({ unread_count: 0 })
       .eq("id", selectedId);
-  }, [selectedId]);
+  }, [selectedId, supabase]);
 
   async function handleSend() {
     if (!compose.trim() || !selectedId) return;
