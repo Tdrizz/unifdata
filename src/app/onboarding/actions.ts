@@ -79,7 +79,7 @@ export async function createCompanyStepAction(
   if (defaultTags.length > 0) {
     await (supabase as any).from("tags").insert(
       defaultTags.map((name: string) => ({ organization_id: company.id, name }))
-    ).maybeSingle();
+    );
   }
 
   if (businessSector === "veterinary") {

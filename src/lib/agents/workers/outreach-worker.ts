@@ -78,10 +78,11 @@ export async function runOutreachWorker(
       if (latestMsg?.direction === "inbound" && new Date(latestMsg.sent_at) > new Date(sevenDaysAgo)) {
         await supabase.from("agent_alerts").insert({
           organization_id: company.id,
+          alert_type: "unanswered_reply",
           title: "Unanswered reply",
           body: `${String(payload.customer_name ?? "A contact")} replied but hasn't received a response.`,
           severity: "warning",
-          read: false,
+          escalation_level: 0,
         });
         return;
       }
