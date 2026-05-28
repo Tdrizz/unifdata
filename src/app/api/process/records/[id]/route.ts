@@ -18,7 +18,7 @@ export async function PATCH(
 
   const { company } = currentCompany;
 
-  let body: { stageId?: string; status?: string };
+  let body: { stageId?: string; status?: string; value?: number; closed_reason?: string };
   try {
     body = await request.json();
   } catch {
@@ -38,6 +38,8 @@ export async function PATCH(
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.stageId) updates.stage_id = body.stageId;
   if (body.status) updates.status = body.status;
+  if (body.value != null) updates.value = body.value;
+  if (body.closed_reason != null) updates.closed_reason = body.closed_reason;
 
   const { data: updated, error } = await (supabase as any)
     .from("process_records")

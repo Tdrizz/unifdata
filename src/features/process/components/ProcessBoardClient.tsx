@@ -481,6 +481,12 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
           )
         );
       }
+    }).catch(() => {
+      setRecords((prev) =>
+        prev.map((r) =>
+          r.id === recordId ? { ...r, stage_id: record.stage_id, status: record.status } : r
+        )
+      );
     });
   }
 
