@@ -13,11 +13,12 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getDateInputValue, formatCurrency } from "@/lib/utils";
 import { getRevenueTone, isUnpaid } from "@/lib/status";
 import { updateSaleAction, deleteSaleAction, type ActionState } from "../actions";
-import type { SaleRow, CustomerRow } from "../types";
+import type { SaleRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   sale: SaleRow;
-  customers: Pick<CustomerRow, "id" | "name">[];
+  contacts: ContactForSelect[];
   errorParam?: string;
 };
 
@@ -67,7 +68,9 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SaleForm({ sale, customers }: Props) {
+export function SaleForm({ sale, contacts }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saleContactId = (sale as any).contact_id ?? sale.customer_id ?? "";
   const boundUpdateAction = updateSaleAction.bind(null, sale.id);
   const deleteAction = deleteSaleAction.bind(null, sale.id);
   const issues = getRevenueIssues(sale);
@@ -119,11 +122,11 @@ export function SaleForm({ sale, customers }: Props) {
             </FormField>
           </div>
 
-          {customers.length > 0 && (
+          {contacts.length > 0 && (
             <FormField label="Link to person">
-              <Select name="customer_id" defaultValue={sale.customer_id || ""}>
+              <Select name="contact_id" defaultValue={saleContactId}>
                 <option value="">No person linked</option>
-                {customers.map((c) => (
+                {contacts.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </Select>
@@ -166,7 +169,7 @@ export function SaleForm({ sale, customers }: Props) {
 
             <SummaryCard
               label="Linked person"
-              value={sale.customer_id ? (customers.find((c) => c.id === sale.customer_id)?.name ?? "Unknown") : "No person linked"}
+              value={saleContactId ? (contacts.find((c) => c.id === saleContactId)?.name ?? "Unknown") : "No person linked"}
               helper="Linking a person connects this revenue to their profile."
             />
           </div>

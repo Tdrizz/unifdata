@@ -27,7 +27,7 @@ export default async function EditWorkPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [job, customers, leads] = await Promise.all([
+  const [job, contacts, leads] = await Promise.all([
     getJobById(supabase, company.id, id),
     getCustomersForJobSelect(supabase, company.id),
     getLeadsForJobSelect(supabase, company.id),
@@ -57,7 +57,7 @@ export default async function EditWorkPage({
             </div>
           }
         />
-        <JobForm job={job} customers={customers} leads={leads} profile={profile} />
+        <JobForm job={job} contacts={contacts} leads={leads} profile={profile} />
       </div>
     </AppShell>
   );

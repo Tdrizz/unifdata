@@ -9,12 +9,13 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pill } from "@/components/ui/Pill";
 import { JobCreateForm } from "./JobCreateForm";
-import type { JobListRow, CustomerRow, LeadRow } from "../types";
+import type { JobListRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   jobs: JobListRow[];
   count: number;
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  contacts: ContactForSelect[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile: IndustryProfile;
   selectedStage: string;
@@ -33,10 +34,10 @@ function matchesFilter(status: string | null | undefined, filter: StageFilter): 
   return false;
 }
 
-export function MobileJobsList({ jobs, count, customers, leads, profile }: Props) {
+export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props) {
   const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
 
-  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const contactById = new Map(contacts.map((c) => [c.id, c]));
 
   const totalValue = jobs.reduce((sum, job) => sum + Number(job.job_value || 0), 0);
 
@@ -107,7 +108,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
       ) : (
         <div className="px-4 flex flex-col gap-3">
           {filteredJobs.map((job) => {
-            const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+            const customer = (job.contact_id ?? job.customer_id) ? contactById.get(job.contact_id ?? job.customer_id ?? "") : null;
 
             return (
               <Link
@@ -152,7 +153,7 @@ export function MobileJobsList({ jobs, count, customers, leads, profile }: Props
         </div>
       )}
       <div id="job-quick-add" className="px-4 mt-6">
-        <JobCreateForm customers={customers} leads={leads} />
+        <JobCreateForm contacts={contacts} leads={leads} />
       </div>
     </div>
   );

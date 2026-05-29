@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
+import { logActivity } from "@/lib/crm/activity";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildJobText } from "@/lib/embeddings/generate";
 
@@ -19,7 +20,7 @@ export async function createJobAction(
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  const customerId = getFormString(formData, "customer_id");
+  const contactId = getFormString(formData, "contact_id");
   const leadId = getFormString(formData, "lead_id");
   const serviceType = getFormString(formData, "service_type");
   const status = getFormString(formData, "status") || "Scheduled";
@@ -36,11 +37,12 @@ export async function createJobAction(
     return { fieldErrors: { job_value: "Must be a positive number." } };
   }
 
-  const { data: inserted, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inserted, error } = await (supabase as any)
     .from("jobs")
     .insert({
       company_id: company.id,
-      customer_id: customerId || null,
+      contact_id: contactId || null,
       lead_id: leadId || null,
       service_type: serviceType,
       status,
@@ -61,6 +63,19 @@ export async function createJobAction(
       buildJobText({ service_type: serviceType, status, paid_status: paidStatus, start_date: startDate || null }),
       company.id,
     );
+    if (contactId) {
+      try {
+        await logActivity(supabase, company.id, contactId, {
+          type: "work_created",
+          label: `Work "${serviceType}" created`,
+          referenceId: inserted.id,
+          referenceType: "job",
+          source: "user",
+        });
+      } catch {
+        // Non-fatal
+      }
+    }
   }
 
   revalidatePath("/jobs");
@@ -78,7 +93,7 @@ export async function updateJobAction(
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  const customerId = getFormString(formData, "customer_id");
+  const contactId = getFormString(formData, "contact_id");
   const leadId = getFormString(formData, "lead_id");
   const serviceType = getFormString(formData, "service_type");
   const status = getFormString(formData, "status") || "Scheduled";
@@ -95,10 +110,11 @@ export async function updateJobAction(
     return { fieldErrors: { job_value: "Must be a positive number." } };
   }
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("jobs")
     .update({
-      customer_id: customerId || null,
+      contact_id: contactId || null,
       lead_id: leadId || null,
       service_type: serviceType,
       status,

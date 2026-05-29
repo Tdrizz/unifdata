@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { getTodayString } from "@/lib/date-format";
+import { logActivity } from "@/lib/crm/activity";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildSaleText } from "@/lib/embeddings/generate";
 
@@ -25,6 +26,7 @@ export async function createSaleAction(
   const saleDate = getFormString(formData, "sale_date") || getTodayString();
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
+  const contactId = getFormString(formData, "contact_id");
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };
@@ -34,10 +36,12 @@ export async function createSaleAction(
     return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
-  const { data: inserted, error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inserted, error } = await (supabase as any)
     .from("sales")
     .insert({
       company_id: company.id,
+      contact_id: contactId || null,
       amount,
       payment_status: paymentStatus,
       sale_date: saleDate || undefined,
@@ -56,6 +60,19 @@ export async function createSaleAction(
       buildSaleText({ service_type: serviceType || null, payment_status: paymentStatus, sale_date: saleDate || null, source: source || null }),
       company.id,
     );
+    if (contactId) {
+      try {
+        await logActivity(supabase, company.id, contactId, {
+          type: "invoice_created",
+          label: `Revenue of $${amount.toFixed(2)} recorded`,
+          referenceId: inserted.id,
+          referenceType: "sale",
+          source: "user",
+        });
+      } catch {
+        // Non-fatal
+      }
+    }
   }
 
   revalidatePath("/sales");
@@ -78,7 +95,7 @@ export async function updateSaleAction(
   const saleDate = getFormString(formData, "sale_date");
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
-  const customerId = getFormString(formData, "customer_id");
+  const contactId = getFormString(formData, "contact_id");
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };
@@ -88,7 +105,8 @@ export async function updateSaleAction(
     return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("sales")
     .update({
       amount,
@@ -96,7 +114,7 @@ export async function updateSaleAction(
       sale_date: saleDate || undefined,
       service_type: serviceType || null,
       source: source || null,
-      customer_id: customerId || null,
+      contact_id: contactId || null,
     })
     .eq("id", id)
     .eq("company_id", company.id);

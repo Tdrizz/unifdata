@@ -1,6 +1,6 @@
 import type { Database } from "@/types/db";
 
-export type FollowUpRow = Database["public"]["Tables"]["follow_ups"]["Row"];
+export type FollowUpRow = Database["public"]["Tables"]["follow_ups"]["Row"] & { contact_id?: string | null };
 export type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 

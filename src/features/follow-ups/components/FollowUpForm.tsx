@@ -14,11 +14,12 @@ import { getActionTone } from "@/lib/status";
 import { getDateInputValue } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { updateFollowUpAction, deleteFollowUpAction, type ActionState } from "../actions";
-import type { FollowUpRow, CustomerRow } from "../types";
+import type { FollowUpRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   followUp: FollowUpRow;
-  people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  people: ContactForSelect[];
   profile: IndustryProfile;
   errorParam?: string;
 };
@@ -56,7 +57,7 @@ function getDueLabel(action: FollowUpRow) {
 }
 
 function getActionNextStep(action: FollowUpRow) {
-  if (!action.customer_id)
+  if (!action.contact_id && !action.customer_id)
     return "Link this follow-up to the person or business it belongs to.";
   if (!action.message)
     return "Add a clear action so this follow-up is understandable.";
@@ -78,7 +79,7 @@ function getActionIssues(action: FollowUpRow) {
     detail: string;
   }[] = [];
 
-  if (!action.customer_id)
+  if (!action.contact_id && !action.customer_id)
     issues.push({ label: "Link person", tone: "warning", detail: "Follow-ups are more useful when connected to who they are for." });
   if (!action.message)
     issues.push({ label: "Add action", tone: "warning", detail: "A clear action makes the follow-up understandable." });
@@ -100,9 +101,9 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
   const boundUpdateAction = updateFollowUpAction.bind(null, followUp.id);
   const deleteAction = deleteFollowUpAction.bind(null, followUp.id);
 
-  const linkedPerson = followUp.customer_id
-    ? people.find((p) => p.id === followUp.customer_id)
-    : null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const followUpContactId = (followUp as any).contact_id ?? followUp.customer_id;
+  const linkedPerson = followUpContactId ? people.find((p) => p.id === followUpContactId) : null;
   const issues = getActionIssues(followUp);
 
   const [state, formAction] = useActionState<ActionState, FormData>(
@@ -125,7 +126,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
             )}
 
             <FormField label="Link to person or business">
-              <Select name="customer_id" defaultValue={followUp.customer_id || ""}>
+              <Select name="contact_id" defaultValue={followUpContactId || ""}>
                 <option value="">No linked person yet</option>
                 {people.map((person) => (
                   <option key={person.id} value={person.id}>

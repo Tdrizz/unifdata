@@ -4,13 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency, cn } from "@/lib/utils";
 import { SaleCreateForm } from "./SaleCreateForm";
-import type { SaleRow, CustomerRow } from "../types";
+import type { SaleRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type Props = {
   sales: SaleRow[];
   profile: IndustryProfile;
-  customers?: Pick<CustomerRow, "id" | "name">[];
+  contacts?: ContactForSelect[];
 };
 
 type Filter = "all" | "overdue" | "pending" | "paid";
@@ -47,13 +48,13 @@ function sourceBadge(sourceSystem: string | null | undefined) {
   return labels[sourceSystem.toLowerCase()] ?? sourceSystem.toUpperCase().slice(0, 4);
 }
 
-export function MobileSalesView({ sales, profile, customers = [] }: Props) {
+export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
 
   const saleSingular = profile.labels.saleSingular ?? "Invoice";
   const salePlural = profile.labels.salePlural ?? "Invoices";
 
-  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const contactById = new Map(contacts.map((c) => [c.id, c]));
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -143,7 +144,9 @@ export function MobileSalesView({ sales, profile, customers = [] }: Props) {
           <p className="text-center text-[13px] text-ud-faint py-8">No {salePlural.toLowerCase()} here.</p>
         ) : (
           filtered.map((sale) => {
-            const customer = sale.customer_id ? customerById.get(sale.customer_id) : null;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const saleContactId = (sale as any).contact_id ?? sale.customer_id;
+            const customer = saleContactId ? contactById.get(saleContactId) : null;
             return (
               <Link
                 key={sale.id}
@@ -187,7 +190,7 @@ export function MobileSalesView({ sales, profile, customers = [] }: Props) {
 
       {/* Quick add */}
       <div id="sale-quick-add" className="px-4 mt-2">
-        <SaleCreateForm profile={profile} />
+        <SaleCreateForm profile={profile} contacts={contacts} />
       </div>
     </div>
   );

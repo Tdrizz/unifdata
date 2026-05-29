@@ -80,11 +80,12 @@ export async function compileTelemetry(
       .not("status", "in", "(completed,cancelled)")
       .lt("updated_at", tenDaysAgo),
 
-    // 4. New customers in last 7 days with no follow-up
-    supabase
-      .from("customers")
+    // 4. New contacts in last 7 days with no follow-up
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("master_customers")
       .select("id")
-      .eq("company_id", orgId)
+      .eq("organization_id", orgId)
       .gte("created_at", sevenDaysAgo),
 
     // 5. Unpaid invoices ≥30 days
@@ -134,12 +135,13 @@ export async function compileTelemetry(
       .gte("created_at", thirtyDaysAgo)
       .in("status", ["approved", "rejected"]),
 
-    // 11. Top 5 customers by lifetime value (total sales)
-    supabase
+    // 11. Top 5 contacts by lifetime value (total sales via contact_id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
       .from("sales")
-      .select("customer_id, amount")
+      .select("contact_id, amount")
       .eq("company_id", orgId)
-      .not("customer_id", "is", null),
+      .not("contact_id", "is", null),
   ]);
 
   // Revenue calculations
@@ -157,17 +159,18 @@ export async function compileTelemetry(
       ? Math.round(((revenueThisWeek - revenueFourWeekAvg) / revenueFourWeekAvg) * 100)
       : 0;
 
-  // Check new customers for missing follow-ups
-  const newCustomerIds = (newCustomersResult.data || []).map((c) => c.id);
+  // Check new contacts for missing follow-ups
+  const newCustomerIds = (newCustomersResult.data || []).map((c: { id: string }) => c.id);
   let newCustomersNoFollowUp = 0;
   if (newCustomerIds.length > 0) {
-    const { data: followedUp } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: followedUp } = await (supabase as any)
       .from("follow_ups")
-      .select("customer_id")
+      .select("contact_id")
       .eq("company_id", orgId)
-      .in("customer_id", newCustomerIds);
-    const followedUpIds = new Set((followedUp || []).map((f) => f.customer_id));
-    newCustomersNoFollowUp = newCustomerIds.filter((id) => !followedUpIds.has(id)).length;
+      .in("contact_id", newCustomerIds);
+    const followedUpIds = new Set((followedUp || []).map((f: { contact_id: string }) => f.contact_id));
+    newCustomersNoFollowUp = newCustomerIds.filter((id: string) => !followedUpIds.has(id)).length;
   }
 
   const unpaidSales = unpaidResult.data || [];
@@ -202,28 +205,32 @@ export async function compileTelemetry(
     recentDrafts.length > 0 ? Math.round((approvedCount / recentDrafts.length) * 100) : 0;
 
   // Top contacts by LTV
-  const ltvByCustomer = new Map<string, number>();
+  const ltvByContact = new Map<string, number>();
   for (const row of topContactsResult.data || []) {
-    const cid = row.customer_id as string;
-    ltvByCustomer.set(cid, (ltvByCustomer.get(cid) ?? 0) + Number(row.amount || 0));
+    const cid = (row as { contact_id: string }).contact_id;
+    ltvByContact.set(cid, (ltvByContact.get(cid) ?? 0) + Number(row.amount || 0));
   }
-  const topCustomerIds = Array.from(ltvByCustomer.entries())
+  const topContactIds = Array.from(ltvByContact.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([id]) => id);
 
   let topContactsByLtv: Array<{ id: string; name: string; ltv: number }> = [];
-  if (topCustomerIds.length > 0) {
-    const { data: customerNames } = await supabase
-      .from("customers")
-      .select("id, name")
-      .in("id", topCustomerIds);
+  if (topContactIds.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: contactNames } = await (supabase as any)
+      .from("master_customers")
+      .select("id, first_name, last_name")
+      .in("id", topContactIds);
 
-    topContactsByLtv = topCustomerIds.map((id) => ({
-      id,
-      name: (customerNames || []).find((c) => c.id === id)?.name ?? "Unknown",
-      ltv: ltvByCustomer.get(id) ?? 0,
-    }));
+    topContactsByLtv = topContactIds.map((id) => {
+      const c = (contactNames || []).find((r: { id: string; first_name: string; last_name: string | null }) => r.id === id);
+      return {
+        id,
+        name: c ? [c.first_name, c.last_name].filter(Boolean).join(" ") : "Unknown",
+        ltv: ltvByContact.get(id) ?? 0,
+      };
+    });
   }
 
   let processBoardSnapshot: TelemetrySnapshot["processBoardSnapshot"];

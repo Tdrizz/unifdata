@@ -16,4 +16,4 @@ export type JobListRow = Pick<
   | "completed_date"
   | "paid_status"
   | "created_at"
->;
+> & { contact_id?: string | null };

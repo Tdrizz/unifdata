@@ -5,14 +5,15 @@ import { WeeklyCalendar } from "@/components/WeeklyCalendar";
 import type { CalendarEvent } from "@/components/WeeklyCalendar";
 import { FollowUpList } from "./FollowUpList";
 import { FollowUpCreateForm } from "./FollowUpCreateForm";
-import type { FollowUpRow, LeadRow, CustomerRow } from "../types";
+import type { FollowUpRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { isClosedOpportunity } from "@/lib/status";
 
 type Props = {
   followUps: FollowUpRow[];
   opportunities: LeadRow[];
-  people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  people: ContactForSelect[];
   filters: { status?: string; due?: string; source?: string };
   profile: IndustryProfile;
 };

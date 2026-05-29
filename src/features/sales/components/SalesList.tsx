@@ -5,7 +5,8 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { useProfile } from "@/lib/profile-context";
-import type { SaleRow, CustomerRow } from "../types";
+import type { SaleRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import { SaleCreateForm } from "./SaleCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
@@ -18,7 +19,7 @@ type Props = {
   profile: IndustryProfile;
   selectedStatus: string;
   selectedSource: string;
-  customers?: Pick<CustomerRow, "id" | "name">[];
+  contacts?: ContactForSelect[];
 };
 
 type FilterType = "all" | "overdue" | "pending" | "paid";
@@ -91,7 +92,7 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
 
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
-export function SalesList({ sales, count: _count, page: _page, q: _q, customers = [], selectedStatus, selectedSource, profile }: Props) {
+export function SalesList({ sales, count: _count, page: _page, q: _q, contacts = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
@@ -100,7 +101,7 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
   const salePlural = profile?.labels.salePlural ?? p.labels.salePlural;
   const customerSingular = profile?.labels.customerSingular ?? p.labels.customerSingular;
 
-  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const contactById = new Map(contacts.map((c) => [c.id, c]));
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -296,7 +297,9 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
               </tr>
             ) : (
               filtered.map((sale) => {
-                const customer = sale.customer_id ? customerById.get(sale.customer_id) : null;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const saleContactId = (sale as any).contact_id ?? sale.customer_id;
+                const customer = saleContactId ? contactById.get(saleContactId) : null;
                 const isOver = isOverdue(sale.payment_status);
                 return (
                   <tr key={sale.id}>
@@ -329,7 +332,7 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, customers 
 
       {/* Quick add */}
       <div id="sale-quick-add" style={{ marginTop: "20px" }}>
-        <SaleCreateForm profile={profile} />
+        <SaleCreateForm profile={profile} contacts={contacts} />
       </div>
     </div>
   );

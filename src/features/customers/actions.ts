@@ -8,7 +8,10 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
+import { logActivity } from "@/lib/crm/activity";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { syncEmbedding } from "@/lib/embeddings/sync";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { buildCustomerText } from "@/lib/embeddings/generate";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
@@ -34,16 +37,26 @@ export async function createCustomerAction(
   const address = getFormString(formData, "address") || null;
   const notes = getFormString(formData, "notes") || null;
 
-  const { data: inserted, error } = await supabase
-    .from("customers")
+  const phone = getFormString(formData, "phone") || null;
+  const nameParts = name.trim().split(/\s+/);
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inserted, error } = await (supabase as any)
+    .from("master_customers")
     .insert({
-      company_id: company.id,
-      name,
-      phone: getFormString(formData, "phone") || null,
-      email: email || null,
-      address,
-      customer_type: customerType,
-      notes,
+      organization_id: company.id,
+      first_name: firstName,
+      last_name: lastName,
+      primary_email: email || null,
+      primary_phone: phone,
+      billing_address: address ? { line1: address } : null,
+      metadata: Object.keys({ ...(customerType ? { customer_type: customerType } : {}), ...(notes ? { notes } : {}) }).length
+        ? { ...(customerType ? { customer_type: customerType } : {}), ...(notes ? { notes } : {}) }
+        : null,
+      relationship_status: "new",
+      source: "manual",
     })
     .select("id")
     .single();
@@ -51,15 +64,19 @@ export async function createCustomerAction(
   if (error) return { error: error.message };
 
   if (inserted) {
-    syncEmbedding(
-      "customers",
-      inserted.id,
-      buildCustomerText({ name, customer_type: customerType, address, notes }),
-      company.id,
-    );
+    try {
+      await logActivity(supabase, company.id, inserted.id, {
+        type: "contact_created",
+        label: `${name} added`,
+        source: "user",
+      });
+    } catch {
+      // Non-fatal
+    }
   }
 
   revalidatePath("/customers");
+  revalidatePath("/contacts");
   revalidatePath("/workspace");
   redirect("/customers?toast=Customer+created");
 }

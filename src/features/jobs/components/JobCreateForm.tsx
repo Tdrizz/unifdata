@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import { createJobAction, type ActionState } from "../actions";
-import type { CustomerRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
+import type { LeadRow } from "../types";
 import { formatCurrency } from "@/lib/utils";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -15,11 +16,11 @@ type PricingContext = {
 } | { sufficient: false };
 
 type Props = {
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  contacts: ContactForSelect[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
 };
 
-export function JobCreateForm({ customers, leads }: Props) {
+export function JobCreateForm({ contacts, leads }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createJobAction,
     null,
@@ -76,11 +77,11 @@ export function JobCreateForm({ customers, leads }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-            <select name="customer_id" className={f}>
+            <select name="contact_id" className={f}>
               <option value="">No linked person yet</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name || customer.email || customer.phone || "Unnamed person"}
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>
+                  {contact.name || contact.email || contact.phone || "Unnamed person"}
                 </option>
               ))}
             </select>

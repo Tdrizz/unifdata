@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
-import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow } from "./types";
+import type { LeadRow, JobRow, SaleRow, FollowUpRow } from "./types";
 
-type WorkspaceCustomer = Pick<CustomerRow, "id" | "name" | "phone" | "email" | "address" | "customer_type" | "created_at">;
+type WorkspaceCustomer = { id: string; name: string; phone: string | null; email: string | null; address: string | null; customer_type: string | null; created_at: string };
 type WorkspaceLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
 type WorkspaceJob = Pick<JobRow, "id" | "customer_id" | "lead_id" | "service_type" | "status" | "job_value" | "start_date" | "completed_date" | "paid_status" | "created_at">;
 type WorkspaceSale = Pick<SaleRow, "id" | "amount" | "payment_status" | "sale_date" | "service_type" | "source" | "created_at">;
@@ -31,10 +31,11 @@ export async function getWorkspaceData(
     salesResult,
     followUpsResult,
   ] = await Promise.all([
-    supabase
-      .from("customers")
-      .select("id, name, phone, email, address, customer_type, created_at")
-      .eq("company_id", companyId)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("master_customers")
+      .select("id, first_name, last_name, primary_phone, primary_email, billing_address, metadata, created_at")
+      .eq("organization_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
 
@@ -75,8 +76,25 @@ export async function getWorkspaceData(
       .limit(500),
   ]);
 
+  const rawContacts = (customersResult.data ?? []) as Array<{
+    id: string; first_name: string; last_name: string | null;
+    primary_phone: string | null; primary_email: string | null;
+    billing_address: { line1?: string } | null;
+    metadata: { customer_type?: string } | null;
+    created_at: string;
+  }>;
+  const mappedCustomers: WorkspaceCustomer[] = rawContacts.map((r) => ({
+    id: r.id,
+    name: [r.first_name, r.last_name].filter(Boolean).join(" "),
+    phone: r.primary_phone,
+    email: r.primary_email,
+    address: r.billing_address?.line1 ?? null,
+    customer_type: r.metadata?.customer_type ?? null,
+    created_at: r.created_at,
+  }));
+
   return {
-    customers: (customersResult.data ?? []) as WorkspaceCustomer[],
+    customers: mappedCustomers,
     leads: (leadsResult.data ?? []) as WorkspaceLead[],
     jobs: (jobsResult.data ?? []) as WorkspaceJob[],
     sales: (salesResult.data ?? []) as WorkspaceSale[],

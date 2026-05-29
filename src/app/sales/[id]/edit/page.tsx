@@ -28,7 +28,7 @@ export default async function EditRevenuePage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [sale, customers] = await Promise.all([
+  const [sale, contacts] = await Promise.all([
     getSaleById(supabase, company.id, id),
     getCustomersForSaleSelect(supabase, company.id),
   ]);
@@ -57,7 +57,7 @@ export default async function EditRevenuePage({
             </div>
           }
         />
-        <SaleForm sale={sale} customers={customers} />
+        <SaleForm sale={sale} contacts={contacts} />
       </div>
     </AppShell>
   );
