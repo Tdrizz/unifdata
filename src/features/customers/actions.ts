@@ -9,9 +9,7 @@ import { getFormString } from "@/lib/utils";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { logActivity } from "@/lib/crm/activity";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { syncEmbedding } from "@/lib/embeddings/sync";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { buildCustomerText } from "@/lib/embeddings/generate";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
@@ -42,11 +40,29 @@ export async function createCustomerAction(
   const firstName = nameParts[0];
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
 
+  // Legacy insert so existing edit/delete/list pages continue to work
+  const { data: legacyRow, error: legacyError } = await supabase
+    .from("customers")
+    .insert({
+      company_id: company.id,
+      name,
+      phone,
+      email: email || null,
+      address,
+      customer_type: customerType,
+      notes,
+    })
+    .select("id")
+    .single();
+
+  if (legacyError) return { error: legacyError.message };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: inserted, error } = await (supabase as any)
     .from("master_customers")
     .insert({
       organization_id: company.id,
+      legacy_customer_id: legacyRow.id,
       first_name: firstName,
       last_name: lastName,
       primary_email: email || null,

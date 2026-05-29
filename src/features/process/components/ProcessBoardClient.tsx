@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -403,7 +404,8 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   const [confirmSheet, setConfirmSheet] = useState<ConfirmSheet | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
 
   const activeStages = stages.filter(

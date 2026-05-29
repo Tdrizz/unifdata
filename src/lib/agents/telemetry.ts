@@ -81,7 +81,6 @@ export async function compileTelemetry(
       .lt("updated_at", tenDaysAgo),
 
     // 4. New contacts in last 7 days with no follow-up
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("master_customers")
       .select("id")
@@ -136,7 +135,6 @@ export async function compileTelemetry(
       .in("status", ["approved", "rejected"]),
 
     // 11. Top 5 contacts by lifetime value (total sales via contact_id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("sales")
       .select("contact_id, amount")
@@ -163,7 +161,6 @@ export async function compileTelemetry(
   const newCustomerIds = (newCustomersResult.data || []).map((c: { id: string }) => c.id);
   let newCustomersNoFollowUp = 0;
   if (newCustomerIds.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: followedUp } = await (supabase as any)
       .from("follow_ups")
       .select("contact_id")
@@ -217,7 +214,6 @@ export async function compileTelemetry(
 
   let topContactsByLtv: Array<{ id: string; name: string; ltv: number }> = [];
   if (topContactIds.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: contactNames } = await (supabase as any)
       .from("master_customers")
       .select("id, first_name, last_name")

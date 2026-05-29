@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 export const AI_MODELS = {
-  manager: "nousresearch/hermes-3-llama-3.1-70b",
+  manager: "openai/gpt-4o-mini",
   chat: "anthropic/claude-3.5-haiku",
   outreach: "anthropic/claude-3.5-sonnet",
   revenue: "openai/gpt-4o-mini",
