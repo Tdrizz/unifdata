@@ -6,11 +6,9 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type CustomerRow = {
   id: string;
-  name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
-  email?: string | null;
-  phone?: string | null;
+  primary_email?: string | null;
   primary_phone?: string | null;
   relationship_status?: string | null;
   source?: string | null;
@@ -57,11 +55,7 @@ function formatRelativeTime(iso: string | undefined): string {
 }
 
 function getDisplayName(c: CustomerRow): string {
-  if (c.name) return c.name;
-  const first = c.first_name ?? "";
-  const last = c.last_name ?? "";
-  const full = `${first} ${last}`.trim();
-  return full || "Unnamed";
+  return [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unnamed";
 }
 
 function getInitials(name: string): string {
@@ -98,8 +92,7 @@ export function ContactsTableClient({
     ? customers.filter(
         (c) =>
           getDisplayName(c).toLowerCase().includes(q) ||
-          (c.email ?? "").toLowerCase().includes(q) ||
-          (c.phone ?? "").toLowerCase().includes(q) ||
+          (c.primary_email ?? "").toLowerCase().includes(q) ||
           (c.primary_phone ?? "").toLowerCase().includes(q)
       )
     : customers;
@@ -123,7 +116,7 @@ export function ContactsTableClient({
         ) : (
           filtered.map((c) => {
             const displayName = getDisplayName(c);
-            const phone = c.primary_phone ?? c.phone ?? null;
+            const phone = c.primary_phone ?? null;
             const status = c.relationship_status;
             return (
               <Link
@@ -136,7 +129,7 @@ export function ContactsTableClient({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-ud-ink truncate">{displayName}</p>
-                  <p className="text-[11px] text-ud-muted truncate">{c.email ?? phone ?? "No contact info"}</p>
+                  <p className="text-[11px] text-ud-muted truncate">{c.primary_email ?? phone ?? "No contact info"}</p>
                 </div>
                 {status && (
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] bg-ud-surface-sunk text-ud-muted shrink-0 capitalize">
@@ -211,7 +204,7 @@ export function ContactsTableClient({
                 const col = avatarColor(name);
                 const contactTags = tagsMap[contact.id] ?? [];
                 const lastActivity = activityMap[contact.id];
-                const phone = contact.primary_phone ?? contact.phone;
+                const phone = contact.primary_phone ?? null;
 
                 return (
                   <tr key={contact.id}>
@@ -232,7 +225,7 @@ export function ContactsTableClient({
                       </div>
                     </td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
-                      {contact.email || phone || "—"}
+                      {contact.primary_email || phone || "—"}
                     </td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
                       <div className="flex items-center gap-1.5">
