@@ -87,7 +87,8 @@ export async function getImportsPageData(
       .from("customers")
       .select("id, name, phone, email, address, customer_type, created_at")
       .eq("company_id", companyId)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(500),
 
     supabase
       .from("sync_connections")
@@ -95,7 +96,8 @@ export async function getImportsPageData(
         "id, name, source_type, source_name, record_type, sync_frequency, status, last_sync_at, created_at",
       )
       .eq("company_id", companyId)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(100),
 
     supabase
       .from("sync_runs")

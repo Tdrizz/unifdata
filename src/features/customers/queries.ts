@@ -82,8 +82,9 @@ export async function findDuplicateCustomers(companyId: string) {
 
   const { data } = await supabase
     .from("customers")
-    .select("*")
-    .eq("company_id", companyId);
+    .select("id, name, email, phone")
+    .eq("company_id", companyId)
+    .limit(2000);
 
   if (!data || data.length === 0) return [];
 

@@ -127,7 +127,8 @@ export default async function ContactsPage({
       .from("contact_activity")
       .select("contact_id, created_at")
       .in("contact_id", contactIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(contactIds.length * 5);
 
     if (activities) {
       for (const a of activities) {
