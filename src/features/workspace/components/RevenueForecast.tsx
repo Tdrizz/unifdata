@@ -25,7 +25,7 @@ export function RevenueForecast({ result }: Props) {
     return (
       <KpiCard
         label="Revenue Forecast"
-        value={`~${formatCurrency(nextMonthEstimate)} this month`}
+        value={`~${formatCurrency(nextMonthEstimate)} next 30 days`}
         helper={`Based on last 90 days · ${absPercent}% trend`}
         delta={trendLabels[trendDirection]}
         deltaTone={trendDeltaTone[trendDirection]}

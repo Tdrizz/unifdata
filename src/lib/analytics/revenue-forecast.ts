@@ -23,12 +23,14 @@ export async function computeRevenueForecast(
   const since = new Date();
   since.setDate(since.getDate() - LOOKBACK_DAYS);
   const sinceStr = since.toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const { data: rows } = await supabase
     .from("sales")
     .select("sale_date, amount")
     .eq("company_id", companyId)
     .gte("sale_date", sinceStr)
+    .lt("sale_date", todayStr)
     .not("sale_date", "is", null)
     .gt("amount", 0)
     .order("sale_date", { ascending: true });
@@ -62,7 +64,6 @@ export async function computeRevenueForecast(
     nextMonthEstimate += Math.max(0, predict(d));
   }
 
-  const projectedChange = slope * 30;
   const last30Actual = points
     .filter(([x]) => x >= todayOffset - 30)
     .reduce((sum, [, y]) => sum + y, 0);
@@ -70,12 +71,11 @@ export async function computeRevenueForecast(
   let trendPercent: number;
   if (last30Actual > 0) {
     trendPercent = Math.round(((nextMonthEstimate - last30Actual) / last30Actual) * 100);
+  } else if (nextMonthEstimate > 0) {
+    // No recent sales to compare against — use slope direction as a proxy
+    trendPercent = slope > 0 ? 10 : -10;
   } else {
-    trendPercent = Math.round(
-      last30Actual === 0 && nextMonthEstimate > 0
-        ? projectedChange > 0 ? 10 : -10
-        : 0,
-    );
+    trendPercent = 0;
   }
 
   const trendDirection =
