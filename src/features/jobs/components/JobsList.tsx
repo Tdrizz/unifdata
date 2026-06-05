@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { JobListRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -44,13 +45,13 @@ function formatJobDate(startDate: string | null | undefined, today: Date): { lab
   };
 }
 
-function statusBadgeClass(status: string | null) {
+function statusBadgeTone(status: string | null): "info" | "success" | "neutral" | "warning" {
   const s = (status || "").toLowerCase();
-  if (s.includes("progress") || s.includes("active")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-[#eef2ff] text-[#3730a3]";
-  if (s.includes("complete") || s.includes("done")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success";
-  if (s.includes("cancel")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted";
-  if (s.includes("quote") || s.includes("pending")) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-warning-bg text-ud-warning";
-  return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted";
+  if (s.includes("progress") || s.includes("active")) return "info";
+  if (s.includes("complete") || s.includes("done")) return "success";
+  if (s.includes("cancel")) return "neutral";
+  if (s.includes("quote") || s.includes("pending")) return "warning";
+  return "neutral";
 }
 
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
@@ -156,7 +157,7 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
                     <td className={`px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] ${isToday ? "font-semibold text-ud-ink" : "text-ud-muted"}`}>{dateLabel}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={statusBadgeClass(job.status)}>{job.status || "Scheduled"}</span></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><StatusBadge tone={statusBadgeTone(job.status)}>{job.status || "Scheduled"}</StatusBadge></td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><Link href={`/jobs/${job.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link></td>
                   </tr>
                 );
