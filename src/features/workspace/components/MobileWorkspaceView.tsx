@@ -20,8 +20,6 @@ import {
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
 import { AgentInbox } from "./AgentInbox";
-import { RevenueForecast } from "./RevenueForecast";
-import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -74,10 +72,9 @@ type Props = WorkspaceData & {
   drafts?: Draft[];
   alerts?: Alert[];
   isPro?: boolean;
-  revenueForecast?: RevenueForecastResult;
 };
 
-export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, revenueForecast }: Props) {
+export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -195,13 +192,6 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       {isPro && (drafts.length > 0 || alerts.length > 0) && (
         <div className="px-4 pt-4">
           <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />
-        </div>
-      )}
-
-      {/* Revenue forecast (Pro only) */}
-      {isPro && revenueForecast && (
-        <div className="px-4 pt-4">
-          <RevenueForecast result={revenueForecast} />
         </div>
       )}
 
