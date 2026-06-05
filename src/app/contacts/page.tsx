@@ -35,7 +35,7 @@ export default async function ContactsPage({
     tagsWithCountsResult,
     smartGroupsResult,
   ] = await Promise.all([
-    (supabase as any)
+    supabase
       .from("master_customers")
       .select("id, relationship_status, source")
       .eq("organization_id", company.id),

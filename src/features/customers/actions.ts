@@ -57,8 +57,7 @@ export async function createCustomerAction(
 
   if (legacyError) return { error: legacyError.message };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: inserted, error } = await (supabase as any)
+  const { data: inserted, error } = await supabase
     .from("master_customers")
     .insert({
       organization_id: company.id,
@@ -147,8 +146,7 @@ export async function updateCustomerAction(
     ...(notes ? { notes } : {}),
   };
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("master_customers")
       .update({
         first_name: firstName,
@@ -196,8 +194,7 @@ export async function bulkDeleteCustomers(ids: string[]): Promise<ActionState> {
   if (error) return { error: error.message };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("master_customers")
       .delete()
       .in("legacy_customer_id", ids)
@@ -250,8 +247,7 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
   if (deleteError) throw new Error(`Failed to delete merged customer: ${deleteError.message}`);
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("master_customers")
       .delete()
       .eq("legacy_customer_id", loserId)
@@ -371,8 +367,7 @@ export async function deleteCustomerAction(id: string) {
   if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any)
+    await supabase
       .from("master_customers")
       .delete()
       .eq("legacy_customer_id", id)

@@ -19,8 +19,7 @@ export async function getFollowUpPageData(
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(250),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
+    supabase
       .from("master_customers")
       .select("id, first_name, last_name, primary_email, primary_phone")
       .eq("organization_id", companyId)
@@ -62,8 +61,7 @@ export async function getCustomersForSelect(
   supabase: SupabaseClient,
   companyId: string,
 ): Promise<ContactForSelect[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("master_customers")
     .select("id, first_name, last_name, primary_email, primary_phone")
     .eq("organization_id", companyId)
