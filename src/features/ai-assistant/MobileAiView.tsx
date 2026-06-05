@@ -186,7 +186,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null }: 
           message.role === "action" ? (
             <div
               key={index}
-              className="rounded-[10px] px-[14px] py-[10px] text-[12.5px] font-medium bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.22)] text-[#16a34a] whitespace-pre-line"
+              className="rounded-[10px] px-[14px] py-[10px] text-[12.5px] font-medium bg-ud-success-bg border border-ud-success/20 text-ud-success whitespace-pre-line"
             >
               {message.text}
             </div>

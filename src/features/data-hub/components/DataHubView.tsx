@@ -90,9 +90,9 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
   });
 
   const dotClass = (dot: "danger" | "warning" | "neutral") => {
-    if (dot === "danger") return "w-2 h-2 rounded-full bg-[#e05050] shrink-0";
-    if (dot === "warning") return "w-2 h-2 rounded-full bg-[#d97706] shrink-0";
-    return "w-2 h-2 rounded-full bg-[#c5bfb5] shrink-0";
+    if (dot === "danger") return "w-2 h-2 rounded-full bg-ud-danger shrink-0";
+    if (dot === "warning") return "w-2 h-2 rounded-full bg-ud-warning shrink-0";
+    return "w-2 h-2 rounded-full bg-ud-surface-sunk shrink-0";
   };
 
   return (

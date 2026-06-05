@@ -219,7 +219,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       <div className="overflow-x-auto no-scrollbar px-4 pb-5">
         <div className="flex gap-[8px]">
           <Link
-            href="/customers#customer-quick-add"
+            href="/contacts"
             className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">

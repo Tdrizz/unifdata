@@ -42,9 +42,38 @@ export async function POST(
   const messageBody = body.body.trim();
   const now = new Date().toISOString();
 
-  // TODO: wire Twilio — call Twilio API to actually send the SMS
-  // const twilio = require("twilio")(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  // await twilio.messages.create({ body: messageBody, from: process.env.TWILIO_FROM_NUMBER, to: thread.contact_phone });
+  if (thread.channel !== "sms") {
+    return NextResponse.json({ error: "Only SMS threads are supported" }, { status: 422 });
+  }
+
+  if (!thread.contact_phone) {
+    return NextResponse.json({ error: "Thread has no phone number" }, { status: 422 });
+  }
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+  if (!accountSid || !authToken || !fromNumber) {
+    return NextResponse.json({ error: "SMS is not configured. Add Twilio credentials in settings." }, { status: 503 });
+  }
+
+  const twilioRes = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To: thread.contact_phone, From: fromNumber, Body: messageBody }),
+    },
+  );
+
+  if (!twilioRes.ok) {
+    const twilioData = await twilioRes.json().catch(() => ({})) as { message?: string };
+    return NextResponse.json({ error: twilioData.message ?? "SMS send failed" }, { status: 502 });
+  }
 
   // Insert outbound message
   const { data: message, error } = await (supabase as any)
@@ -54,7 +83,7 @@ export async function POST(
       organization_id: company.id,
       direction: "outbound",
       body: messageBody,
-      status: "sent",
+      status: "delivered",
       sent_at: now,
     })
     .select("id, communication_id, direction, body, status, sent_at")

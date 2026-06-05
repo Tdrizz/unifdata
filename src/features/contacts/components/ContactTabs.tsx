@@ -68,9 +68,10 @@ export function ContactTabs({
           <ContactNotesTab notes={notes} contactId={contactId} orgId={orgId} />
         )}
         {tab === "communications" && (
-          <div className="py-10 text-center text-[13px] text-ud-muted">
-            SMS history coming in Phase 3.{" "}
-            <a href="/communications" className="text-ud-accent underline">
+          <div className="py-10 text-center">
+            <p className="text-[13px] font-semibold text-ud-ink mb-1">No messages yet</p>
+            <p className="text-[12.5px] text-ud-muted mb-4">SMS conversations with this contact will appear here.</p>
+            <a href="/communications" className="text-[12.5px] text-ud-accent hover:underline">
               View all communications →
             </a>
           </div>

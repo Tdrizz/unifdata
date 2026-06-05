@@ -3,7 +3,7 @@ const badgeStyles = {
   success: "bg-ud-success-bg text-ud-success",
   warning: "bg-ud-warning-bg text-ud-warning",
   danger: "bg-ud-danger-bg text-ud-danger",
-  info: "bg-[#eef2ff] text-[#3730a3]",
+  info: "bg-ud-info-bg text-ud-info",
 };
 
 export function StatusBadge({

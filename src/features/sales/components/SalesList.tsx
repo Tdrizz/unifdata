@@ -10,6 +10,7 @@ import type { ContactForSelect } from "@/lib/crm/types";
 import { SaleCreateForm } from "./SaleCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Props = {
   sales: SaleRow[];
@@ -92,7 +93,7 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
 
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
-export function SalesList({ sales, count: _count, page: _page, q: _q, contacts = [], selectedStatus, selectedSource, profile }: Props) {
+export function SalesList({ sales, count, page: _page, q: _q, contacts = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
@@ -328,6 +329,10 @@ export function SalesList({ sales, count: _count, page: _page, q: _q, contacts =
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-4">
+        <Pagination count={count} pageSize={50} />
       </div>
 
       {/* Quick add */}

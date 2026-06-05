@@ -40,6 +40,7 @@ export async function POST(_request: Request, context: RouteContext) {
     revalidatePath("/crm");
     revalidatePath("/data-hub");
     revalidatePath("/ai-assistant");
+    revalidatePath("/contacts");
 
     return NextResponse.json({
       ok: true,

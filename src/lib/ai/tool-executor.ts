@@ -70,13 +70,23 @@ export async function executeTool(
       case "create_customer": {
         const data = CreateCustomerSchema.parse(args);
         const name = `${data.first_name} ${data.last_name}`.trim();
-        const { error } = await supabase.from("customers").insert({
+        const { data: created, error } = await supabase.from("customers").insert({
           company_id: orgId,
           name,
           email: data.email || null,
           phone: data.phone || null,
-        });
+        }).select("id").single();
         if (error) return { success: false, message: `Failed to create customer: ${error.message}` };
+        void supabase.from("master_customers").insert({
+          organization_id: orgId,
+          legacy_customer_id: created.id,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          primary_email: data.email || null,
+          primary_phone: data.phone || null,
+          relationship_status: "new",
+          source: "ai",
+        });
         return { success: true, message: `Customer "${name}" created.` };
       }
 

@@ -1294,8 +1294,10 @@ export async function commitImportSession({
 
   type CreatedJobInfo = { id: string; customer_id: string | null; service_type: string | null; start_date: string | null };
   type CreatedSaleInfo = { id: string; customer_id: string | null; service_type: string | null; sale_date: string | null; amount: number | null };
+  type CreatedCustomerInfo = { id: string; name: string | null; email: string | null; phone: string | null };
   const createdJobs: CreatedJobInfo[] = [];
   const createdSales: CreatedSaleInfo[] = [];
+  const createdCustomers: CreatedCustomerInfo[] = [];
 
   const { data: syncRun, error: syncRunError } = await supabase
     .from("sync_runs")
@@ -1494,6 +1496,15 @@ export async function commitImportSession({
             amount: (row.normalized_data.amount as number) ?? null,
           });
         }
+
+        if (recordType === "relationships") {
+          createdCustomers.push({
+            id: internalId,
+            name: cleanImportValue(row.normalized_data.name) || null,
+            email: cleanImportValue(row.normalized_data.email) || null,
+            phone: cleanImportValue(row.normalized_data.phone) || null,
+          });
+        }
       }
 
       committedRowUpdates.push({ id: row.id, target_id: internalId });
@@ -1568,6 +1579,26 @@ export async function commitImportSession({
   }
 
   await Promise.all(flushPromises);
+
+  if (recordType === "relationships" && createdCustomers.length > 0) {
+    void Promise.allSettled(
+      createdCustomers.map(async (c) => {
+        const nameParts = (c.name || "").trim().split(/\s+/);
+        const firstName = nameParts[0] || null;
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
+        await supabase.from("master_customers").insert({
+          organization_id: companyId,
+          legacy_customer_id: c.id,
+          first_name: firstName,
+          last_name: lastName,
+          primary_email: c.email || null,
+          primary_phone: c.phone || null,
+          relationship_status: "new",
+          source: "import",
+        });
+      }),
+    );
+  }
 
   const { error: importHistoryError } = await supabase.from("imports").insert({
     company_id: companyId,
