@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Draft = {
   id: string;
@@ -84,8 +85,14 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function approveDraft(id: string) {
     startActioning(id);
     try {
-      await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? `Request failed: ${res.status}`);
+      }
       setDrafts((prev) => prev.filter((d) => d.id !== id));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to approve. Try again.");
     } finally {
       stopActioning(id);
     }
@@ -94,8 +101,11 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function dismissDraft(id: string) {
     setDismissingIds((prev) => new Set(prev).add(id));
     try {
-      await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setDrafts((prev) => prev.filter((d) => d.id !== id));
+    } catch {
+      toast.error("Failed to dismiss. Try again.");
     } finally {
       setDismissingIds((prev) => {
         const next = new Set(prev);
@@ -108,8 +118,11 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function dismissAlert(id: string) {
     setDismissingIds((prev) => new Set(prev).add(id));
     try {
-      await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setAlerts((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+      toast.error("Failed to dismiss. Try again.");
     } finally {
       setDismissingIds((prev) => {
         const next = new Set(prev);
