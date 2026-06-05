@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type CustomerRow = {
   id: string;
@@ -176,6 +177,20 @@ export function ContactsTableClient({
       </div>
 
       {/* Table */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="No contacts yet"
+          body="Add your first contact or import a list to get started."
+          action={
+            <Link
+              href="/imports"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              Import contacts
+            </Link>
+          }
+        />
+      ) : (
       <div className="overflow-hidden rounded-[var(--radius-ud-lg,10px)] border border-[rgba(0,0,0,0.06)] shadow-ud">
         <table className="w-full border-collapse bg-ud-surface">
           <thead>
@@ -191,13 +206,7 @@ export function ContactsTableClient({
             </tr>
           </thead>
           <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-[13px] text-ud-muted text-center">
-                  No contacts match your search.
-                </td>
-              </tr>
-            ) : (
+            {(
               filtered.map((contact) => {
                 const name = getDisplayName(contact);
                 const initials = getInitials(name);
@@ -271,6 +280,7 @@ export function ContactsTableClient({
           </tbody>
         </table>
       </div>
+      )}
     </div>
     </>
   );

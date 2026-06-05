@@ -174,7 +174,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
               >
                 Cancel
               </Link>
-              <SubmitButton>Save follow-up</SubmitButton>
+              <SubmitButton pendingLabel="Updating…">Save follow-up</SubmitButton>
             </div>
           </form>
         </SectionCard>

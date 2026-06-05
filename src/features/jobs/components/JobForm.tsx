@@ -225,7 +225,7 @@ export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
               >
                 Cancel
               </Link>
-              <SubmitButton>Save work</SubmitButton>
+              <SubmitButton pendingLabel="Updating…">Save work</SubmitButton>
             </div>
           </form>
         </SectionCard>
