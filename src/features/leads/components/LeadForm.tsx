@@ -182,7 +182,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
               >
                 Cancel
               </Link>
-              <SubmitButton>Save opportunity</SubmitButton>
+              <SubmitButton pendingLabel="Updating…">Save opportunity</SubmitButton>
             </div>
           </form>
         </SectionCard>

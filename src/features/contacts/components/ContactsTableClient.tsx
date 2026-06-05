@@ -3,14 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type CustomerRow = {
   id: string;
-  name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
-  email?: string | null;
-  phone?: string | null;
+  primary_email?: string | null;
   primary_phone?: string | null;
   relationship_status?: string | null;
   source?: string | null;
@@ -57,11 +56,7 @@ function formatRelativeTime(iso: string | undefined): string {
 }
 
 function getDisplayName(c: CustomerRow): string {
-  if (c.name) return c.name;
-  const first = c.first_name ?? "";
-  const last = c.last_name ?? "";
-  const full = `${first} ${last}`.trim();
-  return full || "Unnamed";
+  return [c.first_name, c.last_name].filter(Boolean).join(" ") || "Unnamed";
 }
 
 function getInitials(name: string): string {
@@ -98,8 +93,7 @@ export function ContactsTableClient({
     ? customers.filter(
         (c) =>
           getDisplayName(c).toLowerCase().includes(q) ||
-          (c.email ?? "").toLowerCase().includes(q) ||
-          (c.phone ?? "").toLowerCase().includes(q) ||
+          (c.primary_email ?? "").toLowerCase().includes(q) ||
           (c.primary_phone ?? "").toLowerCase().includes(q)
       )
     : customers;
@@ -111,7 +105,7 @@ export function ContactsTableClient({
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
         <Link
-          href="/customers/new"
+          href="/customers"
           className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
         >
           + Add
@@ -123,7 +117,7 @@ export function ContactsTableClient({
         ) : (
           filtered.map((c) => {
             const displayName = getDisplayName(c);
-            const phone = c.primary_phone ?? c.phone ?? null;
+            const phone = c.primary_phone ?? null;
             const status = c.relationship_status;
             return (
               <Link
@@ -136,7 +130,7 @@ export function ContactsTableClient({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-ud-ink truncate">{displayName}</p>
-                  <p className="text-[11px] text-ud-muted truncate">{c.email ?? phone ?? "No contact info"}</p>
+                  <p className="text-[11px] text-ud-muted truncate">{c.primary_email ?? phone ?? "No contact info"}</p>
                 </div>
                 {status && (
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] bg-ud-surface-sunk text-ud-muted shrink-0 capitalize">
@@ -183,6 +177,20 @@ export function ContactsTableClient({
       </div>
 
       {/* Table */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          title="No contacts yet"
+          body="Add your first contact or import a list to get started."
+          action={
+            <Link
+              href="/imports"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              Import contacts
+            </Link>
+          }
+        />
+      ) : (
       <div className="overflow-hidden rounded-[var(--radius-ud-lg,10px)] border border-[rgba(0,0,0,0.06)] shadow-ud">
         <table className="w-full border-collapse bg-ud-surface">
           <thead>
@@ -198,20 +206,14 @@ export function ContactsTableClient({
             </tr>
           </thead>
           <tbody className="[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-[rgba(0,0,0,0.012)]">
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-[13px] text-ud-muted text-center">
-                  No contacts match your search.
-                </td>
-              </tr>
-            ) : (
+            {(
               filtered.map((contact) => {
                 const name = getDisplayName(contact);
                 const initials = getInitials(name);
                 const col = avatarColor(name);
                 const contactTags = tagsMap[contact.id] ?? [];
                 const lastActivity = activityMap[contact.id];
-                const phone = contact.primary_phone ?? contact.phone;
+                const phone = contact.primary_phone ?? null;
 
                 return (
                   <tr key={contact.id}>
@@ -232,7 +234,7 @@ export function ContactsTableClient({
                       </div>
                     </td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
-                      {contact.email || phone || "—"}
+                      {contact.primary_email || phone || "—"}
                     </td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
                       <div className="flex items-center gap-1.5">
@@ -278,6 +280,7 @@ export function ContactsTableClient({
           </tbody>
         </table>
       </div>
+      )}
     </div>
     </>
   );

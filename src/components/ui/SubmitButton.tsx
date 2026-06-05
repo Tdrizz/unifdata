@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 import { haptic } from "@/lib/haptics";
 
-export function SubmitButton({ children }: { children: React.ReactNode }) {
+export function SubmitButton({ children, pendingLabel = "Saving…" }: { children: React.ReactNode; pendingLabel?: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -34,7 +34,7 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
           />
         </svg>
       )}
-      {pending ? "Saving…" : children}
+      {pending ? pendingLabel : children}
     </button>
   );
 }

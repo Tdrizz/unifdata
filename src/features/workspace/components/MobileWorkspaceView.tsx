@@ -140,7 +140,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   const dataIssueCount =
     customers.filter((c) => !c.phone || !c.email).length +
     customers.filter((c) => !c.address).length +
-    openLeads.filter((l) => !l.customer_id).length +
+    openLeads.filter((l) => !l.contact_id && !l.customer_id).length +
     openLeads.filter((l) => !l.source).length +
     openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
     jobs.filter((w) => w.job_value === null || w.job_value === undefined).length;
@@ -219,7 +219,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       <div className="overflow-x-auto no-scrollbar px-4 pb-5">
         <div className="flex gap-[8px]">
           <Link
-            href="/customers#customer-quick-add"
+            href="/contacts"
             className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
@@ -352,7 +352,9 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
             </p>
           ) : (
             visitsToShow.map((job) => {
-              const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+              const customer =
+                (job.contact_id ? customerById.get(job.contact_id) : null) ??
+                (job.customer_id ? customerById.get(job.customer_id) : null);
               const tone = getWorkTone(job.status);
               const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
                 tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral";

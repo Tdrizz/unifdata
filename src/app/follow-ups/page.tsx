@@ -12,9 +12,10 @@ export const dynamic = 'force-dynamic';
 export default async function FollowUpsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; due?: string; source?: string }>;
+  searchParams: Promise<{ status?: string; due?: string; source?: string; page?: string }>;
 }) {
   const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
@@ -24,7 +25,7 @@ export default async function FollowUpsPage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const data = await getFollowUpPageData(supabase, company.id);
+  const data = await getFollowUpPageData(supabase, company.id, page);
 
   return (
     <AppShell
@@ -38,6 +39,7 @@ export default async function FollowUpsPage({
         opportunities={data.opportunities}
         people={data.people}
         profile={profile}
+        count={data.count}
       />
 
       {/* Mobile view */}

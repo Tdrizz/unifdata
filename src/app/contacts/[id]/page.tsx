@@ -42,8 +42,8 @@ export default async function ContactDetailPage({
 
   if (!contact) notFound();
 
-  // Fetch recent activity + notes in parallel
-  const [activityResult, notesResult] = await Promise.all([
+  // Fetch activity, notes, and linked records in parallel
+  const [activityResult, notesResult, jobsResult, salesResult, followUpsResult] = await Promise.all([
     (supabase as any)
       .from("contact_activity")
       .select("id, event_type, event_label, event_detail, source, created_at")
@@ -58,10 +58,34 @@ export default async function ContactDetailPage({
       .eq("organization_id", company.id)
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false }),
+    supabase
+      .from("jobs")
+      .select("id, service_type, status, job_value, start_date, completed_date, created_at")
+      .eq("company_id", company.id)
+      .eq("contact_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("sales")
+      .select("id, service_type, amount, payment_status, sale_date, created_at")
+      .eq("company_id", company.id)
+      .eq("contact_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("follow_ups")
+      .select("id, message, due_date, status, created_at")
+      .eq("company_id", company.id)
+      .eq("contact_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
   const activities = activityResult.data ?? [];
   const notes = notesResult.data ?? [];
+  const jobs = jobsResult.data ?? [];
+  const sales = salesResult.data ?? [];
+  const followUps = followUpsResult.data ?? [];
 
   const displayName =
     contact.name ?? contact.first_name
@@ -152,6 +176,9 @@ export default async function ContactDetailPage({
             <ContactTabs
               activities={activities}
               notes={notes}
+              jobs={jobs}
+              sales={sales}
+              followUps={followUps}
               contactId={id}
               orgId={company.id}
             />
@@ -178,6 +205,9 @@ export default async function ContactDetailPage({
         <ContactTabs
           activities={activities}
           notes={notes}
+          jobs={jobs}
+          sales={sales}
+          followUps={followUps}
           contactId={id}
           orgId={company.id}
         />

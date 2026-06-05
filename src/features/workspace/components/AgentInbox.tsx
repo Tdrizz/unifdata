@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 type Draft = {
   id: string;
@@ -84,8 +85,14 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function approveDraft(id: string) {
     startActioning(id);
     try {
-      await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? `Request failed: ${res.status}`);
+      }
       setDrafts((prev) => prev.filter((d) => d.id !== id));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to approve. Try again.");
     } finally {
       stopActioning(id);
     }
@@ -94,8 +101,11 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function dismissDraft(id: string) {
     setDismissingIds((prev) => new Set(prev).add(id));
     try {
-      await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setDrafts((prev) => prev.filter((d) => d.id !== id));
+    } catch {
+      toast.error("Failed to dismiss. Try again.");
     } finally {
       setDismissingIds((prev) => {
         const next = new Set(prev);
@@ -108,8 +118,11 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   async function dismissAlert(id: string) {
     setDismissingIds((prev) => new Set(prev).add(id));
     try {
-      await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+      const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       setAlerts((prev) => prev.filter((a) => a.id !== id));
+    } catch {
+      toast.error("Failed to dismiss. Try again.");
     } finally {
       setDismissingIds((prev) => {
         const next = new Set(prev);
@@ -122,8 +135,8 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
   return (
     <div className="mb-5 rounded-[var(--radius-ud-lg)] border border-[rgba(0,0,0,0.06)] bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-3.5 border-b border-[rgba(0,0,0,0.05)] flex items-center gap-2">
-        <span className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-[#8B80E0]">AI Inbox</span>
-        <span className="inline-flex items-center justify-center rounded-full bg-[#8B80E0] text-white text-[10px] font-bold w-[18px] h-[18px]">{total}</span>
+        <span className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-ud-accent">AI Inbox</span>
+        <span className="inline-flex items-center justify-center rounded-full bg-ud-accent text-white text-[10px] font-bold w-[18px] h-[18px]">{total}</span>
         <p className="text-[12.5px] text-ud-muted ml-1">
           AI flagged {total === 1 ? "1 thing" : `${total} things`} for your review
         </p>
@@ -144,7 +157,7 @@ export function AgentInbox({ drafts: initialDrafts, alerts: initialAlerts, isPro
             : "";
           return (
             <div key={draft.id} className={`px-5 py-4 flex gap-4 items-start ${escalBorder}`}>
-              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[#8B80E0]/10 flex items-center justify-center text-[12px]">
+              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-ud-accent/10 flex items-center justify-center text-[12px]">
                 {draft.draft_type === "outreach_email" ? "✉" : "💬"}
               </div>
               <div className="flex-1 min-w-0">

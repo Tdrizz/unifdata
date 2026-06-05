@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Card } from "@/components/ui/Card";
 
 function MobileDesktopNotice({ title, description }: { title: string; description: string }) {
   return (
@@ -310,6 +311,10 @@ export function AutomationsClient({ automations: initialAutomations }: { automat
     <>
     <MobileDesktopNotice title="Automations" description="Manage your automation rules on desktop for the full experience." />
     <div className="hidden md:block px-7 pb-10 pt-7">
+      <Card padding={16} radius="md" className="mb-6 border-ud-accent/20 bg-ud-accent/5">
+        <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ud-accent mb-1">Early Access</p>
+        <p className="text-[13px] text-ud-muted">Automations are in early access. Rules you create now will run once this feature is fully enabled.</p>
+      </Card>
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-0.5">

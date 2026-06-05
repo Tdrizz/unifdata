@@ -7,6 +7,7 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  try {
   const { id } = await params;
 
   const supabase = await createClient();
@@ -43,4 +44,10 @@ export async function POST(
   });
 
   return NextResponse.json({ ok: true });
+  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (err instanceof Error && (err as any).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    console.error("[proposals-reject]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

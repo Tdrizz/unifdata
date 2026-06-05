@@ -137,7 +137,7 @@ export function SaleForm({ sale, contacts }: Props) {
             <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
               Cancel
             </Link>
-            <SubmitButton>Save revenue</SubmitButton>
+            <SubmitButton pendingLabel="Updating…">Save revenue</SubmitButton>
           </div>
         </form>
       </SectionCard>

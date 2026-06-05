@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -92,10 +92,37 @@ function NewRecordForm({
   const [name, setName] = useState("");
   const [stageId, setStageId] = useState(stages[0]?.id ?? "");
   const [value, setValue] = useState("");
-  const [_contactSearch, _setContactSearch] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
   const [contactId, setContactId] = useState("");
+  const [selectedContactName, setSelectedContactName] = useState("");
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; email: string | null; phone: string | null }>>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!contactSearch || contactId) return;
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/contacts/search?q=${encodeURIComponent(contactSearch)}`);
+      if (res.ok) {
+        const data = await res.json() as Array<{ id: string; name: string; email: string | null; phone: string | null }>;
+        setSearchResults(data);
+        setSearchOpen(data.length > 0);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [contactSearch, contactId]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,8 +152,6 @@ function NewRecordForm({
       onClose();
     });
   }
-
-  void _setContactSearch;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -165,18 +190,48 @@ function NewRecordForm({
                 ))}
             </select>
           </div>
-          <div>
+          <div ref={searchRef} className="relative">
             <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
-              Contact ID
+              Contact
             </label>
-            <input
-              type="text"
-              value={contactId}
-              onChange={(e) => setContactId(e.target.value)}
-              placeholder="Paste contact UUID"
-              className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent font-mono text-[11px]"
-            />
-            <p className="text-[11px] text-ud-faint mt-1">Find contact IDs on the Contacts page.</p>
+            {selectedContactName ? (
+              <div className="flex items-center gap-2 px-3 py-2 border border-ud-accent rounded-[8px] bg-ud-accent/5">
+                <span className="flex-1 text-[13px] text-ud-ink">{selectedContactName}</span>
+                <button
+                  type="button"
+                  onClick={() => { setContactId(""); setSelectedContactName(""); setContactSearch(""); }}
+                  className="text-ud-muted hover:text-ud-ink text-[11px]"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={contactSearch}
+                onChange={(e) => { setContactSearch(e.target.value); setContactId(""); }}
+                placeholder="Search by name, email, or phone…"
+                className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
+                style={{ fontFamily: "var(--font)" }}
+              />
+            )}
+            {searchOpen && searchResults.length > 0 && (
+              <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-ud-surface border border-ud rounded-[8px] shadow-lg overflow-hidden">
+                {searchResults.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className="w-full text-left px-3 py-2 hover:bg-ud-surface-sunk transition-colors"
+                    onClick={() => { setContactId(r.id); setSelectedContactName(r.name); setContactSearch(""); setSearchOpen(false); }}
+                  >
+                    <p className="text-[13px] font-medium text-ud-ink">{r.name}</p>
+                    {(r.email || r.phone) && (
+                      <p className="text-[11px] text-ud-muted">{r.email ?? r.phone}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">

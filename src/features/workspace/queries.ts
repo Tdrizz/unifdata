@@ -3,8 +3,8 @@ import type { Database } from "@/types/db";
 import type { LeadRow, JobRow, SaleRow, FollowUpRow } from "./types";
 
 type WorkspaceCustomer = { id: string; name: string; phone: string | null; email: string | null; address: string | null; customer_type: string | null; created_at: string };
-type WorkspaceLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
-type WorkspaceJob = Pick<JobRow, "id" | "customer_id" | "lead_id" | "service_type" | "status" | "job_value" | "start_date" | "completed_date" | "paid_status" | "created_at">;
+type WorkspaceLead = Pick<LeadRow, "id" | "customer_id" | "contact_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
+type WorkspaceJob = Pick<JobRow, "id" | "customer_id" | "lead_id" | "service_type" | "status" | "job_value" | "start_date" | "completed_date" | "paid_status" | "created_at"> & { contact_id: string | null };
 type WorkspaceSale = Pick<SaleRow, "id" | "amount" | "payment_status" | "sale_date" | "service_type" | "source" | "created_at">;
 type WorkspaceFollowUp = Pick<FollowUpRow, "id" | "customer_id" | "message" | "due_date" | "status" | "created_at">;
 
@@ -42,16 +42,17 @@ export async function getWorkspaceData(
     supabase
       .from("leads")
       .select(
-        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, created_at",
+        "id, customer_id, contact_id, service_requested, status, estimated_value, source, next_follow_up_date, created_at",
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
 
-    supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
       .from("jobs")
       .select(
-        "id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
+        "id, customer_id, contact_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })

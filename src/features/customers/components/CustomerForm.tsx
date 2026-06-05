@@ -233,7 +233,7 @@ export function CustomerForm({
               >
                 Cancel
               </Link>
-              <SubmitButton>Save person</SubmitButton>
+              <SubmitButton pendingLabel="Updating…">Save person</SubmitButton>
             </div>
           </div>
         </form>

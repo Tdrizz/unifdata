@@ -20,6 +20,7 @@ const SYNC_RECORD_TYPES = [
 ] as const;
 
 export async function GET(request: Request) {
+  try {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
@@ -156,4 +157,10 @@ export async function GET(request: Request) {
   response.cookies.delete("frontierops_quickbooks_oauth_state");
 
   return response;
+  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (err instanceof Error && (err as any).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    console.error("[quickbooks-callback]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

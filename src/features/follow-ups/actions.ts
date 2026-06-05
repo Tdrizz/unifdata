@@ -52,6 +52,7 @@ export async function createFollowUpAction(
 
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   redirect("/follow-ups?toast=Follow-up+created");
 }
 
@@ -87,6 +88,7 @@ export async function updateFollowUpAction(
   revalidatePath(`/follow-ups/${id}`);
   revalidatePath(`/follow-ups/${id}/edit`);
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   redirect("/follow-ups?toast=Follow-up+updated");
 }
 
@@ -105,6 +107,7 @@ export async function markFollowUpCompleteAction(id: string) {
   if (error) return;
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
 }
 
 export async function deleteFollowUpAction(id: string) {
@@ -122,5 +125,6 @@ export async function deleteFollowUpAction(id: string) {
   if (error) redirect(`/follow-ups/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   redirect("/follow-ups?toast=Follow-up+deleted");
 }

@@ -35,7 +35,7 @@ export default async function ContactsPage({
     tagsWithCountsResult,
     smartGroupsResult,
   ] = await Promise.all([
-    (supabase as any)
+    supabase
       .from("master_customers")
       .select("id, relationship_status, source")
       .eq("organization_id", company.id),
@@ -81,16 +81,16 @@ export default async function ContactsPage({
     smartGroupsResult.data ?? [];
 
   // Query master_customers with active filter
-  let query = (supabase as any)
+  let query = supabase
     .from("master_customers")
-    .select("id, name, first_name, last_name, email, phone, primary_phone, relationship_status, source, created_at")
+    .select("id, first_name, last_name, primary_email, primary_phone, relationship_status, source, created_at")
     .eq("organization_id", company.id)
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (params.q) {
     query = query.or(
-      `name.ilike.%${params.q}%,email.ilike.%${params.q}%,phone.ilike.%${params.q}%,primary_phone.ilike.%${params.q}%`
+      `first_name.ilike.%${params.q}%,last_name.ilike.%${params.q}%,primary_email.ilike.%${params.q}%,primary_phone.ilike.%${params.q}%`
     );
   }
 
@@ -127,7 +127,8 @@ export default async function ContactsPage({
       .from("contact_activity")
       .select("contact_id, created_at")
       .in("contact_id", contactIds)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(contactIds.length * 5);
 
     if (activities) {
       for (const a of activities) {

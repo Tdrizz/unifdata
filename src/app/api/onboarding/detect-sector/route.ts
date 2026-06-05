@@ -25,16 +25,23 @@ const KEYWORDS: Record<string, string[]> = {
 };
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name } = (await req.json()) as { name: string };
-  const lower = name.toLowerCase();
-  for (const [sector, keywords] of Object.entries(KEYWORDS)) {
-    if (keywords.some((kw) => lower.includes(kw))) {
-      return NextResponse.json({ sector });
+    const { name } = (await req.json()) as { name: string };
+    const lower = name.toLowerCase();
+    for (const [sector, keywords] of Object.entries(KEYWORDS)) {
+      if (keywords.some((kw) => lower.includes(kw))) {
+        return NextResponse.json({ sector });
+      }
     }
+    return NextResponse.json({ sector: null });
+  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (err instanceof Error && (err as any).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    console.error("[detect-sector]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-  return NextResponse.json({ sector: null });
 }

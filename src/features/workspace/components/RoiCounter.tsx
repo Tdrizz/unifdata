@@ -14,7 +14,7 @@ export function RoiCounter({ amountRecovered }: Props) {
 
   return (
     <div className="rounded-[var(--radius-ud-lg)] border border-[rgba(74,63,168,0.18)] bg-ud-accent-tint px-5 py-4 mb-5">
-      <p className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-[#8B80E0] mb-1">AI Impact</p>
+      <p className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-ud-accent mb-1">AI Impact</p>
       <p className="text-[15px] font-semibold text-ud-ink">
         AI recovered <span className="text-ud-accent">{formatted}</span> this month
       </p>

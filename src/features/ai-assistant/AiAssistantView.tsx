@@ -180,7 +180,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
           <div className="flex flex-col gap-3.5 p-[18px_20px] min-h-[300px]">
             {messages.length === 0 && !loading && (
               <div className="flex flex-col gap-1">
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-[#8B80E0]">AI Assistant</p>
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.10em] text-ud-accent">AI Assistant</p>
                 <div className="rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed bg-ud-surface-sunk text-ud-text">
                   Hello! I can help you analyze your clients, pipeline, revenue, and follow-ups. What would you like to know?
                 </div>
@@ -189,12 +189,12 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
             {messages.map((msg, i) => (
               <div key={i} className="flex flex-col gap-1">
                 {msg.role === "action" ? (
-                  <div className="rounded-[10px] px-[14px] py-2.5 text-[12.5px] font-medium bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.22)] text-[#16a34a] whitespace-pre-line">
+                  <div className="rounded-[10px] px-[14px] py-2.5 text-[12.5px] font-medium bg-ud-success-bg border border-ud-success/20 text-ud-success whitespace-pre-line">
                     {msg.text}
                   </div>
                 ) : (
                   <>
-                    <p className={`text-[10.5px] font-bold uppercase tracking-[0.10em] ${msg.role === "user" ? "text-ud-accent" : "text-[#8B80E0]"}`}>
+                    <p className={`text-[10.5px] font-bold uppercase tracking-[0.10em] ${msg.role === "user" ? "text-ud-accent" : "text-ud-accent"}`}>
                       {msg.role === "user" ? "You" : "AI Assistant"}
                     </p>
                     <div className={`rounded-[10px] px-[14px] py-3 text-[13.5px] leading-relaxed ${msg.role === "user" ? "bg-ud-accent-tint border border-[rgba(74,63,168,0.18)] text-ud-text" : "bg-ud-surface-sunk text-ud-text"}`}>

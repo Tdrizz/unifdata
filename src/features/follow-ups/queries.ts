@@ -5,22 +5,24 @@ import type { ContactForSelect } from "@/lib/crm/types";
 export async function getFollowUpPageData(
   supabase: SupabaseClient,
   companyId: string,
+  page = 1,
 ) {
+  const from = (page - 1) * 50;
+  const to = page * 50 - 1;
   const [followUpsResult, opportunitiesResult, peopleResult] = await Promise.all([
     supabase
       .from("follow_ups")
-      .select("id, customer_id, contact_id, message, due_date, status, created_at")
+      .select("id, customer_id, contact_id, message, due_date, status, created_at", { count: "exact" })
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
-      .limit(250),
+      .range(from, to),
     supabase
       .from("leads")
-      .select("id, customer_id, service_requested, status, next_follow_up_date, source, estimated_value, created_at")
+      .select("id, customer_id, service_requested, status, next_follow_up_date, source, estimated_value, created_at", { count: "exact" })
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
-      .limit(250),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
+      .range(from, to),
+    supabase
       .from("master_customers")
       .select("id, first_name, last_name, primary_email, primary_phone")
       .eq("organization_id", companyId)
@@ -40,6 +42,7 @@ export async function getFollowUpPageData(
     followUps: (followUpsResult.data ?? []) as FollowUpRow[],
     opportunities: (opportunitiesResult.data ?? []) as LeadRow[],
     people,
+    count: followUpsResult.count ?? 0,
   };
 }
 
@@ -62,8 +65,7 @@ export async function getCustomersForSelect(
   supabase: SupabaseClient,
   companyId: string,
 ): Promise<ContactForSelect[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("master_customers")
     .select("id, first_name, last_name, primary_email, primary_phone")
     .eq("organization_id", companyId)

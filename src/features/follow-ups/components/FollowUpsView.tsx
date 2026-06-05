@@ -12,12 +12,14 @@ import { FollowUpCreateForm } from "./FollowUpCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { Card } from "@/components/ui/Card";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Props = {
   followUps: FollowUpRow[];
   opportunities: LeadRow[];
   people: ContactForSelect[];
   profile?: IndustryProfile;
+  count?: number;
 };
 
 type FilterType = "all" | "overdue" | "today" | "upcoming";
@@ -46,9 +48,9 @@ function isUpcoming(date: string | null, status: string | null) {
 }
 
 function getDotClass(date: string | null, status: string | null) {
-  if (isOverdue(date, status)) return "w-2 h-2 rounded-full bg-[#e05050] shrink-0";
-  if (isDueToday(date, status)) return "w-2 h-2 rounded-full bg-[#d97706] shrink-0";
-  return "w-2 h-2 rounded-full bg-[#c5bfb5] shrink-0";
+  if (isOverdue(date, status)) return "w-2 h-2 rounded-full bg-ud-danger shrink-0";
+  if (isDueToday(date, status)) return "w-2 h-2 rounded-full bg-ud-warning shrink-0";
+  return "w-2 h-2 rounded-full bg-ud-surface-sunk shrink-0";
 }
 
 function getDueClass(date: string | null, status: string | null) {
@@ -85,7 +87,7 @@ type QueueEntry = {
 const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
-export function FollowUpsView({ followUps, opportunities, people, profile }: Props) {
+export function FollowUpsView({ followUps, opportunities, people, profile, count = 0 }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
   const [, startTransition] = useTransition();
 
@@ -216,6 +218,10 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
           )}
         </div>
       </Card>
+
+      <div className="mt-4">
+        <Pagination count={count} pageSize={50} />
+      </div>
 
       {/* Quick add */}
       <div id="followup-quick-add" style={{ marginTop: "20px" }}>

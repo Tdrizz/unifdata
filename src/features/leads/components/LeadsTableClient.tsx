@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/Button";
 import { formatDateOnly, isTodayOrPast } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
@@ -93,15 +94,16 @@ export function LeadsTableClient({ leads, customers, profile, sectionTitle }: Pr
               </option>
             ))}
           </select>
-          <button
+          <Button
+            variant="accent"
+            size="sm"
             onClick={handleApply}
             disabled={isPending || !bulkStatus}
-            className="rounded-lg bg-[#4A3FA8] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#3D3494] disabled:opacity-50"
           >
             {isPending
               ? "Applying…"
               : `Apply to selected (${selected.size})`}
-          </button>
+          </Button>
         </div>
       )}
 

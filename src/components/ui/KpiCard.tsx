@@ -15,8 +15,8 @@ type Props = {
 };
 
 const deltaToneClasses: Record<DeltaTone, string> = {
-  up:   "bg-[#eef5ec] text-ud-success",
-  down: "bg-[#fbeded] text-ud-danger",
+  up:   "bg-ud-success-bg text-ud-success",
+  down: "bg-ud-danger-bg text-ud-danger",
   flat: "bg-ud-surface-sunk text-ud-muted",
 };
 

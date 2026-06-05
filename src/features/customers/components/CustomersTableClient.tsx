@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { CustomerRow } from "../types";
@@ -10,6 +11,8 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { CustomerCreateForm } from "./CustomerCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -21,6 +24,8 @@ type Props = {
   leads?: LeadRow[];
   sales?: SaleRow[];
   profile?: IndustryProfile;
+  count: number;
+  page: number;
 };
 
 function computeLifetimeRevenue(customer: CustomerRow, sales: SaleRow[]): number {
@@ -45,16 +50,16 @@ function getLastJobDate(customer: CustomerRow, jobs: JobRow[]): string | null {
   });
 }
 
-function getCustomerStatus(customer: CustomerRow, leads: LeadRow[], jobs: JobRow[]): { label: string; badgeClass: string } {
+function getCustomerStatus(customer: CustomerRow, leads: LeadRow[], jobs: JobRow[]): { label: string; tone: "neutral" | "success" | "warning" } {
   const hasOpenLead = leads.some(
     (l) => l.customer_id === customer.id && l.status !== "closed" && l.status !== "won" && l.status !== "lost",
   );
-  if (hasOpenLead) return { label: "Quote pending", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-warning-bg text-ud-warning" };
+  if (hasOpenLead) return { label: "Quote pending", tone: "warning" };
 
   const recentJob = jobs.find((j) => j.customer_id === customer.id && j.status === "completed");
-  if (recentJob) return { label: "Active", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success" };
+  if (recentJob) return { label: "Active", tone: "success" };
 
-  return { label: "Dormant", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted" };
+  return { label: "Dormant", tone: "neutral" };
 }
 
 function getInitials(name: string | null): string {
@@ -80,22 +85,37 @@ function avatarColor(name: string | null) {
 
 type Filter = "all" | "active" | "quote" | "dormant";
 
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
-const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
-
 export function CustomersTableClient({
   customers,
   jobs = [],
   leads = [],
   sales = [],
   profile,
+  count,
+  page,
 }: Props) {
   const p = profile ?? getIndustryProfile();
   const custPlural = p.labels.customerPlural;
   const custSingular = p.labels.customerSingular;
   const jobPlural = p.labels.jobPlural;
   const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleSearch(value: string) {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set("q", value);
+      else params.delete("q");
+      params.delete("page");
+      router.replace(`?${params.toString()}`);
+    }, 300);
+  }
 
   const stats = customers.map((c) => ({
     id: c.id,
@@ -119,15 +139,10 @@ export function CustomersTableClient({
     return true;
   });
 
-  const q = search.toLowerCase().trim();
-  const filtered = q
-    ? byFilter.filter(
-        (c) =>
-          (c.name ?? "").toLowerCase().includes(q) ||
-          (c.email ?? "").toLowerCase().includes(q) ||
-          (c.phone ?? "").toLowerCase().includes(q),
-      )
-    : byFilter;
+  const filtered = byFilter;
+
+  const pageStart = (page - 1) * 50 + 1;
+  const pageEnd = Math.min(page * 50, count);
 
   return (
     <div className="hidden md:block px-7 pb-10 pt-7">
@@ -138,8 +153,8 @@ export function CustomersTableClient({
         className="mb-6"
         actions={
           <>
-            <Link href="/imports" className={btnGhost}>Import</Link>
-            <a href="#customer-quick-add" className={btnPrimary}>
+            <Link href="/imports" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">Import</Link>
+            <a href="#customer-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-accent text-white border border-ud-accent hover:opacity-90 px-3 py-2 text-[13px] rounded-[9px]">
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -157,8 +172,8 @@ export function CustomersTableClient({
         <input
           type="text"
           placeholder="Search by name, email, or phone…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={inputValue}
+          onChange={(e) => handleSearch(e.target.value)}
           className="flex-1 border-0 outline-none bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint"
           style={{ fontFamily: "var(--font)" }}
         />
@@ -191,7 +206,7 @@ export function CustomersTableClient({
               </tr>
             ) : (
               filtered.map((customer) => {
-                const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", badgeClass: "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted" } };
+                const s = statsById[customer.id] ?? { lifetime: 0, jobCount: 0, lastJob: null, status: { label: "Dormant", tone: "neutral" as const } };
                 const initials = getInitials(customer.name);
                 const col = avatarColor(customer.name);
                 return (
@@ -206,7 +221,7 @@ export function CustomersTableClient({
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{s.jobCount}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold [font-variant-numeric:tabular-nums]">{s.lifetime > 0 ? formatCurrency(s.lifetime) : "—"}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">{s.lastJob || "—"}</td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><span className={s.status.badgeClass}>{s.status.label}</span></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><StatusBadge tone={s.status.tone}>{s.status.label}</StatusBadge></td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><Link href={`/customers/${customer.id}`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link></td>
                   </tr>
                 );
@@ -215,6 +230,39 @@ export function CustomersTableClient({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {count > 50 && (
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", String(page - 1));
+              router.push(`?${params.toString()}`);
+            }}
+          >
+            Previous
+          </Button>
+          <p className="text-[13px] text-ud-muted">
+            Showing {pageStart}–{pageEnd} of {count} {custPlural.toLowerCase()}
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page * 50 >= count}
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", String(page + 1));
+              router.push(`?${params.toString()}`);
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Quick add */}
       {profile && (

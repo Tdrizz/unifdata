@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -389,7 +388,7 @@ export async function createTagAction(orgId: string, name: string, color: string
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("tags")
     .insert({ organization_id: orgId, name: name.trim(), color });
 
@@ -402,7 +401,7 @@ export async function renameTagAction(tagId: string, name: string): Promise<void
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
 
-  const { data: tag } = await (supabase as any)
+  const { data: tag } = await supabase
     .from("tags")
     .select("organization_id")
     .eq("id", tagId)
@@ -410,7 +409,7 @@ export async function renameTagAction(tagId: string, name: string): Promise<void
 
   if (!tag || tag.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("tags")
     .update({ name: name.trim() })
     .eq("id", tagId);
@@ -424,7 +423,7 @@ export async function deleteTagAction(tagId: string): Promise<void> {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
 
-  const { data: tag } = await (supabase as any)
+  const { data: tag } = await supabase
     .from("tags")
     .select("organization_id")
     .eq("id", tagId)
@@ -432,7 +431,7 @@ export async function deleteTagAction(tagId: string): Promise<void> {
 
   if (!tag || tag.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("tags")
     .delete()
     .eq("id", tagId);
@@ -453,7 +452,7 @@ export async function createCustomFieldAction(
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
 
-  const { data: existing } = await (supabase as any)
+  const { data: existing } = await supabase
     .from("custom_field_definitions")
     .select("position")
     .eq("organization_id", orgId)
@@ -464,7 +463,7 @@ export async function createCustomFieldAction(
   const nextPosition = existing && existing.length > 0 ? (existing[0].position as number) + 1 : 0;
   const fieldKey = label.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("custom_field_definitions")
     .insert({
       organization_id: orgId,
@@ -492,7 +491,7 @@ export async function updateCustomFieldAction(
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
 
-  const { data: field } = await (supabase as any)
+  const { data: field } = await supabase
     .from("custom_field_definitions")
     .select("organization_id")
     .eq("id", fieldId)
@@ -500,7 +499,7 @@ export async function updateCustomFieldAction(
 
   if (!field || field.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("custom_field_definitions")
     .update({ label: label.trim(), field_type: fieldType, options: options ?? null, required })
     .eq("id", fieldId);
@@ -514,7 +513,7 @@ export async function deleteCustomFieldAction(fieldId: string): Promise<void> {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
 
-  const { data: field } = await (supabase as any)
+  const { data: field } = await supabase
     .from("custom_field_definitions")
     .select("organization_id")
     .eq("id", fieldId)
@@ -522,7 +521,7 @@ export async function deleteCustomFieldAction(fieldId: string): Promise<void> {
 
   if (!field || field.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("custom_field_definitions")
     .delete()
     .eq("id", fieldId);
@@ -541,7 +540,7 @@ export async function reorderCustomFieldAction(
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) throw new Error("Unauthorized");
 
-  const { data: fields } = await (supabase as any)
+  const { data: fields } = await supabase
     .from("custom_field_definitions")
     .select("id, position")
     .eq("organization_id", orgId)
@@ -560,8 +559,8 @@ export async function reorderCustomFieldAction(
   const swap = fields[swapIdx] as { id: string; position: number };
 
   await Promise.all([
-    (supabase as any).from("custom_field_definitions").update({ position: swap.position }).eq("id", current.id),
-    (supabase as any).from("custom_field_definitions").update({ position: current.position }).eq("id", swap.id),
+    supabase.from("custom_field_definitions").update({ position: swap.position }).eq("id", current.id),
+    supabase.from("custom_field_definitions").update({ position: current.position }).eq("id", swap.id),
   ]);
 
   revalidatePath("/settings");
@@ -572,7 +571,7 @@ export async function createBoardAction(orgId: string, name: string): Promise<{ 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) return { error: "Unauthorized" };
 
-  const { data: board, error } = await (supabase as any)
+  const { data: board, error } = await supabase
     .from("process_boards")
     .insert({ organization_id: orgId, name: name.trim() })
     .select("id")
@@ -588,9 +587,9 @@ export async function createBoardAction(orgId: string, name: string): Promise<{ 
     { name: "Cancelled", color: "#6B7280", stage_type: "cancelled", position: 4 },
   ];
 
-  await (supabase as any)
+  await supabase
     .from("board_stages")
-    .insert(defaultStages.map((s) => ({ ...s, board_id: (board as { id: string }).id })));
+    .insert(defaultStages.map((s) => ({ ...s, board_id: (board as { id: string }).id, organization_id: orgId })));
 
   revalidatePath("/settings");
   return { id: (board as { id: string }).id };
@@ -601,7 +600,7 @@ export async function renameBoardAction(boardId: string, name: string): Promise<
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");
 
-  const { data: board } = await (supabase as any)
+  const { data: board } = await supabase
     .from("process_boards")
     .select("organization_id")
     .eq("id", boardId)
@@ -609,7 +608,7 @@ export async function renameBoardAction(boardId: string, name: string): Promise<
 
   if (!board || board.organization_id !== currentCompany.company.id) throw new Error("Unauthorized");
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("process_boards")
     .update({ name: name.trim() })
     .eq("id", boardId);
@@ -623,7 +622,7 @@ export async function deleteBoardAction(boardId: string): Promise<{ error?: stri
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return { error: "Unauthorized" };
 
-  const { data: board } = await (supabase as any)
+  const { data: board } = await supabase
     .from("process_boards")
     .select("organization_id")
     .eq("id", boardId)
@@ -631,7 +630,7 @@ export async function deleteBoardAction(boardId: string): Promise<{ error?: stri
 
   if (!board || board.organization_id !== currentCompany.company.id) return { error: "Unauthorized" };
 
-  const { count } = await (supabase as any)
+  const { count } = await supabase
     .from("process_records")
     .select("id", { count: "exact", head: true })
     .eq("board_id", boardId)
@@ -639,7 +638,7 @@ export async function deleteBoardAction(boardId: string): Promise<{ error?: stri
 
   if (count && count > 0) return { error: "Move or close active records first" };
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("process_boards")
     .delete()
     .eq("id", boardId);
@@ -660,7 +659,7 @@ export async function createStageAction(
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) return { error: "Unauthorized" };
 
-  const { data: existingStages } = await (supabase as any)
+  const { data: existingStages } = await supabase
     .from("board_stages")
     .select("id, stage_type, position")
     .eq("board_id", boardId)
@@ -677,9 +676,9 @@ export async function createStageAction(
 
   const nextPosition = stages.length > 0 ? stages[0].position + 1 : 0;
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("board_stages")
-    .insert({ board_id: boardId, name: name.trim(), color, stage_type: stageType, position: nextPosition });
+    .insert({ board_id: boardId, organization_id: orgId, name: name.trim(), color, stage_type: stageType, position: nextPosition });
 
   if (error) return { error: error.message };
   revalidatePath("/settings");
@@ -688,7 +687,7 @@ export async function createStageAction(
 
 export async function renameStageAction(stageId: string, name: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("board_stages")
     .update({ name: name.trim() })
     .eq("id", stageId);
@@ -698,7 +697,7 @@ export async function renameStageAction(stageId: string, name: string): Promise<
 
 export async function updateStageColorAction(stageId: string, color: string): Promise<void> {
   const supabase = await createClient();
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("board_stages")
     .update({ color })
     .eq("id", stageId);
@@ -709,7 +708,7 @@ export async function updateStageColorAction(stageId: string, color: string): Pr
 export async function updateStageTypeAction(stageId: string, stageType: string): Promise<{ error?: string }> {
   const supabase = await createClient();
 
-  const { data: stage } = await (supabase as any)
+  const { data: stage } = await supabase
     .from("board_stages")
     .select("board_id")
     .eq("id", stageId)
@@ -717,7 +716,7 @@ export async function updateStageTypeAction(stageId: string, stageType: string):
 
   if (!stage) return { error: "Stage not found" };
 
-  const { data: siblings } = await (supabase as any)
+  const { data: siblings } = await supabase
     .from("board_stages")
     .select("id, stage_type")
     .eq("board_id", stage.board_id)
@@ -732,7 +731,7 @@ export async function updateStageTypeAction(stageId: string, stageType: string):
     return { error: "Only 1 cancelled stage allowed per board" };
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("board_stages")
     .update({ stage_type: stageType })
     .eq("id", stageId);
@@ -745,7 +744,7 @@ export async function updateStageTypeAction(stageId: string, stageType: string):
 export async function reorderStageAction(stageId: string, boardId: string, direction: "up" | "down"): Promise<void> {
   const supabase = await createClient();
 
-  const { data: stages } = await (supabase as any)
+  const { data: stages } = await supabase
     .from("board_stages")
     .select("id, position")
     .eq("board_id", boardId)
@@ -761,8 +760,8 @@ export async function reorderStageAction(stageId: string, boardId: string, direc
   if (swapIdx < 0 || swapIdx >= stagesTyped.length) return;
 
   await Promise.all([
-    (supabase as any).from("board_stages").update({ position: stagesTyped[swapIdx].position }).eq("id", stagesTyped[idx].id),
-    (supabase as any).from("board_stages").update({ position: stagesTyped[idx].position }).eq("id", stagesTyped[swapIdx].id),
+    supabase.from("board_stages").update({ position: stagesTyped[swapIdx].position }).eq("id", stagesTyped[idx].id),
+    supabase.from("board_stages").update({ position: stagesTyped[idx].position }).eq("id", stagesTyped[swapIdx].id),
   ]);
 
   revalidatePath("/settings");
@@ -771,7 +770,7 @@ export async function reorderStageAction(stageId: string, boardId: string, direc
 export async function deleteStageAction(stageId: string, reassignToStageId?: string): Promise<{ error?: string }> {
   const supabase = await createClient();
 
-  const { data: stage } = await (supabase as any)
+  const { data: stage } = await supabase
     .from("board_stages")
     .select("board_id")
     .eq("id", stageId)
@@ -779,7 +778,7 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
 
   if (!stage) return { error: "Stage not found" };
 
-  const { count } = await (supabase as any)
+  const { count } = await supabase
     .from("process_records")
     .select("id", { count: "exact", head: true })
     .eq("stage_id", stageId)
@@ -788,7 +787,7 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
   if (count && count > 0) {
     if (!reassignToStageId) return { error: "Active records exist — choose a stage to reassign them to" };
 
-    const { error: reassignError } = await (supabase as any)
+    const { error: reassignError } = await supabase
       .from("process_records")
       .update({ stage_id: reassignToStageId })
       .eq("stage_id", stageId)
@@ -797,7 +796,7 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
     if (reassignError) return { error: reassignError.message };
   }
 
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("board_stages")
     .delete()
     .eq("id", stageId);
@@ -814,10 +813,10 @@ export async function updateLabelOverrideAction(orgId: string, key: string, valu
     .select("profile_overrides")
     .eq("id", orgId)
     .single();
-  const current = ((co as any)?.profile_overrides as Record<string, string>) ?? {};
+  const current = (co?.profile_overrides as Record<string, string> | null) ?? {};
   await supabase
     .from("companies")
-    .update({ profile_overrides: { ...current, [key]: value } } as any)
+    .update({ profile_overrides: { ...current, [key]: value } })
     .eq("id", orgId);
   revalidatePath("/settings");
 }
@@ -826,7 +825,7 @@ export async function resetLabelOverridesAction(orgId: string): Promise<void> {
   const supabase = await createClient();
   await supabase
     .from("companies")
-    .update({ profile_overrides: {} } as any)
+    .update({ profile_overrides: {} })
     .eq("id", orgId);
   revalidatePath("/settings");
 }
