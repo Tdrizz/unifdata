@@ -297,7 +297,9 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               <p className="px-5 py-5 text-sm text-ud-muted">No active {jobPlural.toLowerCase()} right now.</p>
             ) : (
               activeWork.slice(0, 5).map((job, idx) => {
-                const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+                const customer =
+                  (job.contact_id ? customerById.get(job.contact_id) : null) ??
+                  (job.customer_id ? customerById.get(job.customer_id) : null);
                 const tone = getWorkTone(job.status);
                 return (
                   <Link key={job.id} href={`/jobs/${job.id}/edit`}>

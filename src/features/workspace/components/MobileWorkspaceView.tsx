@@ -352,7 +352,9 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
             </p>
           ) : (
             visitsToShow.map((job) => {
-              const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+              const customer =
+                (job.contact_id ? customerById.get(job.contact_id) : null) ??
+                (job.customer_id ? customerById.get(job.customer_id) : null);
               const tone = getWorkTone(job.status);
               const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
                 tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral";
