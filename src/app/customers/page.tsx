@@ -37,15 +37,18 @@ export default async function CustomersPage({
     supabase
       .from("jobs")
       .select("id, customer_id, status, completed_date, job_value, lead_id, company_id, created_at, notes, paid_status, service_type, start_date, updated_at")
-      .eq("company_id", company.id),
+      .eq("company_id", company.id)
+      .limit(500),
     supabase
       .from("leads")
       .select("id, customer_id, status, estimated_value, company_id, created_at, next_follow_up_date, notes, service_requested, source, updated_at")
-      .eq("company_id", company.id),
+      .eq("company_id", company.id)
+      .limit(500),
     supabase
       .from("sales")
       .select("id, customer_id, amount, sale_date, company_id, created_at, job_id, payment_status, service_type, source")
-      .eq("company_id", company.id),
+      .eq("company_id", company.id)
+      .limit(500),
   ]);
 
   const { customers } = customersResult;

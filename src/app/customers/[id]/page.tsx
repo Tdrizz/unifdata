@@ -46,22 +46,25 @@ export default async function CustomerDetailPage({
       .maybeSingle(),
     supabase
       .from("leads")
-      .select("*")
+      .select("id, customer_id, status, estimated_value, service_requested, source, next_follow_up_date, created_at")
       .eq("customer_id", id)
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(100),
     supabase
       .from("jobs")
-      .select("*")
+      .select("id, customer_id, status, job_value, service_type, start_date, completed_date, paid_status, created_at")
       .eq("customer_id", id)
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(100),
     supabase
       .from("sales")
-      .select("*")
+      .select("id, customer_id, amount, payment_status, sale_date, service_type, created_at")
       .eq("customer_id", id)
       .eq("company_id", company.id)
-      .order("created_at", { ascending: false }),
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
   if (customerError || !customer) redirect("/customers");
