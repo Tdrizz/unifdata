@@ -25,6 +25,7 @@ function rowsToCsv(rows: Record<string, unknown>[]): string {
 }
 
 export async function GET(request: Request) {
+  try {
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -44,7 +45,8 @@ export async function GET(request: Request) {
   const { data, error } = await supabase
     .from(table as never)
     .select("*")
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .limit(5000);
 
   if (error) {
     return NextResponse.json({ error: "Export failed" }, { status: 500 });
@@ -60,4 +62,10 @@ export async function GET(request: Request) {
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
+  } catch (err) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (err instanceof Error && (err as any).digest?.startsWith("NEXT_REDIRECT")) throw err;
+    console.error("[export-csv]", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
