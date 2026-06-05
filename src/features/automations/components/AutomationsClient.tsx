@@ -2,6 +2,20 @@
 
 import { useState, useTransition } from "react";
 
+function MobileDesktopNotice({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="md:hidden flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="w-12 h-12 rounded-[14px] bg-ud-surface border border-ud flex items-center justify-center mb-4">
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-muted">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <p className="text-[15px] font-semibold text-ud-ink mb-1">{title}</p>
+      <p className="text-[13px] text-ud-muted max-w-[240px]">{description}</p>
+    </div>
+  );
+}
+
 type Automation = {
   id: string;
   name: string;
@@ -293,6 +307,8 @@ export function AutomationsClient({ automations: initialAutomations }: { automat
   }
 
   return (
+    <>
+    <MobileDesktopNotice title="Automations" description="Manage your automation rules on desktop for the full experience." />
     <div className="hidden md:block px-7 pb-10 pt-7">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -382,5 +398,6 @@ export function AutomationsClient({ automations: initialAutomations }: { automat
         />
       )}
     </div>
+    </>
   );
 }

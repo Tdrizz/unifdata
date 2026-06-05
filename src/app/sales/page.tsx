@@ -28,7 +28,7 @@ export default async function RevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const [{ sales, count }, customers] = await Promise.all([
+  const [{ sales, count }, contacts] = await Promise.all([
     getSalesPageData(supabase, company.id, { q: params.q, page }),
     getCustomersForSaleSelect(supabase, company.id),
   ]);
@@ -39,7 +39,7 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <MobileSalesView sales={sales} profile={profile} customers={customers} />
+      <MobileSalesView sales={sales} profile={profile} contacts={contacts} />
       <SalesList
         sales={sales}
         count={count}
@@ -48,7 +48,7 @@ export default async function RevenuePage({
         profile={profile}
         selectedStatus={selectedStatus}
         selectedSource={selectedSource}
-        customers={customers}
+        contacts={contacts}
       />
     </AppShell>
   );

@@ -34,7 +34,7 @@ export default async function WorkPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [{ jobs, count }, customers, leads] = await Promise.all([
+  const [{ jobs, count }, contacts, leads] = await Promise.all([
     getJobsPageData(supabase, company.id, { q: params.q, page }),
     getCustomersForJobSelect(supabase, company.id),
     getLeadsForJobSelect(supabase, company.id),
@@ -49,7 +49,7 @@ export default async function WorkPage({
       <JobsList
         jobs={jobs}
         count={count}
-        customers={customers}
+        contacts={contacts}
         leads={leads}
         profile={profile}
         selectedStage={selectedStage}
@@ -58,7 +58,7 @@ export default async function WorkPage({
         <MobileJobsList
           jobs={jobs}
           count={count}
-          customers={customers}
+          contacts={contacts}
           leads={leads}
           profile={profile}
           selectedStage={selectedStage}

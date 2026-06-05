@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { JobListRow, CustomerRow, LeadRow } from "../types";
+import type { JobListRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { useProfile } from "@/lib/profile-context";
 import { JobCreateForm } from "./JobCreateForm";
@@ -10,7 +11,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 type Props = {
   jobs: JobListRow[];
   count: number;
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  contacts: ContactForSelect[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile?: IndustryProfile;
   selectedStage: string;
@@ -54,12 +55,12 @@ function statusBadgeClass(status: string | null) {
 
 const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
-export function JobsList({ jobs, count, customers, leads, profile, selectedStage }: Props) {
+export function JobsList({ jobs, count, contacts, leads, profile, selectedStage }: Props) {
   const p = useProfile();
   const jobPlural = profile?.labels.jobPlural ?? p.labels.jobPlural;
   const jobSingular = profile?.labels.jobSingular ?? p.labels.jobSingular;
   const customerSingular = profile?.labels.customerSingular ?? p.labels.customerSingular;
-  const customerById = new Map(customers.map((c) => [c.id, c]));
+  const contactById = new Map(contacts.map((c) => [c.id, c]));
   const today = new Date();
   const weekDays = getWeekDays(today);
 
@@ -146,7 +147,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
               </tr>
             ) : (
               sorted.map((job) => {
-                const customer = job.customer_id ? customerById.get(job.customer_id) : null;
+                const customer = (job.contact_id ?? job.customer_id) ? contactById.get(job.contact_id ?? job.customer_id ?? "") : null;
                 const { label: dateLabel, isToday } = formatJobDate(job.start_date, today);
                 return (
                   <tr key={job.id}>
@@ -167,7 +168,7 @@ export function JobsList({ jobs, count, customers, leads, profile, selectedStage
 
       {/* Quick add */}
       <div id="job-quick-add" style={{ marginTop: "20px" }}>
-        <JobCreateForm customers={customers} leads={leads} />
+        <JobCreateForm contacts={contacts} leads={leads} />
       </div>
     </div>
   );

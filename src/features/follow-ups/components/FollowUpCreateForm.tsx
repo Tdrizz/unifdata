@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
-import type { CustomerRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import { createFollowUpAction, type ActionState } from "../actions";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
-  people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  people: ContactForSelect[];
 };
 
 export function FollowUpCreateForm({ people }: Props) {
@@ -28,7 +28,7 @@ export function FollowUpCreateForm({ people }: Props) {
 
         <label className="block">
           <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-          <select name="customer_id" className={f}>
+          <select name="contact_id" className={f}>
             <option value="">No linked person yet</option>
             {people.map((person) => (
               <option key={person.id} value={person.id}>

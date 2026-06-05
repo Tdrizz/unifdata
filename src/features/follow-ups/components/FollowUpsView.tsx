@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { parseDateOnly, getTodayDateOnly, formatDateOnly } from "@/lib/date-format";
 import { isClosedOpportunity } from "@/lib/status";
-import type { FollowUpRow, LeadRow, CustomerRow } from "../types";
+import type { FollowUpRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { markFollowUpCompleteAction } from "../actions";
 import { FollowUpCreateForm } from "./FollowUpCreateForm";
@@ -15,7 +16,7 @@ import { Card } from "@/components/ui/Card";
 type Props = {
   followUps: FollowUpRow[];
   opportunities: LeadRow[];
-  people: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  people: ContactForSelect[];
   profile?: IndustryProfile;
 };
 
@@ -93,7 +94,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
   const manualEntries: QueueEntry[] = followUps
     .filter((f) => !isComplete(f.status))
     .map((f) => {
-      const person = f.customer_id ? personById.get(f.customer_id) : null;
+      const person = (f.contact_id ?? f.customer_id) ? personById.get(f.contact_id ?? f.customer_id ?? "") : null;
       return {
         id: `manual-${f.id}`,
         title: f.message || `Untitled ${profile?.labels.followUpSingular?.toLowerCase() ?? "follow-up"}`,
@@ -108,7 +109,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile }: Pro
   const opportunityEntries: QueueEntry[] = opportunities
     .filter((o) => !isClosedOpportunity(o.status) && Boolean(o.next_follow_up_date))
     .map((o) => {
-      const person = o.customer_id ? personById.get(o.customer_id) : null;
+      const person = o.customer_id ? personById.get(o.customer_id) : null; // leads still use customer_id from legacy customers table
       return {
         id: `opportunity-${o.id}`,
         title: o.service_requested ? `Follow up: ${o.service_requested}` : "Follow up on opportunity",

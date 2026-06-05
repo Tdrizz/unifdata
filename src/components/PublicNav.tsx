@@ -19,18 +19,19 @@ export function PublicNav({ active }: { active?: ActivePage }) {
         </Link>
 
         <div className="flex items-center gap-1 text-sm">
-          <Link href="/preview" className={linkClass("preview")}>
+          {/* Hide secondary links on mobile — only show CTA */}
+          <Link href="/preview" className={`hidden sm:inline-flex ${linkClass("preview")}`}>
             Preview
           </Link>
-          <Link href="/pricing" className={linkClass("pricing")}>
+          <Link href="/pricing" className={`hidden sm:inline-flex ${linkClass("pricing")}`}>
             Pricing
           </Link>
-          <Link href="/docs" className={linkClass("docs")}>
+          <Link href="/docs" className={`hidden sm:inline-flex ${linkClass("docs")}`}>
             Docs
           </Link>
           <Link
             href="/sign-in"
-            className={`rounded-full px-4 py-2 font-medium transition-colors ${
+            className={`hidden sm:inline-flex rounded-full px-4 py-2 font-medium transition-colors ${
               active === "login"
                 ? "text-white"
                 : "text-slate-400 hover:bg-white/8 hover:text-white"
@@ -40,13 +41,14 @@ export function PublicNav({ active }: { active?: ActivePage }) {
           </Link>
           <Link
             href="/waitlist"
-            className={`ml-1 rounded-full px-4 py-2 font-semibold transition-colors ${
+            className={`rounded-full px-4 py-2 font-semibold transition-colors ${
               active === "waitlist"
                 ? "bg-white/20 text-white"
                 : "bg-white text-slate-950 hover:bg-slate-100"
             }`}
           >
-            Request access
+            <span className="hidden sm:inline">Request access</span>
+            <span className="sm:hidden">Get access</span>
           </Link>
         </div>
       </div>

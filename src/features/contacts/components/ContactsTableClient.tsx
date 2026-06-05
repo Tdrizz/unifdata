@@ -105,6 +105,50 @@ export function ContactsTableClient({
     : customers;
 
   return (
+    <>
+    {/* Mobile contacts list */}
+    <div className="md:hidden px-4 pt-5 pb-10">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
+        <Link
+          href="/customers/new"
+          className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
+        >
+          + Add
+        </Link>
+      </div>
+      <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
+        {filtered.length === 0 ? (
+          <p className="text-[13px] text-ud-muted text-center py-8">No contacts yet.</p>
+        ) : (
+          filtered.map((c) => {
+            const displayName = getDisplayName(c);
+            const phone = c.primary_phone ?? c.phone ?? null;
+            const status = c.relationship_status;
+            return (
+              <Link
+                key={c.id}
+                href={`/contacts/${c.id}`}
+                className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 hover:bg-[rgba(0,0,0,0.015)]"
+              >
+                <div className="w-8 h-8 rounded-full bg-ud-accent/10 flex items-center justify-center text-[13px] font-bold text-ud-accent shrink-0">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-ud-ink truncate">{displayName}</p>
+                  <p className="text-[11px] text-ud-muted truncate">{c.email ?? phone ?? "No contact info"}</p>
+                </div>
+                {status && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px] bg-ud-surface-sunk text-ud-muted shrink-0 capitalize">
+                    {status}
+                  </span>
+                )}
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </div>
     <div className="hidden md:block px-7 pb-10 pt-7">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -235,5 +279,6 @@ export function ContactsTableClient({
         </table>
       </div>
     </div>
+    </>
   );
 }

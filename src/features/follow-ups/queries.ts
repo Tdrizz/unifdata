@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FollowUpRow, LeadRow, CustomerRow } from "./types";
+import type { FollowUpRow, LeadRow } from "./types";
+import type { ContactForSelect } from "@/lib/crm/types";
 
 export async function getFollowUpPageData(
   supabase: SupabaseClient,
@@ -8,7 +9,7 @@ export async function getFollowUpPageData(
   const [followUpsResult, opportunitiesResult, peopleResult] = await Promise.all([
     supabase
       .from("follow_ups")
-      .select("id, customer_id, message, due_date, status, created_at")
+      .select("id, customer_id, contact_id, message, due_date, status, created_at")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(250),
@@ -18,18 +19,27 @@ export async function getFollowUpPageData(
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(250),
-    supabase
-      .from("customers")
-      .select("id, name, email, phone")
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: false })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("master_customers")
+      .select("id, first_name, last_name, primary_email, primary_phone")
+      .eq("organization_id", companyId)
+      .order("first_name", { ascending: true })
       .limit(250),
   ]);
+
+  const rawPeople = (peopleResult.data ?? []) as Array<{ id: string; first_name: string; last_name: string | null; primary_email: string | null; primary_phone: string | null }>;
+  const people: ContactForSelect[] = rawPeople.map((r) => ({
+    id: r.id,
+    name: [r.first_name, r.last_name].filter(Boolean).join(" "),
+    email: r.primary_email,
+    phone: r.primary_phone,
+  }));
 
   return {
     followUps: (followUpsResult.data ?? []) as FollowUpRow[],
     opportunities: (opportunitiesResult.data ?? []) as LeadRow[],
-    people: (peopleResult.data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[],
+    people,
   };
 }
 
@@ -51,12 +61,19 @@ export async function getFollowUpById(
 export async function getCustomersForSelect(
   supabase: SupabaseClient,
   companyId: string,
-): Promise<Pick<CustomerRow, "id" | "name" | "email" | "phone">[]> {
-  const { data } = await supabase
-    .from("customers")
-    .select("id, name, email, phone")
-    .eq("company_id", companyId)
-    .order("name", { ascending: true })
+): Promise<ContactForSelect[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from("master_customers")
+    .select("id, first_name, last_name, primary_email, primary_phone")
+    .eq("organization_id", companyId)
+    .order("first_name", { ascending: true })
     .limit(500);
-  return (data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+
+  return ((data ?? []) as Array<{ id: string; first_name: string; last_name: string | null; primary_email: string | null; primary_phone: string | null }>).map((r) => ({
+    id: r.id,
+    name: [r.first_name, r.last_name].filter(Boolean).join(" "),
+    email: r.primary_email,
+    phone: r.primary_phone,
+  }));
 }

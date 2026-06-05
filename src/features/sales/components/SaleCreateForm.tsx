@@ -4,15 +4,17 @@ import { useActionState } from "react";
 import { createSaleAction, type ActionState } from "../actions";
 import { getTodayString } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import type { ContactForSelect } from "@/lib/crm/types";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
   profile: IndustryProfile;
+  contacts?: ContactForSelect[];
 };
 
-export function SaleCreateForm({ profile }: Props) {
+export function SaleCreateForm({ profile, contacts = [] }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createSaleAction,
     null,
@@ -88,6 +90,18 @@ export function SaleCreateForm({ profile }: Props) {
             />
           </label>
         </div>
+
+        {contacts.length > 0 && (
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
+            <select name="contact_id" className={f}>
+              <option value="">No person linked</option>
+              {contacts.map((c) => (
+                <option key={c.id} value={c.id}>{c.name || c.email || "Unnamed person"}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <div className="flex justify-end pt-1">
           <SubmitButton>Create {profile.labels.saleSingular.toLowerCase()}</SubmitButton>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
+import { logActivity } from "@/lib/crm/activity";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -22,15 +23,33 @@ export async function createFollowUpAction(
   const dueDate = getFormString(formData, "due_date");
   if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
-  const { error } = await supabase.from("follow_ups").insert({
+  const contactId = getFormString(formData, "contact_id") || null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: inserted, error } = await (supabase as any).from("follow_ups").insert({
     company_id: company.id,
-    customer_id: getFormString(formData, "customer_id") || null,
+    contact_id: contactId,
     message,
     due_date: dueDate,
     status: getFormString(formData, "status") || "Open",
-  });
+  }).select("id").single();
 
   if (error) return { error: error.message };
+
+  if (contactId && inserted) {
+    try {
+      await logActivity(supabase, company.id, contactId, {
+        type: "task_created",
+        label: `Follow-up created: ${message.slice(0, 80)}`,
+        referenceId: inserted.id,
+        referenceType: "follow_up",
+        source: "user",
+      });
+    } catch {
+      // Non-fatal
+    }
+  }
+
   revalidatePath("/follow-ups");
   revalidatePath("/workspace");
   redirect("/follow-ups?toast=Follow-up+created");
@@ -51,10 +70,11 @@ export async function updateFollowUpAction(
   const dueDate = getFormString(formData, "due_date");
   if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("follow_ups")
     .update({
-      customer_id: getFormString(formData, "customer_id") || null,
+      contact_id: getFormString(formData, "contact_id") || null,
       message,
       due_date: dueDate,
       status: getFormString(formData, "status") || "Open",

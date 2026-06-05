@@ -137,12 +137,12 @@ export async function AppShell({
         {!hideMobileHeader && (
           <header
             className="sticky top-0 z-30 flex items-center justify-between px-4 border-b border-ud/60 bg-ud-page/95 backdrop-blur-[20px] saturate-[160%]"
-            style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)", paddingBottom: "12px" }}
+            style={{ paddingTop: "calc(env(safe-area-inset-top) + 10px)", paddingBottom: "10px" }}
           >
-            <Link href="/workspace">
-              <ProductMark companyName={companyName} />
+            <Link href="/workspace" className="flex-1 min-w-0">
+              <ProductMark companyName={companyName} compact={false} />
             </Link>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 shrink-0">
               {companyId && (
                 <NotificationBell
                   companyId={companyId}

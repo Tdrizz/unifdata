@@ -13,12 +13,13 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { formatCurrency, getDateInputValue } from "@/lib/utils";
 import { isCompleteWork, isUnpaid, getWorkTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { JobListRow, CustomerRow, LeadRow } from "../types";
+import type { JobListRow, LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import { updateJobAction, deleteJobAction, type ActionState } from "../actions";
 
 type Props = {
   job: JobListRow;
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  contacts: ContactForSelect[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile: IndustryProfile;
   errorParam?: string;
@@ -29,7 +30,7 @@ function isCancelled(status: string | null) {
 }
 
 function getWorkNextStep(work: JobListRow) {
-  if (!work.customer_id)
+  if (!work.contact_id && !work.customer_id)
     return "Link this work to the person or business it belongs to.";
   if (!work.lead_id)
     return "Link this work to the opportunity it came from if one exists.";
@@ -53,7 +54,7 @@ function getWorkIssues(work: JobListRow) {
     detail: string;
   }[] = [];
 
-  if (!work.customer_id)
+  if (!work.contact_id && !work.customer_id)
     issues.push({
       label: "Link person",
       tone: "warning",
@@ -98,12 +99,12 @@ function getWorkIssues(work: JobListRow) {
   return issues;
 }
 
-export function JobForm({ job, customers, leads, profile: _profile }: Props) {
+export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
   const boundUpdateAction = updateJobAction.bind(null, job.id);
   const deleteAction = deleteJobAction.bind(null, job.id);
 
-  const linkedCustomer = job.customer_id
-    ? customers.find((c) => c.id === job.customer_id)
+  const linkedCustomer = (job.contact_id || job.customer_id)
+    ? contacts.find((c) => c.id === (job.contact_id ?? job.customer_id))
     : null;
   const linkedLead = job.lead_id
     ? leads.find((l) => l.id === job.lead_id)
@@ -131,11 +132,11 @@ export function JobForm({ job, customers, leads, profile: _profile }: Props) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
-                <Select name="customer_id" defaultValue={job.customer_id || ""}>
+                <Select name="contact_id" defaultValue={job.contact_id ?? job.customer_id ?? ""}>
                   <option value="">No linked person yet</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name || customer.email || customer.phone || "Unnamed person"}
+                  {contacts.map((contact) => (
+                    <option key={contact.id} value={contact.id}>
+                      {contact.name || contact.email || contact.phone || "Unnamed person"}
                     </option>
                   ))}
                 </Select>

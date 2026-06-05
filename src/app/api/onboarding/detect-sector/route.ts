@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 const KEYWORDS: Record<string, string[]> = {
   dental: ["dental", "dentist", "orthodont", "smile"],
@@ -24,6 +25,10 @@ const KEYWORDS: Record<string, string[]> = {
 };
 
 export async function POST(req: Request) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { name } = (await req.json()) as { name: string };
   const lower = name.toLowerCase();
   for (const [sector, keywords] of Object.entries(KEYWORDS)) {
