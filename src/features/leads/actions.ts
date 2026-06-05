@@ -33,9 +33,21 @@ export async function createLeadAction(
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
+  let contactId: string | null = null;
+  if (customerId) {
+    const { data: mc } = await supabase
+      .from("master_customers")
+      .select("id")
+      .eq("organization_id", company.id)
+      .eq("legacy_customer_id", customerId)
+      .maybeSingle();
+    contactId = mc?.id ?? null;
+  }
+
   const { error } = await supabase.from("leads").insert({
     company_id: company.id,
     customer_id: customerId || null,
+    contact_id: contactId,
     service_requested: serviceRequested,
     status,
     estimated_value: estimatedValue,
@@ -78,10 +90,22 @@ export async function updateLeadAction(
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
+  let contactId: string | null = null;
+  if (customerId) {
+    const { data: mc } = await supabase
+      .from("master_customers")
+      .select("id")
+      .eq("organization_id", company.id)
+      .eq("legacy_customer_id", customerId)
+      .maybeSingle();
+    contactId = mc?.id ?? null;
+  }
+
   const { error } = await supabase
     .from("leads")
     .update({
       customer_id: customerId || null,
+      contact_id: contactId,
       service_requested: serviceRequested,
       status,
       estimated_value: estimatedValue,

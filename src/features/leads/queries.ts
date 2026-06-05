@@ -15,7 +15,7 @@ export async function getLeadsPageData(
   let query = supabase
     .from("leads")
     .select(
-      "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
+      "id, customer_id, contact_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
       { count: "exact" },
     )
     .eq("company_id", companyId)
@@ -40,7 +40,7 @@ export async function getLeadById(
   const { data, error } = await supabase
     .from("leads")
     .select(
-      "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
+      "id, customer_id, contact_id, service_requested, status, estimated_value, source, next_follow_up_date, notes, created_at",
     )
     .eq("id", id)
     .eq("company_id", companyId)

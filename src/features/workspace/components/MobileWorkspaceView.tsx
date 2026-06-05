@@ -140,7 +140,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   const dataIssueCount =
     customers.filter((c) => !c.phone || !c.email).length +
     customers.filter((c) => !c.address).length +
-    openLeads.filter((l) => !l.customer_id).length +
+    openLeads.filter((l) => !l.contact_id && !l.customer_id).length +
     openLeads.filter((l) => !l.source).length +
     openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
     jobs.filter((w) => w.job_value === null || w.job_value === undefined).length;

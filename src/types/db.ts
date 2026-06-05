@@ -1689,6 +1689,7 @@ export type Database = {
       leads: {
         Row: {
           company_id: string
+          contact_id: string | null
           created_at: string
           customer_id: string | null
           estimated_value: number | null
@@ -1702,6 +1703,7 @@ export type Database = {
         }
         Insert: {
           company_id: string
+          contact_id?: string | null
           created_at?: string
           customer_id?: string | null
           estimated_value?: number | null
@@ -1715,6 +1717,7 @@ export type Database = {
         }
         Update: {
           company_id?: string
+          contact_id?: string | null
           created_at?: string
           customer_id?: string | null
           estimated_value?: number | null
@@ -1732,6 +1735,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "master_customers"
             referencedColumns: ["id"]
           },
           {
@@ -2630,4 +2640,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

@@ -17,6 +17,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@e965/xlsx": "^0.20.3",
     "@google/genai": "^2.5.0",
+    "@sentry/nextjs": "^10.56.0",
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.5.0",
     "@supabase/ssr": "^0.10.2",
