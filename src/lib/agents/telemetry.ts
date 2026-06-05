@@ -80,10 +80,10 @@ export async function compileTelemetry(
       .not("status", "in", "(completed,cancelled)")
       .lt("updated_at", tenDaysAgo),
 
-    // 4. New contacts in last 7 days with no follow-up
+    // 4. New contacts in last 7 days with no follow-up (fetch id + legacy_customer_id for cross-table lookup)
     (supabase as any)
       .from("master_customers")
-      .select("id")
+      .select("id, legacy_customer_id")
       .eq("organization_id", orgId)
       .gte("created_at", sevenDaysAgo),
 
@@ -157,17 +157,36 @@ export async function compileTelemetry(
       ? Math.round(((revenueThisWeek - revenueFourWeekAvg) / revenueFourWeekAvg) * 100)
       : 0;
 
-  // Check new contacts for missing follow-ups
-  const newCustomerIds = (newCustomersResult.data || []).map((c: { id: string }) => c.id);
+  // Check new contacts for missing follow-ups (check both contact_id and legacy customer_id)
+  const newContacts = (newCustomersResult.data || []) as Array<{ id: string; legacy_customer_id: string | null }>;
   let newCustomersNoFollowUp = 0;
-  if (newCustomerIds.length > 0) {
-    const { data: followedUp } = await (supabase as any)
-      .from("follow_ups")
-      .select("contact_id")
-      .eq("company_id", orgId)
-      .in("contact_id", newCustomerIds);
-    const followedUpIds = new Set((followedUp || []).map((f: { contact_id: string }) => f.contact_id));
-    newCustomersNoFollowUp = newCustomerIds.filter((id: string) => !followedUpIds.has(id)).length;
+  if (newContacts.length > 0) {
+    const masterIds = newContacts.map((c) => c.id);
+    const legacyIds = newContacts.map((c) => c.legacy_customer_id).filter(Boolean) as string[];
+
+    const [byContactId, byCustomerId] = await Promise.all([
+      (supabase as any)
+        .from("follow_ups")
+        .select("contact_id")
+        .eq("company_id", orgId)
+        .in("contact_id", masterIds),
+      legacyIds.length
+        ? (supabase as any)
+            .from("follow_ups")
+            .select("customer_id")
+            .eq("company_id", orgId)
+            .in("customer_id", legacyIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const followedUpMasterIds = new Set((byContactId.data || []).map((f: { contact_id: string }) => f.contact_id));
+    const followedUpLegacyIds = new Set((byCustomerId.data || []).map((f: { customer_id: string }) => f.customer_id));
+
+    newCustomersNoFollowUp = newContacts.filter((c) => {
+      if (followedUpMasterIds.has(c.id)) return false;
+      if (c.legacy_customer_id && followedUpLegacyIds.has(c.legacy_customer_id)) return false;
+      return true;
+    }).length;
   }
 
   const unpaidSales = unpaidResult.data || [];

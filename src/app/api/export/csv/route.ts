@@ -41,10 +41,14 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from(table as never)
     .select("*")
     .eq("company_id", companyId);
+
+  if (error) {
+    return NextResponse.json({ error: "Export failed" }, { status: 500 });
+  }
 
   const csv = rowsToCsv((data ?? []) as Record<string, unknown>[]);
   const date = new Date().toISOString().split("T")[0];
