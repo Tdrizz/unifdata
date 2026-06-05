@@ -8,7 +8,7 @@ Live at [unifdata.com](https://unifdata.com).
 
 ## Tech Stack
 
-- Next.js 16 (App Router)
+- Next.js 15 (App Router)
 - TypeScript
 - Tailwind CSS v4
 - Clerk (auth + invite-only waitlist)
@@ -17,6 +17,7 @@ Live at [unifdata.com](https://unifdata.com).
 - OpenRouter (AI routing — Claude 3.5 Haiku for chat, Claude 3.5 Sonnet for outreach, GPT-4o-mini for revenue/alerts, Gemini Flash for data quality, Hermes-3-70B for orchestration)
 - BullMQ + Upstash Redis (background job queue)
 - Twilio (outbound SMS)
+- Sentry (error monitoring)
 - Mailgun (outbound email)
 - Vercel (hosting + cron jobs)
 
@@ -61,6 +62,10 @@ Live at [unifdata.com](https://unifdata.com).
 /imports/sessions/[id] Import session review
 /ai-assistant          AI Advisor chat (persistent history, tool calling)
 /data-hub              Record quality, health scoring, and deduplication
+/contacts              Contact records (master_customers — unified view)
+/communications        SMS thread inbox
+/automations           Automation rule builder (early access)
+/process               Custom process board (drag-and-drop kanban)
 /settings              Workspace and integration settings (autopilot toggle)
 ```
 
@@ -95,6 +100,9 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 - **Imports** — CSV and Google Sheets import with staged review (validate → resolve duplicates → commit)
 - **Integrations** — Jobber, QuickBooks, HubSpot, Square
 - **Data Hub** — Record quality, health scoring, and automatic background deduplication
+- **Contacts** — Unified contact view built on master_customers. Synced from all write paths (manual entry, onboarding wizard, CSV import, AI assistant, integrations). Includes activity timeline, notes, linked jobs/sales/follow-ups, and tag/segment filtering.
+- **Communications** — SMS thread inbox. Inbound messages routed via Twilio webhook to matched contacts. Outbound replies sent via Twilio.
+- **Process Board** — Custom drag-and-drop kanban board for tracking any business process. Configurable stages, record values, and contact linking. Boards are created and managed in Settings.
 
 ---
 
@@ -140,6 +148,10 @@ TWILIO_PHONE_NUMBER=
 MAILGUN_API_KEY=
 MAILGUN_DOMAIN=
 CRON_SECRET=
+NEXT_PUBLIC_SENTRY_DSN=
+SENTRY_ORG=
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=
 ```
 
 See `.env.example` for optional integration variables (Google Sheets, QuickBooks, Square, HubSpot, Jobber, Stripe Connect).
@@ -196,3 +208,4 @@ Telemetry signals checked each night:
 - Medical sector gate: `isAiAllowed()` blocks all AI features for `business_sector = "medical"` (no BAA)
 - Cron endpoints require `Authorization: Bearer <CRON_SECRET>` — Vercel injects this automatically on scheduled invocations
 - Google Sheets integration is read-only
+- Error monitoring: Sentry captures runtime exceptions with PII scrubbed before transmission (request bodies, query strings, auth headers, and user identity are stripped from all events)
