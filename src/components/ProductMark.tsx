@@ -2,18 +2,20 @@ export function ProductMark({
   companyName,
   compact = false,
   inverse = false,
+  iconOnly = false,
 }: {
   companyName?: string;
   compact?: boolean;
   inverse?: boolean;
+  iconOnly?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2.5">
       <div
         className={
           inverse
-            ? "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1D2D3E] shadow-sm"
-            : "relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-[#1D2D3E] shadow-sm"
+            ? "relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#1D2D3E] shadow-sm shrink-0"
+            : "relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-[#1D2D3E] shadow-sm shrink-0"
         }
       >
         <svg viewBox="0 0 512 512" className="h-10 w-10" aria-hidden="true">
@@ -45,28 +47,20 @@ export function ProductMark({
         </svg>
       </div>
 
-      {!compact && (
+      {!compact && !iconOnly && (
         <div className="min-w-0">
-          <p
-            className={
-              inverse
-                ? "truncate text-sm font-semibold tracking-tight text-white"
-                : "truncate text-sm font-semibold tracking-tight text-ud-ink"
-            }
-          >
-            <span>UNIF</span>
-            <span className={inverse ? "text-[#6B5FCC]" : "text-[#6B5FCC]"}>DATA</span>
-          </p>
-
-          {companyName && (
-            <p
-              className={
-                inverse
-                  ? "truncate text-xs font-medium text-white/60"
-                  : "truncate text-xs font-medium text-ud-muted"
-              }
-            >
-              {companyName}
+          {companyName ? (
+            <>
+              <p className={inverse ? "truncate text-sm font-semibold text-white leading-tight" : "truncate text-sm font-semibold text-ud-ink leading-tight"}>
+                {companyName}
+              </p>
+              <p className={inverse ? "truncate text-[11px] font-medium text-white/50" : "truncate text-[11px] font-medium text-ud-faint"}>
+                <span>UNIF</span><span className="text-[#6B5FCC]">DATA</span>
+              </p>
+            </>
+          ) : (
+            <p className={inverse ? "truncate text-sm font-semibold tracking-tight text-white" : "truncate text-sm font-semibold tracking-tight text-ud-ink"}>
+              <span>UNIF</span><span className="text-[#6B5FCC]">DATA</span>
             </p>
           )}
         </div>
