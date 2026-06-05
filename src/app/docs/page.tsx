@@ -71,6 +71,34 @@ const pages = [
       "Stores all relationship records — customers, clients, patients, accounts, or companies depending on the business sector.",
   },
   {
+    name: "Contacts",
+    path: "/contacts",
+    tag: "Records",
+    description:
+      "Unified contact view built on master customer records. Synced from every write path — manual entry, onboarding, CSV import, AI assistant, and integrations. Shows activity timeline, notes, linked jobs, sales, and follow-ups. Supports tag filtering and segment groups.",
+  },
+  {
+    name: "Communications",
+    path: "/communications",
+    tag: "Tools",
+    description:
+      "SMS thread inbox. Inbound messages are routed via Twilio to matched contacts automatically. Replies are sent directly from the thread. Best managed on desktop.",
+  },
+  {
+    name: "Process Board",
+    path: "/process",
+    tag: "Tools",
+    description:
+      "Custom drag-and-drop kanban board for tracking any internal business process. Stages, record values, and contact linking are fully configurable. Boards are created and managed in Settings.",
+  },
+  {
+    name: "Automations",
+    path: "/automations",
+    tag: "Tools",
+    description:
+      "Rule builder for contact-based automation triggers. Create rules now — automatic triggering is rolling out in an upcoming release.",
+  },
+  {
     name: "Opportunities",
     path: "/leads",
     tag: "Records",
@@ -117,7 +145,7 @@ const pages = [
     path: "/ai-assistant",
     tag: "Tools",
     description:
-      "Generates a plain-English business brief from live workspace data. Surfaces what needs attention, what is performing well, and recommended next actions.",
+      "Persistent AI chat interface with full tool calling over live workspace data. Ask plain-language questions about customers, pipeline, revenue, and follow-ups. The AI can create follow-ups, update job status, and add customers directly from chat. Rate-limited per tier — 5 requests/day on Standard, 20 on Pro.",
   },
 ];
 
@@ -226,6 +254,8 @@ const navItems = [
   ["Integrations", "#integrations"],
   ["Imports", "#imports"],
   ["AI Advisor", "#ai"],
+  ["Contacts", "#contacts"],
+  ["Agent Inbox", "#agent"],
 ];
 
 export default function DocsPage() {
@@ -556,6 +586,51 @@ export default function DocsPage() {
                   <p className="text-[13px] font-semibold text-[#8B80E0]">Get better results with more data</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     The AI Advisor is most useful after the workspace has real records. Add customers, leads, jobs, sales, and follow-ups first. A workspace with only a few records will produce a thinner summary.
+                  </p>
+                </div>
+              </section>
+
+              <section id="contacts" className="py-10">
+                <h2 className="text-[24px] font-semibold">Contacts</h2>
+                <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
+                  The Contacts page is the unified view of every person or business the workspace has a relationship with. Unlike the People records page — which is the editing surface — Contacts is the intelligence surface. It shows relationship status, activity history, linked records, tags, and segment groups in one place.
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  {[
+                    { title: "Synced from everywhere", body: "Contacts are created and updated from manual entry, CSV imports, the onboarding wizard, the AI assistant, and connected integrations. Every write path keeps the contact record current." },
+                    { title: "Full activity timeline", body: "Each contact has an activity tab showing every interaction — jobs completed, sales logged, follow-ups created, and messages sent — in chronological order." },
+                    { title: "Tags and segments", body: "Tag contacts manually or let the system apply smart group segments automatically based on relationship status, source, and activity patterns." },
+                  ].map((item) => (
+                    <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
+                      <p className="text-[14px] font-semibold">{item.title}</p>
+                      <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section id="agent" className="py-10">
+                <h2 className="text-[24px] font-semibold">Agent Inbox</h2>
+                <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
+                  The Agent Inbox sits on the workspace dashboard and surfaces AI-generated outreach drafts and operational alerts. Every night, the agent pipeline reads live workspace data and decides what needs attention — stale customers, unpaid revenue, overdue follow-ups — then drafts actions for review.
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {[
+                    { title: "Outreach drafts", body: "The agent drafts follow-up emails and SMS messages for customers who haven't been contacted recently or have open unpaid work. Each draft includes the AI's reasoning. Approve to send, dismiss to skip." },
+                    { title: "Revenue alerts", body: "Surfaces revenue drops, unpaid invoices older than 30 days, and significant changes in pipeline value. Each alert includes the specific records driving the signal." },
+                    { title: "Co-Pilot mode", body: "Default mode. Drafts queue for your approval before anything is sent. Full control over every outreach action." },
+                    { title: "Autopilot mode (Pro)", body: "Outreach emails and SMS fire automatically without approval. Enable in Settings once the agent pipeline is calibrated to the business." },
+                  ].map((item) => (
+                    <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
+                      <p className="text-[14px] font-semibold">{item.title}</p>
+                      <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-[#8B80E0]">Pro tier only</p>
+                  <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
+                    The Agent Inbox, nightly pipeline, autopilot mode, and ROI counter are available on the Pro plan. Standard accounts see an upgrade prompt.
                   </p>
                 </div>
               </section>
