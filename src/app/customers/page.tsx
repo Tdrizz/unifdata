@@ -51,7 +51,7 @@ export default async function CustomersPage({
       .limit(500),
   ]);
 
-  const { customers } = customersResult;
+  const { customers, count } = customersResult;
   const jobs = (jobsResult.data ?? []) as JobRow[];
   const leads = (leadsResult.data ?? []) as LeadRow[];
   const sales = (salesResult.data ?? []) as SaleRow[];
@@ -69,6 +69,8 @@ export default async function CustomersPage({
         leads={leads}
         sales={sales}
         profile={profile}
+        count={count}
+        page={page}
       />
 
       {/* Mobile view */}

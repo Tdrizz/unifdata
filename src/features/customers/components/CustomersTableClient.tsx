@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { CustomerRow } from "../types";
@@ -10,6 +11,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { CustomerCreateForm } from "./CustomerCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
+import { Button } from "@/components/ui/Button";
 
 type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -21,6 +23,8 @@ type Props = {
   leads?: LeadRow[];
   sales?: SaleRow[];
   profile?: IndustryProfile;
+  count: number;
+  page: number;
 };
 
 function computeLifetimeRevenue(customer: CustomerRow, sales: SaleRow[]): number {
@@ -89,13 +93,31 @@ export function CustomersTableClient({
   leads = [],
   sales = [],
   profile,
+  count,
+  page,
 }: Props) {
   const p = profile ?? getIndustryProfile();
   const custPlural = p.labels.customerPlural;
   const custSingular = p.labels.customerSingular;
   const jobPlural = p.labels.jobPlural;
   const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleSearch(value: string) {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set("q", value);
+      else params.delete("q");
+      params.delete("page");
+      router.replace(`?${params.toString()}`);
+    }, 300);
+  }
 
   const stats = customers.map((c) => ({
     id: c.id,
@@ -119,15 +141,10 @@ export function CustomersTableClient({
     return true;
   });
 
-  const q = search.toLowerCase().trim();
-  const filtered = q
-    ? byFilter.filter(
-        (c) =>
-          (c.name ?? "").toLowerCase().includes(q) ||
-          (c.email ?? "").toLowerCase().includes(q) ||
-          (c.phone ?? "").toLowerCase().includes(q),
-      )
-    : byFilter;
+  const filtered = byFilter;
+
+  const pageStart = (page - 1) * 50 + 1;
+  const pageEnd = Math.min(page * 50, count);
 
   return (
     <div className="hidden md:block px-7 pb-10 pt-7">
@@ -157,8 +174,8 @@ export function CustomersTableClient({
         <input
           type="text"
           placeholder="Search by name, email, or phone…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={inputValue}
+          onChange={(e) => handleSearch(e.target.value)}
           className="flex-1 border-0 outline-none bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint"
           style={{ fontFamily: "var(--font)" }}
         />
@@ -215,6 +232,39 @@ export function CustomersTableClient({
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {count > 50 && (
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", String(page - 1));
+              router.push(`?${params.toString()}`);
+            }}
+          >
+            Previous
+          </Button>
+          <p className="text-[13px] text-ud-muted">
+            Showing {pageStart}–{pageEnd} of {count} {custPlural.toLowerCase()}
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page * 50 >= count}
+            onClick={() => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("page", String(page + 1));
+              router.push(`?${params.toString()}`);
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       {/* Quick add */}
       {profile && (
