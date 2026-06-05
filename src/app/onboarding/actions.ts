@@ -113,6 +113,26 @@ export async function createWizardCustomersAction(
 
   const { data, error } = await supabase.from("customers").insert(rows).select("id, name");
   if (error) return { created: [], error: error.message };
+
+  try {
+    const masterRows = (data ?? []).map((row, i) => {
+      const nameParts = customers[i].name.trim().split(/\s+/);
+      return {
+        organization_id: companyId,
+        legacy_customer_id: row.id,
+        first_name: nameParts[0],
+        last_name: nameParts.length > 1 ? nameParts.slice(1).join(" ") : null,
+        primary_email: customers[i].email ?? null,
+        primary_phone: customers[i].phone ?? null,
+        relationship_status: "new",
+        source: "manual",
+      };
+    });
+    await (supabase as any).from("master_customers").insert(masterRows);
+  } catch (syncErr) {
+    console.error("master_customers sync failed for wizard customers", syncErr);
+  }
+
   return { created: (data ?? []).map((r) => ({ id: r.id, name: r.name })) };
 }
 

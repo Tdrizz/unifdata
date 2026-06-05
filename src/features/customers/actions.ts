@@ -122,12 +122,13 @@ export async function updateCustomerAction(
   const customerType = getFormString(formData, "customer_type") || null;
   const address = getFormString(formData, "address") || null;
   const notes = getFormString(formData, "notes") || null;
+  const phone = getFormString(formData, "phone") || null;
 
   const { error } = await supabase
     .from("customers")
     .update({
       name,
-      phone: getFormString(formData, "phone") || null,
+      phone,
       email: email || null,
       address,
       customer_type: customerType,
@@ -137,6 +138,31 @@ export async function updateCustomerAction(
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  const nameParts = name.trim().split(/\s+/);
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
+  const metadataObj = {
+    ...(customerType ? { customer_type: customerType } : {}),
+    ...(notes ? { notes } : {}),
+  };
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("master_customers")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        primary_email: email || null,
+        primary_phone: phone,
+        billing_address: address ? { line1: address } : null,
+        metadata: Object.keys(metadataObj).length ? metadataObj : null,
+      })
+      .eq("legacy_customer_id", id)
+      .eq("organization_id", company.id);
+  } catch (syncErr) {
+    console.error("master_customers sync failed for update", id, syncErr);
+  }
 
   syncEmbedding(
     "customers",
@@ -149,6 +175,7 @@ export async function updateCustomerAction(
   revalidatePath(`/customers/${id}`);
   revalidatePath(`/customers/${id}/edit`);
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   redirect("/customers?toast=Customer+updated");
 }
 
@@ -167,8 +194,21 @@ export async function bulkDeleteCustomers(ids: string[]): Promise<ActionState> {
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("master_customers")
+      .delete()
+      .in("legacy_customer_id", ids)
+      .eq("organization_id", company.id);
+  } catch (syncErr) {
+    console.error("master_customers sync failed for bulk delete", syncErr);
+  }
+
   revalidatePath("/customers");
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   return null;
 }
 
@@ -209,6 +249,17 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     .eq("company_id", company.id);
   if (deleteError) throw new Error(`Failed to delete merged customer: ${deleteError.message}`);
 
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("master_customers")
+      .delete()
+      .eq("legacy_customer_id", loserId)
+      .eq("organization_id", company.id);
+  } catch (syncErr) {
+    console.error("master_customers sync failed for merge loser", loserId, syncErr);
+  }
+
   // Touch winner's updated_at
   await supabase
     .from("customers")
@@ -216,6 +267,7 @@ export async function mergeCustomers(winnerId: string, loserId: string) {
     .eq("id", winnerId);
 
   revalidatePath("/customers");
+  revalidatePath("/contacts");
 }
 
 export type SendMessageState = { ok: true } | { error: string } | null;
@@ -317,7 +369,20 @@ export async function deleteCustomerAction(id: string) {
     .eq("company_id", company.id);
 
   if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("master_customers")
+      .delete()
+      .eq("legacy_customer_id", id)
+      .eq("organization_id", company.id);
+  } catch (syncErr) {
+    console.error("master_customers sync failed for delete", id, syncErr);
+  }
+
   revalidatePath("/customers");
   revalidatePath("/workspace");
+  revalidatePath("/contacts");
   redirect("/customers?toast=Customer+deleted");
 }
