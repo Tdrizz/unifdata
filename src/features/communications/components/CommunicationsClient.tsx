@@ -4,6 +4,20 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+function MobileDesktopNotice({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="md:hidden flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="w-12 h-12 rounded-[14px] bg-ud-surface border border-ud flex items-center justify-center mb-4">
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-muted">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <p className="text-[15px] font-semibold text-ud-ink mb-1">{title}</p>
+      <p className="text-[13px] text-ud-muted max-w-[240px]">{description}</p>
+    </div>
+  );
+}
+
 type Thread = {
   id: string;
   contact_id: string | null;
@@ -172,6 +186,8 @@ export function CommunicationsClient({
   const messageGroups = groupMessages(messages);
 
   return (
+    <>
+    <MobileDesktopNotice title="Communications" description="SMS conversations are best managed on desktop." />
     <div className="hidden md:flex h-full">
       {/* Thread list */}
       <div className="w-72 shrink-0 border-r border-ud flex flex-col">
@@ -306,5 +322,6 @@ export function CommunicationsClient({
         )}
       </div>
     </div>
+    </>
   );
 }

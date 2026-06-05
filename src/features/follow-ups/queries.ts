@@ -9,7 +9,7 @@ export async function getFollowUpPageData(
   const [followUpsResult, opportunitiesResult, peopleResult] = await Promise.all([
     supabase
       .from("follow_ups")
-      .select("id, customer_id, message, due_date, status, created_at")
+      .select("id, customer_id, contact_id, message, due_date, status, created_at")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(250),

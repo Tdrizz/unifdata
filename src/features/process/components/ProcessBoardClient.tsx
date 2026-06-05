@@ -549,7 +549,7 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
 
   if (!board) {
     return (
-      <div className="hidden md:flex flex-col items-center justify-center h-full text-center px-7 pt-7">
+      <div className="flex flex-col items-center justify-center h-full text-center px-7 pt-7">
         <div className="text-[22px] font-bold text-ud-ink mb-2">No board set up yet</div>
         <p className="text-[13px] text-ud-muted">
           Create your first board and stages in Settings.
@@ -558,8 +558,69 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
     );
   }
 
+  // Mobile list view (shown below md breakpoint)
+  const mobileView = (
+    <div className="md:hidden px-4 pt-5 pb-10 space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-[18px] font-bold text-ud-ink">{board.name}</h1>
+        <button
+          onClick={() => setShowNewForm(true)}
+          className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
+        >
+          + New
+        </button>
+      </div>
+      {activeStages.map((stage) => {
+        const stageRecords = getStageRecords(stage);
+        return (
+          <div key={stage.id} className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-ud">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
+              <span className="text-[13px] font-semibold text-ud-ink">{stage.name}</span>
+              <span className="ml-auto text-[11px] text-ud-faint bg-ud-surface-sunk px-1.5 py-0.5 rounded-[4px]">{stageRecords.length}</span>
+            </div>
+            {stageRecords.length === 0 ? (
+              <p className="text-[12px] text-ud-faint text-center py-4">Empty</p>
+            ) : (
+              stageRecords.map((record) => (
+                <div key={record.id} className="px-4 py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-ud-ink truncate">{record.name}</p>
+                      <p className="text-[11px] text-ud-muted mt-0.5">{getContactName(record)}</p>
+                    </div>
+                    {record.value != null && record.value > 0 && (
+                      <span className="text-[12px] font-semibold text-ud-ink shrink-0">{formatCurrency(record.value)}</span>
+                    )}
+                  </div>
+                  <span
+                    className="inline-block mt-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] text-white"
+                    style={{ backgroundColor: daysColor(daysInStage(record.created_at)) }}
+                  >
+                    {daysInStage(record.created_at)}d
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        );
+      })}
+      {showNewForm && (
+        <NewRecordForm
+          boardId={board.id}
+          orgId={orgId}
+          stages={stages}
+          onCreated={handleRecordCreated}
+          onClose={() => setShowNewForm(false)}
+        />
+      )}
+    </div>
+  );
+
   return (
-    <DndContext
+    <>
+      {mobileView}
+      <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
@@ -642,5 +703,6 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
         />
       )}
     </DndContext>
+    </>
   );
 }

@@ -77,7 +77,11 @@ export async function createCustomerAction(
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    // Clean up the orphaned legacy row so the two tables stay in sync
+    await supabase.from("customers").delete().eq("id", legacyRow.id);
+    return { error: error.message };
+  }
 
   if (inserted) {
     try {

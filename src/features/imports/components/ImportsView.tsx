@@ -304,6 +304,16 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
   };
 
   return (
+    <>
+    <div className="md:hidden flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="w-12 h-12 rounded-[14px] bg-ud-surface border border-ud flex items-center justify-center mb-4">
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-muted">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <p className="text-[15px] font-semibold text-ud-ink mb-1">Import data</p>
+      <p className="text-[13px] text-ud-muted max-w-[240px]">Use a desktop browser to import contacts, jobs, or revenue from CSV or Google Sheets.</p>
+    </div>
     <div className="hidden md:block px-7 pb-10 pt-7">
       <PageHeader
         eyebrow="Imports"
@@ -519,5 +529,6 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
         </div>
       </div>
     </div>
+    </>
   );
 }

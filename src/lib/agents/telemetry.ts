@@ -32,7 +32,7 @@ export async function compileTelemetry(
   const tenDaysAgo = new Date(now.getTime() - 10 * 86400000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10);
   const thisWeekStart = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
-  const fourWeeksAgo = new Date(now.getTime() - 28 * 86400000).toISOString().slice(0, 10);
+  const fourWeeksAgo = new Date(now.getTime() - 35 * 86400000).toISOString().slice(0, 10);
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
   const [
