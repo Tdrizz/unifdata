@@ -25,22 +25,33 @@ export async function computeRevenueForecast(
   const sinceStr = since.toISOString().slice(0, 10);
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  const { data: rows } = await supabase
+  // Fetch all days including today — needed for accurate progress count
+  const { data: allRows } = await supabase
     .from("sales")
     .select("sale_date, amount")
     .eq("company_id", companyId)
     .gte("sale_date", sinceStr)
-    .lt("sale_date", todayStr)
     .not("sale_date", "is", null)
     .gt("amount", 0)
     .order("sale_date", { ascending: true });
 
-  if (!rows || rows.length === 0) return { status: "no_sales", daysOfData: 0 };
+  if (!allRows || allRows.length === 0) return { status: "no_sales", daysOfData: 0 };
 
   // Epoch anchored to the first non-zero sale to avoid bias from $0 records
-  const epoch = new Date(rows[0].sale_date!).getTime();
+  const epoch = new Date(allRows[0].sale_date!).getTime();
+
+  // Unique days including today — shown in the progress display
+  const allDailyTotals = new Map<number, number>();
+  for (const row of allRows) {
+    const dayOffset = Math.round(
+      (new Date(row.sale_date!).getTime() - epoch) / 86_400_000,
+    );
+    allDailyTotals.set(dayOffset, (allDailyTotals.get(dayOffset) ?? 0) + Number(row.amount));
+  }
+
+  // Regression points exclude today to avoid partial-day slope bias
   const dailyTotals = new Map<number, number>();
-  for (const row of rows) {
+  for (const row of allRows.filter((r) => r.sale_date !== todayStr)) {
     const dayOffset = Math.round(
       (new Date(row.sale_date!).getTime() - epoch) / 86_400_000,
     );
@@ -52,7 +63,7 @@ export async function computeRevenueForecast(
   );
 
   if (points.length < MIN_DATA_POINTS) {
-    return { status: "insufficient_data", daysOfData: points.length };
+    return { status: "insufficient_data", daysOfData: allDailyTotals.size };
   }
 
   const { m: slope, b: intercept } = linearRegression(points);
