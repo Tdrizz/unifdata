@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Sentry build artifacts
+.sentry-build-plugin/
+.sentryclirc
+.env.sentry-build-plugin
+
 # vercel
 .vercel
 

@@ -24,8 +24,6 @@ import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AgentInbox } from "./AgentInbox";
 import { RoiCounter } from "./RoiCounter";
-import { RevenueForecast } from "./RevenueForecast";
-import type { RevenueForecastResult } from "@/lib/analytics/revenue-forecast";
 
 type QueueItem = {
   id: string;
@@ -79,10 +77,9 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   isPro?: boolean;
   roiTotal?: number;
-  revenueForecast?: RevenueForecastResult;
 };
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0, revenueForecast }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0 }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -334,9 +331,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               ))
             )}
           </Card>
-
-          {/* Revenue forecast */}
-          {isPro && revenueForecast && <RevenueForecast result={revenueForecast} />}
 
           {/* Quick actions */}
           <Card padding={16} radius="md">

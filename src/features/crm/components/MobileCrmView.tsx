@@ -58,7 +58,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
 
       {/* Stage chips */}
       <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
-        {STAGES.map((stage) => {
+        {STAGES.filter((stage) => (leadsByStage.get(stage.name) ?? []).length > 0 || stage.name === activeStage).map((stage) => {
           const count = (leadsByStage.get(stage.name) ?? []).length;
           const isActive = activeStage === stage.name;
           return (
@@ -115,8 +115,12 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
                     </span>
                   )}
                 </div>
-                <p className="mt-[8px] text-[12px] text-ud-muted">
-                  {customer?.name || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
+                <p className="mt-[8px]">
+                  {customer ? (
+                    <span className="text-[12px] text-ud-muted">{customer.name}</span>
+                  ) : (
+                    <span className="text-[12px] text-ud-faint italic">No contact linked</span>
+                  )}
                 </p>
               </Link>
             );

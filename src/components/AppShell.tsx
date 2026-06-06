@@ -6,6 +6,7 @@ import { AppNav } from "@/components/AppNav";
 import { CommandPalette } from "@/components/CommandPalette";
 import { LogoutButton } from "@/components/LogoutButton";
 import { MobileTabBar } from "@/components/MobileTabBar";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ProductMark } from "@/components/ProductMark";
 import { MobileSearchButton } from "@/components/MobileSearchButton";
@@ -160,6 +161,7 @@ export async function AppShell({
 
       {/* Mobile tab bar */}
       <MobileTabBar businessSector={businessSector} />
+      <InstallPrompt />
 
       {/* Command palette */}
       <CommandPalette businessSector={businessSector} />

@@ -1,5 +1,5 @@
-const CACHE_NAME = "unifdata-shell-v3";
-const SHELL_URLS = ["/", "/workspace"];
+const CACHE_NAME = "unifdata-shell-v4";
+const SHELL_URLS = ["/", "/workspace", "/contacts", "/jobs", "/crm", "/follow-ups", "/sales"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
