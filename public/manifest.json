@@ -4,7 +4,9 @@
   "short_name": "UnifData",
   "description": "Unified business data. Clearer decisions.",
   "start_url": "/workspace",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#f4f3f0",
   "theme_color": "#f4f3f0",
   "orientation": "portrait-primary",
@@ -33,6 +35,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Workspace",
+      "short_name": "Workspace",
+      "url": "/workspace",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contacts",
+      "short_name": "Contacts",
+      "url": "/contacts",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "UnifData workspace"
     }
   ]
 }

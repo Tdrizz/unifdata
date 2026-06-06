@@ -55,10 +55,16 @@ export const metadata: Metadata = {
   },
   other: {
     "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "UnifData",
   },
   icons: {
     icon: "/unifdata-mark.svg",
-    apple: "/icons/icon-192.png",
+    apple: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
   },
   openGraph: {
     title: "UnifData – Unified Business Data. Clearer Decisions.",
