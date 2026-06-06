@@ -210,7 +210,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         <div className="flex gap-[8px]">
           <Link
             href="/contacts"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[9px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -219,7 +219,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/leads#leads-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[9px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -228,7 +228,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/jobs#job-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[9px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -237,7 +237,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Link>
           <Link
             href="/follow-ups#followup-quick-add"
-            className="flex-shrink-0 flex items-center gap-[6px] rounded-full border border-ud bg-ud-surface px-[16px] py-[10px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
+            className="flex-shrink-0 flex items-center gap-[6px] rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[9px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
