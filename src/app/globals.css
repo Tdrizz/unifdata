@@ -120,6 +120,26 @@
   --foreground: var(--ud-ink);
 }
 
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html {
+  overscroll-behavior: none;
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .dark {
   --ud-page:         #111110;
   --ud-surface:      #1a1917;
@@ -368,7 +388,7 @@ table {
 .notif-dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; background: #e05050; border-radius: 50%; border: 1.5px solid white; }
 
 /* ── Content ── */
-.content { flex: 1; overflow-y: auto; padding: 0; }
+.content { flex: 1; overflow-y: auto; padding: 0; overscroll-behavior: none; }
 .content::-webkit-scrollbar { width: 6px; }
 .content::-webkit-scrollbar-track { background: transparent; }
 .content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); border-radius: 99px; }
