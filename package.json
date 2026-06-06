@@ -54,6 +54,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.6",
+    "sharp": "^0.34.5"
   }
 }
