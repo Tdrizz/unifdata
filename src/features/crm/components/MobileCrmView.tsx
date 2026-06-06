@@ -58,7 +58,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
 
       {/* Stage chips */}
       <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
-        {STAGES.map((stage) => {
+        {STAGES.filter((stage) => (leadsByStage.get(stage.name) ?? []).length > 0 || stage.name === activeStage).map((stage) => {
           const count = (leadsByStage.get(stage.name) ?? []).length;
           const isActive = activeStage === stage.name;
           return (
