@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -68,6 +69,12 @@ export async function POST(request: Request) {
     });
   } catch {
     // Non-fatal
+  }
+
+  try {
+    await triggerAutomations(company.id, "record_created", { boardId, stageId }, contactId, supabase);
+  } catch (err) {
+    console.error("[process.records] automation trigger failed", err);
   }
 
   return NextResponse.json(record);

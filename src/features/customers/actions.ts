@@ -9,6 +9,7 @@ import { getFormString } from "@/lib/utils";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { logActivity } from "@/lib/crm/activity";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildCustomerText } from "@/lib/embeddings/generate";
 
@@ -91,6 +92,12 @@ export async function createCustomerAction(
       });
     } catch {
       // Non-fatal
+    }
+    try {
+      await triggerAutomations(company.id, "contact_created", {}, inserted.id, supabase);
+    } catch (err) {
+      // Automation failures must never block the create
+      console.error("[customers.create] automation trigger failed", err);
     }
   }
 

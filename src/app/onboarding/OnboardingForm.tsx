@@ -143,9 +143,17 @@ export function OnboardingForm() {
   // Step 5: auto-generate brief then redirect
   useEffect(() => {
     if (step !== 5) return;
-    fetch("/api/ai/business-summary", { method: "POST", credentials: "include" }).finally(() => {
-      router.push("/workspace");
-    });
+    fetch("/api/ai/business-summary", { method: "POST", credentials: "include" })
+      .then((res) => {
+        router.push(
+          res.ok
+            ? "/workspace"
+            : "/workspace?toast=Your+Operating+Brief+is+still+generating+—+check+back+in+a+minute"
+        );
+      })
+      .catch(() => {
+        router.push("/workspace?toast=Your+Operating+Brief+is+still+generating+—+check+back+in+a+minute");
+      });
   }, [step, router]);
 
   async function analyzeUpload(file: File) {

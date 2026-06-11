@@ -6,6 +6,7 @@ import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-va
 import { checkAndDropEchoWebhook } from "@/lib/conflict-resolver";
 import { normalizePhone } from "@/lib/crm/phone";
 import { logActivity } from "@/lib/crm/activity";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export const runtime = "nodejs";
 
@@ -199,6 +200,13 @@ export async function POST(request: Request) {
       } catch {
         // Non-fatal
       }
+    }
+
+    // Fire message_received automations for the matched contact
+    try {
+      await triggerAutomations(orgId, "message_received", { body }, customer!.id, supabase);
+    } catch (err) {
+      console.error("[twilio.webhook] automation trigger failed", err);
     }
   }
 

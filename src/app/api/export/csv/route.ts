@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import { rateLimit } from "@/lib/rate-limit";
 
 const ALLOWED_TABLES = ["customers", "leads", "jobs", "sales", "follow_ups"] as const;
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
@@ -29,6 +30,10 @@ export async function GET(request: Request) {
   const companyId = await getCurrentCompanyId();
   if (!companyId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!await rateLimit(`export:${companyId}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many exports. Try again in a minute." }, { status: 429 });
   }
 
   const url = new URL(request.url);

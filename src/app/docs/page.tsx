@@ -96,7 +96,7 @@ const pages = [
     path: "/automations",
     tag: "Tools",
     description:
-      "Rule builder for contact-based automation triggers. Create rules now — automatic triggering is rolling out in an upcoming release.",
+      "Rule builder for contact-based automations. Rules fire automatically when a contact is created, an inbound SMS arrives, or a process record is created — adding tags, setting status, sending SMS, or notifying the owner.",
   },
   {
     name: "Opportunities",
