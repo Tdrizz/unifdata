@@ -18,6 +18,18 @@ function isSubscribed(metadata: Record<string, unknown> | null | undefined) {
   return metadata?.subscribed === true;
 }
 
+// Pilot users bypass the paywall via a comma-separated email allowlist.
+// Remove PILOT_EMAILS from the environment to end the pilot program.
+function isPilotUser(email: string): boolean {
+  const list = process.env.PILOT_EMAILS;
+  if (!list || !email) return false;
+  return list
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(email.toLowerCase());
+}
+
 function getStringMetadata(
   publicMetadata: Record<string, unknown> | null | undefined,
   privateMetadata: Record<string, unknown> | null | undefined,
@@ -66,7 +78,9 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
   }
 
   const subscribed =
-    isSubscribed(user.publicMetadata) || isSubscribed(user.privateMetadata);
+    isSubscribed(user.publicMetadata) ||
+    isSubscribed(user.privateMetadata) ||
+    isPilotUser(email);
   const invitationCompanyId = getStringMetadata(
     user.publicMetadata,
     user.privateMetadata,
