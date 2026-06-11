@@ -23,7 +23,7 @@ export default async function CommunicationsPage() {
     .select(`
       id, contact_id, contact_phone, channel, unread_count,
       last_message_at, last_message_preview, status,
-      contact:master_customers(id, name, first_name, last_name)
+      contact:master_customers(id, first_name, last_name)
     `)
     .eq("organization_id", company.id)
     .order("last_message_at", { ascending: false })

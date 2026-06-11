@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     })
     .select(`
       id, name, value, target_date, status, stage_id, contact_id, created_at,
-      contact:master_customers(id, name, first_name, last_name)
+      contact:master_customers(id, first_name, last_name)
     `)
     .single();
 

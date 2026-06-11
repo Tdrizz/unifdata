@@ -77,7 +77,9 @@ export async function executeTool(
           phone: data.phone || null,
         }).select("id").single();
         if (error) return { success: false, message: `Failed to create customer: ${error.message}` };
-        void supabase.from("master_customers").insert({
+        // Await the master_customers write — a fire-and-forget insert gets killed on
+        // serverless before it runs, leaving the contact invisible in the Contacts view.
+        const { error: mcError } = await supabase.from("master_customers").insert({
           organization_id: orgId,
           legacy_customer_id: created.id,
           first_name: data.first_name,
@@ -87,6 +89,7 @@ export async function executeTool(
           relationship_status: "new",
           source: "ai",
         });
+        if (mcError) console.error("[tool-executor] master_customers insert failed", mcError);
         return { success: true, message: `Customer "${name}" created.` };
       }
 

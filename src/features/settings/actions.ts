@@ -807,6 +807,16 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
 }
 
 export async function updateLabelOverrideAction(orgId: string, key: string, value: string): Promise<void> {
+  // Never trust the orgId from the client — derive the company from the session.
+  // (The app's Supabase client uses the service role, so RLS is not a backstop here.)
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) {
+    throw new Error("Unauthorized");
+  }
+  if (currentCompany.role !== "owner" && currentCompany.role !== "admin") {
+    throw new Error("Only owners or admins can change labels");
+  }
+
   const supabase = await createClient();
   const { data: co } = await supabase
     .from("companies")
@@ -822,6 +832,14 @@ export async function updateLabelOverrideAction(orgId: string, key: string, valu
 }
 
 export async function resetLabelOverridesAction(orgId: string): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany || currentCompany.company.id !== orgId) {
+    throw new Error("Unauthorized");
+  }
+  if (currentCompany.role !== "owner" && currentCompany.role !== "admin") {
+    throw new Error("Only owners or admins can change labels");
+  }
+
   const supabase = await createClient();
   await supabase
     .from("companies")

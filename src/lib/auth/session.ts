@@ -176,7 +176,19 @@ export async function requireSubscription() {
   const user = await requireAppUser();
 
   if (!user.subscribed) {
-    redirect("/subscribe");
+    // Subscription is company-level: members invited into an existing company
+    // (whose owner already paid to create it) must not hit the paywall again.
+    const supabase = createAdminClient();
+    const { data: membership } = await supabase
+      .from("company_members")
+      .select("company_id")
+      .eq("user_id", user.profileId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) {
+      redirect("/subscribe");
+    }
   }
 
   return user;

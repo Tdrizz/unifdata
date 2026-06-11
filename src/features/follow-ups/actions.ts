@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { logActivity } from "@/lib/crm/activity";
+import { resolveOwnedContactId } from "@/lib/crm/contacts";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -23,7 +24,7 @@ export async function createFollowUpAction(
   const dueDate = getFormString(formData, "due_date");
   if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
-  const contactId = getFormString(formData, "contact_id") || null;
+  const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: inserted, error } = await (supabase as any).from("follow_ups").insert({
@@ -75,7 +76,7 @@ export async function updateFollowUpAction(
   const { error } = await (supabase as any)
     .from("follow_ups")
     .update({
-      contact_id: getFormString(formData, "contact_id") || null,
+      contact_id: await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id")),
       message,
       due_date: dueDate,
       status: getFormString(formData, "status") || "Open",

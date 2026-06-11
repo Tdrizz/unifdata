@@ -136,7 +136,9 @@ async function evaluateCondition(
   if (operator === "contains") return (fieldValue ?? "").toLowerCase().includes((value ?? "").toLowerCase());
   if (operator === "is_blank") return fieldValue == null || fieldValue === "";
   if (operator === "is_not_blank") return fieldValue != null && fieldValue !== "";
-  return true;
+  // Unknown/unsupported operator — fail closed so an automation never fires on a
+  // condition we can't actually evaluate.
+  return false;
 }
 
 async function executeAction(
