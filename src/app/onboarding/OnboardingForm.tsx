@@ -527,7 +527,7 @@ export function OnboardingForm() {
           {contactMode === "manual" && (
             <div className="space-y-2">
               {manualRows.map((row, i) => (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="flex flex-wrap gap-2">
                   <input
                     placeholder="Name"
                     value={row.name}
@@ -536,7 +536,7 @@ export function OnboardingForm() {
                       updated[i] = { ...updated[i], name: e.target.value };
                       setManualRows(updated);
                     }}
-                    className="flex-1 rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint"
+                    className="w-full rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint sm:w-auto sm:flex-1"
                   />
                   <input
                     placeholder="Phone"
@@ -546,7 +546,7 @@ export function OnboardingForm() {
                       updated[i] = { ...updated[i], phone: e.target.value };
                       setManualRows(updated);
                     }}
-                    className="w-28 rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint"
+                    className="min-w-0 flex-1 rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint sm:flex-none sm:w-28"
                   />
                   <input
                     placeholder="Email"
@@ -556,13 +556,13 @@ export function OnboardingForm() {
                       updated[i] = { ...updated[i], email: e.target.value };
                       setManualRows(updated);
                     }}
-                    className="w-36 rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint"
+                    className="min-w-0 flex-1 rounded-[10px] border border-white/10 bg-ud-surface px-3 py-2.5 text-sm text-ud-ink outline-none focus:ring-2 focus:ring-ud-accent/40 placeholder:text-ud-faint sm:flex-none sm:w-36"
                   />
                   {manualRows.length > 1 && (
                     <button
                       type="button"
                       onClick={() => setManualRows(manualRows.filter((_, j) => j !== i))}
-                      className="px-2 text-ud-faint hover:text-red-400"
+                      className="flex h-10 w-9 items-center justify-center text-ud-faint hover:text-red-400"
                     >
                       ✕
                     </button>

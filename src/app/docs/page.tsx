@@ -281,14 +281,14 @@ export default function DocsPage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-8 py-8 lg:grid-cols-[240px_1fr]">
             {/* Sidebar */}
-            <aside className="h-fit rounded-[14px] border border-white/10 bg-white/4 p-5 lg:sticky lg:top-[72px]">
+            <aside className="h-fit rounded-[14px] border border-white/10 bg-white/4 p-4 lg:p-5 lg:sticky lg:top-[72px]">
               <p className="text-[12px] font-semibold text-slate-300">Contents</p>
-              <div className="mt-3 grid gap-0.5 text-[13px]">
+              <div className="mt-3 flex gap-1.5 overflow-x-auto no-scrollbar text-[13px] lg:grid lg:gap-0.5 lg:overflow-visible">
                 {navItems.map(([label, href]) => (
                   <a
                     key={href}
                     href={href}
-                    className="rounded-[8px] px-3 py-2 font-medium text-slate-400 hover:bg-white/8 hover:text-white transition-colors"
+                    className="whitespace-nowrap rounded-full border border-white/10 px-3.5 py-1.5 font-medium text-slate-400 hover:bg-white/8 hover:text-white transition-colors lg:whitespace-normal lg:rounded-[8px] lg:border-0 lg:px-3 lg:py-2"
                   >
                     {label}
                   </a>
@@ -298,7 +298,7 @@ export default function DocsPage() {
 
             <div className="divide-y divide-white/8">
               {/* GETTING STARTED */}
-              <section id="start" className="py-10">
+              <section id="start" className="scroll-mt-20 py-10">
                 <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                   Quick start
                 </p>
@@ -330,7 +330,7 @@ export default function DocsPage() {
               </section>
 
               {/* OVERVIEW */}
-              <section id="overview" className="py-10">
+              <section id="overview" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Overview</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   UnifData is built for businesses that have important information scattered across spreadsheets, QuickBooks, old CRMs, texts, inboxes, and memory. The goal is to give business owners one clear place to see what needs attention, what work is active, what money is unpaid, and what data needs cleanup.
@@ -351,7 +351,7 @@ export default function DocsPage() {
               </section>
 
               {/* LIFECYCLE */}
-              <section id="lifecycle" className="py-10">
+              <section id="lifecycle" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Core lifecycle</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   UnifData organizes every business around five layers. The labels change based on the company sector, but the structure stays the same across all industries.
@@ -377,7 +377,7 @@ export default function DocsPage() {
               </section>
 
               {/* PRODUCT PAGES */}
-              <section id="pages" className="py-10">
+              <section id="pages" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Product pages</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   Each page in UnifData covers a specific part of the business operating layer. Pages are accessible from the main navigation after logging in.
@@ -386,7 +386,7 @@ export default function DocsPage() {
                 <div className="mt-6 grid gap-3 md:grid-cols-2">
                   {pages.map((page) => (
                     <div key={page.path} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                         <p className="text-[14px] font-semibold">{page.name}</p>
                         <div className="flex items-center gap-2">
                           <span className="rounded-full bg-[#4A3FA8]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#8B80E0]">
@@ -404,14 +404,14 @@ export default function DocsPage() {
               </section>
 
               {/* INDUSTRY LANGUAGE */}
-              <section id="industries" className="py-10">
+              <section id="industries" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Industry-aware language</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The same five-layer lifecycle powers every workspace. What changes is the language. A dental office should see &quot;Patients&quot; and &quot;Appointments&quot; — not &quot;Customers&quot; and &quot;Jobs.&quot; UnifData adapts the workspace labels and priorities to the company&apos;s operating model during onboarding.
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="grid grid-cols-2 border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid-cols-[200px_1fr]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[200px_1fr]">
                     <span>Sector</span>
                     <span>Workspace language</span>
                   </div>
@@ -428,7 +428,7 @@ export default function DocsPage() {
               </section>
 
               {/* CONNECTED WORKFLOW */}
-              <section id="sync" className="py-10">
+              <section id="sync" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Connected workflow</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   When an opportunity is marked accepted or won, UnifData can create the connected work record and expected revenue record. Payment status stays separate, so accepted business does not automatically mean the money has been collected.
@@ -459,7 +459,7 @@ export default function DocsPage() {
               </section>
 
               {/* INTEGRATIONS */}
-              <section id="integrations" className="py-10">
+              <section id="integrations" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Integrations</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   UnifData connects to the tools local businesses already use. Integrations pull records into the workspace so you are not re-entering data from Jobber, QuickBooks, HubSpot, Square, or Google Sheets. Connect and manage integrations from{" "}
@@ -498,14 +498,14 @@ export default function DocsPage() {
               </section>
 
               {/* IMPORTS */}
-              <section id="imports" className="py-10">
+              <section id="imports" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Imports</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The import flow supports customer CSV files. Each import is logged as a batch so you can track what was created and when. Records that already exist are not duplicated — the import creates new customer records only.
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="grid border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid-cols-[140px_80px_1fr_160px]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[140px_80px_1fr_160px]">
                     <span>Column</span>
                     <span>Required</span>
                     <span>Description</span>
@@ -539,7 +539,7 @@ export default function DocsPage() {
               </section>
 
               {/* AI ADVISOR */}
-              <section id="ai" className="py-10">
+              <section id="ai" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">AI Advisor</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The AI Advisor generates a plain-English business brief from the live data in the workspace. It reads the current state of customers, leads, jobs, sales, and follow-ups, then produces a structured summary with three sections: an overall snapshot, what needs attention, and recommended next actions.
@@ -590,7 +590,7 @@ export default function DocsPage() {
                 </div>
               </section>
 
-              <section id="contacts" className="py-10">
+              <section id="contacts" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Contacts</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The Contacts page is the unified view of every person or business the workspace has a relationship with. Unlike the People records page — which is the editing surface — Contacts is the intelligence surface. It shows relationship status, activity history, linked records, tags, and segment groups in one place.
@@ -609,7 +609,7 @@ export default function DocsPage() {
                 </div>
               </section>
 
-              <section id="agent" className="py-10">
+              <section id="agent" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Agent Inbox</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The Agent Inbox sits on the workspace dashboard and surfaces AI-generated outreach drafts and operational alerts. Every night, the agent pipeline reads live workspace data and decides what needs attention — stale customers, unpaid revenue, overdue follow-ups — then drafts actions for review.
