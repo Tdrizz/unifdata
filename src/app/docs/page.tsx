@@ -65,7 +65,7 @@ const pages = [
   },
   {
     name: "People",
-    path: "/customers",
+    path: "/contacts",
     tag: "Records",
     description:
       "Stores all relationship records — customers, clients, patients, accounts, or companies depending on the business sector.",

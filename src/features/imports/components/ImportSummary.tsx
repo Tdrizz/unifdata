@@ -114,7 +114,7 @@ export function ImportSummary({
           <Link
             href={
               recordType === "relationships"
-                ? "/customers"
+                ? "/contacts"
                 : recordType === "opportunities"
                   ? "/leads"
                   : recordType === "work"

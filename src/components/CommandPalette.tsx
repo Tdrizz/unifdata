@@ -10,7 +10,7 @@ function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
   return [
     { id: "workspace", label: "Go to Workspace", href: "/workspace", group: "Navigate" },
-    { id: "customers", label: `Go to ${profile.labels.customerPlural}`, href: "/customers", group: "Navigate" },
+    { id: "customers", label: `Go to ${profile.labels.customerPlural}`, href: "/contacts", group: "Navigate" },
     { id: "crm", label: `Go to ${profile.labels.leadPlural}`, href: "/crm", group: "Navigate" },
     { id: "jobs", label: `Go to ${profile.labels.jobPlural}`, href: "/jobs", group: "Navigate" },
     { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },

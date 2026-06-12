@@ -1,60 +1,35 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getCustomerById, getCustomerLinkedCounts } from "@/features/customers/queries";
-import { CustomerForm } from "@/features/customers/components/CustomerForm";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function EditCustomerPage({
+// Legacy edit page — editing now lives at /contacts/[id]/edit.
+export default async function LegacyCustomerEditPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
-  const { error: errorParam } = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
-
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
 
-  const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
-  const customer = await getCustomerById(supabase, company.id, id);
-  if (!customer) redirect("/customers");
+  const supabase = await createClient();
+  const { data: byLegacy } = await supabase
+    .from("master_customers")
+    .select("id")
+    .eq("legacy_customer_id", id)
+    .eq("organization_id", currentCompany.company.id)
+    .maybeSingle();
 
-  const { leadsCount, jobsCount, followUpsCount } = await getCustomerLinkedCounts(supabase, company.id, id);
+  if (byLegacy) redirect(`/contacts/${byLegacy.id}/edit`);
 
-  const actions = (
-    <div className="flex flex-wrap gap-2">
-      <Link href="/customers" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">Back to {profile.labels.customerPlural}</Link>
-      <Link href="/crm" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">{profile.labels.leadPlural}</Link>
-    </div>
-  );
+  const { data: byMaster } = await supabase
+    .from("master_customers")
+    .select("id")
+    .eq("id", id)
+    .eq("organization_id", currentCompany.company.id)
+    .maybeSingle();
 
-  return (
-    <AppShell
-      companyName={company.name}
-      userEmail={user.email || ""}
-      businessSector={company.business_sector}
-    >
-      <div className="space-y-5 px-6 pt-5 pb-8">
-        <PageHeader
-          eyebrow={`Edit ${profile.labels.customerSingular.toLowerCase()}`}
-          title={customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
-          description="Update contact details, address, type, and notes for this person or business."
-          actions={actions}
-        />
-        <CustomerForm customer={customer} leadsCount={leadsCount} jobsCount={jobsCount} followUpsCount={followUpsCount} profile={profile} errorParam={errorParam} />
-      </div>
-    </AppShell>
-  );
+  redirect(byMaster ? `/contacts/${byMaster.id}/edit` : "/contacts");
 }

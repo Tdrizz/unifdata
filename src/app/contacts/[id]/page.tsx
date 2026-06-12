@@ -88,12 +88,12 @@ export default async function ContactDetailPage({
   const followUps = followUpsResult.data ?? [];
 
   const displayName =
-    contact.name ?? contact.first_name
-      ? `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim()
-      : "Unnamed Contact";
+    `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || "Unnamed Contact";
 
-  const phone = contact.primary_phone ?? contact.phone ?? null;
-  const email = contact.email ?? null;
+  const phone = contact.primary_phone ?? null;
+  const email = contact.primary_email ?? null;
+  const businessName = (contact.metadata as { business_name?: string } | null)?.business_name ?? null;
+  const address = (contact.billing_address as { line1?: string } | null)?.line1 ?? null;
 
   return (
     <AppShell
@@ -121,8 +121,8 @@ export default async function ContactDetailPage({
                     {email}
                   </a>
                 )}
-                {contact.company && (
-                  <span className="text-ud-faint">{contact.company}</span>
+                {businessName && (
+                  <span className="text-ud-faint">{businessName}</span>
                 )}
                 {contact.source && (
                   <span className="text-[11px] px-2 py-0.5 rounded-[5px] bg-ud-surface-sunk text-ud-muted border border-ud">
@@ -135,7 +135,7 @@ export default async function ContactDetailPage({
               </div>
             </div>
             <a
-              href={`/customers/${id}/edit`}
+              href={`/contacts/${id}/edit`}
               className="px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
             >
               Edit
@@ -155,14 +155,8 @@ export default async function ContactDetailPage({
               <DetailRow label="Name" value={displayName} />
               <DetailRow label="Phone" value={phone} />
               <DetailRow label="Email" value={email} />
-              {contact.company && <DetailRow label="Company" value={contact.company} />}
-              {contact.address && <DetailRow label="Address" value={contact.address} />}
-              {contact.city && (
-                <DetailRow
-                  label="Location"
-                  value={[contact.city, contact.state, contact.zip].filter(Boolean).join(", ")}
-                />
-              )}
+              {businessName && <DetailRow label="Company" value={businessName} />}
+              {address && <DetailRow label="Address" value={address} />}
               <DetailRow label="Source" value={contact.source} />
               {contact.source_detail && (
                 <DetailRow label="Source detail" value={contact.source_detail} />

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
 
 type CustomerRow = {
   id: string;
@@ -104,12 +105,12 @@ export function ContactsTableClient({
     <div className="md:hidden px-4 pt-5 pb-10">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
-        <Link
-          href="/customers"
+        <a
+          href="#add-contact-m"
           className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
         >
           + Add
-        </Link>
+        </a>
       </div>
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
@@ -142,6 +143,11 @@ export function ContactsTableClient({
           })
         )}
       </div>
+      {profile && (
+        <div id="add-contact-m" className="mt-6 scroll-mt-20">
+          <CustomerCreateForm profile={profile} />
+        </div>
+      )}
     </div>
     <div className="hidden md:block px-7 pb-10 pt-7">
       {/* Header */}
@@ -153,12 +159,12 @@ export function ContactsTableClient({
           <h1 className="text-[22px] font-bold text-ud-ink">All contacts</h1>
           <div className="text-[13px] text-ud-muted mt-0.5">{customers.length} contacts</div>
         </div>
-        <Link
-          href="/customers"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
+        <a
+          href="#add-contact"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-accent text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
         >
-          Legacy view →
-        </Link>
+          + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
+        </a>
       </div>
 
       {/* Search */}
@@ -280,6 +286,12 @@ export function ContactsTableClient({
           </tbody>
         </table>
       </div>
+      )}
+
+      {profile && (
+        <div id="add-contact" className="mt-6 scroll-mt-20">
+          <CustomerCreateForm profile={profile} />
+        </div>
       )}
     </div>
     </>

@@ -72,8 +72,8 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
   };
 
   const issues: Issue[] = [
-    ...(missingEmail.length > 0 ? [{ id: "missing-email", dot: "danger" as const, title: `${missingEmail.length} ${customerPlural.toLowerCase()} missing email`, meta: `${customerPlural} · Needed for outreach and follow-up`, count: missingEmail.length, href: "/customers" }] : []),
-    ...(missingPhone.length > 0 ? [{ id: "missing-phone", dot: "warning" as const, title: `${missingPhone.length} ${customerPlural.toLowerCase()} missing phone number`, meta: `${customerPlural} · Limits how quickly you can reach ${customerPlural.toLowerCase()}`, count: missingPhone.length, href: "/customers" }] : []),
+    ...(missingEmail.length > 0 ? [{ id: "missing-email", dot: "danger" as const, title: `${missingEmail.length} ${customerPlural.toLowerCase()} missing email`, meta: `${customerPlural} · Needed for outreach and follow-up`, count: missingEmail.length, href: "/contacts" }] : []),
+    ...(missingPhone.length > 0 ? [{ id: "missing-phone", dot: "warning" as const, title: `${missingPhone.length} ${customerPlural.toLowerCase()} missing phone number`, meta: `${customerPlural} · Limits how quickly you can reach ${customerPlural.toLowerCase()}`, count: missingPhone.length, href: "/contacts" }] : []),
     ...(leadMissingCustomer.length > 0 ? [{ id: "lead-no-customer", dot: "warning" as const, title: `${leadMissingCustomer.length} open ${leadPlural.toLowerCase()} not linked to a ${customerSingular.toLowerCase()}`, meta: `${leadPlural} · Breaks history and lifetime value`, count: leadMissingCustomer.length, href: "/crm" }] : []),
     ...(leadMissingValue.length > 0 ? [{ id: "lead-no-value", dot: "neutral" as const, title: `${leadMissingValue.length} open ${leadPlural.toLowerCase()} missing estimated value`, meta: `${leadPlural} · Pipeline value will be understated`, count: leadMissingValue.length, href: "/crm" }] : []),
     ...(leadNoFollowUp.length > 0 ? [{ id: "lead-no-followup", dot: "warning" as const, title: `${leadNoFollowUp.length} open ${leadPlural.toLowerCase()} with no follow-up date`, meta: `${leadPlural} · At risk of going cold`, count: leadNoFollowUp.length, href: "/crm" }] : []),
@@ -83,7 +83,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
     ...(overdueFollowUps.length > 0 ? [{ id: "overdue-followups", dot: "danger" as const, title: `${overdueFollowUps.length} overdue ${followUpPlural.toLowerCase()}`, meta: `${followUpPlural} · These are past their due date`, count: overdueFollowUps.length, href: "/follow-ups" }] : []),
     ...(followUpNoDueDate.length > 0 ? [{ id: "followup-no-date", dot: "neutral" as const, title: `${followUpNoDueDate.length} ${followUpPlural.toLowerCase()} with no due date`, meta: `${followUpPlural} · Hard to prioritize without a date`, count: followUpNoDueDate.length, href: "/follow-ups" }] : []),
     ...(unpaidSales.length > 0 ? [{ id: "unpaid-sales", dot: "warning" as const, title: `${unpaidSales.length} ${salePlural.toLowerCase()} unpaid`, meta: `${salePlural} · Outstanding payments to collect`, count: unpaidSales.length, href: "/sales" }] : []),
-    ...(missingAddress.length > 0 ? [{ id: "missing-address", dot: "neutral" as const, title: `${missingAddress.length} ${customerPlural.toLowerCase()} missing address`, meta: `${customerPlural} · Useful for routing and service records`, count: missingAddress.length, href: "/customers" }] : []),
+    ...(missingAddress.length > 0 ? [{ id: "missing-address", dot: "neutral" as const, title: `${missingAddress.length} ${customerPlural.toLowerCase()} missing address`, meta: `${customerPlural} · Useful for routing and service records`, count: missingAddress.length, href: "/contacts" }] : []),
   ].sort((a, b) => {
     const order = { danger: 0, warning: 1, neutral: 2 };
     return order[a.dot] - order[b.dot];
