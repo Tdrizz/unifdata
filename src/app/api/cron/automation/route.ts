@@ -4,6 +4,7 @@ import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } f
 import { getSweeperQueue, getAutomationQueue, isRedisConfigured, JOB_SWEEP_BATCH, JOB_RUN_NIGHTLY_COORDINATOR, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import { getOrgsWithPendingSweep } from "@/lib/data-keeper/sweeper";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { evaluateDaysInactiveAutomations } from "@/lib/automations/evaluator";
 
 export const runtime = "nodejs";
 
@@ -40,9 +41,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
+  // Time-based automations run before the Redis gate — they evaluate and fire
+  // directly against the database and must not be lost when queues are down.
+  let daysInactiveFired = 0;
+  try {
+    daysInactiveFired = await evaluateDaysInactiveAutomations(createAdminClient());
+  } catch (err) {
+    console.warn("[cron.automation] days_inactive evaluation failed:", err instanceof Error ? err.message : err);
+  }
+
   if (!isRedisConfigured()) {
     return NextResponse.json(
-      { ok: false, error: "REDIS_URL is not configured — queue processing skipped." },
+      { ok: false, daysInactiveFired, error: "REDIS_URL is not configured — queue processing skipped." },
       { status: 503 },
     );
   }
@@ -103,7 +113,7 @@ export async function GET(request: Request) {
     await drainWorker(dkWorker);
     await drainWorker(swWorker);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, daysInactiveFired });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[cron.automation] Worker run failed", message);

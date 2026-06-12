@@ -61,6 +61,7 @@ const TRIGGER_OPTIONS = [
   { value: "record_created", label: "Record created" },
   { value: "record_completed", label: "Record completed" },
   { value: "message_received", label: "Message received" },
+  { value: "days_inactive", label: "Contact inactive for N days" },
 ];
 
 const ACTION_OPTIONS = [
@@ -107,6 +108,7 @@ function NewAutomationBuilder({
 }) {
   const [step, setStep] = useState<Step>("trigger");
   const [triggerType, setTriggerType] = useState("contact_created");
+  const [inactiveDays, setInactiveDays] = useState("30");
   const [conditions, setConditions] = useState<ConditionDraft[]>([]);
   const [actionType, setActionType] = useState("add_tag");
   const [actionValue, setActionValue] = useState("");
@@ -152,6 +154,10 @@ function NewAutomationBuilder({
           name: name.trim(),
           description: description.trim() || null,
           trigger_type: triggerType,
+          trigger_config:
+            triggerType === "days_inactive"
+              ? { days: Math.min(Math.max(Number(inactiveDays) || 30, 1), 730) }
+              : {},
           conditions: conditions.filter(
             (c) => VALUELESS_OPERATORS.has(c.operator) || c.value.trim() !== ""
           ),
@@ -212,6 +218,24 @@ function NewAutomationBuilder({
                 </label>
               ))}
             </div>
+            {triggerType === "days_inactive" && (
+              <div className="mt-3">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+                  Days without activity
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={730}
+                  value={inactiveDays}
+                  onChange={(e) => setInactiveDays(e.target.value)}
+                  className="w-32 px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
+                />
+                <p className="mt-1.5 text-[11px] text-ud-faint">
+                  Checked once a day. Fires once per contact when they pass this many days without any logged activity.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

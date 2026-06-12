@@ -33,16 +33,21 @@ export async function triggerAutomations(
   triggerConfig: Record<string, unknown>,
   contactId: string,
   supabase: SupabaseClient,
-  depth = 0
+  depth = 0,
+  onlyAutomationId?: string
 ): Promise<void> {
   if (depth > MAX_TRIGGER_DEPTH) return;
   // 1. Fetch active automations for org with matching trigger_type
-  const { data: automations } = await supabase
+  let query = supabase
     .from("automations")
     .select("id, organization_id, name, conditions, actions, run_count")
     .eq("organization_id", orgId)
     .eq("trigger_type", triggerType)
     .eq("is_active", true);
+  if (onlyAutomationId) {
+    query = query.eq("id", onlyAutomationId);
+  }
+  const { data: automations } = await query;
 
   if (!automations || automations.length === 0) return;
 
@@ -131,6 +136,81 @@ export async function triggerAutomations(
       })
       .eq("id", automation.id);
   }
+}
+
+/**
+ * Daily evaluation of "days_inactive" automations, called from the automation
+ * cron. A contact qualifies when it was created before the inactivity window
+ * and has no contact_activity inside it. Each automation fires at most once
+ * per contact, ever (one-shot), and at most 25 contacts per day so newly
+ * enabled rules can't trigger an SMS storm over an old customer base.
+ */
+export async function evaluateDaysInactiveAutomations(supabase: SupabaseClient): Promise<number> {
+  const { data: automations } = await supabase
+    .from("automations")
+    .select("id, organization_id, trigger_config")
+    .eq("trigger_type", "days_inactive")
+    .eq("is_active", true);
+
+  if (!automations || automations.length === 0) return 0;
+
+  let fired = 0;
+  for (const automation of automations) {
+    const config = (automation.trigger_config ?? {}) as { days?: unknown };
+    const rawDays = Number(config.days);
+    const windowDays = Number.isFinite(rawDays) && rawDays >= 1 ? Math.min(rawDays, 730) : 30;
+    const threshold = new Date(Date.now() - windowDays * 86400000).toISOString();
+    const orgId = automation.organization_id as string;
+
+    const [{ data: contacts }, { data: recent }, { data: prior }] = await Promise.all([
+      supabase
+        .from("master_customers")
+        .select("id")
+        .eq("organization_id", orgId)
+        .lt("created_at", threshold)
+        .limit(1000),
+      supabase
+        .from("contact_activity")
+        .select("contact_id")
+        .eq("organization_id", orgId)
+        .gte("created_at", threshold)
+        .limit(10000),
+      supabase
+        .from("automation_runs")
+        .select("contact_id")
+        .eq("automation_id", automation.id)
+        .limit(10000),
+    ]);
+
+    if (!contacts || contacts.length === 0) continue;
+
+    const activeIds = new Set((recent ?? []).map((r) => r.contact_id));
+    const alreadyFired = new Set((prior ?? []).map((r) => r.contact_id));
+
+    const candidates = contacts
+      .filter((c) => !activeIds.has(c.id) && !alreadyFired.has(c.id))
+      .slice(0, 25);
+
+    for (const candidate of candidates) {
+      try {
+        // Scope to this automation — other days_inactive rules have their own
+        // windows and must only fire for their own candidate sets.
+        await triggerAutomations(
+          orgId,
+          "days_inactive",
+          { days: windowDays },
+          candidate.id,
+          supabase,
+          0,
+          automation.id as string,
+        );
+        fired++;
+      } catch (err) {
+        console.error("[automation] days_inactive trigger failed", { automationId: automation.id, err });
+      }
+    }
+  }
+  return fired;
 }
 
 async function evaluateCondition(

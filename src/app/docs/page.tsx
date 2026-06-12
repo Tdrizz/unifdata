@@ -96,7 +96,7 @@ const pages = [
     path: "/automations",
     tag: "Tools",
     description:
-      "Rule builder for contact-based automations. Rules fire automatically when a contact is created, an inbound SMS arrives, or a process record is created — adding tags, setting status, sending SMS, or notifying the owner.",
+      "Rule builder for contact-based automations. Rules fire when a contact is created, changes status, gains a tag, goes inactive for N days, sends an inbound SMS, or when a process record is created or completed — adding tags, setting status, sending SMS, creating follow-ups or board records, or notifying the owner. Conditions scope each rule, and every run is logged.",
   },
   {
     name: "Opportunities",
