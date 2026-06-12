@@ -45,7 +45,7 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-4 border-b border-ud-soft flex items-center justify-between">
         <p className="text-sm font-semibold text-ud-ink">Edit {customerLabel}</p>
-        <Link href={`/contacts/${contact.id}`} className="text-[12px] text-ud-muted hover:text-ud-ink">
+        <Link href={`/customers/${contact.id}`} className="text-[12px] text-ud-muted hover:text-ud-ink">
           Back to {customerLabel} →
         </Link>
       </div>

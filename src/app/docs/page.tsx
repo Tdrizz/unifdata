@@ -65,14 +65,14 @@ const pages = [
   },
   {
     name: "People",
-    path: "/contacts",
+    path: "/customers",
     tag: "Records",
     description:
       "Stores all relationship records — customers, clients, patients, accounts, or companies depending on the business sector.",
   },
   {
     name: "Contacts",
-    path: "/contacts",
+    path: "/customers",
     tag: "Records",
     description:
       "Unified contact view built on master customer records. Synced from every write path — manual entry, onboarding, CSV import, AI assistant, and integrations. Shows activity timeline, notes, linked jobs, sales, and follow-ups. Supports tag filtering and segment groups.",

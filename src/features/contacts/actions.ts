@@ -115,11 +115,11 @@ export async function updateContactAction(
     }
   }
 
-  revalidatePath("/contacts");
-  revalidatePath(`/contacts/${id}`);
-  revalidatePath(`/contacts/${id}/edit`);
+  revalidatePath("/customers");
+  revalidatePath(`/customers/${id}`);
+  revalidatePath(`/customers/${id}/edit`);
   revalidatePath("/workspace");
-  redirect(`/contacts/${id}?toast=Contact+updated`);
+  redirect(`/customers/${id}?toast=Contact+updated`);
 }
 
 export async function deleteContactAction(id: string) {
@@ -135,7 +135,7 @@ export async function deleteContactAction(id: string) {
     .eq("organization_id", company.id)
     .maybeSingle();
 
-  if (!existing) redirect("/contacts?toast=Contact+not+found");
+  if (!existing) redirect("/customers?toast=Contact+not+found");
 
   const { error } = await supabase
     .from("master_customers")
@@ -143,7 +143,7 @@ export async function deleteContactAction(id: string) {
     .eq("id", id)
     .eq("organization_id", company.id);
 
-  if (error) redirect(`/contacts/${id}/edit?error=${encodeURIComponent(error.message)}`);
+  if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
 
   if (existing.legacy_customer_id) {
     const { error: legacyError } = await supabase
@@ -156,7 +156,7 @@ export async function deleteContactAction(id: string) {
     }
   }
 
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   revalidatePath("/workspace");
-  redirect("/contacts?toast=Contact+deleted");
+  redirect("/customers?toast=Contact+deleted");
 }

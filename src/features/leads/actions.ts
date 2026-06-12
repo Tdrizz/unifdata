@@ -60,7 +60,7 @@ export async function createLeadAction(
 
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/crm?toast=Opportunity+created");
 }
 
@@ -121,7 +121,7 @@ export async function updateLeadAction(
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/crm?toast=Opportunity+updated");
 }
 
@@ -141,7 +141,7 @@ export async function deleteLeadAction(id: string) {
 
   revalidatePath("/crm");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/crm?toast=Opportunity+deleted");
 }
 

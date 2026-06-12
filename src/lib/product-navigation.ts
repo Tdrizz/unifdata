@@ -37,7 +37,7 @@ export function getProductNavigation(profile: IndustryProfile): ProductNavGroup[
       label: "Workspace",
       items: [
         {
-          href: "/contacts",
+          href: "/customers",
           label: profile.labels.customerPlural,
           description: `${profile.labels.customerPlural} and contact records`,
         },

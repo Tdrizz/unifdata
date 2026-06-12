@@ -96,7 +96,7 @@ export async function createCustomerAction(
     }
   }
 
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   revalidatePath("/workspace");
-  redirect("/contacts?toast=Contact+created");
+  redirect("/customers?toast=Contact+created");
 }

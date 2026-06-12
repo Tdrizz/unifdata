@@ -81,7 +81,7 @@ export async function createJobAction(
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/jobs?toast=Job+created");
 }
 
@@ -141,7 +141,7 @@ export async function updateJobAction(
   revalidatePath(`/jobs/${id}`);
   revalidatePath(`/jobs/${id}/edit`);
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/jobs?toast=Job+updated");
 }
 
@@ -161,6 +161,6 @@ export async function deleteJobAction(id: string) {
 
   revalidatePath("/jobs");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/jobs?toast=Job+deleted");
 }

@@ -123,7 +123,7 @@ export function ContactsTableClient({
             return (
               <Link
                 key={c.id}
-                href={`/contacts/${c.id}`}
+                href={`/customers/${c.id}`}
                 className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 hover:bg-[rgba(0,0,0,0.015)]"
               >
                 <div className="w-8 h-8 rounded-full bg-ud-accent/10 flex items-center justify-center text-[13px] font-bold text-ud-accent shrink-0">
@@ -232,7 +232,7 @@ export function ContactsTableClient({
                           {initials}
                         </div>
                         <Link
-                          href={`/contacts/${contact.id}`}
+                          href={`/customers/${contact.id}`}
                           className="font-semibold text-ud-ink hover:text-ud-accent transition-colors"
                         >
                           {name}
@@ -273,7 +273,7 @@ export function ContactsTableClient({
                     </td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
                       <Link
-                        href={`/contacts/${contact.id}`}
+                        href={`/customers/${contact.id}`}
                         className="text-ud-accent no-underline font-medium text-[12px] hover:underline"
                       >
                         View →
