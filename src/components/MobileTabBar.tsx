@@ -42,12 +42,12 @@ function SvgCalendar({ active }: { active: boolean }) {
     </svg>
   );
 }
-function SvgMore({ active }: { active: boolean }) {
+function SvgSparkles({ active }: { active: boolean }) {
   return (
     <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+      <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
+      <path d="M5 17l.5 1.5L7 19l-1.5.5L5 21l-.5-1.5L3 19l1.5-.5L5 17z"/>
     </svg>
   );
 }
@@ -69,45 +69,28 @@ export function MobileTabBar({
       match: (p: string) => p === "/workspace",
     },
     {
-      href: "/contacts",
+      href: "/customers",
       label: profile.labels.customerPlural,
       Icon: SvgUsers,
-      match: (p: string) =>
-        p === "/contacts" ||
-        p.startsWith("/contacts/") ||
-        p === "/customers" ||
-        p.startsWith("/customers/"),
+      match: (p: string) => p === "/customers" || p.startsWith("/customers/") || p === "/contacts" || p.startsWith("/contacts/"),
     },
     {
       href: "/crm",
       label: "Pipeline",
       Icon: SvgBriefcase,
-      match: (p: string) =>
-        p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
+      match: (p: string) => p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
     },
     {
       href: "/jobs",
-      label: profile.labels.jobPlural ?? "Visits",
+      label: profile.labels.jobPlural ?? "Jobs",
       Icon: SvgCalendar,
       match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
     },
     {
-      href: "/settings",
-      label: "More",
-      Icon: SvgMore,
-      match: (p: string) =>
-        p === "/settings" ||
-        p.startsWith("/settings/") ||
-        p === "/imports" ||
-        p === "/sales" ||
-        p === "/ai-assistant" ||
-        p.startsWith("/ai-assistant/") ||
-        p === "/follow-ups" ||
-        p.startsWith("/follow-ups/") ||
-        p === "/data-hub" ||
-        p === "/communications" ||
-        p === "/automations" ||
-        p === "/process",
+      href: "/aria",
+      label: "Aria",
+      Icon: SvgSparkles,
+      match: (p: string) => p === "/aria" || p === "/ai-assistant" || p.startsWith("/ai-assistant/"),
     },
   ];
 
