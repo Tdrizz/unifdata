@@ -34,15 +34,24 @@ function ProposalRow({
   onRemove: (id: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [actError, setActError] = useState<string | null>(null);
   const updates = (proposal.proposed_changes?.updates ?? {}) as FieldDelta;
   const hasDiff = Object.keys(updates).length > 0;
 
   async function act(action: "approve" | "reject") {
     setBusy(true);
+    setActError(null);
     try {
-      await fetch(`/api/v1/proposals/${proposal.id}/${action}`, { method: "POST" });
+      const res = await fetch(`/api/v1/proposals/${proposal.id}/${action}`, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        setActError(body.error ?? "Action failed. Please try again.");
+        setBusy(false);
+        return;
+      }
       onRemove(proposal.id);
     } catch {
+      setActError("Network error. Please try again.");
       setBusy(false);
     }
   }
@@ -76,6 +85,9 @@ function ProposalRow({
             ? proposal.raw_reasoning.slice(0, 157) + "…"
             : proposal.raw_reasoning}
         </div>
+        {actError && (
+          <div style={{ marginTop: "6px", fontSize: "12px", color: "#dc2626" }}>{actError}</div>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getAutomationQueue,
+  isRedisConfigured,
   JOB_RECORD_NUDGER,
   DEFAULT_JOB_OPTIONS,
 } from "@/lib/queue/client";
@@ -30,6 +31,13 @@ export async function GET(request: Request) {
   }
   if (request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!isRedisConfigured()) {
+    return NextResponse.json(
+      { ok: false, error: "REDIS_URL is not configured — queue processing skipped." },
+      { status: 503 },
+    );
   }
 
   const supabase = createAdminClient();

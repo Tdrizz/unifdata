@@ -57,15 +57,20 @@ export async function POST(
       }
     }
 
-    await admin
+    const { error: updateError } = await admin
       .from("master_customers")
       .update(updateRecord as TablesUpdate<"master_customers">)
       .eq("id", proposal.target_record_id)
       .eq("organization_id", company.id);
+    if (updateError) {
+      // Don't flip the proposal to APPROVED if the data write failed — leave it
+      // retryable instead of silently marking it done.
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
   } else if (!proposal.target_record_id && changes.normalizedData) {
     // Proposal was for a new record — create it now
     const p = changes.normalizedData;
-    await admin.from("master_customers").insert({
+    const { error: insertError } = await admin.from("master_customers").insert({
       organization_id: company.id,
       first_name: p.firstName,
       last_name: p.lastName,
@@ -77,6 +82,9 @@ export async function POST(
         approved_by: user.id,
       },
     });
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
   }
 
   // Write sync token to prevent echo loop — covers both update and create paths.

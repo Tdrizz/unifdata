@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getDataKeeperQueue, JOB_EMBEDDING_BACKFILL, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
+import { getDataKeeperQueue, isRedisConfigured, JOB_EMBEDDING_BACKFILL, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import type { EmbeddingBackfillJobData } from "@/lib/queue/jobs/embedding-backfill-job";
 
 export const runtime = "nodejs";
@@ -16,6 +16,13 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    if (!isRedisConfigured()) {
+      return NextResponse.json(
+        { ok: false, error: "REDIS_URL is not configured — queue processing skipped." },
+        { status: 503 },
+      );
     }
 
     const supabase = createAdminClient();

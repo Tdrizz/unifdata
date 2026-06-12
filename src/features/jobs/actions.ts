@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { logActivity } from "@/lib/crm/activity";
+import { resolveOwnedContactId } from "@/lib/crm/contacts";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildJobText } from "@/lib/embeddings/generate";
 
@@ -20,7 +21,7 @@ export async function createJobAction(
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  const contactId = getFormString(formData, "contact_id");
+  const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
   const leadId = getFormString(formData, "lead_id");
   const serviceType = getFormString(formData, "service_type");
   const status = getFormString(formData, "status") || "Scheduled";
@@ -94,7 +95,7 @@ export async function updateJobAction(
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
 
-  const contactId = getFormString(formData, "contact_id");
+  const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
   const leadId = getFormString(formData, "lead_id");
   const serviceType = getFormString(formData, "service_type");
   const status = getFormString(formData, "status") || "Scheduled";

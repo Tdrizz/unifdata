@@ -18,6 +18,18 @@ function isSubscribed(metadata: Record<string, unknown> | null | undefined) {
   return metadata?.subscribed === true;
 }
 
+// Pilot users bypass the paywall via a comma-separated email allowlist.
+// Remove PILOT_EMAILS from the environment to end the pilot program.
+function isPilotUser(email: string): boolean {
+  const list = process.env.PILOT_EMAILS;
+  if (!list || !email) return false;
+  return list
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+    .includes(email.toLowerCase());
+}
+
 function getStringMetadata(
   publicMetadata: Record<string, unknown> | null | undefined,
   privateMetadata: Record<string, unknown> | null | undefined,
@@ -66,7 +78,9 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
   }
 
   const subscribed =
-    isSubscribed(user.publicMetadata) || isSubscribed(user.privateMetadata);
+    isSubscribed(user.publicMetadata) ||
+    isSubscribed(user.privateMetadata) ||
+    isPilotUser(email);
   const invitationCompanyId = getStringMetadata(
     user.publicMetadata,
     user.privateMetadata,
@@ -162,7 +176,19 @@ export async function requireSubscription() {
   const user = await requireAppUser();
 
   if (!user.subscribed) {
-    redirect("/subscribe");
+    // Subscription is company-level: members invited into an existing company
+    // (whose owner already paid to create it) must not hit the paywall again.
+    const supabase = createAdminClient();
+    const { data: membership } = await supabase
+      .from("company_members")
+      .select("company_id")
+      .eq("user_id", user.profileId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) {
+      redirect("/subscribe");
+    }
   }
 
   return user;

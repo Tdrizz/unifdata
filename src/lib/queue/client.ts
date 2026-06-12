@@ -8,6 +8,12 @@ import { Queue } from "bullmq";
 
 let connection: IORedis | null = null;
 
+// Guard for routes that should degrade gracefully (503) instead of throwing
+// when Redis hasn't been provisioned yet.
+export function isRedisConfigured(): boolean {
+  return Boolean(process.env.REDIS_URL);
+}
+
 export function getRedisConnection(): IORedis {
   if (connection) return connection;
 

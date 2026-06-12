@@ -7,6 +7,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { getTodayString } from "@/lib/date-format";
 import { logActivity } from "@/lib/crm/activity";
+import { resolveOwnedContactId } from "@/lib/crm/contacts";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildSaleText } from "@/lib/embeddings/generate";
 
@@ -26,7 +27,7 @@ export async function createSaleAction(
   const saleDate = getFormString(formData, "sale_date") || getTodayString();
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
-  const contactId = getFormString(formData, "contact_id");
+  const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };
@@ -96,7 +97,7 @@ export async function updateSaleAction(
   const saleDate = getFormString(formData, "sale_date");
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
-  const contactId = getFormString(formData, "contact_id");
+  const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };

@@ -6,6 +6,7 @@ import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-va
 import { checkAndDropEchoWebhook } from "@/lib/conflict-resolver";
 import { normalizePhone } from "@/lib/crm/phone";
 import { logActivity } from "@/lib/crm/activity";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export const runtime = "nodejs";
 
@@ -169,22 +170,21 @@ export async function POST(request: Request) {
         .eq("id", threadId);
 
       // Increment unread count separately
-      await (supabase as any).rpc("increment_unread", { thread_id: threadId }).catch(() => {
-        // If RPC doesn't exist, do a manual fetch+update
-        (supabase as any)
+      const rpcResult = await (supabase as any).rpc("increment_unread", { thread_id: threadId });
+      if (rpcResult.error) {
+        // RPC doesn't exist — fall back to read-modify-write
+        const { data: threadRow } = await (supabase as any)
           .from("communications")
           .select("unread_count")
           .eq("id", threadId)
-          .maybeSingle()
-          .then(({ data }: { data: { unread_count: number } | null }) => {
-            if (data) {
-              (supabase as any)
-                .from("communications")
-                .update({ unread_count: (data.unread_count ?? 0) + 1 })
-                .eq("id", threadId);
-            }
-          });
-      });
+          .maybeSingle();
+        if (threadRow) {
+          await (supabase as any)
+            .from("communications")
+            .update({ unread_count: (threadRow.unread_count ?? 0) + 1 })
+            .eq("id", threadId);
+        }
+      }
 
       // Log activity on the contact
       try {
@@ -199,6 +199,13 @@ export async function POST(request: Request) {
       } catch {
         // Non-fatal
       }
+    }
+
+    // Fire message_received automations for the matched contact
+    try {
+      await triggerAutomations(orgId, "message_received", { body }, customer!.id, supabase);
+    } catch (err) {
+      console.error("[twilio.webhook] automation trigger failed", err);
     }
   }
 

@@ -57,12 +57,8 @@ type Step = "trigger" | "conditions" | "actions" | "name";
 
 const TRIGGER_OPTIONS = [
   { value: "contact_created", label: "Contact created" },
-  { value: "status_changed", label: "Status changed" },
-  { value: "tag_added", label: "Tag added" },
   { value: "record_created", label: "Record created" },
-  { value: "record_completed", label: "Record completed" },
   { value: "message_received", label: "Message received" },
-  { value: "manual", label: "Manual trigger" },
 ];
 
 const ACTION_OPTIONS = [
@@ -177,10 +173,8 @@ function NewAutomationBuilder({
           <div>
             <h2 className="text-[15px] font-bold text-ud-ink mb-3">Conditions</h2>
             <p className="text-[13px] text-ud-muted">
-              No conditions — this automation runs for all contacts that match the trigger.
-            </p>
-            <p className="text-[12px] text-ud-faint mt-2">
-              Advanced conditions can be configured later.
+              No conditions — this automation runs for every contact that matches the trigger.
+              Each automation runs at most once per contact every 24 hours.
             </p>
           </div>
         )}

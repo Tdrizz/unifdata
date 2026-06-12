@@ -36,7 +36,7 @@ export async function evaluateSmartGroup(
   // For a production system this would build SQL, but for now we filter in memory
   const { data: contacts } = await (supabase as any)
     .from("master_customers")
-    .select("id, relationship_status, source, primary_phone, email, created_at")
+    .select("id, relationship_status, source, primary_phone, primary_email, created_at")
     .eq("organization_id", orgId);
 
   if (!contacts) return [];

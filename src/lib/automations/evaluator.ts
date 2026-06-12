@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SmartGroupRule } from "@/lib/crm/smart-groups";
 import { getAutomationQueue, JOB_POST_COMPLETION_OUTREACH } from "@/lib/queue/client";
+import { sendSms } from "@/lib/messaging/sms";
+import { toE164 } from "@/lib/webhook-validation";
 
 type AutomationAction = {
   type: string;
@@ -13,6 +15,7 @@ type Automation = {
   name: string;
   conditions: SmartGroupRule[];
   actions: AutomationAction[];
+  run_count: number | null;
 };
 
 export async function triggerAutomations(
@@ -25,7 +28,7 @@ export async function triggerAutomations(
   // 1. Fetch active automations for org with matching trigger_type
   const { data: automations } = await supabase
     .from("automations")
-    .select("id, organization_id, name, conditions, actions")
+    .select("id, organization_id, name, conditions, actions, run_count")
     .eq("organization_id", orgId)
     .eq("trigger_type", triggerType)
     .eq("is_active", true);
@@ -99,9 +102,7 @@ export async function triggerAutomations(
     await supabase
       .from("automations")
       .update({
-        run_count: (automation as unknown as { run_count: number }).run_count
-          ? (automation as unknown as { run_count: number }).run_count + 1
-          : 1,
+        run_count: (automation.run_count ?? 0) + 1,
         last_triggered: new Date().toISOString(),
       })
       .eq("id", automation.id);
@@ -135,7 +136,9 @@ async function evaluateCondition(
   if (operator === "contains") return (fieldValue ?? "").toLowerCase().includes((value ?? "").toLowerCase());
   if (operator === "is_blank") return fieldValue == null || fieldValue === "";
   if (operator === "is_not_blank") return fieldValue != null && fieldValue !== "";
-  return true;
+  // Unknown/unsupported operator — fail closed so an automation never fires on a
+  // condition we can't actually evaluate.
+  return false;
 }
 
 async function executeAction(
@@ -213,13 +216,33 @@ async function executeAction(
     }
 
     case "send_sms": {
-      // TODO: wire Twilio — log intent as activity
+      const message = (action.message as string | undefined)?.trim();
+      if (!message) {
+        throw new Error("send_sms action has no message configured.");
+      }
+      const phone = contact.primary_phone as string | null | undefined;
+      if (!phone) {
+        throw new Error("Contact has no phone number — SMS not sent.");
+      }
+      const to = toE164(phone);
+      const providerMessageId = await sendSms(to, message);
+
+      await supabase.from("communications_log").insert({
+        organization_id: orgId,
+        customer_id: contactId,
+        direction: "outbound",
+        channel: "sms",
+        to_address: to,
+        payload: message,
+        status: "sent",
+        provider_message_id: providerMessageId || null,
+      });
       await supabase.from("contact_activity").insert({
         organization_id: orgId,
         contact_id: contactId,
         event_type: "message_sent",
         event_label: "SMS sent by automation",
-        event_detail: action.message as string | null ?? null,
+        event_detail: message,
         source: "agent",
       });
       break;
@@ -238,8 +261,13 @@ async function executeAction(
     }
 
     case "notify_owner": {
-      // Log only
-      console.info(`[automation] notify_owner for contact ${contactId}: ${action.message ?? ""}`);
+      await supabase.from("notifications").insert({
+        company_id: orgId,
+        type: "automation",
+        title: "Automation alert",
+        body: (action.message as string | undefined) || `Automation triggered for a contact.`,
+        read: false,
+      });
       break;
     }
 
