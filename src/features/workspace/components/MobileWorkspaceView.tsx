@@ -19,7 +19,6 @@ import {
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
-import { AgentInbox } from "./AgentInbox";
 
 type QueueItem = {
   id: string;
@@ -188,11 +187,29 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
   return (
     <div className="block md:hidden pb-8">
-      {/* Agent Inbox (Pro tier) */}
-      {isPro && (drafts.length > 0 || alerts.length > 0) && (
-        <div className="px-4 pt-4">
-          <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />
-        </div>
+      {/* Aria briefing card (Pro tier) */}
+      {isPro && (drafts.length + alerts.length > 0) && (
+        <Link
+          href="/aria"
+          className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-[12px] border border-ud-accent/20 bg-ud-accent/[0.03] px-4 py-3.5 active:opacity-75"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
+                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-ud-ink">
+                Aria found {drafts.length + alerts.length} {drafts.length + alerts.length === 1 ? "item" : "items"}
+              </p>
+              <p className="text-[11.5px] text-ud-muted">Tap to review</p>
+            </div>
+          </div>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent shrink-0">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </Link>
       )}
 
       {/* 1. Greeting */}
@@ -209,7 +226,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       <div className="overflow-x-auto no-scrollbar px-4 pb-5">
         <div className="flex gap-[8px]">
           <Link
-            href="/contacts"
+            href="/customers"
             className="flex-shrink-0 flex items-center gap-[6px] rounded-[10px] border border-ud bg-ud-surface px-[14px] py-[9px] text-[13px] font-semibold text-ud-ink active:scale-[0.96] transition-transform"
           >
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">

@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
+import { toast } from "sonner";
 import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
 import ReactMarkdown from "react-markdown";
+import { AriaDraftCard, AriaAlertCard, getTimeOfDay } from "@/features/ai-assistant/AiAssistantView";
+import type { Draft, Alert } from "@/features/ai-assistant/AiAssistantView";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -22,14 +25,27 @@ const STARTER_QUESTIONS = [
 type Props = {
   initialMessages?: Array<{ role: "user" | "model"; text: string }>;
   initialSessionId?: string | null;
+  drafts?: Draft[];
+  alerts?: Alert[];
+  isPro?: boolean;
 };
 
-export function MobileAiView({ initialMessages = [], initialSessionId = null }: Props) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+export function MobileAiView({ initialMessages = [], initialSessionId = null, drafts = [], alerts = [], isPro = false }: Props) {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (initialMessages.length > 0) return initialMessages;
+    const total = drafts.length + alerts.length;
+    if (total === 0 || !isPro) return [];
+    return [{
+      role: "model" as const,
+      text: `Good ${getTimeOfDay()}. I reviewed your business overnight and found ${total === 1 ? "1 thing" : `${total} things`} that need your attention. Take a look below — tap any action to handle it, or ask me anything.`,
+    }];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
+  const [draftList, setDraftList] = useState<Draft[]>(drafts);
+  const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,6 +147,28 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null }: 
     }
   }
 
+  async function handleApproveDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      toast.error((body as { error?: string }).error ?? "Failed to approve. Try again.");
+      return;
+    }
+    setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleDismissDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+    if (!res.ok) { toast.error("Failed to dismiss. Try again."); return; }
+    setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleDismissAlert(id: string) {
+    const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+    if (!res.ok) { toast.error("Failed to dismiss. Try again."); return; }
+    setAlertList((prev) => prev.filter((a) => a.id !== id));
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     sendMessage(input);
@@ -221,6 +259,26 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null }: 
         {error && (
           <div className="rounded-[10px] border border-ud bg-ud-surface-soft px-[14px] py-[11px] text-[13px] text-ud-danger">
             {error}
+          </div>
+        )}
+
+        {isPro && (draftList.length > 0 || alertList.length > 0) && (
+          <div className="space-y-2.5">
+            {draftList.map((draft) => (
+              <AriaDraftCard
+                key={draft.id}
+                draft={draft}
+                onApprove={() => handleApproveDraft(draft.id)}
+                onDismiss={() => handleDismissDraft(draft.id)}
+              />
+            ))}
+            {alertList.map((alert) => (
+              <AriaAlertCard
+                key={alert.id}
+                alert={alert}
+                onDismiss={() => handleDismissAlert(alert.id)}
+              />
+            ))}
           </div>
         )}
 

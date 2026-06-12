@@ -2,15 +2,92 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/PageHeader";
 import ReactMarkdown from "react-markdown";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+
+export type Draft = {
+  id: string;
+  draft_type: string;
+  subject?: string | null;
+  body: string;
+  action_label?: string | null;
+  reasoning?: string | null;
+  escalation_level?: number | null;
+};
+
+export type Alert = {
+  id: string;
+  alert_type: string;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  body: string;
+  reasoning?: string | null;
+  escalation_level?: number | null;
+};
 
 type Message = {
   role: "user" | "model" | "action";
   text: string;
   streaming?: boolean;
 };
+
+export function getTimeOfDay() {
+  const h = new Date().getHours();
+  return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+}
+
+export function AriaDraftCard({ draft, onApprove, onDismiss }: { draft: Draft; onApprove: () => Promise<void>; onDismiss: () => Promise<void> }) {
+  const [actioning, setActioning] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
+  const label = draft.draft_type === "outreach_email" || draft.draft_type === "outreach_sms" ? "Send" : draft.action_label ?? "Approve";
+  return (
+    <div className="rounded-[12px] border border-ud bg-ud-surface p-4">
+      <div className="flex items-start gap-3">
+        <div className="w-7 h-7 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0 text-[12px]">
+          {draft.draft_type === "outreach_email" ? "✉" : "💬"}
+        </div>
+        <div className="flex-1 min-w-0">
+          {draft.subject && <p className="text-[13px] font-semibold text-ud-ink mb-0.5 truncate">{draft.subject}</p>}
+          <p className="text-[12.5px] text-ud-text leading-relaxed line-clamp-2">{draft.body}</p>
+          {draft.reasoning && <p className="mt-1 text-[11px] text-ud-faint italic">{draft.reasoning}</p>}
+        </div>
+      </div>
+      <div className="flex gap-2 mt-3">
+        <button onClick={async () => { setActioning(true); await onApprove(); setActioning(false); }} disabled={actioning || dismissing} className="flex-1 rounded-[8px] bg-ud-accent text-white text-[12.5px] font-semibold py-2 hover:opacity-90 transition-opacity disabled:opacity-40">
+          {actioning ? "Sending…" : label}
+        </button>
+        <button onClick={async () => { setDismissing(true); await onDismiss(); setDismissing(false); }} disabled={actioning || dismissing} className="px-4 rounded-[8px] border border-ud text-ud-muted text-[12.5px] font-semibold py-2 hover:border-ud-hard hover:text-ud-ink transition-colors disabled:opacity-40">
+          Skip
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function AriaAlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => Promise<void> }) {
+  const [dismissing, setDismissing] = useState(false);
+  const toneClass = alert.severity === "critical"
+    ? "border-ud-danger/30 bg-ud-danger-bg/30"
+    : alert.severity === "warning"
+    ? "border-ud-warning/30 bg-ud-warning-bg/30"
+    : "border-ud";
+  return (
+    <div className={`rounded-[12px] border p-4 ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-ud-ink mb-0.5">{alert.title}</p>
+          <p className="text-[12.5px] text-ud-text leading-relaxed">{alert.body}</p>
+          {alert.reasoning && <p className="mt-1 text-[11px] text-ud-faint italic">{alert.reasoning}</p>}
+        </div>
+        <button onClick={async () => { setDismissing(true); await onDismiss(); setDismissing(false); }} disabled={dismissing} className="shrink-0 text-[12px] font-semibold text-ud-muted hover:text-ud-ink transition-colors disabled:opacity-40 px-2 py-1 rounded-[6px] hover:bg-ud-surface-sunk">
+          {dismissing ? "…" : "Got it"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
@@ -19,9 +96,12 @@ type Props = {
   initialMessages?: Array<{ role: "user" | "model"; text: string }>;
   initialSessionId?: string | null;
   profile?: IndustryProfile;
+  drafts?: Draft[];
+  alerts?: Alert[];
+  isPro?: boolean;
 };
 
-export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile }: Props) {
+export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile, drafts = [], alerts = [], isPro = false }: Props) {
   const customerPlural = profile?.labels.customerPlural ?? "clients";
   const jobPlural = profile?.labels.jobPlural ?? "jobs";
   const starterQuestions = [
@@ -30,10 +110,20 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
     "Draft a payment reminder for overdue invoices",
     "What's our close rate this quarter?",
   ];
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (initialMessages.length > 0) return initialMessages;
+    const total = drafts.length + alerts.length;
+    if (total === 0 || !isPro) return [];
+    return [{
+      role: "model" as const,
+      text: `Good ${getTimeOfDay()}. I reviewed your business overnight and found ${total === 1 ? "1 thing" : `${total} things`} that need your attention. Take a look below — tap any action to handle it, or ask me anything.`,
+    }];
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
+  const [draftList, setDraftList] = useState<Draft[]>(drafts);
+  const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -143,6 +233,28 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
     }
   }
 
+  async function handleApproveDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      toast.error((body as { error?: string }).error ?? "Failed to approve. Try again.");
+      return;
+    }
+    setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleDismissDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+    if (!res.ok) { toast.error("Failed to dismiss. Try again."); return; }
+    setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleDismissAlert(id: string) {
+    const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+    if (!res.ok) { toast.error("Failed to dismiss. Try again."); return; }
+    setAlertList((prev) => prev.filter((a) => a.id !== id));
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     sendMessage(input);
@@ -223,6 +335,26 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
             ))}
             <div ref={chatBottomRef} />
           </div>
+
+          {isPro && (draftList.length > 0 || alertList.length > 0) && (
+            <div className="px-5 pb-4 space-y-2.5">
+              {draftList.map((draft) => (
+                <AriaDraftCard
+                  key={draft.id}
+                  draft={draft}
+                  onApprove={() => handleApproveDraft(draft.id)}
+                  onDismiss={() => handleDismissDraft(draft.id)}
+                />
+              ))}
+              {alertList.map((alert) => (
+                <AriaAlertCard
+                  key={alert.id}
+                  alert={alert}
+                  onDismiss={() => handleDismissAlert(alert.id)}
+                />
+              ))}
+            </div>
+          )}
 
           <form className="border-t border-ud px-4 py-[14px] flex gap-2.5 items-center" onSubmit={handleSubmit}>
             <input
