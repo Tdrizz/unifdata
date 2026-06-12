@@ -17,7 +17,7 @@ export default async function AutomationsPage() {
 
   const { company } = currentCompany;
 
-  const [{ data: automations }, { data: boards }, { data: stages }] = await Promise.all([
+  const [{ data: automations }, { data: boards }, { data: stages }, { data: runs }] = await Promise.all([
     (supabase as any)
       .from("automations")
       .select("id, name, description, is_active, trigger_type, run_count, last_triggered, created_at")
@@ -33,6 +33,12 @@ export default async function AutomationsPage() {
       .select("id, name, board_id, stage_type, position")
       .eq("organization_id", company.id)
       .order("position", { ascending: true }),
+    (supabase as any)
+      .from("automation_runs")
+      .select("id, automation_id, triggered_by, status, error, run_at")
+      .eq("organization_id", company.id)
+      .order("run_at", { ascending: false })
+      .limit(100),
   ]);
 
   const boardsWithStages = (boards ?? []).map((b: { id: string; name: string }) => ({
@@ -49,7 +55,7 @@ export default async function AutomationsPage() {
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <AutomationsClient automations={automations ?? []} boards={boardsWithStages} />
+      <AutomationsClient automations={automations ?? []} boards={boardsWithStages} runs={runs ?? []} />
     </AppShell>
   );
 }

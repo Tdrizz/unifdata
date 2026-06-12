@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Card } from "@/components/ui/Card";
 
 function MobileDesktopNotice({ title, description }: { title: string; description: string }) {
   return (
@@ -77,6 +76,26 @@ const ACTION_OPTIONS = [
 
 type BoardOption = { id: string; name: string; stages: Array<{ id: string; name: string }> };
 
+type ConditionDraft = { field: string; operator: string; value: string };
+
+const CONDITION_FIELDS = [
+  { value: "relationship_status", label: "Contact status" },
+  { value: "tag", label: "Tag" },
+  { value: "source", label: "Source" },
+  { value: "primary_email", label: "Email" },
+  { value: "primary_phone", label: "Phone" },
+];
+
+const CONDITION_OPERATORS = [
+  { value: "is", label: "is" },
+  { value: "is_not", label: "is not" },
+  { value: "contains", label: "contains" },
+  { value: "is_blank", label: "is blank" },
+  { value: "is_not_blank", label: "is not blank" },
+];
+
+const VALUELESS_OPERATORS = new Set(["is_blank", "is_not_blank"]);
+
 function NewAutomationBuilder({
   boards,
   onCreated,
@@ -88,6 +107,7 @@ function NewAutomationBuilder({
 }) {
   const [step, setStep] = useState<Step>("trigger");
   const [triggerType, setTriggerType] = useState("contact_created");
+  const [conditions, setConditions] = useState<ConditionDraft[]>([]);
   const [actionType, setActionType] = useState("add_tag");
   const [actionValue, setActionValue] = useState("");
   const [dueInDays, setDueInDays] = useState("3");
@@ -132,6 +152,9 @@ function NewAutomationBuilder({
           name: name.trim(),
           description: description.trim() || null,
           trigger_type: triggerType,
+          conditions: conditions.filter(
+            (c) => VALUELESS_OPERATORS.has(c.operator) || c.value.trim() !== ""
+          ),
           actions: [action],
         }),
       });
@@ -195,10 +218,71 @@ function NewAutomationBuilder({
         {step === "conditions" && (
           <div>
             <h2 className="text-[15px] font-bold text-ud-ink mb-3">Conditions</h2>
-            <p className="text-[13px] text-ud-muted">
-              No conditions — this automation runs for every contact that matches the trigger.
+            <p className="text-[12px] text-ud-muted mb-3">
+              {conditions.length === 0
+                ? "No conditions — this automation runs for every contact that matches the trigger."
+                : "All conditions must match for the automation to run."}{" "}
               Each automation runs at most once per contact every 24 hours.
             </p>
+            <div className="space-y-2">
+              {conditions.map((c, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <select
+                    value={c.field}
+                    onChange={(e) =>
+                      setConditions((prev) => prev.map((p, j) => (j === i ? { ...p, field: e.target.value } : p)))
+                    }
+                    className="flex-1 px-2 py-2 bg-ud-surface border border-ud rounded-[8px] text-[12px] text-ud-ink outline-none"
+                  >
+                    {CONDITION_FIELDS.map((f) => (
+                      <option key={f.value} value={f.value}>{f.label}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={c.operator}
+                    onChange={(e) =>
+                      setConditions((prev) => prev.map((p, j) => (j === i ? { ...p, operator: e.target.value } : p)))
+                    }
+                    className="w-28 px-2 py-2 bg-ud-surface border border-ud rounded-[8px] text-[12px] text-ud-ink outline-none"
+                  >
+                    {(c.field === "tag"
+                      ? CONDITION_OPERATORS.filter((o) => o.value === "is" || o.value === "is_not")
+                      : CONDITION_OPERATORS
+                    ).map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  {!VALUELESS_OPERATORS.has(c.operator) && (
+                    <input
+                      type="text"
+                      value={c.value}
+                      onChange={(e) =>
+                        setConditions((prev) => prev.map((p, j) => (j === i ? { ...p, value: e.target.value } : p)))
+                      }
+                      placeholder="Value"
+                      className="flex-1 px-2 py-2 bg-transparent border border-ud rounded-[8px] text-[12px] text-ud-ink outline-none focus:border-ud-accent"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setConditions((prev) => prev.filter((_, j) => j !== i))}
+                    className="text-ud-muted hover:text-red-500 text-[13px] px-1"
+                    aria-label="Remove condition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setConditions((prev) => [...prev, { field: "relationship_status", operator: "is", value: "" }])
+              }
+              className="mt-3 text-[12px] font-semibold text-ud-accent hover:underline"
+            >
+              + Add condition
+            </button>
           </div>
         )}
 
@@ -367,15 +451,34 @@ function NewAutomationBuilder({
   );
 }
 
+type RunRow = {
+  id: string;
+  automation_id: string;
+  triggered_by: string;
+  status: string;
+  error: string | null;
+  run_at: string;
+};
+
 export function AutomationsClient({
   automations: initialAutomations,
   boards = [],
+  runs = [],
 }: {
   automations: Automation[];
   boards?: BoardOption[];
+  runs?: RunRow[];
 }) {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const runsByAutomation = new Map<string, RunRow[]>();
+  for (const run of runs) {
+    const list = runsByAutomation.get(run.automation_id) ?? [];
+    if (list.length < 10) list.push(run);
+    runsByAutomation.set(run.automation_id, list);
+  }
 
   async function toggleActive(id: string, current: boolean) {
     const res = await fetch(`/api/automations/${id}`, {
@@ -394,10 +497,6 @@ export function AutomationsClient({
     <>
     <MobileDesktopNotice title="Automations" description="Manage your automation rules on desktop for the full experience." />
     <div className="hidden md:block px-7 pb-10 pt-7">
-      <Card padding={16} radius="md" className="mb-6 border-ud-accent/20 bg-ud-accent/5">
-        <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-ud-accent mb-1">Early Access</p>
-        <p className="text-[13px] text-ud-muted">Automations are in early access. Rules you create now will run once this feature is fully enabled.</p>
-      </Card>
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-0.5">
@@ -439,41 +538,82 @@ export function AutomationsClient({
                 </td>
               </tr>
             ) : (
-              automations.map((automation) => (
-                <tr key={automation.id}>
-                  <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
-                    <div className="font-semibold text-ud-ink">{automation.name}</div>
-                    {automation.description && (
-                      <div className="text-[12px] text-ud-faint truncate max-w-[240px]">
-                        {automation.description}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
-                    {triggerLabel(automation.trigger_type)}
-                  </td>
-                  <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
-                    {formatDate(automation.last_triggered)}
-                  </td>
-                  <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted [font-variant-numeric:tabular-nums]">
-                    {automation.run_count.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
-                    <button
-                      onClick={() => toggleActive(automation.id, automation.is_active)}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${
-                        automation.is_active ? "bg-ud-accent" : "bg-ud-surface-sunk border border-ud"
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                          automation.is_active ? "translate-x-4" : "translate-x-0"
+              automations.flatMap((automation) => {
+                const automationRuns = runsByAutomation.get(automation.id) ?? [];
+                const isExpanded = expandedId === automation.id;
+                const rows = [
+                  <tr key={automation.id}>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
+                      <div className="font-semibold text-ud-ink">{automation.name}</div>
+                      {automation.description && (
+                        <div className="text-[12px] text-ud-faint truncate max-w-[240px]">
+                          {automation.description}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
+                      {triggerLabel(automation.trigger_type)}
+                    </td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">
+                      {formatDate(automation.last_triggered)}
+                    </td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted [font-variant-numeric:tabular-nums]">
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : automation.id)}
+                        className="hover:text-ud-ink hover:underline disabled:no-underline"
+                        disabled={automationRuns.length === 0}
+                        title={automationRuns.length > 0 ? "Show recent runs" : "No runs yet"}
+                      >
+                        {automation.run_count.toLocaleString()}
+                        {automationRuns.length > 0 && (
+                          <span className="ml-1 text-[10px]">{isExpanded ? "▲" : "▼"}</span>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">
+                      <button
+                        onClick={() => toggleActive(automation.id, automation.is_active)}
+                        className={`relative w-9 h-5 rounded-full transition-colors ${
+                          automation.is_active ? "bg-ud-accent" : "bg-ud-surface-sunk border border-ud"
                         }`}
-                      />
-                    </button>
-                  </td>
-                </tr>
-              ))
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                            automation.is_active ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </td>
+                  </tr>,
+                ];
+                if (isExpanded && automationRuns.length > 0) {
+                  rows.push(
+                    <tr key={`${automation.id}-runs`}>
+                      <td colSpan={5} className="px-4 py-3 border-b border-[rgba(0,0,0,0.04)] bg-[rgba(0,0,0,0.012)]">
+                        <div className="space-y-1.5">
+                          {automationRuns.map((run) => (
+                            <div key={run.id} className="flex items-center gap-3 text-[12px]">
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  run.status === "success" ? "bg-green-500" : "bg-red-500"
+                                }`}
+                              />
+                              <span className="text-ud-muted w-36 shrink-0">
+                                {new Date(run.run_at).toLocaleString("en-US", {
+                                  month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                                })}
+                              </span>
+                              <span className="text-ud-faint">{triggerLabel(run.triggered_by)}</span>
+                              {run.error && <span className="text-red-600 truncate">{run.error}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>,
+                  );
+                }
+                return rows;
+              })
             )}
           </tbody>
         </table>
