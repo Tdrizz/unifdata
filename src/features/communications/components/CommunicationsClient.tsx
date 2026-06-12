@@ -95,6 +95,7 @@ export function CommunicationsClient({
   );
   const [messages, setMessages] = useState<Message[]>([]);
   const [compose, setCompose] = useState("");
+  const [sendError, setSendError] = useState<string | null>(null);
   const [isSending, startSending] = useTransition();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
@@ -150,7 +151,7 @@ export function CommunicationsClient({
     setThreads((prev) =>
       prev.map((t) => (t.id === selectedId ? { ...t, unread_count: 0 } : t))
     );
-    (supabase as any)
+    void (supabase as any)
       .from("communications")
       .update({ unread_count: 0 })
       .eq("id", selectedId);
@@ -160,18 +161,25 @@ export function CommunicationsClient({
     if (!compose.trim() || !selectedId) return;
     const body = compose.trim();
     setCompose("");
+    setSendError(null);
 
     startSending(async () => {
-      const res = await fetch(`/api/communications/${selectedId}/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body }),
-      });
+      try {
+        const res = await fetch(`/api/communications/${selectedId}/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body }),
+        });
 
-      if (res.ok) {
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({})) as { error?: string };
+          setSendError(errData.error ?? "Failed to send message.");
+          setCompose(body);
+          return;
+        }
+
         const newMessage = await res.json();
         setMessages((prev) => [...prev, newMessage]);
-        // Update thread preview
         setThreads((prev) =>
           prev.map((t) =>
             t.id === selectedId
@@ -179,6 +187,9 @@ export function CommunicationsClient({
               : t
           )
         );
+      } catch {
+        setSendError("Network error. Please try again.");
+        setCompose(body);
       }
     });
   }
@@ -294,6 +305,9 @@ export function CommunicationsClient({
 
             {/* Compose */}
             <div className="px-6 py-4 border-t border-ud">
+              {sendError && (
+                <p className="text-[12px] text-red-500 mb-2">{sendError}</p>
+              )}
               <div className="flex gap-2 items-end">
                 <textarea
                   value={compose}

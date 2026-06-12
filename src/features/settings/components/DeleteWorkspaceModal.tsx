@@ -10,14 +10,23 @@ type Props = {
 export function DeleteWorkspaceModal({ companyName }: Props) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const confirmed = confirm.trim() === companyName.trim();
 
   function handleDelete() {
     if (!confirmed) return;
+    setDeleteError(null);
     startTransition(async () => {
-      await deleteWorkspaceAction();
+      try {
+        await deleteWorkspaceAction();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Delete failed. Please try again.";
+        if (!msg.includes("NEXT_REDIRECT")) {
+          setDeleteError(msg);
+        }
+      }
     });
   }
 
@@ -80,11 +89,17 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
               />
             </div>
 
+            {deleteError && (
+              <div style={{ marginBottom: "12px", padding: "10px 14px", borderRadius: "8px", background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626", fontSize: "13px" }}>
+                {deleteError}
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
               <button
                 type="button"
                 className="inline-flex items-center px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted text-[13px] font-semibold hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer"
-                onClick={() => { setOpen(false); setConfirm(""); }}
+                onClick={() => { setOpen(false); setConfirm(""); setDeleteError(null); }}
                 disabled={isPending}
               >
                 Cancel

@@ -170,22 +170,21 @@ export async function POST(request: Request) {
         .eq("id", threadId);
 
       // Increment unread count separately
-      await (supabase as any).rpc("increment_unread", { thread_id: threadId }).catch(() => {
-        // If RPC doesn't exist, do a manual fetch+update
-        (supabase as any)
+      const rpcResult = await (supabase as any).rpc("increment_unread", { thread_id: threadId });
+      if (rpcResult.error) {
+        // RPC doesn't exist — fall back to read-modify-write
+        const { data: threadRow } = await (supabase as any)
           .from("communications")
           .select("unread_count")
           .eq("id", threadId)
-          .maybeSingle()
-          .then(({ data }: { data: { unread_count: number } | null }) => {
-            if (data) {
-              (supabase as any)
-                .from("communications")
-                .update({ unread_count: (data.unread_count ?? 0) + 1 })
-                .eq("id", threadId);
-            }
-          });
-      });
+          .maybeSingle();
+        if (threadRow) {
+          await (supabase as any)
+            .from("communications")
+            .update({ unread_count: (threadRow.unread_count ?? 0) + 1 })
+            .eq("id", threadId);
+        }
+      }
 
       // Log activity on the contact
       try {

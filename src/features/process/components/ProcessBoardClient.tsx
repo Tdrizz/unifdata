@@ -457,6 +457,7 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   const [activeRecord, setActiveRecord] = useState<ProcessRecord | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [confirmSheet, setConfirmSheet] = useState<ConfirmSheet | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -537,6 +538,8 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
             r.id === recordId ? { ...r, stage_id: record.stage_id, status: record.status } : r
           )
         );
+        setMoveError("Couldn't move record — changes reverted.");
+        setTimeout(() => setMoveError(null), 4000);
       }
     }).catch(() => {
       setRecords((prev) =>
@@ -544,6 +547,8 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
           r.id === recordId ? { ...r, stage_id: record.stage_id, status: record.status } : r
         )
       );
+      setMoveError("Network error — record move reverted.");
+      setTimeout(() => setMoveError(null), 4000);
     });
   }
 
@@ -674,6 +679,11 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
 
   return (
     <>
+      {moveError && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-red-600 text-white text-[13px] font-medium rounded-[10px] shadow-lg pointer-events-none">
+          {moveError}
+        </div>
+      )}
       {mobileView}
       <DndContext
       sensors={sensors}
