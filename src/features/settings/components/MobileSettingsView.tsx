@@ -316,13 +316,15 @@ export function MobileSettingsView({
               integration: squareIntegration,
               startHref: "/api/integrations/square/start",
             },
-            {
-              provider: "hubspot",
-              label: "HubSpot",
-              description: "Syncs contacts and deals.",
-              integration: hubspotIntegration,
-              startHref: "/api/integrations/hubspot/start",
-            },
+            ...(hubspotIntegration
+              ? [{
+                  provider: "hubspot",
+                  label: "HubSpot",
+                  description: "Syncs contacts and deals.",
+                  integration: hubspotIntegration,
+                  startHref: "/api/integrations/hubspot/start",
+                }]
+              : []),
             {
               provider: "jobber",
               label: "Jobber",

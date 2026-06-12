@@ -100,7 +100,7 @@ const pages = [
   },
   {
     name: "Opportunities",
-    path: "/leads",
+    path: "/crm",
     tag: "Records",
     description:
       "Tracks potential business with status, source, estimated value, follow-up dates, and links to connected work and revenue records.",

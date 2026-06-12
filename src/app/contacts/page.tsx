@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; status?: string; tag?: string; source?: string; group?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; status?: string; tag?: string; source?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -33,7 +33,6 @@ export default async function ContactsPage({
   const [
     allContactsResult,
     tagsWithCountsResult,
-    smartGroupsResult,
   ] = await Promise.all([
     supabase
       .from("master_customers")
@@ -42,10 +41,6 @@ export default async function ContactsPage({
     (supabase as any)
       .from("tags")
       .select("id, name, color, contact_tags(count)")
-      .eq("organization_id", company.id),
-    (supabase as any)
-      .from("smart_groups")
-      .select("id, name, contact_count")
       .eq("organization_id", company.id),
   ]);
 
@@ -76,9 +71,6 @@ export default async function ContactsPage({
         ? t.contact_tags.reduce((s: number, r: any) => s + (r.count ?? 0), 0)
         : 0,
     }));
-
-  const smartGroups: Array<{ id: string; name: string; contact_count: number }> =
-    smartGroupsResult.data ?? [];
 
   // Query master_customers with active filter
   let query = supabase
@@ -166,12 +158,10 @@ export default async function ContactsPage({
           totalCount={allContacts.length}
           statusCounts={statusCounts}
           tags={tags}
-          smartGroups={smartGroups}
           sourceCounts={sourceCounts}
           activeStatus={params.status}
           activeTag={params.tag}
           activeSource={params.source}
-          activeGroup={params.group}
           profileSourceOptions={profile.sourceOptions}
         />
         <div className="flex-1 min-w-0">

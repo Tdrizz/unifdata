@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   }
 
   const companyId = await getCurrentCompanyId();
-  if (!companyId) return NextResponse.redirect(new URL("/login", request.url));
+  if (!companyId) return NextResponse.redirect(new URL("/sign-in", request.url));
 
   const stateCompanyId = state?.split(":")[1];
   if (!stateCompanyId || stateCompanyId !== companyId) {

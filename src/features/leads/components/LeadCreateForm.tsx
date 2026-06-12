@@ -63,7 +63,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
           <div>
             <label className="block">
               <span className="block text-xs font-semibold text-ud-muted">
-                Opportunity name <span className="text-ud-accent">*</span>
+                {profile.labels.leadSingular} name <span className="text-ud-accent">*</span>
               </span>
               <input
                 name="service_requested"

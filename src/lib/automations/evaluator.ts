@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { SmartGroupRule } from "@/lib/crm/smart-groups";
 import { getAutomationQueue, JOB_POST_COMPLETION_OUTREACH } from "@/lib/queue/client";
+
+export type SmartGroupRule = {
+  field: string;
+  operator: string;
+  value?: string;
+};
 import { sendSms } from "@/lib/messaging/sms";
 import { toE164 } from "@/lib/webhook-validation";
 

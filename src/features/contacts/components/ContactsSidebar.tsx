@@ -5,18 +5,15 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 type TagItem = { id: string; name: string; color: string; count: number };
-type GroupItem = { id: string; name: string; contact_count: number };
 
 type Props = {
   totalCount: number;
   statusCounts: Record<string, number>;
   tags: TagItem[];
-  smartGroups: GroupItem[];
   sourceCounts: Record<string, number>;
   activeStatus?: string;
   activeTag?: string;
   activeSource?: string;
-  activeGroup?: string;
   profileSourceOptions: string[];
 };
 
@@ -49,12 +46,10 @@ export default function ContactsSidebar({
   totalCount,
   statusCounts,
   tags,
-  smartGroups,
   sourceCounts,
   activeStatus,
   activeTag,
   activeSource,
-  activeGroup,
   profileSourceOptions,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -62,7 +57,7 @@ export default function ContactsSidebar({
   const searchParams = useSearchParams();
   const currentQ = searchParams.get("q") ?? undefined;
 
-  const isFiltered = !!(activeStatus || activeTag || activeSource || activeGroup);
+  const isFiltered = !!(activeStatus || activeTag || activeSource);
 
   const allHref = buildHref(pathname, { q: currentQ });
 
@@ -113,33 +108,6 @@ export default function ContactsSidebar({
                   {STATUS_LABELS[s] ?? s}
                 </span>
                 <span className="text-xs text-ud-faint tabular-nums">{statusCounts[s]}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Smart Groups */}
-      {smartGroups.length > 0 && (
-        <div className="mt-3">
-          <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-ud-faint">
-            Smart Groups
-          </p>
-          {smartGroups.map((g) => {
-            const href = buildHref(pathname, { q: currentQ, group: g.id });
-            const active = activeGroup === g.id;
-            return (
-              <Link
-                key={g.id}
-                href={href}
-                className={`flex items-center justify-between rounded-[8px] px-3 py-1.5 transition-colors ${
-                  active
-                    ? "bg-ud-accent/15 text-ud-ink font-medium"
-                    : "text-ud-muted hover:bg-white/5 hover:text-ud-ink"
-                }`}
-              >
-                <span>{g.name}</span>
-                <span className="text-xs text-ud-faint tabular-nums">{g.contact_count}</span>
               </Link>
             );
           })}

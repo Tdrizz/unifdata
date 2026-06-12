@@ -116,7 +116,7 @@ export function ImportSummary({
               recordType === "relationships"
                 ? "/contacts"
                 : recordType === "opportunities"
-                  ? "/leads"
+                  ? "/crm"
                   : recordType === "work"
                     ? "/jobs"
                     : recordType === "revenue"
