@@ -1581,12 +1581,14 @@ export async function commitImportSession({
   await Promise.all(flushPromises);
 
   if (recordType === "relationships" && createdCustomers.length > 0) {
-    void Promise.allSettled(
+    // Must be awaited: fire-and-forget writes get killed when the serverless
+    // invocation ends, leaving imported customers invisible on /contacts.
+    const masterResults = await Promise.allSettled(
       createdCustomers.map(async (c) => {
         const nameParts = (c.name || "").trim().split(/\s+/);
         const firstName = nameParts[0] || null;
         const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
-        await supabase.from("master_customers").insert({
+        const { error } = await supabase.from("master_customers").insert({
           organization_id: companyId,
           legacy_customer_id: c.id,
           first_name: firstName,
@@ -1596,8 +1598,15 @@ export async function commitImportSession({
           relationship_status: "new",
           source: "import",
         });
+        if (error) throw new Error(error.message);
       }),
     );
+    const masterFailures = masterResults.filter((r) => r.status === "rejected").length;
+    if (masterFailures > 0) {
+      console.error(
+        `[import-engine] ${masterFailures}/${createdCustomers.length} master_customers writes failed for company ${companyId}`,
+      );
+    }
   }
 
   const { error: importHistoryError } = await supabase.from("imports").insert({

@@ -89,7 +89,13 @@ export async function executeTool(
           relationship_status: "new",
           source: "ai",
         });
-        if (mcError) console.error("[tool-executor] master_customers insert failed", mcError);
+        if (mcError) {
+          // Roll back the legacy row so the two tables stay consistent and the
+          // AI reports the failure instead of claiming success.
+          await supabase.from("customers").delete().eq("id", created.id).eq("company_id", orgId);
+          console.error("[tool-executor] master_customers insert failed", mcError);
+          return { success: false, message: `Failed to create customer: ${mcError.message}` };
+        }
         return { success: true, message: `Customer "${name}" created.` };
       }
 
