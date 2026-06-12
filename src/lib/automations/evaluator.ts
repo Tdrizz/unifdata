@@ -18,13 +18,19 @@ type Automation = {
   run_count: number | null;
 };
 
+// Chained triggers (an automation's own add_tag / set_status firing further
+// automations) are capped so a tag ping-pong between rules can never run away.
+const MAX_TRIGGER_DEPTH = 3;
+
 export async function triggerAutomations(
   orgId: string,
   triggerType: string,
   triggerConfig: Record<string, unknown>,
   contactId: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  depth = 0
 ): Promise<void> {
+  if (depth > MAX_TRIGGER_DEPTH) return;
   // 1. Fetch active automations for org with matching trigger_type
   const { data: automations } = await supabase
     .from("automations")
@@ -72,14 +78,30 @@ export async function triggerAutomations(
 
     if (!conditionsMet) continue;
 
-    // 4. Execute actions in sequence
+    // 4. Claim the run BEFORE executing actions. The 24h throttle reads this
+    // table, so writing it first makes re-entrant trigger chains (an action
+    // firing tag_added/status_changed) see the run and stop — otherwise a
+    // rule that adds a tag could recurse into itself before any row exists.
+    const { data: runRow } = await supabase
+      .from("automation_runs")
+      .insert({
+        organization_id: orgId,
+        automation_id: automation.id,
+        contact_id: contactId,
+        triggered_by: triggerType,
+        actions_taken: [],
+        status: "success",
+      })
+      .select("id")
+      .single();
+
     const actionsTaken: AutomationAction[] = [];
     let runStatus = "success";
     let runError: string | undefined;
 
     try {
       for (const action of automation.actions) {
-        await executeAction(action, contact, orgId, supabase, triggerConfig);
+        await executeAction(action, contact, orgId, supabase, triggerConfig, depth);
         actionsTaken.push(action);
       }
     } catch (err) {
@@ -87,16 +109,13 @@ export async function triggerAutomations(
       runError = err instanceof Error ? err.message : String(err);
     }
 
-    // 5. Write automation_runs row
-    await supabase.from("automation_runs").insert({
-      organization_id: orgId,
-      automation_id: automation.id,
-      contact_id: contactId,
-      triggered_by: triggerType,
-      actions_taken: actionsTaken,
-      status: runStatus,
-      error: runError ?? null,
-    });
+    // 5. Finalize the run row with what actually happened
+    if (runRow) {
+      await supabase
+        .from("automation_runs")
+        .update({ actions_taken: actionsTaken, status: runStatus, error: runError ?? null })
+        .eq("id", runRow.id);
+    }
 
     // 6. Increment run_count, update last_triggered
     await supabase
@@ -146,7 +165,8 @@ async function executeAction(
   contact: Record<string, unknown>,
   orgId: string,
   supabase: SupabaseClient,
-  _triggerConfig: Record<string, unknown>
+  _triggerConfig: Record<string, unknown>,
+  depth: number
 ): Promise<void> {
   const contactId = contact.id as string;
 
@@ -172,6 +192,12 @@ async function executeAction(
         await supabase
           .from("contact_tags")
           .upsert({ contact_id: contactId, tag_id: tag.id, applied_by: "automation" });
+        // Tagging is the composition primitive — let other rules react to it.
+        try {
+          await triggerAutomations(orgId, "tag_added", { tag: tagName }, contactId, supabase, depth + 1);
+        } catch (err) {
+          console.error("[automation] chained tag_added trigger failed", err);
+        }
       }
       break;
     }
@@ -198,7 +224,13 @@ async function executeAction(
       await supabase
         .from("master_customers")
         .update({ relationship_status: action.status as string })
-        .eq("id", contactId);
+        .eq("id", contactId)
+        .eq("organization_id", orgId);
+      try {
+        await triggerAutomations(orgId, "status_changed", { status: action.status }, contactId, supabase, depth + 1);
+      } catch (err) {
+        console.error("[automation] chained status_changed trigger failed", err);
+      }
       break;
     }
 

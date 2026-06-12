@@ -57,7 +57,10 @@ type Step = "trigger" | "conditions" | "actions" | "name";
 
 const TRIGGER_OPTIONS = [
   { value: "contact_created", label: "Contact created" },
+  { value: "status_changed", label: "Contact status changed" },
+  { value: "tag_added", label: "Tag added" },
   { value: "record_created", label: "Record created" },
+  { value: "record_completed", label: "Record completed" },
   { value: "message_received", label: "Message received" },
 ];
 

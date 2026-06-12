@@ -7,6 +7,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildCustomerText } from "@/lib/embeddings/generate";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 import type { Json } from "@/types/db";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
@@ -49,7 +50,7 @@ export async function updateContactAction(
   // Fetch existing row to preserve unrelated metadata keys and find the legacy link.
   const { data: existing } = await supabase
     .from("master_customers")
-    .select("id, legacy_customer_id, metadata")
+    .select("id, legacy_customer_id, metadata, relationship_status")
     .eq("id", id)
     .eq("organization_id", company.id)
     .maybeSingle();
@@ -79,6 +80,14 @@ export async function updateContactAction(
     .eq("organization_id", company.id);
 
   if (error) return { error: error.message };
+
+  if (status && status !== existing.relationship_status) {
+    try {
+      await triggerAutomations(company.id, "status_changed", { status }, id, supabase);
+    } catch (err) {
+      console.error("[contacts.update] automation trigger failed", err);
+    }
+  }
 
   // Mirror to the legacy customers row — non-fatal, master is authoritative.
   if (existing.legacy_customer_id) {

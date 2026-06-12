@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
+import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export async function PATCH(
   request: Request,
@@ -28,12 +29,23 @@ export async function PATCH(
   // Verify record belongs to org
   const { data: existing } = await (supabase as any)
     .from("process_records")
-    .select("id, contact_id, stage_id, name")
+    .select("id, contact_id, stage_id, name, status")
     .eq("id", id)
     .eq("organization_id", company.id)
     .maybeSingle();
 
   if (!existing) return NextResponse.json({ error: "Record not found" }, { status: 404 });
+
+  // A client-supplied stage must belong to this org (service role bypasses RLS)
+  if (body.stageId) {
+    const { data: stage } = await (supabase as any)
+      .from("board_stages")
+      .select("id")
+      .eq("id", body.stageId)
+      .eq("organization_id", company.id)
+      .maybeSingle();
+    if (!stage) return NextResponse.json({ error: "Stage not found" }, { status: 400 });
+  }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.stageId) updates.stage_id = body.stageId;
@@ -45,10 +57,26 @@ export async function PATCH(
     .from("process_records")
     .update(updates)
     .eq("id", id)
+    .eq("organization_id", company.id)
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire record_completed automations the first time a record reaches completed
+  if (body.status === "completed" && existing.status !== "completed" && existing.contact_id) {
+    try {
+      await triggerAutomations(
+        company.id,
+        "record_completed",
+        { record_name: existing.name },
+        existing.contact_id,
+        supabase,
+      );
+    } catch (err) {
+      console.error("[process.patch] automation trigger failed", err);
+    }
+  }
 
   // Log stage change activity
   if (body.stageId && body.stageId !== existing.stage_id) {
