@@ -178,15 +178,18 @@ export async function requireSubscription() {
   if (!user.subscribed) {
     // Subscription is company-level: members invited into an existing company
     // (whose owner already paid to create it) must not hit the paywall again.
+    // Owners are excluded from this bypass — they hold the subscription, so a
+    // lapsed/cancelled subscription must actually lock them out. (Invite
+    // pilots as member/admin, or use PILOT_EMAILS.)
     const supabase = createAdminClient();
     const { data: membership } = await supabase
       .from("company_members")
-      .select("company_id")
+      .select("company_id, role")
       .eq("user_id", user.profileId)
       .limit(1)
       .maybeSingle();
 
-    if (!membership) {
+    if (!membership || membership.role === "owner") {
       redirect("/subscribe");
     }
   }

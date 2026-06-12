@@ -2032,6 +2032,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          stripe_customer_id: string | null
         }
         Insert: {
           clerk_user_id?: string | null
@@ -2039,6 +2040,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          stripe_customer_id?: string | null
         }
         Update: {
           clerk_user_id?: string | null
@@ -2046,6 +2048,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          stripe_customer_id?: string | null
         }
         Relationships: []
       }
