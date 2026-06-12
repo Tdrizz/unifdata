@@ -44,7 +44,7 @@ export async function triggerAutomations(
   // Fetch contact for condition evaluation
   const { data: contact } = await supabase
     .from("master_customers")
-    .select("id, relationship_status, source, primary_phone, primary_email, created_at")
+    .select("id, first_name, last_name, relationship_status, source, primary_phone, primary_email, created_at")
     .eq("id", contactId)
     .eq("organization_id", orgId)
     .maybeSingle();
@@ -235,13 +235,32 @@ async function executeAction(
     }
 
     case "create_task": {
-      // Log as activity for now (no tasks table defined yet)
+      const title = ((action.task_title as string | undefined) ?? "").trim() || "Follow up (automation)";
+      const rawDays = Number(action.due_in_days);
+      const dueInDays = Number.isFinite(rawDays) && rawDays >= 0 ? Math.min(rawDays, 365) : 3;
+      const dueDate = new Date(Date.now() + dueInDays * 86400000).toISOString().slice(0, 10);
+
+      const { data: followUp, error } = await supabase
+        .from("follow_ups")
+        .insert({
+          company_id: orgId,
+          contact_id: contactId,
+          message: title,
+          due_date: dueDate,
+          status: "Open",
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(`create_task failed: ${error.message}`);
+
       await supabase.from("contact_activity").insert({
         organization_id: orgId,
         contact_id: contactId,
         event_type: "task_created",
-        event_label: action.task_title ?? "Task created by automation",
-        event_detail: action.task_description ?? null,
+        event_label: title,
+        event_detail: `Due ${dueDate} — created by automation`,
+        reference_id: followUp?.id ?? null,
+        reference_type: "follow_up",
         source: "agent",
       });
       break;
@@ -281,12 +300,42 @@ async function executeAction(
     }
 
     case "create_record": {
-      // Would need a board context — log as activity for now
+      const boardId = action.board_id as string | undefined;
+      const stageId = action.stage_id as string | undefined;
+      if (!boardId || !stageId) {
+        throw new Error("create_record action has no board/stage configured.");
+      }
+      // Stage must belong to this org and board — action config is stored data
+      // but the service-role client gives no RLS backstop.
+      const { data: stage } = await supabase
+        .from("board_stages")
+        .select("id")
+        .eq("id", stageId)
+        .eq("board_id", boardId)
+        .eq("organization_id", orgId)
+        .maybeSingle();
+      if (!stage) throw new Error("create_record stage not found for this board.");
+
+      const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+      const recordName =
+        ((action.record_name as string | undefined) ?? "").trim() ||
+        (contactName ? `${contactName} — automation` : "Created by automation");
+
+      const { error } = await supabase.from("process_records").insert({
+        organization_id: orgId,
+        board_id: boardId,
+        stage_id: stageId,
+        contact_id: contactId,
+        name: recordName,
+        status: "active",
+      });
+      if (error) throw new Error(`create_record failed: ${error.message}`);
+
       await supabase.from("contact_activity").insert({
         organization_id: orgId,
         contact_id: contactId,
         event_type: "record_created",
-        event_label: "Record created by automation",
+        event_label: `Record "${recordName}" created by automation`,
         source: "agent",
       });
       break;

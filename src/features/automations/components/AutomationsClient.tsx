@@ -69,15 +69,20 @@ const ACTION_OPTIONS = [
   { value: "remove_tag", label: "Remove tag" },
   { value: "set_status", label: "Set contact status" },
   { value: "send_sms", label: "Send SMS" },
-  { value: "create_task", label: "Create task" },
+  { value: "create_task", label: "Create follow-up task" },
+  { value: "create_record", label: "Create board record" },
   { value: "notify_owner", label: "Notify owner" },
   { value: "request_ai_outreach", label: "Request AI outreach" },
 ];
 
+type BoardOption = { id: string; name: string; stages: Array<{ id: string; name: string }> };
+
 function NewAutomationBuilder({
+  boards,
   onCreated,
   onClose,
 }: {
+  boards: BoardOption[];
   onCreated: (a: Automation) => void;
   onClose: () => void;
 }) {
@@ -85,6 +90,9 @@ function NewAutomationBuilder({
   const [triggerType, setTriggerType] = useState("contact_created");
   const [actionType, setActionType] = useState("add_tag");
   const [actionValue, setActionValue] = useState("");
+  const [dueInDays, setDueInDays] = useState("3");
+  const [boardId, setBoardId] = useState("");
+  const [stageId, setStageId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -92,10 +100,15 @@ function NewAutomationBuilder({
 
   const steps: Step[] = ["trigger", "conditions", "actions", "name"];
   const stepIdx = steps.indexOf(step);
+  const selectedBoard = boards.find((b) => b.id === boardId) ?? null;
 
   function handleCreate() {
     if (!name.trim()) {
       setError("Name is required.");
+      return;
+    }
+    if (actionType === "create_record" && (!boardId || !stageId)) {
+      setError("Choose a board and stage for the new record.");
       return;
     }
     startTransition(async () => {
@@ -103,7 +116,14 @@ function NewAutomationBuilder({
       if (actionType === "add_tag" || actionType === "remove_tag") action.tag_name = actionValue;
       else if (actionType === "set_status") action.status = actionValue;
       else if (actionType === "send_sms") action.message = actionValue;
-      else if (actionType === "create_task") action.task_title = actionValue;
+      else if (actionType === "create_task") {
+        action.task_title = actionValue;
+        action.due_in_days = dueInDays || "3";
+      } else if (actionType === "create_record") {
+        action.board_id = boardId;
+        action.stage_id = stageId;
+        action.record_name = actionValue;
+      }
 
       const res = await fetch("/api/automations", {
         method: "POST",
@@ -200,23 +220,83 @@ function NewAutomationBuilder({
                   ))}
                 </select>
               </div>
-              {["add_tag", "remove_tag", "set_status", "send_sms", "create_task", "notify_owner"].includes(actionType) && (
+              {["add_tag", "remove_tag", "set_status", "send_sms", "create_task", "create_record", "notify_owner"].includes(actionType) && (
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
                     {actionType === "add_tag" || actionType === "remove_tag" ? "Tag name" :
                      actionType === "set_status" ? "Status value" :
                      actionType === "send_sms" ? "Message" :
-                     actionType === "create_task" ? "Task title" : "Message"}
+                     actionType === "create_task" ? "Task title" :
+                     actionType === "create_record" ? "Record name (optional)" : "Message"}
                   </label>
                   <input
                     type="text"
                     value={actionValue}
                     onChange={(e) => setActionValue(e.target.value)}
-                    placeholder={actionType === "set_status" ? "e.g. active, inactive, closed" : ""}
+                    placeholder={
+                      actionType === "set_status" ? "e.g. active, inactive, closed" :
+                      actionType === "create_record" ? "Defaults to the contact's name" : ""
+                    }
                     className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
                     style={{ fontFamily: "var(--font)" }}
                   />
                 </div>
+              )}
+              {actionType === "create_task" && (
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+                    Due in (days)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={365}
+                    value={dueInDays}
+                    onChange={(e) => setDueInDays(e.target.value)}
+                    className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
+                  />
+                </div>
+              )}
+              {actionType === "create_record" && (
+                boards.length === 0 ? (
+                  <p className="text-[12px] text-ud-muted">
+                    No process boards yet — create one in Settings first.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+                        Board
+                      </label>
+                      <select
+                        value={boardId}
+                        onChange={(e) => { setBoardId(e.target.value); setStageId(""); }}
+                        className="w-full px-3 py-2 bg-ud-surface border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none"
+                      >
+                        <option value="">Choose…</option>
+                        {boards.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-1">
+                        Stage
+                      </label>
+                      <select
+                        value={stageId}
+                        onChange={(e) => setStageId(e.target.value)}
+                        disabled={!selectedBoard}
+                        className="w-full px-3 py-2 bg-ud-surface border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none disabled:opacity-50"
+                      >
+                        <option value="">Choose…</option>
+                        {(selectedBoard?.stages ?? []).map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -287,7 +367,13 @@ function NewAutomationBuilder({
   );
 }
 
-export function AutomationsClient({ automations: initialAutomations }: { automations: Automation[] }) {
+export function AutomationsClient({
+  automations: initialAutomations,
+  boards = [],
+}: {
+  automations: Automation[];
+  boards?: BoardOption[];
+}) {
   const [automations, setAutomations] = useState<Automation[]>(initialAutomations);
   const [showBuilder, setShowBuilder] = useState(false);
 
@@ -395,6 +481,7 @@ export function AutomationsClient({ automations: initialAutomations }: { automat
 
       {showBuilder && (
         <NewAutomationBuilder
+          boards={boards}
           onCreated={(a) => setAutomations((prev) => [a, ...prev])}
           onClose={() => setShowBuilder(false)}
         />
