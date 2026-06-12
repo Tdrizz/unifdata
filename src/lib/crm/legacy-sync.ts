@@ -1,5 +1,6 @@
-import "server-only";
-
+// No "server-only" guard: this module is imported by conflict-resolver, which
+// is covered by vitest (server-only throws outside React Server Components).
+// It takes a SupabaseClient parameter and holds no credentials of its own.
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
