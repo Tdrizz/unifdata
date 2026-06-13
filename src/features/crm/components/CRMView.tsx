@@ -127,13 +127,13 @@ export function CRMView({ leads, customers, profile }: Props) {
           const stageLeads = leadsByStage.get(stage.name) ?? [];
           const totalValue = stageLeads.reduce((sum, l) => sum + Number(l.estimated_value || 0), 0);
           return (
-            <div key={stage.name} className="bg-[rgba(0,0,0,0.022)] rounded-[16px] p-3.5 min-h-[200px] border border-[rgba(0,0,0,0.04)]">
+            <div key={stage.name} className="bg-ud-surface-sunk rounded-[12px] p-3 min-h-[200px] border border-ud-soft">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div>
                   <span className="text-[11px] font-bold text-ud-muted uppercase tracking-[0.10em]">{stage.name}</span>
                   <span className="text-[11px] text-ud-faint ml-[5px]">{formatCurrency(totalValue)}</span>
                 </div>
-                <span className="text-[10.5px] font-bold bg-[rgba(0,0,0,0.07)] text-ud-muted rounded-full px-[7px] py-[1px]">{stageLeads.length}</span>
+                <span className="text-[10px] font-bold bg-ud-surface-sunk text-ud-faint rounded-full px-2 py-[2px]">{stageLeads.length}</span>
               </div>
 
               {stageLeads.map((lead) => {
@@ -142,12 +142,12 @@ export function CRMView({ leads, customers, profile }: Props) {
                 const dl = dateLabel(lead);
                 return (
                   <Link key={lead.id} href={`/leads/${lead.id}/edit`} style={{ textDecoration: "none" }}>
-                    <div className={`bg-ud-surface border rounded-[13px] p-[14px_15px] mb-2 shadow-ud cursor-pointer transition-[box-shadow,transform] duration-[220ms] hover:-translate-y-0.5 hover:shadow-ud-raised ${urgent ? "bg-ud-danger-bg border-ud-danger/20" : "border-[rgba(0,0,0,0.06)]"}`}>
+                    <div className={`bg-ud-surface border rounded-[13px] p-[14px_15px] mb-2 shadow-ud cursor-pointer transition-[box-shadow,transform] duration-[220ms] hover:-translate-y-0.5 hover:shadow-ud-raised ${urgent ? "bg-ud-danger-bg border-ud-danger/15" : "border-ud"}`}>
                       <p className="text-[13px] font-semibold text-ud-ink mb-[3px] leading-[1.3]">{lead.service_requested || `Untitled ${leadSingular.toLowerCase()}`}</p>
                       <p className="text-[12px] text-ud-muted mb-2.5">{customer?.name || `No ${customerSingular.toLowerCase()}`}</p>
                       <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-surface-sunk text-ud-muted">{formatCurrency(lead.estimated_value)}</span>
-                        <span style={{ fontSize: "11px", color: urgent ? "var(--danger)" : "var(--faint)", fontWeight: urgent ? 600 : 400 }}>
+                        <StatusBadge tone="neutral">{formatCurrency(lead.estimated_value)}</StatusBadge>
+                        <span className={urgent ? "text-ud-danger font-semibold text-[11px]" : "text-ud-faint text-[11px]"}>
                           {urgent ? `${Math.floor((Date.now() - new Date(lead.next_follow_up_date!).getTime()) / 86400000)}d overdue` : dl}
                         </span>
                       </div>
