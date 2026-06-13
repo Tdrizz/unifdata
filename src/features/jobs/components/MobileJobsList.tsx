@@ -9,6 +9,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pill } from "@/components/ui/Pill";
 import { JobCreateForm } from "./JobCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { JobListRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
@@ -36,6 +37,7 @@ function matchesFilter(status: string | null | undefined, filter: StageFilter): 
 
 export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props) {
   const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const contactById = new Map(contacts.map((c) => [c.id, c]));
 
@@ -152,9 +154,19 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
           })}
         </div>
       )}
-      <div id="job-quick-add" className="px-4 mt-6">
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center hover:opacity-90 transition-opacity"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+      >
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={`Add ${profile.labels.jobSingular?.toLowerCase() ?? "job"}`}>
         <JobCreateForm contacts={contacts} leads={leads} />
-      </div>
+      </BottomSheet>
     </div>
   );
 }

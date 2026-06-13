@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency, cn } from "@/lib/utils";
 import { SaleCreateForm } from "./SaleCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { SaleRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -50,6 +51,7 @@ function sourceBadge(sourceSystem: string | null | undefined) {
 
 export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const saleSingular = profile.labels.saleSingular ?? "Invoice";
   const salePlural = profile.labels.salePlural ?? "Invoices";
@@ -188,10 +190,19 @@ export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
         )}
       </div>
 
-      {/* Quick add */}
-      <div id="sale-quick-add" className="px-4 mt-2">
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center hover:opacity-90 transition-opacity"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+      >
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={`Add ${profile.labels.saleSingular ?? "invoice"}`}>
         <SaleCreateForm profile={profile} contacts={contacts} />
-      </div>
+      </BottomSheet>
     </div>
   );
 }

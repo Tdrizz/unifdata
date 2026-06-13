@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 
 type CustomerRow = {
   id: string;
@@ -88,6 +89,7 @@ export function ContactsTableClient({
 }: Props) {
   const custPlural = profile?.labels.customerPlural ?? "Contacts";
   const [search, setSearch] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const q = search.toLowerCase().trim();
   const filtered = q
@@ -105,12 +107,13 @@ export function ContactsTableClient({
     <div className="md:hidden px-4 pt-5 pb-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
-        <a
-          href="#add-contact-m"
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
           className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
         >
           + Add
-        </a>
+        </button>
       </div>
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
@@ -143,10 +146,20 @@ export function ContactsTableClient({
           })
         )}
       </div>
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center hover:opacity-90 transition-opacity md:hidden"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
+      >
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
       {profile && (
-        <div id="add-contact-m" className="mt-6 scroll-mt-20">
+        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={`Add ${profile.labels.customerSingular.toLowerCase()}`}>
           <CustomerCreateForm profile={profile} />
-        </div>
+        </BottomSheet>
       )}
     </div>
     <div className="hidden md:block px-8 pt-7 pb-12">
