@@ -107,7 +107,7 @@ export function ChangePasswordForm() {
       )}
 
       {error && (
-        <div className="rounded-[10px] border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+        <div className="rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg p-3 text-[13px] text-ud-danger">
           {error}
         </div>
       )}

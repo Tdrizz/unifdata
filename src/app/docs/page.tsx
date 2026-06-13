@@ -314,15 +314,15 @@ export default function DocsPage() {
                     { step: "03", title: "Work from the Today page", body: "The /workspace page shows what needs attention today — overdue follow-ups, open quotes, unpaid work, and data quality issues." },
                   ].map((item) => (
                     <div key={item.step} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
-                      <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                      <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                       <p className="mt-3 text-[14px] font-semibold">{item.title}</p>
                       <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Tip: Start with your customer list</p>
+                <div className="mt-5 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Tip: Start with your customer list</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     Importing customers first means leads, jobs, sales, and follow-ups can be linked to real records from the start. A CSV with just name, phone, and email is enough to get going.
                   </p>
@@ -389,7 +389,7 @@ export default function DocsPage() {
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                         <p className="text-[14px] font-semibold">{page.name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-[#4A3FA8]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#8B80E0]">
+                          <span className="rounded-full bg-ud-accent/20 px-2.5 py-0.5 text-[11px] font-semibold text-ud-accent">
                             {page.tag}
                           </span>
                           <code className="rounded-[6px] border border-white/10 bg-white/6 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
@@ -411,7 +411,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[200px_1fr]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500 md:grid md:grid-cols-[200px_1fr]">
                     <span>Sector</span>
                     <span>Workspace language</span>
                   </div>
@@ -442,7 +442,7 @@ export default function DocsPage() {
                       { step: "03", label: "Revenue tracked as unpaid", detail: "A revenue record is created with payment status set to unpaid until collected." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-slate-400">{item.detail}</p>
                       </div>
@@ -488,7 +488,7 @@ export default function DocsPage() {
                       { step: "03", label: "Records sync in", detail: "Customers, jobs, and revenue records are pulled into the workspace and linked to existing data where possible." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-slate-400">{item.detail}</p>
                       </div>
@@ -505,7 +505,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[140px_80px_1fr_160px]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500 md:grid md:grid-cols-[140px_80px_1fr_160px]">
                     <span>Column</span>
                     <span>Required</span>
                     <span>Description</span>
@@ -519,7 +519,7 @@ export default function DocsPage() {
                       <code className="font-semibold text-white">{col.column}</code>
                       <span>
                         {col.required ? (
-                          <span className="rounded-full bg-[#4A3FA8]/25 px-2.5 py-0.5 text-[11px] font-semibold text-[#8B80E0]">
+                          <span className="rounded-full bg-ud-accent/25 px-2.5 py-0.5 text-[11px] font-semibold text-ud-accent">
                             Required
                           </span>
                         ) : (
@@ -582,8 +582,8 @@ export default function DocsPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Get better results with more data</p>
+                <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Get better results with more data</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     The AI Advisor is most useful after the workspace has real records. Add customers, leads, jobs, sales, and follow-ups first. A workspace with only a few records will produce a thinner summary.
                   </p>
@@ -627,8 +627,8 @@ export default function DocsPage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Pro tier only</p>
+                <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Pro tier only</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     The Agent Inbox, nightly pipeline, autopilot mode, and ROI counter are available on the Pro plan. Standard accounts see an upgrade prompt.
                   </p>

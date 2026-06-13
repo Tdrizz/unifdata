@@ -17,7 +17,7 @@ export default function RouteError({
 
   return (
     <main className="px-7 py-10">
-      <div className="mx-auto max-w-lg rounded-[14px] border border-red-200 bg-ud-surface p-6 shadow-sm">
+      <div className="mx-auto max-w-lg rounded-[14px] border border-ud-danger/20 bg-ud-surface p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">
           Something went wrong
         </p>
@@ -36,13 +36,13 @@ export default function RouteError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-[9px] bg-ud-accent px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="rounded-[8px] bg-ud-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90 transition-opacity"
           >
             Try again
           </button>
           <Link
             href="/workspace"
-            className="rounded-[9px] border border-ud bg-ud-surface px-4 py-2.5 text-sm font-medium text-ud-muted hover:bg-ud-surface-sunk"
+            className="rounded-[8px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors"
           >
             Go to workspace
           </Link>

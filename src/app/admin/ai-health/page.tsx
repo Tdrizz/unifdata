@@ -51,7 +51,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   return (
     <div className="rounded-[12px] border border-[rgba(0,0,0,0.07)] bg-white shadow-sm overflow-hidden">
       <div className="px-5 py-3.5 border-b border-[rgba(0,0,0,0.06)]">
-        <p className="text-[12px] font-bold uppercase tracking-[0.10em] text-[#8B80E0]">{title}</p>
+        <p className="text-[12px] font-bold uppercase tracking-[0.10em] text-ud-accent">{title}</p>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -99,7 +99,7 @@ export default async function AiHealthPage() {
     <div className="min-h-screen bg-gray-50 px-6 py-10">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8B80E0] mb-1">Internal</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-ud-accent mb-1">Internal</p>
           <h1 className="text-[26px] font-semibold text-gray-900 tracking-tight">AI Health Dashboard</h1>
           <p className="text-[13px] text-gray-500 mt-1">Last 7 days (nightly runs: 14 days, ROI: 30 days)</p>
         </div>

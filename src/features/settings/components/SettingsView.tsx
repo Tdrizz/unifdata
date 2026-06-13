@@ -2,6 +2,7 @@ import Link from "next/link";
 import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { LogoutButton } from "@/components/LogoutButton";
+import { Button } from "@/components/ui/Button";
 import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
@@ -57,8 +58,6 @@ interface SettingsViewProps {
   };
 }
 
-const btnGhost ="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
 
 export function SettingsView({
@@ -78,7 +77,7 @@ export function SettingsView({
   defaultLabels,
 }: SettingsViewProps) {
   return (
-    <div className="px-7 pb-10 pt-7">
+    <div className="px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"
@@ -114,7 +113,7 @@ export function SettingsView({
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button type="reset" className={btnGhost}>Cancel</button>
+              <Button type="reset" variant="secondary" size="md">Cancel</Button>
               <button type="submit" className={btnInk}>Save changes</button>
             </div>
           </form>
@@ -180,7 +179,7 @@ export function SettingsView({
               </div>
               {currentUserRole === "owner" && (
                 <form action={removeMember.bind(null, member.user_id)}>
-                  <button type="submit" className={btnGhostSm} style={{ color: "var(--danger)" }}>Remove</button>
+                  <Button type="submit" variant="danger" size="sm">Remove</Button>
                 </form>
               )}
             </div>

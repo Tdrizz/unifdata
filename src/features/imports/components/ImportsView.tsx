@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
@@ -33,7 +34,6 @@ const cardHeader = "px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)]";
 const cardTitle = "text-[13.5px] font-semibold text-ud-ink";
 const cardDesc = "text-[12px] text-ud-muted mt-0.5";
 const queueItem = "flex items-center gap-3.5 px-5 py-[14px] border-b border-[rgba(0,0,0,0.04)] last:border-b-0";
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 function formatImportDate(date: string | null) {
   if (!date) return "—";
@@ -72,7 +72,7 @@ function sessionStatusBadge(status: string | null) {
   const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
   const s = (status || "").toLowerCase();
   if (s === "committed") return `${base} bg-ud-success-bg text-ud-success`;
-  if (s === "failed" || s === "error") return `${base} bg-[#fef2f2] text-ud-danger`;
+  if (s === "failed" || s === "error") return `${base} bg-ud-danger-bg text-ud-danger`;
   if (s === "ready" || s === "draft" || s === "analyzing") return `${base} bg-ud-warning-bg text-ud-warning`;
   return `${base} bg-ud-surface-sunk text-ud-muted`;
 }
@@ -282,7 +282,7 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
 
   const syncBadge = (isError: boolean, hasRecords: boolean) => {
     const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
-    if (isError) return `${base} bg-[#fef2f2] text-ud-danger`;
+    if (isError) return `${base} bg-ud-danger-bg text-ud-danger`;
     if (hasRecords) return `${base} bg-ud-success-bg text-ud-success`;
     return `${base} bg-ud-surface-sunk text-ud-muted`;
   };
@@ -298,7 +298,7 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
       <p className="text-[15px] font-semibold text-ud-ink mb-1">Import data</p>
       <p className="text-[13px] text-ud-muted max-w-[240px]">Use a desktop browser to import contacts, jobs, or revenue from CSV or Google Sheets.</p>
     </div>
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="Imports"
         title="Import data"
@@ -342,10 +342,10 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
                   )}
                   {connected ? (
                     <form action={disconnectIntegrationAction.bind(null, provider)}>
-                      <button type="submit" className={btnGhostSm}>Disconnect</button>
+                      <Button type="submit" variant="secondary" size="sm">Disconnect</Button>
                     </form>
                   ) : (
-                    <Link href={startHref} className={btnGhostSm}>Connect</Link>
+                    <Link href={startHref} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">Connect</Link>
                   )}
                 </div>
               </div>

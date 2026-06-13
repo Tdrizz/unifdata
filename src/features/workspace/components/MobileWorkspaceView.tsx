@@ -214,7 +214,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
       {/* 1. Greeting */}
       <div className="px-4 pt-6 pb-5">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.13em] text-ud-muted mb-1">
           {dayLabel}
         </p>
         <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">

@@ -21,7 +21,7 @@ export function FollowUpCreateForm({ people }: Props) {
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
-          <p className="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          <p className="rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg px-4 py-3 text-sm font-semibold text-ud-danger">
             {state.error}
           </p>
         )}

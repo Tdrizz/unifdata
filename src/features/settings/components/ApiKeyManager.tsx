@@ -93,7 +93,7 @@ export function ApiKeyManager({
       )}
 
       {error && (
-        <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+        <p className="rounded-[8px] border border-ud-danger/20 bg-ud-danger-bg px-3 py-2 text-[13px] text-ud-danger">
           {error}
         </p>
       )}
@@ -139,7 +139,7 @@ export function ApiKeyManager({
                   type="button"
                   onClick={() => handleRevoke(k.id)}
                   disabled={isPending}
-                  className="text-[12px] text-red-500 hover:text-red-700 disabled:opacity-50"
+                  className="text-[12px] text-red-500 hover:text-ud-danger disabled:opacity-50"
                 >
                   Revoke
                 </button>

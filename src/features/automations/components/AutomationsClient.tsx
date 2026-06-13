@@ -520,7 +520,7 @@ export function AutomationsClient({
   return (
     <>
     <MobileDesktopNotice title="Automations" description="Manage your automation rules on desktop for the full experience." />
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint mb-0.5">

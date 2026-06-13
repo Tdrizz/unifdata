@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
 import {
   createBoardAction,
   renameBoardAction,
@@ -20,9 +21,7 @@ type Props = { orgId: string; boards: Board[] };
 const STAGE_COLORS = ["#EF4444", "#F59E0B", "#22C55E", "#3B82F6", "#8B5CF6", "#6B7280"];
 const STAGE_TYPES = ["active", "completed", "cancelled"];
 
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms] disabled:opacity-40";
-const btnDanger = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-red-500 hover:border-red-300 transition-[color,border-color] duration-[120ms] disabled:opacity-40";
 
 function ColorSwatch({ color, selected, onSelect }: { color: string; selected: boolean; onSelect: (c: string) => void }) {
   return (
@@ -42,7 +41,7 @@ function ColorSwatch({ color, selected, onSelect }: { color: string; selected: b
 
 type StageTypeKey = "active" | "completed" | "cancelled";
 const stageTypeBadgeColors: Record<StageTypeKey, string> = {
-  active: "bg-blue-50 text-blue-600",
+  active: "bg-ud-info-bg text-blue-600",
   completed: "bg-green-50 text-green-600",
   cancelled: "bg-gray-100 text-gray-500",
 };
@@ -149,10 +148,10 @@ function StageRow({
               </select>
             </div>
           )}
-          <button type="button" className={btnGhost} onClick={() => { setDeleting(false); setError(null); }}>Cancel</button>
-          <button type="button" className={btnDanger} onClick={handleDelete}>
+          <Button type="button" variant="secondary" size="sm" onClick={() => { setDeleting(false); setError(null); }}>Cancel</Button>
+          <Button type="button" variant="danger" size="sm" onClick={handleDelete}>
             {otherStages.length > 0 ? "Confirm delete + reassign" : "Delete"}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -173,7 +172,7 @@ function StageRow({
               onKeyDown={(e) => { if (e.key === "Enter") handleRename(); if (e.key === "Escape") setRenaming(false); }}
               autoFocus
             />
-            <button type="button" className={btnGhost} onClick={() => setRenaming(false)}>Cancel</button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setRenaming(false)}>Cancel</Button>
             <button type="button" className={btnInk} onClick={handleRename}>Save</button>
           </>
         ) : (
@@ -198,10 +197,10 @@ function StageRow({
             </select>
 
             <div className="flex items-center gap-1">
-              <button type="button" className={btnGhost} disabled={isFirst} onClick={() => handleReorder("up")} style={{ padding: "3px 6px", opacity: isFirst ? 0.3 : 1 }}>↑</button>
-              <button type="button" className={btnGhost} disabled={isLast} onClick={() => handleReorder("down")} style={{ padding: "3px 6px", opacity: isLast ? 0.3 : 1 }}>↓</button>
-              <button type="button" className={btnGhost} onClick={() => { setRenaming(true); setRenameVal(stage.name); }}>Rename</button>
-              <button type="button" className={btnGhost} style={{ color: "var(--danger, #dc2626)" }} onClick={() => { setDeleting(true); setError(null); }}>×</button>
+              <Button type="button" variant="secondary" size="sm" disabled={isFirst} onClick={() => handleReorder("up")} style={{ padding: "3px 6px", opacity: isFirst ? 0.3 : 1 }}>↑</Button>
+              <Button type="button" variant="secondary" size="sm" disabled={isLast} onClick={() => handleReorder("down")} style={{ padding: "3px 6px", opacity: isLast ? 0.3 : 1 }}>↓</Button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => { setRenaming(true); setRenameVal(stage.name); }}>Rename</Button>
+              <Button type="button" variant="secondary" size="sm" style={{ color: "var(--danger, #dc2626)" }} onClick={() => { setDeleting(true); setError(null); }}>×</Button>
             </div>
           </>
         )}
@@ -309,7 +308,7 @@ function BoardCard({
               onClick={(e) => e.stopPropagation()}
               autoFocus
             />
-            <button type="button" className={btnGhost} onClick={(e) => { e.stopPropagation(); setRenaming(false); }}>Cancel</button>
+            <Button type="button" variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); setRenaming(false); }}>Cancel</Button>
             <button type="button" className={btnInk} onClick={(e) => { e.stopPropagation(); handleRename(); }}>Save</button>
           </>
         ) : (
@@ -319,9 +318,9 @@ function BoardCard({
               <span className="inline-flex items-center px-[8px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-accent text-white">default</span>
             )}
             <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className={btnGhost} onClick={() => { setRenaming(true); setRenameVal(board.name); }}>Rename</button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => { setRenaming(true); setRenameVal(board.name); }}>Rename</Button>
               {!board.is_default && (
-                <button type="button" className={btnGhost} style={{ color: "var(--danger, #dc2626)" }} onClick={() => setDeleting(true)}>Delete</button>
+                <Button type="button" variant="secondary" size="sm" style={{ color: "var(--danger, #dc2626)" }} onClick={() => setDeleting(true)}>Delete</Button>
               )}
             </div>
           </>
@@ -333,8 +332,8 @@ function BoardCard({
       {deleting && (
         <div className="px-4 pb-3 flex items-center gap-3">
           <span className="text-[12px] text-ud-muted">Delete this board and all its stages?</span>
-          <button type="button" className={btnGhost} onClick={() => { setDeleting(false); setError(null); }}>Cancel</button>
-          <button type="button" className={btnDanger} onClick={handleDelete}>Confirm delete</button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => { setDeleting(false); setError(null); }}>Cancel</Button>
+          <Button type="button" variant="danger" size="sm" onClick={handleDelete}>Confirm delete</Button>
         </div>
       )}
 
@@ -380,13 +379,13 @@ function BoardCard({
                   >
                     {STAGE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
-                  <button type="button" className={btnGhost} onClick={() => setShowAddStage(false)}>Cancel</button>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setShowAddStage(false)}>Cancel</Button>
                   <button type="button" className={btnInk} onClick={handleAddStage} disabled={!newStageName.trim()}>Add</button>
                 </div>
               </div>
             ) : (
               <div className="mt-3">
-                <button type="button" className={btnGhost} onClick={() => setShowAddStage(true)}>+ Add stage</button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setShowAddStage(true)}>+ Add stage</Button>
               </div>
             )}
           </div>
@@ -446,7 +445,7 @@ export function ProcessBoardsSettings({ orgId, boards: initialBoards }: Props) {
             onKeyDown={(e) => { if (e.key === "Enter") handleCreateBoard(); if (e.key === "Escape") setShowNewBoard(false); }}
             autoFocus
           />
-          <button type="button" className={btnGhost} onClick={() => setShowNewBoard(false)}>Cancel</button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setShowNewBoard(false)}>Cancel</Button>
           <button type="button" className={btnInk} onClick={handleCreateBoard} disabled={!newBoardName.trim()}>Create</button>
         </div>
       )}
@@ -463,7 +462,7 @@ export function ProcessBoardsSettings({ orgId, boards: initialBoards }: Props) {
 
       {!showNewBoard && (
         <div className="mt-2">
-          <button type="button" className={btnGhost} onClick={() => setShowNewBoard(true)}>+ New board</button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setShowNewBoard(true)}>+ New board</Button>
         </div>
       )}
     </div>

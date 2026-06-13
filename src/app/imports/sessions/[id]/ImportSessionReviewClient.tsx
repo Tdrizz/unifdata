@@ -98,11 +98,11 @@ function getRowTone(status: string) {
   }
 
   if (status === "duplicate") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-ud-warning/20 bg-ud-warning-bg text-ud-warning";
   }
 
   if (status === "error") {
-    return "border-red-200 bg-red-50 text-red-700";
+    return "border-ud-danger/20 bg-ud-danger-bg text-ud-danger";
   }
 
   if (status === "skipped") {
@@ -477,15 +477,15 @@ export function ImportSessionReviewClient({
           </p>
         </div>
 
-        <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4">
-          <p className="text-xs font-medium text-amber-700">Duplicates</p>
+        <div className="rounded-[12px] border border-ud-warning/20 bg-ud-warning-bg p-4">
+          <p className="text-xs font-medium text-ud-warning">Duplicates</p>
           <p className="mt-1 text-2xl font-semibold text-amber-800">
             {session.duplicate_rows}
           </p>
         </div>
 
-        <div className="rounded-[12px] border border-red-200 bg-red-50 p-4">
-          <p className="text-xs font-medium text-red-700">Errors</p>
+        <div className="rounded-[12px] border border-ud-danger/20 bg-ud-danger-bg p-4">
+          <p className="text-xs font-medium text-ud-danger">Errors</p>
           <p className="mt-1 text-2xl font-semibold text-red-800">
             {session.error_rows}
           </p>
@@ -503,7 +503,7 @@ export function ImportSessionReviewClient({
       </div>
 
       {hasRowsButNothingReady && (
-        <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+        <div className="rounded-[12px] border border-ud-warning/20 bg-ud-warning-bg p-4 text-sm font-semibold text-amber-800">
           No new rows are ready to import. Resolve duplicate rows by skipping,
           importing as new, or updating the existing record. Error rows need to
           be fixed in the source file and uploaded again.
@@ -513,7 +513,7 @@ export function ImportSessionReviewClient({
       {session.status !== "committed" &&
         session.status !== "cancelled" &&
         Number(session.duplicate_rows || 0) >= 3 && (
-          <div className="flex items-center justify-between gap-3 rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-center justify-between gap-3 rounded-[12px] border border-ud-warning/20 bg-ud-warning-bg px-4 py-3">
             <p className="text-sm font-semibold text-amber-800">
               {session.duplicate_rows} duplicate rows detected
             </p>
@@ -521,7 +521,7 @@ export function ImportSessionReviewClient({
               type="button"
               disabled={bulkWorking}
               onClick={() => bulkAction("skip", "duplicates")}
-              className="shrink-0 rounded-xl border border-amber-200 bg-ud-surface px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+              className="shrink-0 rounded-xl border border-ud-warning/20 bg-ud-surface px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
             >
               {bulkWorking ? "Skipping..." : "Skip all duplicates"}
             </button>
@@ -666,11 +666,11 @@ export function ImportSessionReviewClient({
                 </div>
 
                 {!!row.normalized_data._customer_unlinked && (
-                  <div className="mt-3 rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3">
+                  <div className="mt-3 rounded-[12px] border border-ud-warning/20 bg-ud-warning-bg px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">
                       {resolvedCustomerSingular} not matched
                     </p>
-                    <p className="mt-1 text-sm text-amber-700">
+                    <p className="mt-1 text-sm text-ud-warning">
                       No {resolvedCustomerSingular.toLowerCase()} named &ldquo;{String(row.normalized_data.customer_name ?? "")}&rdquo; was found. This record will import without a {resolvedCustomerSingular.toLowerCase()} link.
                     </p>
                     <p className="mt-1.5 text-xs text-amber-600">
@@ -680,8 +680,8 @@ export function ImportSessionReviewClient({
                 )}
 
                 {!!row.normalized_data._date_defaulted && (
-                  <div className="mt-3 rounded-[12px] border border-amber-100 bg-amber-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-amber-700">
+                  <div className="mt-3 rounded-[12px] border border-amber-100 bg-ud-warning-bg px-4 py-3">
+                    <p className="text-xs font-semibold text-ud-warning">
                       Date defaulted to today
                     </p>
                     <p className="mt-1 text-xs text-amber-600">
@@ -691,7 +691,7 @@ export function ImportSessionReviewClient({
                 )}
 
                 {row.duplicate_reason && (
-                  <div className="mt-3 rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3">
+                  <div className="mt-3 rounded-[12px] border border-ud-warning/20 bg-ud-warning-bg px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">
                       {row.duplicate_reason}
                     </p>
@@ -704,7 +704,7 @@ export function ImportSessionReviewClient({
                             type="button"
                             disabled={isWorking}
                             onClick={() => updateRowAction(row.id, "skip")}
-                            className="rounded-xl border border-amber-200 bg-ud-surface px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+                            className="rounded-xl border border-ud-warning/20 bg-ud-surface px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60"
                           >
                             Skip this row
                           </button>
@@ -738,8 +738,8 @@ export function ImportSessionReviewClient({
                 )}
 
                 {row.validation_errors?.length > 0 && (
-                  <div className="mt-3 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-red-700">
+                  <div className="mt-3 rounded-[12px] border border-ud-danger/20 bg-ud-danger-bg px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ud-danger">
                       Needs fix
                     </p>
                     <p className="mt-1 text-sm font-semibold text-red-800">
@@ -753,7 +753,7 @@ export function ImportSessionReviewClient({
                             type="button"
                             disabled={isWorking}
                             onClick={() => updateRowAction(row.id, "skip")}
-                            className="rounded-xl border border-red-200 bg-ud-surface px-3 py-2 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
+                            className="rounded-xl border border-ud-danger/20 bg-ud-surface px-3 py-2 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
                           >
                             Skip this row
                           </button>
@@ -804,7 +804,7 @@ export function ImportSessionReviewClient({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${suggestion.confidence >= 0.7 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+                  <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${suggestion.confidence >= 0.7 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-ud-warning/20 bg-ud-warning-bg text-ud-warning"}`}>
                     {Math.round(suggestion.confidence * 100)}% match
                   </span>
 

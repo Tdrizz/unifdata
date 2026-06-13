@@ -178,7 +178,7 @@ export default async function ImportSessionPage({
           </div>
 
           {session.error_message && (
-            <div className="mx-5 mb-5 rounded-[12px] border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+            <div className="mx-5 mb-5 rounded-[12px] border border-ud-danger/20 bg-ud-danger-bg p-4 text-sm font-semibold text-ud-danger">
               {session.error_message}
             </div>
           )}

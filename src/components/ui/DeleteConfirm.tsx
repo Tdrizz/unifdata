@@ -19,7 +19,7 @@ export function DeleteConfirm({
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="rounded-[10px] border border-red-200 bg-ud-surface px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+        className="rounded-[10px] border border-ud-danger/20 bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-danger transition-colors hover:bg-ud-danger-bg"
       >
         Delete record
       </button>
@@ -27,7 +27,7 @@ export function DeleteConfirm({
   }
 
   return (
-    <div className="rounded-[10px] border border-red-200 bg-red-50 p-4 [animation:modal-enter_160ms_cubic-bezier(0.16,1,0.3,1)_both]">
+    <div className="rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg p-4 [animation:modal-enter_160ms_cubic-bezier(0.16,1,0.3,1)_both]">
       <p className="text-sm font-semibold text-ud-ink">Are you sure?</p>
       <p className="mt-1 text-sm leading-6 text-ud-muted">{description}</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ export function DeleteConfirm({
             });
           }}
           disabled={isPending}
-          className="rounded-[10px] bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[10px] bg-ud-danger px-4 py-3 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending && (
             <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -61,7 +61,7 @@ export function DeleteConfirm({
         </button>
       </div>
       {deleteError && (
-        <p className="mt-3 text-sm text-red-700">{deleteError}</p>
+        <p className="mt-3 text-sm text-ud-danger">{deleteError}</p>
       )}
     </div>
   );

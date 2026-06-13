@@ -20,7 +20,6 @@ function isOverdueDate(date: string | null) {
   return new Date(date) < new Date(new Date().toDateString());
 }
 
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 export function DataHubView({ customers, opportunities, workRecords, revenueRecords, followUps, profile, proposals }: Props) {
   const { customerSingular, customerPlural, leadSingular, leadPlural, jobSingular, jobPlural, salePlural, followUpPlural } = profile.labels;
@@ -101,7 +100,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
     <div className="block md:hidden pb-8">
       <ProposalsWidget initialProposals={proposals} />
       <div className="px-4 pt-[22px] pb-5">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ud-muted mb-1">Data Hub</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.13em] text-ud-muted mb-1">Data Hub</p>
         <p className="text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-ud-ink">
           {healthPct}% health
         </p>
@@ -160,7 +159,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
     </div>
 
     {/* ── Desktop data hub ───────────────────────────────────────────────── */}
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <ProposalsWidget initialProposals={proposals} />
       <PageHeader
         eyebrow="Data Hub"
@@ -181,13 +180,13 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
           <div className="text-[12px] text-ud-muted">{totalIssues} fixes available</div>
         </div>
         {/* Customers */}
-        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${customerIssues > 0 ? "bg-[#fef8f8] border-[rgba(160,40,40,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${customerIssues > 0 ? "bg-ud-danger-bg border-ud-danger/15" : "border-[rgba(0,0,0,0.06)]"}`}>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">{customerPlural}</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none ${customerIssues > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{customerIssues}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">Contact info gaps</div>
         </div>
         {/* Pipeline */}
-        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${pipelineIssues > 0 ? "bg-[#fefaf4] border-[rgba(138,80,16,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${pipelineIssues > 0 ? "bg-ud-warning-bg border-ud-warning/15" : "border-[rgba(0,0,0,0.06)]"}`}>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Pipeline</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none ${pipelineIssues > 0 ? "text-ud-warning" : "text-ud-ink"}`}>{pipelineIssues}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">{leadSingular} data gaps</div>
@@ -199,7 +198,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
           <div className="text-[12px] text-ud-muted mt-1.5">Unlinked or overdue</div>
         </div>
         {/* Revenue */}
-        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${revenueIssues > 0 ? "bg-[#fef8f8] border-[rgba(160,40,40,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${revenueIssues > 0 ? "bg-ud-danger-bg border-ud-danger/15" : "border-[rgba(0,0,0,0.06)]"}`}>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Unpaid {salePlural.toLowerCase()}</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none ${revenueIssues > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{revenueIssues}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">Outstanding payments</div>
@@ -229,7 +228,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
                   <p className="text-[13.5px] font-semibold text-ud-ink truncate">{issue.title}</p>
                   <p className="text-[12px] text-ud-muted mt-0.5">{issue.meta}</p>
                 </div>
-                <Link href={issue.href} className={btnGhostSm}>
+                <Link href={issue.href} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">
                   View →
                 </Link>
               </div>

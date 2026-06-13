@@ -620,7 +620,7 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
 
   // Mobile list view (shown below md breakpoint)
   const mobileView = (
-    <div className="md:hidden px-4 pt-5 pb-10 space-y-4">
+    <div className="md:hidden px-4 pt-5 pb-8 space-y-4">
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-[18px] font-bold text-ud-ink">{board.name}</h1>
         <button

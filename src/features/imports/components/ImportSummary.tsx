@@ -26,7 +26,7 @@ function CountBadge({
   const colors = {
     success: "bg-ud-success-bg text-ud-success",
     warning: "bg-ud-warning-bg text-ud-warning",
-    danger: "bg-[#fef2f2] text-ud-danger",
+    danger: "bg-ud-danger-bg text-ud-danger",
     neutral: "bg-ud-surface-sunk text-ud-muted",
   };
 
@@ -71,7 +71,7 @@ export function ImportSummary({
       </div>
 
       {hasErrors && (
-        <div className="rounded-[10px] border border-[rgba(220,38,38,0.18)] bg-[#fef2f2] p-4">
+        <div className="rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg p-4">
           <p className="text-[12.5px] font-semibold text-ud-danger">
             {errors.length} row{errors.length !== 1 ? "s" : ""} could not be imported
           </p>

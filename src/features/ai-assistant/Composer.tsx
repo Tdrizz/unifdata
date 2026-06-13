@@ -99,7 +99,7 @@ export function Composer({
           className={cn(
             "md:hidden shrink-0 flex items-center justify-center w-9 h-9 rounded-[9px] border transition-colors",
             recording
-              ? "border-red-400 bg-red-50 text-red-500"
+              ? "border-red-400 bg-ud-danger-bg text-red-500"
               : "border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard",
           )}
           aria-label={recording ? "Stop recording" : "Voice input"}

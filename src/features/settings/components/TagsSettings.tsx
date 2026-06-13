@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { createTagAction, renameTagAction, deleteTagAction } from "../actions";
+import { Button } from "@/components/ui/Button";
+
 
 export type TagItem = { id: string; name: string; color: string; contactCount: number };
 
@@ -9,9 +11,7 @@ type Props = { orgId: string; initialTags: TagItem[] };
 
 const COLOR_SWATCHES = ["#EF4444", "#F59E0B", "#22C55E", "#3B82F6", "#8B5CF6", "#EC4899", "#14B8A6", "#6B7280"];
 
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms] disabled:opacity-40";
-const btnDanger = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-red-500 hover:border-red-300 transition-[color,border-color] duration-[120ms] disabled:opacity-40";
 
 export function TagsSettings({ orgId, initialTags }: Props) {
   const [tags, setTags] = useState<TagItem[]>(initialTags);
@@ -105,7 +105,7 @@ export function TagsSettings({ orgId, initialTags }: Props) {
             ))}
           </div>
           <div className="flex gap-2">
-            <button type="button" className={btnGhost} onClick={() => setShowNewForm(false)}>Cancel</button>
+            <Button type="button" variant="secondary" size="sm" onClick={() => setShowNewForm(false)}>Cancel</Button>
             <button type="button" className={btnInk} onClick={handleCreate} disabled={!newName.trim()}>Create</button>
           </div>
         </div>
@@ -129,7 +129,7 @@ export function TagsSettings({ orgId, initialTags }: Props) {
                 autoFocus
               />
               <div className="flex gap-1.5 ml-auto">
-                <button type="button" className={btnGhost} onClick={() => setRenamingId(null)}>Cancel</button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setRenamingId(null)}>Cancel</Button>
                 <button type="button" className={btnInk} onClick={() => handleRenameSave(tag.id)}>Save</button>
               </div>
             </>
@@ -138,8 +138,8 @@ export function TagsSettings({ orgId, initialTags }: Props) {
               <span className="flex-1 text-[13px] font-medium text-ud-ink">{tag.name}</span>
               <span className="text-[12px] text-ud-muted">Remove from all contacts?</span>
               <div className="flex gap-1.5 ml-auto">
-                <button type="button" className={btnGhost} onClick={() => setDeletingId(null)}>Cancel</button>
-                <button type="button" className={btnDanger} onClick={() => handleDelete(tag.id)}>Confirm</button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setDeletingId(null)}>Cancel</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => handleDelete(tag.id)}>Confirm</Button>
               </div>
             </>
           ) : (
@@ -147,8 +147,8 @@ export function TagsSettings({ orgId, initialTags }: Props) {
               <span className="flex-1 text-[13px] font-medium text-ud-ink">{tag.name}</span>
               <span className="text-[11.5px] text-ud-faint">{tag.contactCount} contact{tag.contactCount !== 1 ? "s" : ""}</span>
               <div className="flex gap-1.5">
-                <button type="button" className={btnGhost} onClick={() => handleRenameStart(tag)}>Rename</button>
-                <button type="button" className={btnGhost} style={{ color: "var(--danger, #dc2626)" }} onClick={() => setDeletingId(tag.id)}>Delete</button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => handleRenameStart(tag)}>Rename</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => setDeletingId(tag.id)}>Delete</Button>
               </div>
             </>
           )}
@@ -157,7 +157,7 @@ export function TagsSettings({ orgId, initialTags }: Props) {
 
       {!showNewForm && (
         <div className="mt-3">
-          <button type="button" className={btnGhost} onClick={() => setShowNewForm(true)}>+ New tag</button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setShowNewForm(true)}>+ New tag</Button>
         </div>
       )}
     </div>

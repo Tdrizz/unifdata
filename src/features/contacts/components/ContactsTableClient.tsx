@@ -102,7 +102,7 @@ export function ContactsTableClient({
   return (
     <>
     {/* Mobile contacts list */}
-    <div className="md:hidden px-4 pt-5 pb-10">
+    <div className="md:hidden px-4 pt-5 pb-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
         <a
@@ -149,7 +149,7 @@ export function ContactsTableClient({
         </div>
       )}
     </div>
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

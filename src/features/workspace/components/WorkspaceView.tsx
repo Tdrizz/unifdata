@@ -189,7 +189,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   })();
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       {/* Page header */}
       <PageHeader
         eyebrow={dayLabel}

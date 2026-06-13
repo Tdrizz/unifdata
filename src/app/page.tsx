@@ -302,7 +302,7 @@ export default function HomePage() {
                 key={point.num}
                 className="rounded-[20px] border border-white/10 bg-white/5 p-7 transition-colors duration-200 hover:bg-white/[0.07]"
               >
-                <p className="text-[13px] font-semibold tabular-nums text-[#8B80E0]">
+                <p className="text-[13px] font-semibold tabular-nums text-ud-accent">
                   {point.num}
                 </p>
                 <p className="mt-3 text-[17px] font-semibold leading-snug">{point.title}</p>
@@ -331,7 +331,7 @@ export default function HomePage() {
                 key={card.step}
                 className="rounded-[20px] border border-white/10 bg-[#0d1422] p-7"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#4A3FA8]/20 text-[13px] font-bold text-[#8B80E0]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-ud-accent/20 text-[13px] font-bold text-ud-accent">
                   {card.step}
                 </div>
                 <p className="mt-5 text-[17px] font-semibold leading-snug">{card.title}</p>

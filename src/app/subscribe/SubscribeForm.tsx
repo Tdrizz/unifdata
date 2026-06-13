@@ -84,7 +84,7 @@ function PaymentForm({
       />
 
       {error && (
-        <div className="rounded-[10px] border border-red-200 bg-red-50 px-[14px] py-[11px] text-[13px] text-red-700">
+        <div className="rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg px-[14px] py-[11px] text-[13px] text-ud-danger">
           {error}
         </div>
       )}
@@ -207,7 +207,7 @@ export function SubscribeForm({ userEmail }: { userEmail: string }) {
             {/* CTA */}
             <div className="px-[28px] pb-[28px]">
               {initError && (
-                <div className="mb-[14px] rounded-[10px] border border-red-200 bg-red-50 px-[14px] py-[11px] text-[13px] text-red-700">
+                <div className="mb-[14px] rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg px-[14px] py-[11px] text-[13px] text-ud-danger">
                   {initError}
                 </div>
               )}

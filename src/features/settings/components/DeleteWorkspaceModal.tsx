@@ -35,7 +35,7 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center px-[11px] py-[5px] rounded-[7px] border border-[#fca5a5] bg-transparent text-[#dc2626] text-[12px] font-semibold shrink-0 cursor-pointer"
+        className="inline-flex items-center px-[11px] py-[5px] rounded-[7px] border border-ud-danger/30 bg-transparent text-ud-danger text-[12px] font-semibold shrink-0 cursor-pointer"
       >
         Delete workspace
       </button>

@@ -101,7 +101,7 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
                 <Command.Group
                   key={group}
                   heading={group}
-                  className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.12em] [&>[cmdk-group-heading]]:text-ud-faint"
+                  className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.13em] [&>[cmdk-group-heading]]:text-ud-faint"
                 >
                   {items.map((cmd) => (
                     <Command.Item

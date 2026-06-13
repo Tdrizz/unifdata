@@ -2,12 +2,12 @@ const toneSurface: Record<string, string> = {
   default:  "bg-ud-surface border-ud",
   subtle:   "bg-ud-surface border-ud",
   positive: "bg-emerald-50/70 border-emerald-100",
-  warning:  "bg-amber-50/70 border-amber-100",
-  danger:   "bg-red-50/60 border-red-100",
+  warning:  "bg-ud-warning-bg/70 border-ud-warning/20",
+  danger:   "bg-ud-danger-bg/60 border-ud-danger/20",
   green:    "bg-emerald-50/70 border-emerald-100",
   blue:     "bg-ud-surface border-ud",
-  amber:    "bg-amber-50/70 border-amber-100",
-  red:      "bg-red-50/60 border-red-100",
+  amber:    "bg-ud-warning-bg/70 border-ud-warning/20",
+  red:      "bg-ud-danger-bg/60 border-ud-danger/20",
 };
 
 export function StatCard({

@@ -26,7 +26,7 @@ export function CustomerCreateForm({ profile }: Props) {
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
-          <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
             {state.error}
           </p>
         )}

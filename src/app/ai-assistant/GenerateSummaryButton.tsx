@@ -58,9 +58,9 @@ export function GenerateSummaryButton() {
 
   const messageClass =
     messageTone === "warning"
-      ? "mt-5 rounded-[10px] border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-800"
+      ? "mt-5 rounded-[10px] border border-ud-warning/20 bg-ud-warning-bg p-4 text-sm font-medium text-amber-800"
       : messageTone === "error"
-        ? "mt-5 rounded-[10px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        ? "mt-5 rounded-[10px] border border-ud-danger/20 bg-ud-danger-bg p-4 text-sm font-medium text-ud-danger"
         : "mt-5 rounded-[10px] border border-ud bg-ud-surface-sunk p-4 text-sm font-semibold text-ud-muted";
 
   return (

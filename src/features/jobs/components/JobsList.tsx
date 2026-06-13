@@ -54,7 +54,6 @@ function statusBadgeTone(status: string | null): "info" | "success" | "neutral" 
   return "neutral";
 }
 
-const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function JobsList({ jobs, count, contacts, leads, profile, selectedStage }: Props) {
   const p = useProfile();
@@ -85,14 +84,14 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
     });
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow={jobPlural}
         title={`Scheduled ${jobPlural.toLowerCase()}`}
         description={`${count} total · ${weekLabel} · ${totalThisWeek} scheduled this week${todayCount > 0 ? ` · ${todayCount} today` : ""}`}
         className="mb-6"
         actions={
-          <a href="#job-quick-add" className={btnPrimary}>
+          <a href="#job-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
 import {
   createCustomFieldAction,
   updateCustomFieldAction,
@@ -27,9 +28,7 @@ type Props = {
 
 const FIELD_TYPES = ["text", "number", "date", "select", "multiselect", "checkbox", "url"];
 
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms] disabled:opacity-40";
-const btnDanger = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-red-500 hover:border-red-300 transition-[color,border-color] duration-[120ms] disabled:opacity-40";
 
 type FormState = {
   label: string;
@@ -98,7 +97,7 @@ function FieldForm({
         <label htmlFor="field-required" className="text-[12.5px] text-ud-ink cursor-pointer">Required</label>
       </div>
       <div className="flex gap-2">
-        <button type="button" className={btnGhost} onClick={onCancel}>Cancel</button>
+        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
         <button type="button" className={btnInk} onClick={() => onSave(form)} disabled={!form.label.trim()}>Save</button>
       </div>
     </div>
@@ -229,8 +228,8 @@ function FieldList({
               <span className="flex-1 text-[13px] font-medium text-ud-ink">{field.label}</span>
               <span className="text-[12px] text-ud-muted">This will delete all saved values.</span>
               <div className="flex gap-1.5">
-                <button type="button" className={btnGhost} onClick={() => setDeletingId(null)}>Cancel</button>
-                <button type="button" className={btnDanger} onClick={() => handleDelete(field.id)}>Delete</button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setDeletingId(null)}>Cancel</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => handleDelete(field.id)}>Delete</Button>
               </div>
             </div>
           ) : (
@@ -241,22 +240,24 @@ function FieldList({
                 <span className="inline-flex items-center px-[7px] py-[2px] rounded-[5px] text-[11px] font-semibold text-[#8B5CF6] bg-[rgba(139,92,246,0.08)]">required</span>
               )}
               <div className="flex items-center gap-1">
-                <button
+                <Button
                   type="button"
-                  className={btnGhost}
+                  variant="secondary"
+                  size="sm"
                   disabled={idx === 0}
                   onClick={() => handleReorder(field.id, "up")}
                   style={{ padding: "4px 7px", opacity: idx === 0 ? 0.3 : 1 }}
-                >↑</button>
-                <button
+                >↑</Button>
+                <Button
                   type="button"
-                  className={btnGhost}
+                  variant="secondary"
+                  size="sm"
                   disabled={idx === sorted.length - 1}
                   onClick={() => handleReorder(field.id, "down")}
                   style={{ padding: "4px 7px", opacity: idx === sorted.length - 1 ? 0.3 : 1 }}
-                >↓</button>
-                <button type="button" className={btnGhost} onClick={() => setEditingId(field.id)}>Edit</button>
-                <button type="button" className={btnGhost} style={{ color: "var(--danger, #dc2626)" }} onClick={() => setDeletingId(field.id)}>Delete</button>
+                >↓</Button>
+                <Button type="button" variant="secondary" size="sm" onClick={() => setEditingId(field.id)}>Edit</Button>
+                <Button type="button" variant="danger" size="sm" onClick={() => setDeletingId(field.id)}>Delete</Button>
               </div>
             </div>
           )}
@@ -267,7 +268,7 @@ function FieldList({
         <FieldForm initial={emptyForm} onSave={handleAdd} onCancel={() => setShowAdd(false)} />
       ) : (
         <div className="mt-3">
-          <button type="button" className={btnGhost} onClick={() => setShowAdd(true)}>+ Add field</button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setShowAdd(true)}>+ Add field</Button>
         </div>
       )}
     </div>

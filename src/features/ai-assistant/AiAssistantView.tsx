@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/PageHeader";
 import ReactMarkdown from "react-markdown";
+import { Button } from "@/components/ui/Button";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
 export type Draft = {
@@ -89,8 +90,7 @@ export function AriaAlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: (
   );
 }
 
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
-const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
+const btnInk ="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
 
 type Props = {
   initialMessages?: Array<{ role: "user" | "model"; text: string }>;
@@ -273,7 +273,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
   }
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="AI Assistant"
         title="Business advisor"
@@ -286,7 +286,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
         <div className="bg-ud-surface border border-[rgba(0,0,0,0.06)] rounded-[var(--radius-ud-lg)] shadow-ud overflow-hidden flex flex-col">
           <div className="px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)] flex items-center justify-between gap-3">
             <p className="text-[13.5px] font-semibold text-ud-ink">Chat</p>
-            <button className={btnGhostSm} onClick={handleClear}>New conversation</button>
+            <Button variant="secondary" size="sm" onClick={handleClear}>New conversation</Button>
           </div>
 
           <div className="flex flex-col gap-3.5 p-[18px_20px] min-h-[300px]">
