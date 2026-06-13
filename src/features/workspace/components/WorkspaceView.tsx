@@ -22,8 +22,6 @@ import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
 import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { AgentInbox } from "./AgentInbox";
-import { RoiCounter } from "./RoiCounter";
 
 type QueueItem = {
   id: string;
@@ -76,10 +74,9 @@ type Props = WorkspaceData & {
   drafts?: Draft[];
   alerts?: Alert[];
   isPro?: boolean;
-  roiTotal?: number;
 };
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false, roiTotal = 0 }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -192,7 +189,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   })();
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       {/* Page header */}
       <PageHeader
         eyebrow={dayLabel}
@@ -202,7 +199,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         actions={
           <>
             <Link href="/jobs" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View calendar</Link>
-            <Link href="/contacts" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
+            <Link href="/customers" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -212,11 +209,45 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
-      {/* Agent Inbox — always render so non-Pro users see the upgrade callout */}
-      <AgentInbox drafts={drafts} alerts={alerts} isPro={isPro} />
-
-      {/* ROI counter (Pro tier, only if recovered > 0) */}
-      {isPro && roiTotal > 0 && <RoiCounter amountRecovered={roiTotal} />}
+      {/* Aria briefing card */}
+      {isPro && (drafts.length + alerts.length > 0) && (
+        <Link
+          href="/aria"
+          className="flex items-center justify-between gap-4 mb-6 rounded-[12px] border border-ud-accent/20 bg-ud-accent/[0.03] px-5 py-4 hover:bg-ud-accent/[0.06] transition-colors group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
+                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-ud-ink">
+                Aria found {drafts.length + alerts.length} {drafts.length + alerts.length === 1 ? "item" : "items"} to review
+              </p>
+              <p className="text-[12px] text-ud-muted mt-0.5">
+                {drafts.length > 0 && `${drafts.length} draft${drafts.length !== 1 ? "s" : ""} ready to send`}
+                {drafts.length > 0 && alerts.length > 0 && " · "}
+                {alerts.length > 0 && `${alerts.length} alert${alerts.length !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+          </div>
+          <span className="text-[12.5px] font-semibold text-ud-accent group-hover:translate-x-[2px] transition-transform shrink-0">
+            Review →
+          </span>
+        </Link>
+      )}
+      {isPro && drafts.length === 0 && alerts.length === 0 && (
+        <div className="flex items-center gap-3 mb-6 rounded-[12px] border border-ud px-5 py-4">
+          <div className="w-7 h-7 rounded-full bg-ud-surface-sunk flex items-center justify-center shrink-0">
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-faint">
+              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+            </svg>
+          </div>
+          <p className="text-[13px] text-ud-muted">Aria reviewed your business overnight. Everything looks good.</p>
+        </div>
+      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">
@@ -337,7 +368,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             <p className="text-[13.5px] font-semibold text-ud-ink mb-3">Quick actions</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { label: `New ${customerSingular.toLowerCase()}`, href: "/contacts" },
+                { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
                 { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
                 { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
                 { label: "Ask AI", href: "/ai-assistant" },

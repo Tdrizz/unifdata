@@ -32,7 +32,7 @@ export async function POST(_request: Request, context: RouteContext) {
 
     revalidatePath("/imports");
     revalidatePath("/customers");
-    revalidatePath("/leads");
+    revalidatePath("/crm");
     revalidatePath("/jobs");
     revalidatePath("/sales");
     revalidatePath("/follow-ups");

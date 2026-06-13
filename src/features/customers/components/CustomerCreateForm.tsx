@@ -26,7 +26,7 @@ export function CustomerCreateForm({ profile }: Props) {
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
-          <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
             {state.error}
           </p>
         )}
@@ -45,7 +45,7 @@ export function CustomerCreateForm({ profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.name && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.name}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.name}</p>
             )}
           </div>
           <label className="block">
@@ -80,7 +80,7 @@ export function CustomerCreateForm({ profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.email && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.email}</p>
             )}
           </div>
         </div>

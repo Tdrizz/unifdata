@@ -687,31 +687,42 @@ export async function createStageAction(
 
 export async function renameStageAction(stageId: string, name: string): Promise<void> {
   const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
   const { error } = await supabase
     .from("board_stages")
     .update({ name: name.trim() })
-    .eq("id", stageId);
+    .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }
 
 export async function updateStageColorAction(stageId: string, color: string): Promise<void> {
   const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+
   const { error } = await supabase
     .from("board_stages")
     .update({ color })
-    .eq("id", stageId);
+    .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id);
   if (error) throw new Error(error.message);
   revalidatePath("/settings");
 }
 
 export async function updateStageTypeAction(stageId: string, stageType: string): Promise<{ error?: string }> {
   const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return { error: "Unauthorized" };
 
   const { data: stage } = await supabase
     .from("board_stages")
     .select("board_id")
     .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id)
     .single();
 
   if (!stage) return { error: "Stage not found" };
@@ -734,7 +745,8 @@ export async function updateStageTypeAction(stageId: string, stageType: string):
   const { error } = await supabase
     .from("board_stages")
     .update({ stage_type: stageType })
-    .eq("id", stageId);
+    .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id);
 
   if (error) return { error: error.message };
   revalidatePath("/settings");
@@ -743,11 +755,14 @@ export async function updateStageTypeAction(stageId: string, stageType: string):
 
 export async function reorderStageAction(stageId: string, boardId: string, direction: "up" | "down"): Promise<void> {
   const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
 
   const { data: stages } = await supabase
     .from("board_stages")
     .select("id, position")
     .eq("board_id", boardId)
+    .eq("organization_id", currentCompany.company.id)
     .order("position", { ascending: true });
 
   if (!stages) throw new Error("Could not load stages");
@@ -769,11 +784,14 @@ export async function reorderStageAction(stageId: string, boardId: string, direc
 
 export async function deleteStageAction(stageId: string, reassignToStageId?: string): Promise<{ error?: string }> {
   const supabase = await createClient();
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return { error: "Unauthorized" };
 
   const { data: stage } = await supabase
     .from("board_stages")
     .select("board_id")
     .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id)
     .single();
 
   if (!stage) return { error: "Stage not found" };
@@ -787,6 +805,14 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
   if (count && count > 0) {
     if (!reassignToStageId) return { error: "Active records exist — choose a stage to reassign them to" };
 
+    const { data: reassignStage } = await supabase
+      .from("board_stages")
+      .select("id")
+      .eq("id", reassignToStageId)
+      .eq("organization_id", currentCompany.company.id)
+      .maybeSingle();
+    if (!reassignStage) return { error: "Reassignment stage not found" };
+
     const { error: reassignError } = await supabase
       .from("process_records")
       .update({ stage_id: reassignToStageId })
@@ -799,7 +825,8 @@ export async function deleteStageAction(stageId: string, reassignToStageId?: str
   const { error } = await supabase
     .from("board_stages")
     .delete()
-    .eq("id", stageId);
+    .eq("id", stageId)
+    .eq("organization_id", currentCompany.company.id);
 
   if (error) return { error: error.message };
   revalidatePath("/settings");

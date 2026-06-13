@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { Card } from "@/components/ui/Card";
 import { Pagination } from "@/components/ui/Pagination";
+import { Button } from "@/components/ui/Button";
 
 type Props = {
   followUps: FollowUpRow[];
@@ -84,8 +85,6 @@ type QueueEntry = {
   priority: number;
 };
 
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms] cursor-pointer";
-const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function FollowUpsView({ followUps, opportunities, people, profile, count = 0 }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
@@ -138,7 +137,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
   const filtered = filter === "overdue" ? overdueItems : filter === "today" ? todayItems : filter === "upcoming" ? upcomingItems : all;
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow={profile?.labels.followUpPlural ?? "Follow-ups"}
         title="Priority queue"
@@ -146,8 +145,8 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
         className="mb-6"
         actions={
           <>
-            <Link href="/crm" className={btnGhostSm}>Pipeline view</Link>
-            <a href="#followup-quick-add" className={btnPrimary}>
+            <Link href="/crm" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">Pipeline view</Link>
+            <a href="#followup-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]">
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -198,18 +197,19 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
                       {getDueLabel(item.due_date, item.status)}
                     </div>
                     {isManual && rawId && (
-                      <button
-                        className={btnGhostSm}
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={(e) => {
                           e.preventDefault();
                           startTransition(() => markFollowUpCompleteAction(rawId));
                         }}
                       >
                         Done
-                      </button>
+                      </Button>
                     )}
                     {!isManual && (
-                      <span className={btnGhostSm}>View →</span>
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">View →</span>
                     )}
                   </div>
                 </Link>

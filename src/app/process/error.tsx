@@ -32,10 +32,10 @@ export default function RouteError({
           </p>
         )}
         <div className="mt-5 flex gap-2">
-          <button type="button" onClick={reset} className="rounded-[9px] bg-ud-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90 transition-opacity">
+          <button type="button" onClick={reset} className="rounded-[8px] bg-ud-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90 transition-opacity">
             Try again
           </button>
-          <a href="/workspace" className="rounded-[9px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors">
+          <a href="/workspace" className="rounded-[8px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors">
             Go to workspace
           </a>
         </div>

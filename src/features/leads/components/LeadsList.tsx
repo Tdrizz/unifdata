@@ -149,7 +149,7 @@ export function LeadsList({ leads, count, customers, profile }: Props) {
 
             <Link
               href="/imports"
-              className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#4A3FA8] px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-[9px] bg-ud-accent px-3 py-2 text-[13px] font-semibold text-white hover:opacity-90"
             >
               Import data
             </Link>

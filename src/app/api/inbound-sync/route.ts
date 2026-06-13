@@ -5,6 +5,7 @@ import { redis } from "@/lib/redis";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizePhone, normalizeEmail } from "@/lib/normalize";
 import { getDataKeeperQueue, JOB_ANALYZE_DATA_FRAGMENT, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
+import { syncLegacyCustomer } from "@/lib/crm/legacy-sync";
 import type { InboundPayload } from "@/lib/data-keeper/types";
 
 export const runtime = "nodejs";
@@ -80,6 +81,7 @@ async function processInboundPayload(body: InboundBody) {
         .update(updates)
         .eq("id", exactMatch.id)
         .eq("organization_id", organizationId);
+      await syncLegacyCustomer(supabase, exactMatch.id);
       return;
     }
   }

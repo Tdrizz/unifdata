@@ -4,252 +4,195 @@ import Link from "next/link";
 import { useState } from "react";
 import { PublicNav } from "@/components/PublicNav";
 
-const sectors = [
+const DEMO_FORM_URL = "DEMO_FORM_URL"; // TODO: Replace with Malachi's Google Form URL before launch
+
+const industries = [
   {
-    label: "Home & field services",
-    title: "Home services",
-    focus:
-      "4 follow-ups due, $12,400 in open quotes, and 3 client records need cleanup.",
+    label: "Home services",
+    brief: "Good morning. Here's what needs your attention.",
     stats: [
-      ["Open quote value", "$12.4k"],
-      ["Service visits", "7"],
-      ["Unpaid work", "$3.8k"],
-      ["Data health", "84%"],
+      { label: "Follow-ups due", value: "4", urgent: true },
+      { label: "Open quotes", value: "$12.4k", urgent: false },
+      { label: "Unpaid work", value: "$3.8k", urgent: true },
+      { label: "Active jobs", value: "7", urgent: false },
     ],
-    insights: [
-      "Yard cleanups are creating the most quote requests.",
-      "Recurring service brings the most repeat revenue.",
-      "Three clients are missing phone or email.",
+    actions: [
+      { type: "draft", text: "Follow-up with David Reyes — roof quote sent 8 days ago, no response.", cta: "Send follow-up" },
+      { type: "alert", text: "Marcus Webb's water heater job completed 5 weeks ago. Invoice still unpaid ($1,400)." },
     ],
   },
   {
     label: "Construction",
-    title: "Contractor",
-    focus:
-      "3 estimates pending response, $18,200 in active projects, and 2 customer records missing addresses.",
+    brief: "Good morning. Here's what needs your attention.",
     stats: [
-      ["Open estimate value", "$18.2k"],
-      ["Active projects", "5"],
-      ["Unpaid work", "$6.1k"],
-      ["Data health", "79%"],
+      { label: "Pending estimates", value: "3", urgent: true },
+      { label: "Active projects", value: "$18.2k", urgent: false },
+      { label: "Unpaid work", value: "$6.1k", urgent: true },
+      { label: "Scheduled jobs", value: "5", urgent: false },
     ],
-    insights: [
-      "Roofing estimates are converting fastest this month.",
-      "Two repeat customers haven't been followed up in 30 days.",
-      "Several project records are missing completed dates.",
+    actions: [
+      { type: "draft", text: "Check in with Apex Realty — roofing estimate open for 12 days.", cta: "Send check-in" },
+      { type: "alert", text: "2 project records are missing completed dates. Revenue may be understated." },
     ],
   },
   {
     label: "Medical & dental",
-    title: "Medical office",
-    focus:
-      "6 recall follow-ups overdue, $8,200 in outstanding balances, and 4 patient records incomplete.",
+    brief: "Good morning. Here's what needs your attention.",
     stats: [
-      ["Open treatment value", "$8.2k"],
-      ["Appointments", "18"],
-      ["Outstanding balances", "$4.1k"],
-      ["Data health", "91%"],
+      { label: "Recall follow-ups", value: "6", urgent: true },
+      { label: "Appointments today", value: "18", urgent: false },
+      { label: "Outstanding balances", value: "$4.1k", urgent: true },
+      { label: "Data health", value: "91%", urgent: false },
     ],
-    insights: [
-      "Recall follow-ups are the highest priority today.",
-      "New patient inquiries are converting from Google.",
-      "Most patient records have usable contact details.",
+    actions: [
+      { type: "draft", text: "Linda Chen is 6 months overdue for a recall appointment.", cta: "Send recall" },
+      { type: "alert", text: "4 patient records are missing a primary contact email." },
     ],
   },
   {
     label: "Professional services",
-    title: "Professional services",
-    focus:
-      "3 proposals awaiting approval, $15,800 in active projects, and 1 client record missing contact info.",
+    brief: "Good morning. Here's what needs your attention.",
     stats: [
-      ["Open proposal value", "$15.8k"],
-      ["Active projects", "3"],
-      ["Unpaid invoices", "$5.2k"],
-      ["Data health", "93%"],
+      { label: "Open proposals", value: "3", urgent: true },
+      { label: "Active projects", value: "$15.8k", urgent: false },
+      { label: "Unpaid invoices", value: "$5.2k", urgent: true },
+      { label: "Data health", value: "93%", urgent: false },
     ],
-    insights: [
-      "Two proposals have been open for more than two weeks.",
-      "Retainer clients are producing the most stable revenue.",
-      "One client file is missing a primary contact email.",
-    ],
-  },
-  {
-    label: "General business",
-    title: "General business",
-    focus:
-      "5 actions due, $9,400 in open opportunities, and 2 records missing contact details.",
-    stats: [
-      ["Open opportunity value", "$9.4k"],
-      ["Active work", "4"],
-      ["Unpaid revenue", "$2.6k"],
-      ["Data health", "86%"],
-    ],
-    insights: [
-      "Two opportunities haven't been touched in over two weeks.",
-      "Referral relationships are producing the strongest revenue.",
-      "A handful of records are missing addresses or sources.",
+    actions: [
+      { type: "draft", text: "Follow up with Greenfield Partners — proposal sent 14 days ago.", cta: "Send follow-up" },
+      { type: "alert", text: "One client file is missing a primary contact email." },
     ],
   },
 ];
 
-const whyItMatters = [
-  {
-    num: "01",
-    title: "Today's priorities, not yesterday's reports",
-    description:
-      "See follow-ups due, unpaid work, and stale opportunities every morning — before the day gets away from you.",
-  },
-  {
-    num: "02",
-    title: "Built for your type of business, not someone else's",
-    description:
-      "The workspace adapts its language and priorities to your business type. A contractor and a dentist don't see the same dashboard.",
-  },
-  {
-    num: "03",
-    title: "Incomplete records are where customers go missing",
-    description:
-      "Fix missing fields and unlinked records before they cost you a relationship — and let UnifData quietly reconcile duplicates in the background as new data comes in.",
-  },
-];
-
-const workflowCards = [
+const howItWorks = [
   {
     step: "01",
-    title: "Import your data or connect your tools",
-    description:
-      "Bring in customers, leads, jobs, sales, and follow-ups from spreadsheets, or connect Jobber, QuickBooks, or HubSpot directly.",
+    title: "Connect your data",
+    body: "Import a spreadsheet or connect Jobber, QuickBooks, HubSpot, or Square. Aria maps your records automatically — customers, jobs, revenue, follow-ups.",
   },
   {
     step: "02",
-    title: "UnifData links everything together",
-    description:
-      "Records link automatically into one view — customers, open work, and revenue — and duplicates from connected tools are reconciled in the background without manual cleanup.",
+    title: "Aria learns your business",
+    body: "Every night, Aria reviews everything. Stale customers. Unpaid work. Overdue follow-ups. Missed opportunities. It prepares a brief so you don't have to dig.",
   },
   {
     step: "03",
-    title: "Act on what needs attention today",
-    description:
-      "Every morning you see exactly what's urgent: follow-ups due, unpaid work, and records that are incomplete.",
+    title: "You make the calls",
+    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment. Aria does the thinking. You make the decisions.",
   },
 ];
 
-const integrations = ["QuickBooks", "Jobber", "HubSpot", "Square", "Google Sheets", "CSV Import"];
+const integrations = ["QuickBooks", "Jobber", "HubSpot", "Square", "Google Sheets", "CSV"];
 
 export default function HomePage() {
-  const [activeSector, setActiveSector] = useState(0);
-  const sector = sectors[activeSector];
+  const [activeIndustry, setActiveIndustry] = useState(0);
+  const industry = industries[activeIndustry];
 
   return (
-    <main className="min-h-screen bg-[#090e1a] text-white">
+    <main className="min-h-screen bg-[#090e1a] text-white antialiased">
       <PublicNav />
 
       {/* Hero */}
-      <div className="relative overflow-hidden">
-        {/* Ambient glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 left-[-8%] h-[640px] w-[640px] rounded-full bg-[#4A3FA8] opacity-[0.11] blur-[140px]"
-        />
+      <section className="relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-[#4A3FA8] opacity-[0.09] blur-[160px]" />
+        <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-16">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[12.5px] font-medium text-slate-400 mb-8">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#7B72D4]" />
+              Aria — your AI business assistant
+            </div>
+            <h1 className="animate-fade-up [animation-delay:60ms] text-[52px] sm:text-[64px] lg:text-[76px] font-semibold leading-[1.02] tracking-[-0.03em] mb-6">
+              Your business,<br />briefed every morning.
+            </h1>
+            <p className="animate-fade-up [animation-delay:120ms] text-[18px] leading-[1.75] text-slate-300 max-w-xl mx-auto mb-10">
+              Stop running your business from memory. Aria reviews your customers, jobs, revenue, and follow-ups overnight — and tells you exactly what needs attention when you wake up.
+            </p>
+            <div className="animate-fade-up [animation-delay:180ms] flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href={DEMO_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto rounded-[12px] bg-[#4A3FA8] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(74,63,168,0.45)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]"
+              >
+                Book a free demo
+              </a>
+              <Link
+                href="/pricing"
+                className="w-full sm:w-auto rounded-[12px] border border-white/12 px-7 py-3.5 text-[15px] font-semibold text-slate-200 hover:bg-white/[0.06] transition-colors active:scale-[0.97]"
+              >
+                See pricing
+              </Link>
+            </div>
+            <p className="animate-fade-up [animation-delay:240ms] mt-5 text-[12.5px] text-slate-500">
+              $300 setup · $100/month · No contracts
+            </p>
+          </div>
 
-        <section className="mx-auto w-full max-w-7xl px-6 pb-10 pt-20">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-            {/* Left: headline + CTAs + sector pills */}
-            <div>
-              <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[13px] font-medium text-slate-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#4A3FA8]" />
-                Built for service businesses
-              </div>
-
-              <h1 className="animate-fade-up [animation-delay:80ms] mt-6 text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-[68px]">
-                Stop losing revenue to scattered data.
-              </h1>
-
-              <p className="animate-fade-up [animation-delay:160ms] mt-5 max-w-lg text-[17px] leading-8 text-slate-300">
-                Your customers, active work, and revenue in one place — with a
-                daily brief that shows exactly what needs attention.
-              </p>
-
-              <div className="animate-fade-up [animation-delay:240ms] mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/waitlist"
-                  className="rounded-xl bg-[#4A3FA8] px-6 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
+          {/* Industry picker + Aria mock */}
+          <div className="mt-16 animate-fade-up [animation-delay:300ms]">
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              {industries.map((ind, i) => (
+                <button
+                  key={ind.label}
+                  onClick={() => setActiveIndustry(i)}
+                  className={`rounded-full border px-4 py-1.5 text-[13px] font-medium transition-all duration-150 active:scale-[0.96] ${
+                    activeIndustry === i
+                      ? "border-white/30 bg-white text-slate-950"
+                      : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/20 hover:text-white"
+                  }`}
                 >
-                  Request access
-                </Link>
-                <Link
-                  href="/preview"
-                  className="rounded-xl border border-white/15 px-6 py-3 text-center font-semibold text-slate-200 transition-colors hover:bg-white/8"
-                >
-                  See how it works
-                </Link>
-              </div>
-
-              <div className="animate-fade-up [animation-delay:320ms] mt-10">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">
-                  Pick your industry
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {sectors.map((s, i) => (
-                    <button
-                      key={s.label}
-                      onClick={() => setActiveSector(i)}
-                      className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-[color,background-color,border-color] duration-[120ms] ease-out active:scale-[0.96] ${
-                        activeSector === i
-                          ? "border-white/40 bg-white text-slate-950"
-                          : "border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/8 hover:text-white"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                  {ind.label}
+                </button>
+              ))}
             </div>
 
-            {/* Right: dashboard card */}
-            <div className="animate-fade-up [animation-delay:200ms] rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/40">
-              <div className="rounded-[20px] bg-[#f7f6f3] p-5 text-slate-950">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">
-                      Today&apos;s brief
-                    </p>
-                    <h2 className="mt-1 text-[22px] font-semibold tracking-tight">
-                      {sector.title}
-                    </h2>
-                  </div>
-                  <span className="rounded-full border border-[#4A3FA8]/20 bg-[#4A3FA8]/10 px-3 py-1 text-[11px] font-semibold text-[#4A3FA8]">
-                    Needs attention
-                  </span>
-                </div>
-
-                <div className="mt-4 rounded-[14px] border border-slate-200 bg-white p-4">
-                  <p className="text-[12px] font-medium text-slate-500">Focus today</p>
-                  <p className="mt-1.5 text-[14px] font-semibold leading-6">{sector.focus}</p>
-                </div>
-
-                <div className="mt-3 grid grid-cols-2 gap-2.5">
-                  {sector.stats.map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-[12px] border border-slate-200 bg-white p-3.5"
-                    >
-                      <p className="text-[11px] font-medium text-slate-500">{label}</p>
-                      <p className="mt-1.5 text-[22px] font-semibold tabular-nums">{value}</p>
+            <div className="mx-auto max-w-2xl rounded-[24px] border border-white/10 bg-white/[0.04] p-2 shadow-[0_32px_80px_rgba(0,0,0,0.5)]">
+              <div className="rounded-[18px] bg-[#f6f5f2] overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-[5px] bg-[#4A3FA8]/20 flex items-center justify-center">
+                      <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                      </svg>
                     </div>
-                  ))}
+                    <span className="text-[12px] font-semibold text-slate-700">Aria</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400">Today</span>
                 </div>
 
-                <div className="mt-3 rounded-[14px] border border-slate-200 bg-white p-4">
-                  <p className="text-[13px] font-semibold">What you&apos;d see today</p>
-                  <div className="mt-3 space-y-2">
-                    {sector.insights.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-[10px] bg-slate-50 px-3.5 py-2.5 text-[12.5px] text-slate-600"
-                      >
-                        {item}
+                <div className="px-5 py-4">
+                  <div className="flex gap-3 mb-4">
+                    <div className="w-7 h-7 rounded-full bg-[#4A3FA8]/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-slate-700 leading-relaxed">{industry.brief}</p>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {industry.stats.map((stat) => (
+                      <div key={stat.label} className={`rounded-[10px] border p-3 ${stat.urgent ? "border-red-200/60 bg-red-50/60" : "border-black/[0.06] bg-white"}`}>
+                        <p className="text-[10px] font-medium text-slate-500 mb-1 leading-tight">{stat.label}</p>
+                        <p className={`text-[18px] font-bold tabular-nums leading-none ${stat.urgent ? "text-red-600" : "text-slate-900"}`}>{stat.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    {industry.actions.map((action, i) => (
+                      <div key={i} className={`rounded-[10px] border p-3.5 ${action.type === "draft" ? "border-[#4A3FA8]/20 bg-[#4A3FA8]/[0.04]" : "border-black/[0.06] bg-white"}`}>
+                        <p className="text-[12px] text-slate-700 leading-relaxed mb-2.5">{action.text}</p>
+                        {action.type === "draft" && action.cta && (
+                          <div className="flex gap-2">
+                            <div className="rounded-[7px] bg-[#4A3FA8] px-3 py-1.5 text-[11.5px] font-semibold text-white">{action.cta}</div>
+                            <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500">Skip</div>
+                          </div>
+                        )}
+                        {action.type === "alert" && (
+                          <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500 inline-flex">Got it</div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -257,219 +200,139 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </section>
-      </div>
-
-      {/* Integration bar */}
-      <section className="border-t border-white/8 px-6 py-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-widest text-slate-500">
-            Works with your existing tools
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {integrations.map((name) => (
-              <div
-                key={name}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[13px] font-medium text-slate-400"
-              >
-                {name}
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
-      {/* Why it matters */}
-      <section className="border-t border-white/8 px-6 py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Why it matters
-            </p>
-            <h2 className="mt-3 text-[38px] font-semibold leading-[1.1] tracking-tight">
-              Scattered data is where revenue goes to disappear.
-            </h2>
-            <p className="mt-4 text-[16px] leading-8 text-slate-300">
-              Customer info lives in spreadsheets. Follow-ups exist only in memory.
-              Revenue gets tracked in a notebook. Jobs arrive by text. UnifData
-              pulls it together so you can see what needs attention — and act on it.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {whyItMatters.map((point) => (
-              <div
-                key={point.num}
-                className="rounded-[20px] border border-white/10 bg-white/5 p-7 transition-colors duration-200 hover:bg-white/[0.07]"
-              >
-                <p className="text-[13px] font-semibold tabular-nums text-[#8B80E0]">
-                  {point.num}
-                </p>
-                <p className="mt-3 text-[17px] font-semibold leading-snug">{point.title}</p>
-                <p className="mt-3 text-[14px] leading-7 text-slate-300">{point.description}</p>
-              </div>
+      {/* Integrations bar */}
+      <section className="border-t border-white/[0.06] py-10">
+        <div className="mx-auto max-w-6xl px-6">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 mb-5">Works with your existing tools</p>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {integrations.map((name) => (
+              <div key={name} className="rounded-full border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-[13px] font-medium text-slate-400">{name}</div>
             ))}
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="border-t border-white/8 px-6 py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              How it works
-            </p>
-            <h2 className="mt-3 text-[38px] font-semibold tracking-tight">
-              Your data, organized and ready to act on
-            </h2>
+      <section className="border-t border-white/[0.06] py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="max-w-xl mb-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">How it works</p>
+            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Set it up once.<br />Aria handles the rest.</h2>
           </div>
-
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {workflowCards.map((card) => (
-              <div
-                key={card.step}
-                className="rounded-[20px] border border-white/10 bg-[#0d1422] p-7"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#4A3FA8]/20 text-[13px] font-bold text-[#8B80E0]">
-                  {card.step}
-                </div>
-                <p className="mt-5 text-[17px] font-semibold leading-snug">{card.title}</p>
-                <p className="mt-3 text-[14px] leading-7 text-slate-300">{card.description}</p>
+          <div className="grid gap-4 md:grid-cols-3">
+            {howItWorks.map((step) => (
+              <div key={step.step} className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-7">
+                <div className="w-9 h-9 rounded-[10px] bg-[#4A3FA8]/20 flex items-center justify-center text-[12px] font-bold text-[#8B80E0] mb-5">{step.step}</div>
+                <p className="text-[17px] font-semibold leading-snug mb-3">{step.title}</p>
+                <p className="text-[14px] leading-[1.75] text-slate-400">{step.body}</p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="mt-12 rounded-[24px] border border-white/10 bg-white/5 p-10 text-center">
-            <h2 className="text-[30px] font-semibold tracking-tight">
-              Five spreadsheets and a notebook is not a system.
-            </h2>
-            <p className="mt-3 text-slate-300">
-              Pick your industry, bring in your data, and start your first day
-              with a clear view of what needs attention.
-            </p>
-            <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
-                href="/waitlist"
-                className="rounded-xl bg-[#4A3FA8] px-6 py-3 font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
-              >
-                Request access
-              </Link>
-              <Link
-                href="/preview"
-                className="rounded-xl border border-white/15 px-6 py-3 font-semibold text-slate-200 transition-colors hover:bg-white/8"
-              >
-                See how it works
-              </Link>
+      {/* What Aria does */}
+      <section className="border-t border-white/[0.06] py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Meet Aria</p>
+              <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em] mb-5">The assistant that works while you sleep.</h2>
+              <p className="text-[16px] leading-[1.8] text-slate-400 mb-8">
+                Every night, Aria reviews your entire business. Customers who haven&apos;t been contacted. Jobs sitting unpaid. Follow-ups that slipped through. Proposals that went quiet.
+              </p>
+              <p className="text-[16px] leading-[1.8] text-slate-400 mb-10">
+                By morning, it&apos;s prepared a briefing with the specific actions that matter most — and drafts the messages to go with them. You review, approve, and move on.
+              </p>
+              <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.4)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
+                See Aria in action →
+              </a>
+            </div>
+            <div className="space-y-3">
+              {[
+                { icon: "📬", title: "Outreach drafts", body: "Aria writes follow-up messages for customers who need contact. You approve or skip — nothing sends without your sign-off." },
+                { icon: "⚠️", title: "Revenue alerts", body: "Flags unpaid invoices, stalling jobs, and revenue drops before they become problems." },
+                { icon: "🔁", title: "Runs every night", body: "The briefing refreshes automatically. You start every morning knowing exactly where things stand." },
+                { icon: "🎯", title: "Adapts to your business", body: "Aria learns your patterns. The longer you use it, the better its prioritization gets." },
+              ].map((item) => (
+                <div key={item.title} className="flex gap-4 rounded-[14px] border border-white/[0.07] bg-white/[0.03] p-5">
+                  <span className="text-[20px] shrink-0 mt-0.5">{item.icon}</span>
+                  <div>
+                    <p className="text-[14px] font-semibold mb-1">{item.title}</p>
+                    <p className="text-[13.5px] leading-[1.65] text-slate-400">{item.body}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="border-t border-white/8 px-6 py-20" id="pricing">
-        <div className="mx-auto max-w-7xl">
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Pricing
-            </p>
-            <h2 className="mt-3 text-[38px] font-semibold tracking-tight">
-              One price. Everything included.
-            </h2>
-            <p className="mt-3 text-slate-300">
-              No tiers, no feature gating. Pay once to get set up, then a flat monthly rate.
-            </p>
+      {/* Pricing teaser */}
+      <section className="border-t border-white/[0.06] py-24" id="pricing">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="max-w-lg mx-auto text-center mb-12">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Pricing</p>
+            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em] mb-4">One price.<br />Everything included.</h2>
+            <p className="text-[16px] text-slate-400 leading-[1.75]">No tiers. No feature gating. No contracts. Pay once to get set up — then $100 a month, cancel any time.</p>
           </div>
-
-          <div className="mx-auto mt-10 max-w-2xl">
-            <div className="rounded-[28px] border border-white/15 bg-white/6 p-10 shadow-2xl">
-              <div className="grid gap-8 sm:grid-cols-2">
-                <div className="text-center">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                    One-time setup
-                  </p>
-                  <div className="mt-3 flex items-end justify-center gap-1">
-                    <span className="text-[60px] font-semibold leading-none tabular-nums">$300</span>
-                  </div>
-                  <p className="mt-2 text-[13px] text-slate-300">
-                    Onboarding &amp; data setup — paid once
-                  </p>
-                </div>
-                <div className="text-center sm:border-l sm:border-white/10 sm:pl-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-                    Then monthly
-                  </p>
-                  <div className="mt-3 flex items-end justify-center gap-1">
-                    <span className="text-[60px] font-semibold leading-none tabular-nums">$100</span>
-                    <span className="mb-2 text-slate-400">/mo</span>
-                  </div>
-                  <p className="mt-2 text-[13px] text-slate-300">Cancel any time — no contracts</p>
-                </div>
+          <div className="mx-auto max-w-md rounded-[24px] border border-white/12 bg-white/[0.05] p-10">
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">Setup</p>
+                <p className="text-[52px] font-semibold leading-none tabular-nums">$300</p>
+                <p className="text-[12.5px] text-slate-400 mt-1.5">one time</p>
               </div>
-
-              <div className="my-8 h-px bg-white/10" />
-
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {[
-                  "CRM for customers, leads, jobs & sales",
-                  "Daily priority queue & follow-ups",
-                  "Data health scoring & automatic deduplication",
-                  "CSV import + QuickBooks, Jobber sync",
-                  "AI-generated operating briefs",
-                  "Secure, isolated workspace",
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-[13px]">
-                    <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-slate-200">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/waitlist"
-                  className="flex-1 rounded-xl bg-[#4A3FA8] px-5 py-3 text-center font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.40)] transition-transform active:scale-[0.97] hover:bg-[#3D3494]"
-                >
-                  Request access
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="flex-1 rounded-xl border border-white/15 px-5 py-3 text-center font-semibold text-slate-200 transition-colors hover:bg-white/8"
-                >
-                  See full pricing details
-                </Link>
+              <div className="text-center border-l border-white/[0.08] pl-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">Monthly</p>
+                <p className="text-[52px] font-semibold leading-none tabular-nums">$100</p>
+                <p className="text-[12.5px] text-slate-400 mt-1.5">per month</p>
               </div>
             </div>
+            <div className="h-px bg-white/[0.08] mb-7" />
+            <ul className="space-y-2.5 mb-8">
+              {["Everything — no feature tiers","Aria AI briefings every morning","Customers, pipeline, jobs, sales","Imports + integrations included","Hands-on setup session included","Cancel any time, no contracts"].map((f) => (
+                <li key={f} className="flex items-center gap-3 text-[13.5px] text-slate-300">
+                  <svg className="w-4 h-4 shrink-0 text-[#7B72D4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="block w-full rounded-[12px] bg-[#4A3FA8] px-5 py-3.5 text-center text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.4)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
+              Book a free demo
+            </a>
+            <p className="mt-3 text-center text-[12px] text-slate-500">30-minute call. We configure your workspace with your real data.</p>
           </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="border-t border-white/[0.06] py-24">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <h2 className="text-[44px] sm:text-[56px] font-semibold leading-[1.05] tracking-[-0.03em] mb-5">
+            Five spreadsheets and a<br className="hidden sm:block" /> notebook is not a system.
+          </h2>
+          <p className="text-[17px] leading-[1.75] text-slate-400 max-w-lg mx-auto mb-10">
+            Book a free 30-minute demo. By the end of the call your workspace will be live with your real data.
+          </p>
+          <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(74,63,168,0.45)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
+            Book a free demo
+          </a>
+          <p className="mt-4 text-[12.5px] text-slate-500">$300 setup · $100/month · No contracts</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/8 px-6 py-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
+      <footer className="border-t border-white/[0.06] py-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-[13px] text-slate-600 md:flex-row md:items-center md:justify-between">
           <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-5">
-            <Link href="/privacy" className="hover:text-slate-300">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-slate-300">
-              Terms
-            </Link>
-            <Link href="/docs" className="hover:text-slate-300">
-              Docs
-            </Link>
+            <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+            <Link href="/docs" className="hover:text-slate-400 transition-colors">Docs</Link>
           </div>
         </div>
       </footer>

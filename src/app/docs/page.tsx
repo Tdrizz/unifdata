@@ -42,111 +42,16 @@ const lifecycle = [
 ];
 
 const pages = [
-  {
-    name: "Today",
-    path: "/workspace",
-    tag: "Dashboard",
-    description:
-      "The daily operating brief. Shows follow-ups that are due, open opportunities, active work, unpaid revenue, and a data health score. Start here every morning.",
-  },
-  {
-    name: "Pipeline",
-    path: "/crm",
-    tag: "Overview",
-    description:
-      "Relationship and opportunity view. See where business is sitting across the full lifecycle and identify what needs a follow-up or next action.",
-  },
-  {
-    name: "Data Hub",
-    path: "/data-hub",
-    tag: "Health",
-    description:
-      "Business data command center. Tracks record completeness, flags missing fields, lists recent imports, and automatically reconciles incoming records — merging fuzzy matches and surfacing ambiguous cases for review.",
-  },
-  {
-    name: "People",
-    path: "/customers",
-    tag: "Records",
-    description:
-      "Stores all relationship records — customers, clients, patients, accounts, or companies depending on the business sector.",
-  },
-  {
-    name: "Contacts",
-    path: "/contacts",
-    tag: "Records",
-    description:
-      "Unified contact view built on master customer records. Synced from every write path — manual entry, onboarding, CSV import, AI assistant, and integrations. Shows activity timeline, notes, linked jobs, sales, and follow-ups. Supports tag filtering and segment groups.",
-  },
-  {
-    name: "Communications",
-    path: "/communications",
-    tag: "Tools",
-    description:
-      "SMS thread inbox. Inbound messages are routed via Twilio to matched contacts automatically. Replies are sent directly from the thread. Best managed on desktop.",
-  },
-  {
-    name: "Process Board",
-    path: "/process",
-    tag: "Tools",
-    description:
-      "Custom drag-and-drop kanban board for tracking any internal business process. Stages, record values, and contact linking are fully configurable. Boards are created and managed in Settings.",
-  },
-  {
-    name: "Automations",
-    path: "/automations",
-    tag: "Tools",
-    description:
-      "Rule builder for contact-based automations. Rules fire automatically when a contact is created, an inbound SMS arrives, or a process record is created — adding tags, setting status, sending SMS, or notifying the owner.",
-  },
-  {
-    name: "Opportunities",
-    path: "/leads",
-    tag: "Records",
-    description:
-      "Tracks potential business with status, source, estimated value, follow-up dates, and links to connected work and revenue records.",
-  },
-  {
-    name: "Work",
-    path: "/jobs",
-    tag: "Records",
-    description:
-      "Tracks delivery and fulfillment records: jobs, appointments, projects, service visits, or orders. Links back to the opportunity and customer.",
-  },
-  {
-    name: "Revenue",
-    path: "/sales",
-    tag: "Records",
-    description:
-      "Tracks all revenue records with amount, payment status, sale date, service type, and source. Separate from work status so unpaid records stay visible.",
-  },
-  {
-    name: "Actions",
-    path: "/follow-ups",
-    tag: "Records",
-    description:
-      "Tracks reminders, follow-ups, callbacks, and overdue tasks. Completed actions are logged so there is a record of what was done and when.",
-  },
-  {
-    name: "Imports",
-    path: "/imports",
-    tag: "Tools",
-    description:
-      "Import customer lists from CSV or connected integrations. Records are validated, created, and logged as an import batch so you can track what came in and when.",
-  },
-  {
-    name: "Integrations",
-    path: "/settings",
-    tag: "Tools",
-    description:
-      "Connect Jobber, QuickBooks, HubSpot, Square, and Google Sheets to pull records into the workspace. Manage connection status and re-sync from Settings.",
-  },
-  {
-    name: "AI Advisor",
-    path: "/ai-assistant",
-    tag: "Tools",
-    description:
-      "Persistent AI chat interface with full tool calling over live workspace data. Ask plain-language questions about customers, pipeline, revenue, and follow-ups. The AI can create follow-ups, update job status, and add customers directly from chat. Rate-limited per tier — 5 requests/day on Standard, 20 on Pro.",
-  },
+  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief. Opens with an Aria summary of what needs attention — follow-ups due, unpaid work, stale pipeline. Start here every morning." },
+  { name: "Customers", path: "/customers", tag: "Records", description: "Unified contact records. Every person or business the workspace has a relationship with, enriched with relationship status, activity history, and linked records." },
+  { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities. See where business sits across the full lifecycle and identify what needs a follow-up or next action." },
+  { name: "Jobs", path: "/jobs", tag: "Operations", description: "All active and scheduled work. Weekly calendar toggle. Filter by status — Scheduled, Active, Complete, Cancelled." },
+  { name: "Sales", path: "/sales", tag: "Revenue", description: "All revenue records with payment status. Overdue items surface prominently. The fastest way to see what's been completed but not collected." },
+  { name: "Follow-ups", path: "/follow-ups", tag: "Actions", description: "Every reminder and action item. List and calendar view. Overdue items surface on the workspace dashboard automatically." },
+  { name: "Aria", path: "/aria", tag: "AI", description: "Your AI business assistant. Opens with the overnight briefing already loaded — drafts ready to send, alerts worth reviewing. Chat freely after clearing the queue." },
+  { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Aria reads from this to prioritize what needs attention." },
+  { name: "Imports", path: "/imports", tag: "Data", description: "CSV and Google Sheets import with smart column mapping and staged review. Also manages connected integrations — Jobber, QuickBooks, HubSpot, Square." },
+  { name: "Settings", path: "/settings", tag: "Account", description: "Business profile, team members, industry labels, process boards, billing, and notification preferences." },
 ];
 
 const sectors = [
@@ -245,17 +150,11 @@ const integrations = [
 ];
 
 const navItems = [
-  ["Getting started", "#start"],
   ["Overview", "#overview"],
-  ["Core lifecycle", "#lifecycle"],
-  ["Product pages", "#pages"],
-  ["Industry language", "#industries"],
-  ["Connected workflow", "#sync"],
-  ["Integrations", "#integrations"],
-  ["Imports", "#imports"],
-  ["AI Advisor", "#ai"],
-  ["Contacts", "#contacts"],
-  ["Agent Inbox", "#agent"],
+  ["The lifecycle model", "#lifecycle"],
+  ["Pages", "#pages"],
+  ["Aria", "#aria"],
+  ["Imports & integrations", "#imports"],
 ];
 
 export default function DocsPage() {
@@ -314,15 +213,15 @@ export default function DocsPage() {
                     { step: "03", title: "Work from the Today page", body: "The /workspace page shows what needs attention today — overdue follow-ups, open quotes, unpaid work, and data quality issues." },
                   ].map((item) => (
                     <div key={item.step} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
-                      <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                      <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                       <p className="mt-3 text-[14px] font-semibold">{item.title}</p>
                       <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Tip: Start with your customer list</p>
+                <div className="mt-5 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Tip: Start with your customer list</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     Importing customers first means leads, jobs, sales, and follow-ups can be linked to real records from the start. A CSV with just name, phone, and email is enough to get going.
                   </p>
@@ -389,7 +288,7 @@ export default function DocsPage() {
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                         <p className="text-[14px] font-semibold">{page.name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-[#4A3FA8]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[#8B80E0]">
+                          <span className="rounded-full bg-ud-accent/20 px-2.5 py-0.5 text-[11px] font-semibold text-ud-accent">
                             {page.tag}
                           </span>
                           <code className="rounded-[6px] border border-white/10 bg-white/6 px-2.5 py-1 text-[11px] font-semibold text-slate-400">
@@ -403,6 +302,27 @@ export default function DocsPage() {
                 </div>
               </section>
 
+              {/* ARIA */}
+              <section id="aria" className="scroll-mt-20 py-10">
+                <h2 className="text-[24px] font-semibold mb-4">Aria</h2>
+                <p className="text-[13.5px] leading-[1.7] text-slate-300 mb-6">
+                  Aria is the AI assistant built into UnifData. Unlike a generic chatbot, Aria has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {[
+                    { title: "Overnight briefing", body: "Every morning, Aria surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
+                    { title: "Outreach drafts", body: "Aria writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
+                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown as alerts inside the Aria view." },
+                    { title: "Free-form chat", body: "After clearing the briefing queue, ask Aria anything. It can query your live data, create follow-ups, update job status, and add customers directly from chat." },
+                  ].map((item) => (
+                    <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
+                      <p className="text-[14px] font-semibold mb-2">{item.title}</p>
+                      <p className="text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
               {/* INDUSTRY LANGUAGE */}
               <section id="industries" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Industry-aware language</h2>
@@ -411,7 +331,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[200px_1fr]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500 md:grid md:grid-cols-[200px_1fr]">
                     <span>Sector</span>
                     <span>Workspace language</span>
                   </div>
@@ -442,7 +362,7 @@ export default function DocsPage() {
                       { step: "03", label: "Revenue tracked as unpaid", detail: "A revenue record is created with payment status set to unpaid until collected." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-slate-400">{item.detail}</p>
                       </div>
@@ -488,7 +408,7 @@ export default function DocsPage() {
                       { step: "03", label: "Records sync in", detail: "Customers, jobs, and revenue records are pulled into the workspace and linked to existing data where possible." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.12em] text-slate-500">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-slate-500">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-slate-400">{item.detail}</p>
                       </div>
@@ -505,7 +425,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
-                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 md:grid md:grid-cols-[140px_80px_1fr_160px]">
+                  <div className="hidden border-b border-white/8 bg-white/6 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-slate-500 md:grid md:grid-cols-[140px_80px_1fr_160px]">
                     <span>Column</span>
                     <span>Required</span>
                     <span>Description</span>
@@ -519,7 +439,7 @@ export default function DocsPage() {
                       <code className="font-semibold text-white">{col.column}</code>
                       <span>
                         {col.required ? (
-                          <span className="rounded-full bg-[#4A3FA8]/25 px-2.5 py-0.5 text-[11px] font-semibold text-[#8B80E0]">
+                          <span className="rounded-full bg-ud-accent/25 px-2.5 py-0.5 text-[11px] font-semibold text-ud-accent">
                             Required
                           </span>
                         ) : (
@@ -582,8 +502,8 @@ export default function DocsPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Get better results with more data</p>
+                <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Get better results with more data</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     The AI Advisor is most useful after the workspace has real records. Add customers, leads, jobs, sales, and follow-ups first. A workspace with only a few records will produce a thinner summary.
                   </p>
@@ -627,8 +547,8 @@ export default function DocsPage() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 rounded-[12px] border border-[#4A3FA8]/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-[#8B80E0]">Pro tier only</p>
+                <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
+                  <p className="text-[13px] font-semibold text-ud-accent">Pro tier only</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
                     The Agent Inbox, nightly pipeline, autopilot mode, and ROI counter are available on the Pro plan. Standard accounts see an upgrade prompt.
                   </p>

@@ -69,7 +69,7 @@ export function JobCreateForm({ contacts, leads }: Props) {
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
-          <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
             {state.error}
           </p>
         )}
@@ -116,7 +116,7 @@ export function JobCreateForm({ contacts, leads }: Props) {
               />
             </label>
             {state?.fieldErrors?.service_type && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.service_type}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.service_type}</p>
             )}
           </div>
 
@@ -135,15 +135,15 @@ export function JobCreateForm({ contacts, leads }: Props) {
               />
             </label>
             {state?.fieldErrors?.job_value && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.job_value}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.job_value}</p>
             )}
           </div>
         </div>
 
         {belowAverage && pricingCtx?.sufficient && (
-          <div className="flex items-start gap-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-4 py-3">
-            <span className="mt-0.5 text-amber-500 text-sm leading-none">⚠</span>
-            <p className="text-sm text-amber-800">
+          <div className="flex items-start gap-2.5 rounded-[10px] border border-ud-warning/20 bg-ud-warning-bg px-4 py-3">
+            <span className="mt-0.5 text-ud-warning text-sm leading-none">⚠</span>
+            <p className="text-sm text-ud-warning">
               This is more than 25% below your workspace average of{" "}
               <strong>{formatCurrency(pricingCtx.averageAmount)}</strong> for similar work
               ({pricingCtx.sampleSize} jobs).

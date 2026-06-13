@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function PageHeader({
-  eyebrow,
-  title,
-  description,
-  actions,
-  className,
-}: {
+export function PageHeader({ eyebrow, title, description, actions, className }: {
   eyebrow?: string;
   title: ReactNode;
   description?: string;
@@ -18,15 +12,15 @@ export function PageHeader({
     <header className={cn("flex flex-col justify-between gap-3 md:flex-row md:items-start", className)}>
       <div>
         {eyebrow && (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ud-faint mb-1">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.13em] text-ud-faint mb-1.5">
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[25px] font-bold leading-[1.15] tracking-[-0.025em] text-ud-ink [text-wrap:balance]">
+        <h1 className="text-[24px] font-bold leading-[1.15] tracking-[-0.025em] text-ud-ink">
           {title}
         </h1>
         {description && (
-          <p className="hidden md:block mt-1.5 max-w-2xl text-[13.5px] leading-[1.6] text-ud-muted [text-wrap:pretty]">
+          <p className="hidden md:block mt-1.5 max-w-2xl text-[13px] leading-[1.65] text-ud-muted">
             {description}
           </p>
         )}

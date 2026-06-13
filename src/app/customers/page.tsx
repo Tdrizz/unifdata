@@ -1,23 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { AppShell } from "@/components/AppShell";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getCustomersPageData } from "@/features/customers/queries";
-import { CustomersList } from "@/features/customers/components/CustomersList";
-import { CustomersTableClient } from "@/features/customers/components/CustomersTableClient";
-import type { Database } from "@/types/db";
+import { ContactsTableClient } from "@/features/contacts/components/ContactsTableClient";
+import ContactsSidebar from "@/features/contacts/components/ContactsSidebar";
 
-type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type SaleRow = Database["public"]["Tables"]["sales"]["Row"];
-
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; status?: string; tag?: string; source?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -30,31 +25,127 @@ export default async function CustomersPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
   const page = Number(params.page ?? 1);
+  const pageSize = 50;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  // Fetch customers + related data in parallel
-  const [customersResult, jobsResult, leadsResult, salesResult] = await Promise.all([
-    getCustomersPageData(supabase, company.id, { q: params.q, page }),
+  // Sidebar data — fetch in parallel with contacts
+  const [
+    allContactsResult,
+    tagsWithCountsResult,
+  ] = await Promise.all([
     supabase
-      .from("jobs")
-      .select("id, customer_id, status, completed_date, job_value, lead_id, company_id, created_at, notes, paid_status, service_type, start_date, updated_at")
-      .eq("company_id", company.id)
-      .limit(500),
-    supabase
-      .from("leads")
-      .select("id, customer_id, status, estimated_value, company_id, created_at, next_follow_up_date, notes, service_requested, source, updated_at")
-      .eq("company_id", company.id)
-      .limit(500),
-    supabase
-      .from("sales")
-      .select("id, customer_id, amount, sale_date, company_id, created_at, job_id, payment_status, service_type, source")
-      .eq("company_id", company.id)
-      .limit(500),
+      .from("master_customers")
+      .select("id, relationship_status, source")
+      .eq("organization_id", company.id),
+    (supabase as any)
+      .from("tags")
+      .select("id, name, color, contact_tags(count)")
+      .eq("organization_id", company.id),
   ]);
 
-  const { customers, count } = customersResult;
-  const jobs = (jobsResult.data ?? []) as JobRow[];
-  const leads = (leadsResult.data ?? []) as LeadRow[];
-  const sales = (salesResult.data ?? []) as SaleRow[];
+  const allContacts: Array<{ id: string; relationship_status?: string | null; source?: string | null }> =
+    allContactsResult.data ?? [];
+
+  // Status counts
+  const statusCounts: Record<string, number> = {};
+  for (const c of allContacts) {
+    const s = c.relationship_status ?? "active";
+    statusCounts[s] = (statusCounts[s] ?? 0) + 1;
+  }
+
+  // Source counts
+  const sourceCounts: Record<string, number> = {};
+  for (const c of allContacts) {
+    if (c.source) {
+      sourceCounts[c.source] = (sourceCounts[c.source] ?? 0) + 1;
+    }
+  }
+
+  const tags: Array<{ id: string; name: string; color: string; count: number }> =
+    (tagsWithCountsResult.data ?? []).map((t: any) => ({
+      id: t.id,
+      name: t.name,
+      color: t.color ?? "#6B7280",
+      count: Array.isArray(t.contact_tags)
+        ? t.contact_tags.reduce((s: number, r: any) => s + (r.count ?? 0), 0)
+        : 0,
+    }));
+
+  // Query master_customers with active filter
+  let query = supabase
+    .from("master_customers")
+    .select("id, first_name, last_name, primary_email, primary_phone, relationship_status, source, created_at")
+    .eq("organization_id", company.id)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (params.q) {
+    query = query.or(
+      `first_name.ilike.%${params.q}%,last_name.ilike.%${params.q}%,primary_email.ilike.%${params.q}%,primary_phone.ilike.%${params.q}%`
+    );
+  }
+
+  if (params.status) {
+    query = query.eq("relationship_status", params.status);
+  }
+
+  if (params.source) {
+    query = query.eq("source", params.source);
+  }
+
+  if (params.tag) {
+    const { data: taggedContactIds } = await (supabase as any)
+      .from("contact_tags")
+      .select("contact_id")
+      .eq("tag_id", params.tag);
+    const ids = (taggedContactIds ?? []).map((r: { contact_id: string }) => r.contact_id);
+    if (ids.length > 0) {
+      query = query.in("id", ids);
+    } else {
+      // Tag exists but no contacts — return empty
+      query = query.in("id", ["00000000-0000-0000-0000-000000000000"]);
+    }
+  }
+
+  const { data: customers } = await query;
+  const contactList = customers ?? [];
+  const contactIds = contactList.map((c: { id: string }) => c.id);
+
+  // Fetch last activity per contact
+  const activityMap: Record<string, string> = {};
+  if (contactIds.length > 0) {
+    const { data: activities } = await (supabase as any)
+      .from("contact_activity")
+      .select("contact_id, created_at")
+      .in("contact_id", contactIds)
+      .order("created_at", { ascending: false })
+      .limit(contactIds.length * 5);
+
+    if (activities) {
+      for (const a of activities) {
+        if (!activityMap[a.contact_id]) {
+          activityMap[a.contact_id] = a.created_at;
+        }
+      }
+    }
+  }
+
+  // Fetch tags per contact
+  const tagsMap: Record<string, { name: string; color: string }[]> = {};
+  if (contactIds.length > 0) {
+    const { data: tagData } = await (supabase as any)
+      .from("contact_tags")
+      .select("contact_id, tags(name, color)")
+      .in("contact_id", contactIds);
+
+    if (tagData) {
+      for (const row of tagData) {
+        if (!tagsMap[row.contact_id]) tagsMap[row.contact_id] = [];
+        if (row.tags) tagsMap[row.contact_id].push(row.tags);
+      }
+    }
+  }
 
   return (
     <AppShell
@@ -62,25 +153,26 @@ export default async function CustomersPage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      {/* Desktop view */}
-      <CustomersTableClient
-        customers={customers}
-        jobs={jobs}
-        leads={leads}
-        sales={sales}
-        profile={profile}
-        count={count}
-        page={page}
-      />
-
-      {/* Mobile view */}
-      <CustomersList
-        customers={customers}
-        jobs={jobs}
-        leads={leads}
-        sales={sales}
-        profile={profile}
-      />
+      <div className="flex min-h-0 flex-1">
+        <ContactsSidebar
+          totalCount={allContacts.length}
+          statusCounts={statusCounts}
+          tags={tags}
+          sourceCounts={sourceCounts}
+          activeStatus={params.status}
+          activeTag={params.tag}
+          activeSource={params.source}
+          profileSourceOptions={profile.sourceOptions}
+        />
+        <div className="flex-1 min-w-0">
+          <ContactsTableClient
+            customers={contactList}
+            profile={profile}
+            activityMap={activityMap}
+            tagsMap={tagsMap}
+          />
+        </div>
+      </div>
     </AppShell>
   );
 }

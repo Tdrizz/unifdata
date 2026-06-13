@@ -1,16 +1,13 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { AppShell } from "@/components/AppShell";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getCustomerById, getCustomerLinkedCounts } from "@/features/customers/queries";
-import { CustomerForm } from "@/features/customers/components/CustomerForm";
+import { AppShell } from "@/components/AppShell";
+import { ContactEditForm } from "@/features/contacts/components/ContactEditForm";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export default async function EditCustomerPage({
+export default async function CustomerEditPage({
   params,
   searchParams,
 }: {
@@ -19,26 +16,36 @@ export default async function EditCustomerPage({
 }) {
   const { id } = await params;
   const { error: errorParam } = await searchParams;
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
-
   const { company } = currentCompany;
+
+  const { data: contact } = await supabase
+    .from("master_customers")
+    .select("id, first_name, last_name, primary_email, primary_phone, billing_address, relationship_status, metadata")
+    .eq("id", id)
+    .eq("organization_id", company.id)
+    .maybeSingle();
+
+  if (!contact) {
+    // Resolve legacy customers-table ids carried by old bookmarks/links.
+    const { data: byLegacy } = await supabase
+      .from("master_customers")
+      .select("id")
+      .eq("legacy_customer_id", id)
+      .eq("organization_id", company.id)
+      .maybeSingle();
+
+    if (byLegacy) redirect(`/customers/${byLegacy.id}/edit`);
+    notFound();
+  }
+
   const profile = getIndustryProfile(company.business_sector);
-  const customer = await getCustomerById(supabase, company.id, id);
-  if (!customer) redirect("/customers");
-
-  const { leadsCount, jobsCount, followUpsCount } = await getCustomerLinkedCounts(supabase, company.id, id);
-
-  const actions = (
-    <div className="flex flex-wrap gap-2">
-      <Link href="/customers" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">Back to {profile.labels.customerPlural}</Link>
-      <Link href="/crm" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">{profile.labels.leadPlural}</Link>
-    </div>
-  );
 
   return (
     <AppShell
@@ -46,14 +53,16 @@ export default async function EditCustomerPage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <div className="space-y-5 px-6 pt-5 pb-8">
-        <PageHeader
-          eyebrow={`Edit ${profile.labels.customerSingular.toLowerCase()}`}
-          title={customer.name || `Unnamed ${profile.labels.customerSingular.toLowerCase()}`}
-          description="Update contact details, address, type, and notes for this person or business."
-          actions={actions}
+      <div className="mx-auto w-full max-w-2xl px-4 pb-10 pt-7 md:px-7">
+        <ContactEditForm
+          contact={{
+            ...contact,
+            billing_address: contact.billing_address as { line1?: string } | null,
+            metadata: contact.metadata as { customer_type?: string; notes?: string } | null,
+          }}
+          profile={profile}
+          errorParam={errorParam}
         />
-        <CustomerForm customer={customer} leadsCount={leadsCount} jobsCount={jobsCount} followUpsCount={followUpsCount} profile={profile} errorParam={errorParam} />
       </div>
     </AppShell>
   );

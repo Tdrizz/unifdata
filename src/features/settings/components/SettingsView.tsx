@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { SyncNowButton } from "@/components/ui/SyncNowButton";
-import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { LogoutButton } from "@/components/LogoutButton";
-import { updateWorkspaceAction, removeMember, disconnectIntegrationAction } from "../actions";
+import { Button } from "@/components/ui/Button";
+import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
 import { NotificationToggles } from "./NotificationToggles";
@@ -59,19 +58,12 @@ interface SettingsViewProps {
   };
 }
 
-function isConnected(integration: SettingsIntegration | undefined) {
-  const s = String(integration?.status || "").toLowerCase();
-  return s.includes("active") || s.includes("connected");
-}
-
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms]";
 
 export function SettingsView({
   company,
   user,
-  integrations,
+  integrations: _integrations,
   geminiEnabled: _geminiEnabled,
   members,
   currentUserRole,
@@ -84,24 +76,8 @@ export function SettingsView({
   profileOverrides,
   defaultLabels,
 }: SettingsViewProps) {
-  const googleIntegration = integrations.find((i) =>
-    String(i.provider || "").toLowerCase().includes("google"),
-  );
-  const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
-  const squareIntegration = integrations.find((i) => i.provider === "square");
-  const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
-  const jobberIntegration = integrations.find((i) => i.provider === "jobber");
-
-  const integrationRows = [
-    { provider: "quickbooks", label: "QuickBooks", desc: "Sync customers, invoices, and revenue", integration: quickbooksIntegration, startHref: "/api/integrations/quickbooks/start" },
-    { provider: "google_sheets", label: "Google Sheets", desc: "Used for bulk imports via the Imports page", integration: googleIntegration, startHref: "/api/integrations/google/start" },
-    { provider: "jobber", label: "Jobber", desc: "Sync jobs, quotes, and field schedules", integration: jobberIntegration, startHref: "/api/integrations/jobber/start" },
-    { provider: "hubspot", label: "HubSpot", desc: "Sync contacts and deal activity", integration: hubspotIntegration, startHref: "/api/integrations/hubspot/start" },
-    { provider: "square", label: "Square", desc: "Import payments, invoices, and customer records", integration: squareIntegration, startHref: "/api/integrations/square/start" },
-  ];
-
   return (
-    <div className="px-7 pb-10 pt-7">
+    <div className="px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"
@@ -137,7 +113,7 @@ export function SettingsView({
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button type="reset" className={btnGhost}>Cancel</button>
+              <Button type="reset" variant="secondary" size="md">Cancel</Button>
               <button type="submit" className={btnInk}>Save changes</button>
             </div>
           </form>
@@ -180,46 +156,13 @@ export function SettingsView({
           <NotificationToggles initialPrefs={notificationPrefs} />
         </div>
 
-        {/* Integrations */}
+        {/* Integrations moved to /imports */}
         <div className="py-[26px] border-b border-ud">
-          <div className="mb-[18px]">
-            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Integrations</p>
-            <p className="text-[12px] text-ud-muted">Connect external tools to sync data automatically.</p>
-          </div>
-          {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
-            const connected = isConnected(integration);
-            return (
-              <div key={label} className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-medium text-ud-ink">{label}</p>
-                    {connected && (
-                      <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success">Connected</span>
-                    )}
-                  </div>
-                  <p className="text-[12px] text-ud-muted mt-[1px]">{desc}</p>
-                  {integration?.provider_account_name && (
-                    <p style={{ fontSize: "11px", color: "var(--faint)", marginTop: "2px" }}>
-                      {integration.provider_account_name}
-                      {integration.created_at && <> · Connected {formatTimestampDate(integration.created_at)}</>}
-                    </p>
-                  )}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                  {connected && integration?.status === "active" && (
-                    <SyncNowButton provider={provider} label={label} />
-                  )}
-                  {connected ? (
-                    <form action={disconnectIntegrationAction.bind(null, provider)}>
-                      <button type="submit" className={btnGhostSm}>Disconnect</button>
-                    </form>
-                  ) : (
-                    <Link href={startHref} className={btnGhostSm}>Connect</Link>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Integrations</p>
+          <p className="text-[12px] text-ud-muted mb-3">Connect your existing tools to sync data automatically.</p>
+          <Link href="/imports" className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
+            Manage integrations in Imports →
+          </Link>
         </div>
 
         {/* Team members */}
@@ -236,7 +179,7 @@ export function SettingsView({
               </div>
               {currentUserRole === "owner" && (
                 <form action={removeMember.bind(null, member.user_id)}>
-                  <button type="submit" className={btnGhostSm} style={{ color: "var(--danger)" }}>Remove</button>
+                  <Button type="submit" variant="danger" size="sm">Remove</Button>
                 </form>
               )}
             </div>

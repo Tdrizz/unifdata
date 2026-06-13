@@ -65,7 +65,7 @@ function ProgressBar({ step }: { step: number }) {
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="rounded-[10px] border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-300">
+    <div className="rounded-[10px] border border-ud-danger/20/30 bg-red-500/10 p-3 text-sm text-ud-danger">
       {message}
     </div>
   );
@@ -570,7 +570,7 @@ export function OnboardingForm() {
                     <button
                       type="button"
                       onClick={() => setManualRows(manualRows.filter((_, j) => j !== i))}
-                      className="flex h-10 w-9 items-center justify-center text-ud-faint hover:text-red-400"
+                      className="flex h-10 w-9 items-center justify-center text-ud-faint hover:text-ud-danger"
                     >
                       ✕
                     </button>

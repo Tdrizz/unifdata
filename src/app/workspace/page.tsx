@@ -65,17 +65,6 @@ export default async function WorkspacePage() {
     reasoning?: string | null;
   }>;
 
-  // ROI: sum from roi_events this month via direct query (no RPC needed)
-  const { data: roiRows } = await supabase
-    .from("roi_events")
-    .select("amount_recovered")
-    .eq("organization_id", company.id)
-    .gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
-
-  const roiTotal = (roiRows ?? []).reduce(
-    (sum, row) => sum + Number(row.amount_recovered || 0),
-    0,
-  );
   const agentInboxCount = drafts.length + alerts.length;
 
   return (
@@ -93,7 +82,6 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           isPro={isProTier}
-          roiTotal={roiTotal}
         />
         <MobileWorkspaceView
           {...data}

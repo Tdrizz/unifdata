@@ -2,6 +2,7 @@ import crypto from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
+import { syncLegacyCustomer } from "@/lib/crm/legacy-sync";
 import { redis } from "@/lib/redis";
 import type { DataKeeperDecision, NormalizedPayload, FieldDelta } from "./types";
 import type { Json } from "@/types/db";
@@ -108,6 +109,8 @@ export async function executeDecision(
         .update({ ...updateData, data_health_score: newScore })
         .eq("id", decision.targetId)
         .eq("organization_id", organizationId);
+
+      await syncLegacyCustomer(supabase, decision.targetId);
 
       await writeSyncToken(organizationId, decision.normalizedData);
 

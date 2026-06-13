@@ -17,8 +17,8 @@ export default function GlobalError({
 
   return (
     <main className="min-h-screen bg-[#eef2f7] px-4 py-10 text-ud-ink">
-      <div className="mx-auto max-w-2xl rounded-[14px] border border-red-200 bg-ud-surface p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">
+      <div className="mx-auto max-w-2xl rounded-[14px] border border-ud-danger/20 bg-ud-surface p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ud-danger">
           Something went wrong
         </p>
 
@@ -41,14 +41,14 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            className="rounded-[8px] bg-ud-accent px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90 transition-opacity"
           >
             Try again
           </button>
 
           <Link
             href="/"
-            className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+            className="rounded-[8px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors"
           >
             Back to Home
           </Link>

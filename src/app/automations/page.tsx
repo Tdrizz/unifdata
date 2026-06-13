@@ -17,11 +17,37 @@ export default async function AutomationsPage() {
 
   const { company } = currentCompany;
 
-  const { data: automations } = await (supabase as any)
-    .from("automations")
-    .select("id, name, description, is_active, trigger_type, run_count, last_triggered, created_at")
-    .eq("organization_id", company.id)
-    .order("created_at", { ascending: false });
+  const [{ data: automations }, { data: boards }, { data: stages }, { data: runs }] = await Promise.all([
+    (supabase as any)
+      .from("automations")
+      .select("id, name, description, is_active, trigger_type, run_count, last_triggered, created_at")
+      .eq("organization_id", company.id)
+      .order("created_at", { ascending: false }),
+    (supabase as any)
+      .from("process_boards")
+      .select("id, name")
+      .eq("organization_id", company.id)
+      .order("created_at", { ascending: true }),
+    (supabase as any)
+      .from("board_stages")
+      .select("id, name, board_id, stage_type, position")
+      .eq("organization_id", company.id)
+      .order("position", { ascending: true }),
+    (supabase as any)
+      .from("automation_runs")
+      .select("id, automation_id, triggered_by, status, error, run_at")
+      .eq("organization_id", company.id)
+      .order("run_at", { ascending: false })
+      .limit(100),
+  ]);
+
+  const boardsWithStages = (boards ?? []).map((b: { id: string; name: string }) => ({
+    id: b.id,
+    name: b.name,
+    stages: (stages ?? [])
+      .filter((s: { board_id: string; stage_type: string }) => s.board_id === b.id && (s.stage_type === "active" || s.stage_type === "on_hold"))
+      .map((s: { id: string; name: string }) => ({ id: s.id, name: s.name })),
+  }));
 
   return (
     <AppShell
@@ -29,7 +55,7 @@ export default async function AutomationsPage() {
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <AutomationsClient automations={automations ?? []} />
+      <AutomationsClient automations={automations ?? []} boards={boardsWithStages} runs={runs ?? []} />
     </AppShell>
   );
 }

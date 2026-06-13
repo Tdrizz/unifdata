@@ -18,40 +18,40 @@ function pct(n: number): string {
 }
 
 function approvalColor(rate: number): string {
-  if (rate >= 60) return "text-green-600";
-  if (rate >= 40) return "text-amber-600";
-  return "text-red-600";
+  if (rate >= 60) return "text-ud-success";
+  if (rate >= 40) return "text-ud-warning";
+  return "text-ud-danger";
 }
 
 function nightlyColor(rate: number): string {
-  if (rate >= 95) return "text-green-600";
-  if (rate >= 90) return "text-amber-600";
-  return "text-red-600";
+  if (rate >= 95) return "text-ud-success";
+  if (rate >= 90) return "text-ud-warning";
+  return "text-ud-danger";
 }
 
 function zodColor(failures: number): string {
-  if (failures === 0) return "text-green-600";
-  if (failures <= 2) return "text-amber-600";
-  return "text-red-600";
+  if (failures === 0) return "text-ud-success";
+  if (failures <= 2) return "text-ud-warning";
+  return "text-ud-danger";
 }
 
 function toolColor(rate: number): string {
-  if (rate >= 95) return "text-green-600";
-  if (rate >= 90) return "text-amber-600";
-  return "text-red-600";
+  if (rate >= 95) return "text-ud-success";
+  if (rate >= 90) return "text-ud-warning";
+  return "text-ud-danger";
 }
 
 function retrievalColor(fallbackRate: number): string {
-  if (fallbackRate < 10) return "text-green-600";
-  if (fallbackRate <= 25) return "text-amber-600";
-  return "text-red-600";
+  if (fallbackRate < 10) return "text-ud-success";
+  if (fallbackRate <= 25) return "text-ud-warning";
+  return "text-ud-danger";
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] border border-[rgba(0,0,0,0.07)] bg-white shadow-sm overflow-hidden">
       <div className="px-5 py-3.5 border-b border-[rgba(0,0,0,0.06)]">
-        <p className="text-[12px] font-bold uppercase tracking-[0.10em] text-[#8B80E0]">{title}</p>
+        <p className="text-[12px] font-bold uppercase tracking-[0.10em] text-ud-accent">{title}</p>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -99,7 +99,7 @@ export default async function AiHealthPage() {
     <div className="min-h-screen bg-gray-50 px-6 py-10">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8B80E0] mb-1">Internal</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-ud-accent mb-1">Internal</p>
           <h1 className="text-[26px] font-semibold text-gray-900 tracking-tight">AI Health Dashboard</h1>
           <p className="text-[13px] text-gray-500 mt-1">Last 7 days (nightly runs: 14 days, ROI: 30 days)</p>
         </div>
@@ -129,14 +129,14 @@ export default async function AiHealthPage() {
               color={nightlyColor(nightlyStats.successRate)}
             />
             <MetricRow label="Total runs" value={String(nightlyStats.total)} />
-            <MetricRow label="Successful" value={String(nightlyStats.success)} color="text-green-600" />
-            <MetricRow label="Failed" value={String(nightlyStats.failed)} color={nightlyStats.failed > 0 ? "text-red-600" : "text-gray-900"} />
+            <MetricRow label="Successful" value={String(nightlyStats.success)} color="text-ud-success" />
+            <MetricRow label="Failed" value={String(nightlyStats.failed)} color={nightlyStats.failed > 0 ? "text-ud-danger" : "text-gray-900"} />
           </Card>
 
           {/* Zod Failures */}
           <Card title="Zod Failures by Agent">
             {zodFailures.length === 0 ? (
-              <p className="text-[13px] text-green-600 font-medium">No failures this period.</p>
+              <p className="text-[13px] text-ud-success font-medium">No failures this period.</p>
             ) : (
               zodFailures.map((row) => (
                 <MetricRow
@@ -174,7 +174,7 @@ export default async function AiHealthPage() {
                 <MetricRow
                   label="Semantic path"
                   value={pct(100 - retrieval.fallbackRate)}
-                  color="text-green-600"
+                  color="text-ud-success"
                 />
                 <MetricRow
                   label="Fallback path"
@@ -205,7 +205,7 @@ export default async function AiHealthPage() {
                     key={row.organization_id}
                     label={row.organization_id}
                     value={formatCurrency(row.total)}
-                    color="text-green-600"
+                    color="text-ud-success"
                   />
                 ))
               )}

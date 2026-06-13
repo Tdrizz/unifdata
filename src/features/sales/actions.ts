@@ -78,7 +78,7 @@ export async function createSaleAction(
 
   revalidatePath("/sales");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/sales?toast=Sale+recorded");
 }
 
@@ -134,7 +134,7 @@ export async function updateSaleAction(
   revalidatePath(`/sales/${id}`);
   revalidatePath(`/sales/${id}/edit`);
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/sales?toast=Sale+updated");
 }
 
@@ -153,6 +153,6 @@ export async function deleteSaleAction(id: string) {
   if (error) redirect(`/sales/${id}/edit?error=${encodeURIComponent(error.message)}`);
   revalidatePath("/sales");
   revalidatePath("/workspace");
-  revalidatePath("/contacts");
+  revalidatePath("/customers");
   redirect("/sales?toast=Sale+deleted");
 }

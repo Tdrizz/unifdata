@@ -5,6 +5,7 @@ import { WeeklyCalendar } from "@/components/WeeklyCalendar";
 import type { CalendarEvent } from "@/components/WeeklyCalendar";
 import { FollowUpList } from "./FollowUpList";
 import { FollowUpCreateForm } from "./FollowUpCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { FollowUpRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -20,6 +21,7 @@ type Props = {
 
 export function FollowUpViewToggle({ followUps, opportunities, people, filters, profile }: Props) {
   const [view, setView] = useState<"list" | "calendar">("list");
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Build calendar events from manual follow-ups with a due_date
   const manualCalendarEvents: CalendarEvent[] = followUps
@@ -103,9 +105,19 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
           </div>
         </>
       )}
-      <div id="followup-quick-add">
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
+        aria-label={"Add " + (profile?.labels.followUpSingular ?? "follow-up")}
+      >
+        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile?.labels.followUpSingular ?? "follow-up")}>
         <FollowUpCreateForm people={people} />
-      </div>
+      </BottomSheet>
     </div>
   );
 }

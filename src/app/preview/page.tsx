@@ -186,7 +186,7 @@ export default function PreviewPage() {
                 key={f.title}
                 className="rounded-[14px] border border-white/10 bg-white/4 p-5"
               >
-                <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-[8px] bg-[#4A3FA8]/20 text-[12px] font-bold text-[#8B80E0]">
+                <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-[8px] bg-ud-accent/20 text-[12px] font-bold text-ud-accent">
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <p className="text-[14px] font-semibold">{f.title}</p>

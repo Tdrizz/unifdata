@@ -9,19 +9,16 @@ import { cn } from "@/lib/utils";
 function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
   return [
-    { id: "workspace", label: "Go to Workspace", href: "/workspace", group: "Navigate" },
-    { id: "customers", label: `Go to ${profile.labels.customerPlural}`, href: "/customers", group: "Navigate" },
-    { id: "crm", label: `Go to ${profile.labels.leadPlural}`, href: "/crm", group: "Navigate" },
-    { id: "jobs", label: `Go to ${profile.labels.jobPlural}`, href: "/jobs", group: "Navigate" },
+    { id: "workspace",  label: "Go to Today",                            href: "/workspace",  group: "Navigate" },
+    { id: "customers",  label: `Go to ${profile.labels.customerPlural}`, href: "/customers",  group: "Navigate" },
+    { id: "crm",        label: "Go to Pipeline",                         href: "/crm",        group: "Navigate" },
+    { id: "jobs",       label: `Go to ${profile.labels.jobPlural}`,      href: "/jobs",       group: "Navigate" },
+    { id: "sales",      label: `Go to ${profile.labels.salePlural}`,     href: "/sales",      group: "Navigate" },
     { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },
-    { id: "sales", label: `Go to ${profile.labels.salePlural}`, href: "/sales", group: "Navigate" },
-    { id: "contacts", label: `Go to ${profile.labels.customerPlural}`, href: "/contacts", group: "Navigate" },
-    { id: "communications", label: "Go to Communications", href: "/communications", group: "Navigate" },
-    { id: "automations", label: "Go to Automations", href: "/automations", group: "Navigate" },
-    { id: "process", label: `Go to ${profile.pipelineLabel ?? "Process Board"}`, href: "/process", group: "Navigate" },
-    { id: "ai", label: "Open AI Assistant", href: "/ai-assistant", group: "Navigate" },
-    { id: "settings", label: "Open Settings", href: "/settings", group: "Navigate" },
-    { id: "imports", label: "Import Data", href: "/imports", group: "Actions" },
+    { id: "aria",       label: "Open Aria",                              href: "/aria",       group: "Navigate" },
+    { id: "data-hub",   label: "Go to Data Hub",                         href: "/data-hub",   group: "Navigate" },
+    { id: "imports",    label: "Go to Imports",                          href: "/imports",    group: "Navigate" },
+    { id: "settings",   label: "Go to Settings",                         href: "/settings",   group: "Navigate" },
   ];
 }
 
@@ -104,7 +101,7 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
                 <Command.Group
                   key={group}
                   heading={group}
-                  className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.12em] [&>[cmdk-group-heading]]:text-ud-faint"
+                  className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.13em] [&>[cmdk-group-heading]]:text-ud-faint"
                 >
                   {items.map((cmd) => (
                     <Command.Item

@@ -88,7 +88,7 @@ export function SaleForm({ sale, contacts }: Props) {
       >
         <form action={formAction} className="space-y-5 p-5">
           {state?.error && (
-            <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
               {state.error}
             </p>
           )}
@@ -97,7 +97,7 @@ export function SaleForm({ sale, contacts }: Props) {
             <FormField label="Amount">
               <Input name="amount" type="number" step="0.01" min="0" required defaultValue={sale.amount ?? ""} placeholder="2500" />
               {state?.fieldErrors?.amount && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.amount}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.amount}</p>
               )}
             </FormField>
             <FormField label="Payment status">

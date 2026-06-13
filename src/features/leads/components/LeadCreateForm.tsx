@@ -28,7 +28,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
-          <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
             {state.error}
           </p>
         )}
@@ -63,7 +63,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
           <div>
             <label className="block">
               <span className="block text-xs font-semibold text-ud-muted">
-                Opportunity name <span className="text-ud-accent">*</span>
+                {profile.labels.leadSingular} name <span className="text-ud-accent">*</span>
               </span>
               <input
                 name="service_requested"
@@ -73,7 +73,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.service_requested && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.service_requested}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.service_requested}</p>
             )}
           </div>
 
@@ -90,7 +90,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.estimated_value && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.estimated_value}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.estimated_value}</p>
             )}
           </div>
         </div>

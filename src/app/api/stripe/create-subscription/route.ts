@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAppUser } from "@/lib/auth/session";
 import { getEnv } from "@/lib/env";
 import { getStripe } from "@/lib/stripe/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,13 @@ export async function POST() {
       });
       customerId = customer.id;
     }
+
+    // Persist on the profile so webhooks can resolve the user without a
+    // Stripe metadata search.
+    await createAdminClient()
+      .from("profiles")
+      .update({ stripe_customer_id: customerId })
+      .eq("id", user.profileId);
 
     // Reuse any existing incomplete subscription so we don't create duplicates
     const existingSubs = await stripe.subscriptions.list({

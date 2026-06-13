@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
+import { SyncNowButton } from "@/components/ui/SyncNowButton";
 import { disconnectIntegrationAction } from "@/features/settings/actions";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -32,7 +34,6 @@ const cardHeader = "px-[22px] py-4 border-b border-[rgba(0,0,0,0.05)]";
 const cardTitle = "text-[13.5px] font-semibold text-ud-ink";
 const cardDesc = "text-[12px] text-ud-muted mt-0.5";
 const queueItem = "flex items-center gap-3.5 px-5 py-[14px] border-b border-[rgba(0,0,0,0.04)] last:border-b-0";
-const btnGhostSm = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 function formatImportDate(date: string | null) {
   if (!date) return "—";
@@ -71,7 +72,7 @@ function sessionStatusBadge(status: string | null) {
   const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
   const s = (status || "").toLowerCase();
   if (s === "committed") return `${base} bg-ud-success-bg text-ud-success`;
-  if (s === "failed" || s === "error") return `${base} bg-[#fef2f2] text-ud-danger`;
+  if (s === "failed" || s === "error") return `${base} bg-ud-danger-bg text-ud-danger`;
   if (s === "ready" || s === "draft" || s === "analyzing") return `${base} bg-ud-warning-bg text-ud-warning`;
   return `${base} bg-ud-surface-sunk text-ud-muted`;
 }
@@ -85,60 +86,10 @@ function sessionStatusLabel(session: ImportsPageData["importSessions"][number]) 
   return session.status || "—";
 }
 
-const INTEGRATIONS = [
-  {
-    id: "quickbooks",
-    name: "QuickBooks",
-    meta: "Sync customers, invoices, and revenue",
-    startHref: "/api/integrations/quickbooks/start",
-    iconBg: "#fef3c7",
-    iconStroke: "#92400e",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth={1.8} strokeLinecap="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-    ),
-  },
-  {
-    id: "jobber",
-    name: "Jobber",
-    meta: "Sync jobs, quotes, and field schedules",
-    startHref: "/api/integrations/jobber/start",
-    iconBg: "#e0e7ff",
-    iconStroke: "#3730a3",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3730a3" strokeWidth={1.8} strokeLinecap="round">
-        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 12h20"/>
-      </svg>
-    ),
-  },
-  {
-    id: "hubspot",
-    name: "HubSpot",
-    meta: "Sync contacts and deal activity",
-    startHref: "/api/integrations/hubspot/start",
-    iconBg: "#fff4ee",
-    iconStroke: "#c2410c",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" strokeWidth={1.8} strokeLinecap="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-    ),
-  },
-  {
-    id: "square",
-    name: "Square",
-    meta: "Import payments, invoices, and customer records",
-    startHref: "/api/integrations/square/start",
-    iconBg: "#f1f5f9",
-    iconStroke: "#334155",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth={1.8} strokeLinecap="round">
-        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-      </svg>
-    ),
-  },
-];
+function isConnected(integration: { status: string | null } | undefined) {
+  const s = String(integration?.status || "").toLowerCase();
+  return s.includes("active") || s.includes("connected");
+}
 
 
 function PublicSheetsFlow() {
@@ -279,10 +230,43 @@ function PublicSheetsFlow() {
 }
 
 export function ImportsView({ importSessions, integrations, syncRuns, profile }: Props) {
-  const connectedIds = new Set(integrations.map((i) => i.provider?.toLowerCase()));
   const googleConnected = integrations.some((i) =>
     String(i.provider ?? "").toLowerCase().includes("google"),
   );
+
+  const googleIntegration = integrations.find((i) =>
+    String(i.provider || "").toLowerCase().includes("google"),
+  );
+  const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
+  const squareIntegration = integrations.find((i) => i.provider === "square");
+  const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
+  const jobberIntegration = integrations.find((i) => i.provider === "jobber");
+  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
+
+  const integrationRows = [
+    { provider: "quickbooks", label: "QuickBooks", desc: "Sync customers, invoices, and revenue", integration: quickbooksIntegration, startHref: "/api/integrations/quickbooks/start" },
+    { provider: "google_sheets", label: "Google Sheets", desc: "Used for bulk imports below", integration: googleIntegration, startHref: "/api/integrations/google/start" },
+    { provider: "jobber", label: "Jobber", desc: "Sync jobs, quotes, and field schedules", integration: jobberIntegration, startHref: "/api/integrations/jobber/start" },
+    // HubSpot and Stripe are hidden for new connections but stay manageable
+    // where already connected.
+    ...(hubspotIntegration
+      ? [{ provider: "hubspot", label: "HubSpot", desc: "Sync contacts and deal activity", integration: hubspotIntegration, startHref: "/api/integrations/hubspot/start" }]
+      : []),
+    ...(stripeIntegration
+      ? [{ provider: "stripe", label: "Stripe", desc: "Sync customers and payment records", integration: stripeIntegration, startHref: "/api/integrations/stripe/start" }]
+      : []),
+    { provider: "square", label: "Square", desc: "Import payments, invoices, and customer records", integration: squareIntegration, startHref: "/api/integrations/square/start" },
+  ];
+
+  // Most recent sync run per provider (syncRuns arrive ordered newest-first)
+  const lastSyncByProvider: Record<string, string> = {};
+  for (const run of syncRuns) {
+    const meta = (run.metadata ?? {}) as Record<string, unknown>;
+    const provider = typeof meta.provider === "string" ? meta.provider : "";
+    if (provider && run.started_at && !lastSyncByProvider[provider]) {
+      lastSyncByProvider[provider] = run.started_at;
+    }
+  }
 
   const syncSessions = importSessions.filter((s) => SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
   const manualSessions = importSessions.filter((s) => !SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
@@ -298,7 +282,7 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
 
   const syncBadge = (isError: boolean, hasRecords: boolean) => {
     const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
-    if (isError) return `${base} bg-[#fef2f2] text-ud-danger`;
+    if (isError) return `${base} bg-ud-danger-bg text-ud-danger`;
     if (hasRecords) return `${base} bg-ud-success-bg text-ud-success`;
     return `${base} bg-ud-surface-sunk text-ud-muted`;
   };
@@ -314,13 +298,61 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
       <p className="text-[15px] font-semibold text-ud-ink mb-1">Import data</p>
       <p className="text-[13px] text-ud-muted max-w-[240px]">Use a desktop browser to import contacts, jobs, or revenue from CSV or Google Sheets.</p>
     </div>
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="Imports"
         title="Import data"
         description="Bring in clients, jobs, or revenue from a CSV or Google Sheets."
         className="mb-6"
       />
+
+      {/* Connected sources */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-[15px] font-semibold text-ud-ink">Connected sources</h2>
+            <p className="text-[12.5px] text-ud-muted mt-0.5">Sync data automatically from your existing tools.</p>
+          </div>
+        </div>
+        <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
+          {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
+            const connected = isConnected(integration);
+            const lastSync = lastSyncByProvider[provider];
+            return (
+              <div key={provider} className={queueItem}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] font-semibold text-ud-ink">{label}</p>
+                    <span className={badgePill(connected)}>
+                      {connected ? "Connected" : "Not connected"}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-ud-muted mt-[1px]">{desc}</p>
+                  {(integration?.provider_account_name || lastSync) && (
+                    <p className="text-[11px] text-ud-faint mt-0.5">
+                      {integration?.provider_account_name}
+                      {integration?.provider_account_name && lastSync && " · "}
+                      {lastSync && <>Last synced {formatSyncTime(lastSync)}</>}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {connected && integration?.status === "active" && (
+                    <SyncNowButton provider={provider} label={label} />
+                  )}
+                  {connected ? (
+                    <form action={disconnectIntegrationAction.bind(null, provider)}>
+                      <Button type="submit" variant="secondary" size="sm">Disconnect</Button>
+                    </form>
+                  ) : (
+                    <Link href={startHref} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">Connect</Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Two import cards */}
       <div className="grid grid-cols-2 gap-5 items-start mb-[22px]">
@@ -348,40 +380,6 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
               <PublicSheetsFlow />
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Sync integrations */}
-      <div className={`${card} mb-[22px]`}>
-        <div className={cardHeader}>
-          <p className={cardTitle}>Sync from integrations</p>
-          <p className={cardDesc}>Pull data directly from connected tools — no file needed</p>
-        </div>
-        <div>
-          {INTEGRATIONS.map((integration) => {
-            const connected = connectedIds.has(integration.id);
-            return (
-              <div key={integration.id} className={queueItem}>
-                <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: integration.iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {integration.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-ud-ink">{integration.name}</p>
-                  <p className="text-[12px] text-ud-muted mt-[1px]">{integration.meta}</p>
-                </div>
-                <span className={badgePill(connected)} style={{ marginRight: "12px" }}>
-                  {connected ? "Connected" : "Not connected"}
-                </span>
-                {connected ? (
-                  <form action={disconnectIntegrationAction.bind(null, integration.id)}>
-                    <button type="submit" className={btnGhostSm}>Disconnect</button>
-                  </form>
-                ) : (
-                  <Link href={integration.startHref} className={btnGhostSm}>Connect</Link>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
 

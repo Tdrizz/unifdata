@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/Button";
 import { updateMonthlyGoalAction } from "../actions";
 
 interface Props {
@@ -9,7 +10,6 @@ interface Props {
 }
 
 const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-ink text-white hover:opacity-85 transition-opacity duration-[120ms] disabled:opacity-40";
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 export function MonthlyGoalForm({ currentGoal, currentMonthRevenue }: Props) {
   const [saved, setSaved] = useState(false);
@@ -57,7 +57,7 @@ export function MonthlyGoalForm({ currentGoal, currentMonthRevenue }: Props) {
           />
         </div>
         <div className="flex gap-2 pb-0.5">
-          <button type="reset" className={btnGhost}>Clear</button>
+          <Button type="reset" variant="secondary" size="md">Clear</Button>
           <button type="submit" disabled={isPending} className={btnInk}>
             {isPending ? "Saving…" : saved ? "Saved ✓" : "Save goal"}
           </button>
@@ -72,14 +72,14 @@ export function MonthlyGoalForm({ currentGoal, currentMonthRevenue }: Props) {
           </div>
           <div className="h-1.5 rounded-full bg-ud-surface border border-[rgba(0,0,0,0.06)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[#8B80E0] transition-all"
+              className="h-full rounded-full bg-ud-accent transition-all"
               style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
       )}
 
-      {error && <p className="text-[12px] text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger mt-1">{error}</p>}
     </form>
   );
 }

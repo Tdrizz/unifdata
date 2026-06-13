@@ -91,7 +91,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
         >
           <form action={formAction} className="space-y-5 p-5">
             {state?.error && (
-              <p className="rounded-[10px] bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <p className="rounded-[10px] bg-ud-danger-bg border border-ud-danger/20 px-4 py-3 text-sm text-ud-danger">
                 {state.error}
               </p>
             )}
@@ -130,7 +130,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
                 placeholder="Website redesign, flooring quote, monthly service plan…"
               />
               {state?.fieldErrors?.service_requested && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_requested}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.service_requested}</p>
               )}
             </FormField>
 
@@ -145,7 +145,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
                   placeholder="2500"
                 />
                 {state?.fieldErrors?.estimated_value && (
-                  <p className="mt-1 text-sm text-red-600">{state.fieldErrors.estimated_value}</p>
+                  <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.estimated_value}</p>
                 )}
               </FormField>
 

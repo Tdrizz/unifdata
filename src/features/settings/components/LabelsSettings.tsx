@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateLabelOverrideAction, resetLabelOverridesAction } from "../actions";
+import { Button } from "@/components/ui/Button";
 
 type DefaultLabels = {
   customerSingular: string;
@@ -39,7 +40,6 @@ const LABEL_KEYS: Array<{ key: keyof DefaultLabels; displayName: string }> = [
   { key: "inactiveStatusLabel", displayName: "Inactive status" },
 ];
 
-const btnGhost = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]";
 
 export function LabelsSettings({ orgId, profileOverrides, defaultLabels }: Props) {
   const [overrides, setOverrides] = useState<Record<string, string>>(profileOverrides);
@@ -108,9 +108,9 @@ export function LabelsSettings({ orgId, profileOverrides, defaultLabels }: Props
         })}
       </div>
 
-      <button type="button" className={btnGhost} onClick={handleReset}>
+      <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
         Reset to defaults
-      </button>
+      </Button>
     </div>
   );
 }

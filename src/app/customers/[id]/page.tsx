@@ -1,23 +1,21 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { AppShell } from "@/components/AppShell";
-import { MobileCustomerDetail } from "@/features/customers/MobileCustomerDetail";
-import { getIndustryProfile } from "@/lib/industry-profiles";
-import { Card } from "@/components/ui/Card";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { DetailRow } from "@/components/ui/DetailRow";
-import { ListRow } from "@/components/ui/ListRow";
-import { EmptyState } from "@/components/ui/EmptyState";
-import type { Database } from "@/types/db";
+import { ContactTabs } from "@/features/contacts/components/ContactTabs";
+import { StatusDot } from "@/features/contacts/components/StatusDot";
 
 export const dynamic = "force-dynamic";
 
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type JobRow = Database["public"]["Tables"]["jobs"]["Row"];
-type SaleRow = Database["public"]["Tables"]["sales"]["Row"];
-type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
+function formatDate(iso: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default async function CustomerDetailPage({
   params,
@@ -26,180 +24,210 @@ export default async function CustomerDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
 
-  const [
-    { data: customer, error: customerError },
-    { data: leads },
-    { data: jobs },
-    { data: sales },
-  ] = await Promise.all([
-    supabase
-      .from("customers")
-      .select("*")
-      .eq("id", id)
-      .eq("company_id", company.id)
-      .maybeSingle(),
-    supabase
-      .from("leads")
-      .select("id, customer_id, status, estimated_value, service_requested, source, next_follow_up_date, created_at")
-      .eq("customer_id", id)
-      .eq("company_id", company.id)
+  // Fetch contact — must belong to this org
+  const { data: contact } = await (supabase as any)
+    .from("master_customers")
+    .select("*")
+    .eq("id", id)
+    .eq("organization_id", company.id)
+    .maybeSingle();
+
+  if (!contact) {
+    // Old bookmarks and emails may still carry legacy customers-table ids —
+    // resolve them to the master record and redirect to the canonical URL.
+    const { data: byLegacy } = await supabase
+      .from("master_customers")
+      .select("id")
+      .eq("legacy_customer_id", id)
+      .eq("organization_id", company.id)
+      .maybeSingle();
+
+    if (byLegacy) redirect(`/customers/${byLegacy.id}`);
+    notFound();
+  }
+
+  // Fetch activity, notes, and linked records in parallel
+  const [activityResult, notesResult, jobsResult, salesResult, followUpsResult] = await Promise.all([
+    (supabase as any)
+      .from("contact_activity")
+      .select("id, event_type, event_label, event_detail, source, created_at")
+      .eq("contact_id", id)
+      .eq("organization_id", company.id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(20),
+    (supabase as any)
+      .from("contact_notes")
+      .select("id, content, pinned, author_name, created_at")
+      .eq("contact_id", id)
+      .eq("organization_id", company.id)
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false }),
     supabase
       .from("jobs")
-      .select("id, customer_id, status, job_value, service_type, start_date, completed_date, paid_status, created_at")
-      .eq("customer_id", id)
+      .select("id, service_type, status, job_value, start_date, completed_date, created_at")
       .eq("company_id", company.id)
+      .eq("contact_id", id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(50),
     supabase
       .from("sales")
-      .select("id, customer_id, amount, payment_status, sale_date, service_type, created_at")
-      .eq("customer_id", id)
+      .select("id, service_type, amount, payment_status, sale_date, created_at")
       .eq("company_id", company.id)
+      .eq("contact_id", id)
       .order("created_at", { ascending: false })
-      .limit(100),
+      .limit(50),
+    supabase
+      .from("follow_ups")
+      .select("id, message, due_date, status, created_at")
+      .eq("company_id", company.id)
+      .eq("contact_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
-  if (customerError || !customer) redirect("/customers");
+  const activities = activityResult.data ?? [];
+  const notes = notesResult.data ?? [];
+  const jobs = jobsResult.data ?? [];
+  const sales = salesResult.data ?? [];
+  const followUps = followUpsResult.data ?? [];
 
-  const c = customer as CustomerRow;
-  const leadList = leads ?? [];
-  const jobList = jobs ?? [];
-  const saleList = sales ?? [];
+  const displayName =
+    `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || "Unnamed Contact";
+
+  const phone = contact.primary_phone ?? null;
+  const email = contact.primary_email ?? null;
+  const businessName = (contact.metadata as { business_name?: string } | null)?.business_name ?? null;
+  const address = (contact.billing_address as { line1?: string } | null)?.line1 ?? null;
 
   return (
     <AppShell
       companyName={company.name}
       userEmail={user.email || ""}
       businessSector={company.business_sector}
-      hideMobileHeader
     >
-      {/* Mobile view */}
-      <div className="block md:hidden">
-        <MobileCustomerDetail
-          customer={c}
-          leads={leadList as LeadRow[]}
-          jobs={jobList as JobRow[]}
-          sales={saleList as SaleRow[]}
-          profile={profile}
-        />
-      </div>
-
-      {/* Desktop view */}
-      <div className="hidden md:block px-7 pb-10 pt-7">
-        <PageHeader
-          eyebrow="Edit customer"
-          title={c.name}
-          actions={
-            <>
-              <Link
-                href="/customers"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
-              >
-                ← Back
-              </Link>
-              <Link
-                href={`/customers/${id}/edit`}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-ink text-white text-[13px] font-semibold hover:opacity-85 transition-opacity"
-              >
-                Edit
-              </Link>
-            </>
-          }
-        />
-
-        <div className="mt-6 grid grid-cols-[1fr_1.2fr] gap-6">
-          {/* Left: contact details */}
-          <Card padding={0}>
-            <DetailRow label="Name">{c.name || "—"}</DetailRow>
-            <DetailRow label="Phone">{c.phone || "—"}</DetailRow>
-            <DetailRow label="Email">{c.email || "—"}</DetailRow>
-            <DetailRow label="Address">{c.address || "—"}</DetailRow>
-            <DetailRow label="Type">{c.customer_type || "—"}</DetailRow>
-            <DetailRow label="Notes" isLast>{c.notes || "—"}</DetailRow>
-          </Card>
-
-          {/* Right: linked records */}
-          <div className="flex flex-col gap-4">
-            {/* Leads */}
-            <Card padding={0}>
-              <div className="px-4 py-3 border-b border-ud-soft flex items-center justify-between">
-                <p className="text-[12px] font-bold uppercase tracking-wide text-ud-faint">Leads</p>
-                <span className="text-[12px] text-ud-muted">{leadList.length}</span>
+      <div className="hidden md:block px-7 pb-10 pt-7 h-full">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-[22px] font-bold text-ud-ink">{displayName}</h1>
+                <StatusDot status={contact.relationship_status} />
               </div>
-              {leadList.length === 0 ? (
-                <EmptyState title="No leads yet" />
-              ) : (
-                leadList.slice(0, 5).map((lead, i) => (
-                  <Link key={lead.id} href={`/customers/${id}/edit`}>
-                    <ListRow
-                      title={lead.service_requested ?? "Lead"}
-                      subtitle={lead.status}
-                      isLast={i === Math.min(leadList.length, 5) - 1}
-                    />
-                  </Link>
-                ))
-              )}
-            </Card>
-
-            {/* Jobs */}
-            <Card padding={0}>
-              <div className="px-4 py-3 border-b border-ud-soft flex items-center justify-between">
-                <p className="text-[12px] font-bold uppercase tracking-wide text-ud-faint">Jobs</p>
-                <span className="text-[12px] text-ud-muted">{jobList.length}</span>
+              <div className="flex items-center gap-4 text-[13px] text-ud-muted">
+                {phone && (
+                  <a href={`tel:${phone}`} className="hover:text-ud-ink">
+                    {phone}
+                  </a>
+                )}
+                {email && (
+                  <a href={`mailto:${email}`} className="hover:text-ud-ink">
+                    {email}
+                  </a>
+                )}
+                {businessName && (
+                  <span className="text-ud-faint">{businessName}</span>
+                )}
+                {contact.source && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-[5px] bg-ud-surface-sunk text-ud-muted border border-ud">
+                    Source: {contact.source}
+                  </span>
+                )}
               </div>
-              {jobList.length === 0 ? (
-                <EmptyState title="No jobs yet" />
-              ) : (
-                jobList.slice(0, 5).map((job, i) => (
-                  <Link key={job.id} href={`/customers/${id}/edit`}>
-                    <ListRow
-                      title={job.service_type ?? "Job"}
-                      subtitle={job.status}
-                      trailing={job.job_value != null ? `$${Number(job.job_value).toLocaleString()}` : undefined}
-                      isLast={i === Math.min(jobList.length, 5) - 1}
-                    />
-                  </Link>
-                ))
-              )}
-            </Card>
-
-            {/* Sales */}
-            <Card padding={0}>
-              <div className="px-4 py-3 border-b border-ud-soft flex items-center justify-between">
-                <p className="text-[12px] font-bold uppercase tracking-wide text-ud-faint">Sales</p>
-                <span className="text-[12px] text-ud-muted">{saleList.length}</span>
+              <div className="text-[11px] text-ud-faint mt-1">
+                Contact since {formatDate(contact.created_at)}
               </div>
-              {saleList.length === 0 ? (
-                <EmptyState title="No sales yet" />
-              ) : (
-                saleList.slice(0, 5).map((sale, i) => (
-                  <Link key={sale.id} href={`/customers/${id}/edit`}>
-                    <ListRow
-                      title={sale.service_type ?? "Sale"}
-                      subtitle={sale.payment_status}
-                      trailing={sale.amount != null ? `$${Number(sale.amount).toLocaleString()}` : undefined}
-                      isLast={i === Math.min(saleList.length, 5) - 1}
-                    />
-                  </Link>
-                ))
+            </div>
+            <a
+              href={`/customers/${id}/edit`}
+              className="px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              Edit
+            </a>
+          </div>
+        </div>
+
+        {/* Two-panel layout */}
+        <div className="flex gap-6 h-[calc(100vh-220px)]">
+          {/* Left panel — details */}
+          <div className="w-72 shrink-0 space-y-4">
+            <div className="bg-ud-surface border border-ud rounded-[12px] p-4 space-y-3">
+              <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint">
+                Details
+              </div>
+
+              <DetailRow label="Name" value={displayName} />
+              <DetailRow label="Phone" value={phone} />
+              <DetailRow label="Email" value={email} />
+              {businessName && <DetailRow label="Company" value={businessName} />}
+              {address && <DetailRow label="Address" value={address} />}
+              <DetailRow label="Source" value={contact.source} />
+              {contact.source_detail && (
+                <DetailRow label="Source detail" value={contact.source_detail} />
               )}
-            </Card>
+              <DetailRow label="Status" value={contact.relationship_status ?? "active"} />
+            </div>
+          </div>
+
+          {/* Right panel — tabs */}
+          <div className="flex-1 bg-ud-surface border border-ud rounded-[12px] p-4 overflow-hidden flex flex-col">
+            <ContactTabs
+              activities={activities}
+              notes={notes}
+              jobs={jobs}
+              sales={sales}
+              followUps={followUps}
+              contactId={id}
+              orgId={company.id}
+            />
           </div>
         </div>
       </div>
+
+      {/* Mobile */}
+      <div className="block md:hidden px-4 pt-6 pb-10">
+        <div className="mb-4">
+          <h1 className="text-[20px] font-bold text-ud-ink">{displayName}</h1>
+          <StatusDot status={contact.relationship_status} />
+          {phone && (
+            <a href={`tel:${phone}`} className="block text-[13px] text-ud-accent mt-1">
+              {phone}
+            </a>
+          )}
+          {email && (
+            <a href={`mailto:${email}`} className="block text-[13px] text-ud-muted mt-0.5">
+              {email}
+            </a>
+          )}
+        </div>
+        <ContactTabs
+          activities={activities}
+          notes={notes}
+          jobs={jobs}
+          sales={sales}
+          followUps={followUps}
+          contactId={id}
+          orgId={company.id}
+        />
+      </div>
     </AppShell>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-2">
+      <span className="text-[11px] text-ud-faint w-[90px] shrink-0 mt-0.5">{label}</span>
+      <span className="text-[13px] text-ud-ink break-words">{value}</span>
+    </div>
   );
 }

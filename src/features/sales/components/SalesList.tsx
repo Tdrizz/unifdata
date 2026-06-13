@@ -91,7 +91,6 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
     .reduce((sum, s) => sum + Number(s.amount || 0), 0);
 }
 
-const btnPrimary = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]";
 
 export function SalesList({ sales, count, page: _page, q: _q, contacts = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
@@ -139,14 +138,14 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], sel
   const sixMonthTotal = months.reduce((sum, m) => sum + sumSalesForMonth(sales, m.year, m.month), 0);
 
   return (
-    <div className="hidden md:block px-7 pb-10 pt-7">
+    <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow="Revenue"
         title={`Revenue & ${salePlural.toLowerCase()}`}
         description={`${formatCurrency(revenueMTD)} this month · ${openCount} open ${openCount === 1 ? saleSingular.toLowerCase() : salePlural.toLowerCase()}`}
         className="mb-6"
         actions={
-          <a href="#sale-quick-add" className={btnPrimary}>
+          <a href="#sale-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -157,12 +156,12 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], sel
 
       {/* Stat row */}
       <div className="grid grid-cols-4 gap-3 mb-[22px]">
-        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${revenueMTD > 0 ? "bg-[#f4fdf6] border-[rgba(29,107,46,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${revenueMTD > 0 ? "bg-ud-success-bg border-ud-success/15" : "border-[rgba(0,0,0,0.06)]"}`}>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Month to date</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none [font-variant-numeric:tabular-nums] ${revenueMTD > 0 ? "text-ud-success" : "text-ud-ink"}`}>{formatCurrency(revenueMTD)}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">This month</div>
         </div>
-        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${outstandingValue > 0 ? "bg-[#fef8f8] border-[rgba(160,40,40,0.12)]" : "border-[rgba(0,0,0,0.06)]"}`}>
+        <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${outstandingValue > 0 ? "bg-ud-danger-bg border-ud-danger/15" : "border-[rgba(0,0,0,0.06)]"}`}>
           <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Outstanding</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none [font-variant-numeric:tabular-nums] ${outstandingValue > 0 ? "text-ud-danger" : "text-ud-ink"}`}>{formatCurrency(outstandingValue)}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">{overdueCount} overdue · {pendingCount} pending</div>

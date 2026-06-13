@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { SyncNowButton } from "@/components/ui/SyncNowButton";
-import { formatTimestampDate } from "@/lib/date-format";
 import { businessSectorOptions as businessSectorGroups, getIndustryProfile } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
@@ -70,19 +67,6 @@ function getStatusLabel(status: string | null) {
   return titleCase(status) || "Not connected";
 }
 
-function getProviderLabel(provider: string | null) {
-  const labels: Record<string, string> = {
-    google_sheets: "Google Sheets",
-    google: "Google",
-    quickbooks: "QuickBooks",
-    square: "Square",
-    hubspot: "HubSpot",
-    jobber: "Jobber",
-  };
-
-  return labels[provider || ""] || titleCase(provider) || "Integration";
-}
-
 export function MobileSettingsView({
   company,
   user,
@@ -97,18 +81,13 @@ export function MobileSettingsView({
       .includes("google"),
   );
 
-  const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
-  const squareIntegration = integrations.find((i) => i.provider === "square");
-  const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
-  const jobberIntegration = integrations.find((i) => i.provider === "jobber");
-
   const profile = getIndustryProfile(company.business_sector);
 
   const morePages = [
     { href: "/follow-ups", label: profile.labels.followUpPlural },
     { href: "/sales",      label: profile.labels.salePlural },
     { href: "/data-hub",   label: "Data Hub" },
-    { href: "/ai-assistant", label: "AI Advisor" },
+    { href: "/aria", label: "Aria" },
     { href: "/imports",    label: "Import Data" },
   ];
 
@@ -292,125 +271,14 @@ export function MobileSettingsView({
         </div>
       </div>
 
-      {/* Data integrations card */}
+      {/* Integrations moved to /imports */}
       <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
-        <div className="px-[22px] py-[18px] border-b border-ud">
-          <p className="text-[14.5px] font-semibold text-ud-ink">Data integrations</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">
-            Connect your business tools. Once connected, UnifData syncs their data automatically every day — no CSV exports needed.
-          </p>
-        </div>
-        <div className="divide-y divide-ud">
-          {[
-            {
-              provider: "quickbooks",
-              label: "QuickBooks",
-              description: "Syncs customers, invoices, and estimates.",
-              integration: quickbooksIntegration,
-              startHref: "/api/integrations/quickbooks/start",
-            },
-            {
-              provider: "square",
-              label: "Square",
-              description: "Syncs customers and payments.",
-              integration: squareIntegration,
-              startHref: "/api/integrations/square/start",
-            },
-            {
-              provider: "hubspot",
-              label: "HubSpot",
-              description: "Syncs contacts and deals.",
-              integration: hubspotIntegration,
-              startHref: "/api/integrations/hubspot/start",
-            },
-            {
-              provider: "jobber",
-              label: "Jobber",
-              description: "Syncs clients, jobs, quotes, and invoices.",
-              integration: jobberIntegration,
-              startHref: "/api/integrations/jobber/start",
-            },
-          ].map(({ provider, label, description, integration, startHref }) => (
-            <div key={label} className="p-[18px] space-y-3">
-              <div>
-                <p className="text-[14px] font-semibold text-ud-ink">{label}</p>
-                <p className="mt-0.5 text-[13px] text-ud-muted">{description}</p>
-                {integration?.provider_account_name && (
-                  <p className="mt-1 text-[12px] text-ud-faint">
-                    {integration.provider_account_name}
-                    {integration.created_at && (
-                      <> · Connected {formatTimestampDate(integration.created_at)}</>
-                    )}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                {integration ? (
-                  <>
-                    <StatusBadge tone={getStatusTone(integration.status)}>
-                      {getStatusLabel(integration.status)}
-                    </StatusBadge>
-                    {integration.status === "active" && (
-                      <SyncNowButton provider={provider} label={label} />
-                    )}
-                    <Link
-                      href={startHref}
-                      className="rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
-                    >
-                      Reconnect
-                    </Link>
-                  </>
-                ) : (
-                  <Link
-                    href={startHref}
-                    className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
-                  >
-                    Connect {label}
-                  </Link>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Connected tools card */}
-      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
-        <div className="px-[22px] py-[18px] border-b border-ud">
-          <p className="text-[14.5px] font-semibold text-ud-ink">Connected tools</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">All external services connected to this workspace.</p>
-        </div>
-        <div>
-          {integrations.length === 0 ? (
-            <EmptyState
-              title="No connected tools"
-              description="Connect a data provider above to get started."
-            />
-          ) : (
-            <div className="divide-y divide-ud">
-              {integrations.map((integration) => (
-                <div key={integration.id} className="p-[18px] space-y-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[14px] font-semibold text-ud-ink">
-                        {getProviderLabel(integration.provider)}
-                      </p>
-                      <p className="mt-1 text-[13px] text-ud-muted">
-                        {integration.provider_account_name || "Connected account"}
-                      </p>
-                    </div>
-                    <StatusBadge tone={getStatusTone(integration.status)}>
-                      {getStatusLabel(integration.status)}
-                    </StatusBadge>
-                  </div>
-                  <p className="text-[12px] text-ud-faint">
-                    Added {formatTimestampDate(integration.created_at)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="px-[22px] py-[18px]">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Integrations</p>
+          <p className="mt-0.5 mb-3 text-[13px] text-ud-muted">Connect your existing tools to sync data automatically.</p>
+          <Link href="/imports" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
+            Manage integrations in Imports →
+          </Link>
         </div>
       </div>
 
@@ -437,7 +305,7 @@ export function MobileSettingsView({
                   <form action={removeMember.bind(null, member.user_id)}>
                     <button
                       type="submit"
-                      className="text-[12.5px] font-medium text-red-500 hover:underline"
+                      className="text-[12.5px] font-medium text-ud-danger hover:underline"
                     >
                       Remove
                     </button>

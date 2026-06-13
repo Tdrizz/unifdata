@@ -9,6 +9,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Pill } from "@/components/ui/Pill";
 import { JobCreateForm } from "./JobCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { JobListRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
@@ -36,6 +37,7 @@ function matchesFilter(status: string | null | undefined, filter: StageFilter): 
 
 export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props) {
   const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const contactById = new Map(contacts.map((c) => [c.id, c]));
 
@@ -96,9 +98,9 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
             action={
               activeFilter === "All" ? (
                 <div className="flex flex-wrap items-center gap-2 justify-center">
-                  <Link href="/jobs" className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity">
+                  <button onClick={() => setSheetOpen(true)} className="inline-flex items-center gap-1.5 font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity active:scale-[0.97]">
                     + Add {profile.labels.jobSingular?.toLowerCase() ?? "job"}
-                  </Link>
+                  </button>
                   <Link href="/imports" className="text-[13px] text-ud-muted hover:text-ud-ink transition-colors">or import via CSV →</Link>
                 </div>
               ) : undefined
@@ -152,9 +154,18 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
           })}
         </div>
       )}
-      <div id="job-quick-add" className="px-4 mt-6">
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
+        aria-label={"Add " + (profile.labels.jobSingular ?? "job")}
+      >
+        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile.labels.jobSingular ?? "job")}>
         <JobCreateForm contacts={contacts} leads={leads} />
-      </div>
+      </BottomSheet>
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function SectorSelector({ sectors }: { sectors: Sector[] }) {
             <h3 className="mt-1.5 text-[22px] font-semibold tracking-tight">{s.sector}</h3>
             <p className="mt-1.5 max-w-xl text-[14px] leading-[1.6] text-slate-400">{s.focus}</p>
           </div>
-          <span className="shrink-0 rounded-full border border-[#4A3FA8]/30 bg-[#4A3FA8]/15 px-3 py-1 text-[11px] font-semibold text-[#8B80E0]">
+          <span className="shrink-0 rounded-full border border-ud-accent/30 bg-ud-accent/15 px-3 py-1 text-[11px] font-semibold text-ud-accent">
             Tailored
           </span>
         </div>
@@ -72,7 +72,7 @@ export function SectorSelector({ sectors }: { sectors: Sector[] }) {
                   key={insight}
                   className="flex items-start gap-3 rounded-[10px] bg-white/5 px-4 py-3 text-[13.5px] leading-[1.55] text-slate-300"
                 >
-                  <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#8B80E0]" />
+                  <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-ud-accent" />
                   {insight}
                 </div>
               ))}

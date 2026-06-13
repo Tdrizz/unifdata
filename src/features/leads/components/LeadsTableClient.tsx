@@ -74,7 +74,7 @@ export function LeadsTableClient({ leads, customers, profile, sectionTitle }: Pr
   return (
     <div>
       {bulkError && (
-        <div className="mb-3 rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-[8px] border border-ud-danger/20 bg-ud-danger-bg px-3 py-2 text-sm text-ud-danger">
           {bulkError}
         </div>
       )}

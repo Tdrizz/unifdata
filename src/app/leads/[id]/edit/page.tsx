@@ -34,7 +34,7 @@ export default async function EditOpportunityPage({
     getCustomersForLeadSelect(supabase, company.id),
   ]);
 
-  if (!lead) redirect("/leads");
+  if (!lead) redirect("/crm");
 
   return (
     <AppShell

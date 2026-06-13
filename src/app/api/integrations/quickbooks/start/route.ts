@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const companyId = await getCurrentCompanyId();
 
     if (!companyId) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
     const clientId = process.env.QUICKBOOKS_CLIENT_ID;

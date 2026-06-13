@@ -306,7 +306,7 @@ export function CommunicationsClient({
             {/* Compose */}
             <div className="px-6 py-4 border-t border-ud">
               {sendError && (
-                <p className="text-[12px] text-red-500 mb-2">{sendError}</p>
+                <p className="text-[12px] text-ud-danger mb-2">{sendError}</p>
               )}
               <div className="flex gap-2 items-end">
                 <textarea
