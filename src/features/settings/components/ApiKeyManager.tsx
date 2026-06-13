@@ -67,17 +67,17 @@ export function ApiKeyManager({
   return (
     <div className="space-y-4">
       {newKey && (
-        <div className="rounded-[10px] border border-green-200 bg-green-50 p-4">
-          <p className="text-[13px] font-semibold text-green-800">API key created — copy it now</p>
-          <p className="mt-1 text-[12px] text-green-700">This key will not be shown again.</p>
+        <div className="rounded-[10px] border border-ud-success/20 bg-ud-success-bg p-4">
+          <p className="text-[13px] font-semibold text-ud-success">API key created — copy it now</p>
+          <p className="mt-1 text-[12px] text-ud-success">This key will not be shown again.</p>
           <div className="mt-3 flex items-center gap-2">
-            <code className="flex-1 rounded-[8px] border border-green-200 bg-white px-3 py-2 text-[12px] font-mono text-green-900 break-all">
+            <code className="flex-1 rounded-[8px] border border-ud-success/20 bg-white px-3 py-2 text-[12px] font-mono text-ud-success break-all">
               {newKey}
             </code>
             <button
               type="button"
               onClick={handleCopy}
-              className="shrink-0 rounded-[8px] border border-green-300 bg-white px-3 py-2 text-[12px] font-medium text-green-800 hover:bg-green-50"
+              className="shrink-0 rounded-[8px] border border-ud-success/20 bg-white px-3 py-2 text-[12px] font-medium text-ud-success hover:bg-ud-success-bg"
             >
               {copied ? "Copied!" : "Copy"}
             </button>
@@ -85,7 +85,7 @@ export function ApiKeyManager({
           <button
             type="button"
             onClick={() => setNewKey(null)}
-            className="mt-3 text-[12px] text-green-600 underline"
+            className="mt-3 text-[12px] text-ud-success underline"
           >
             I&apos;ve saved it, dismiss
           </button>
@@ -139,7 +139,7 @@ export function ApiKeyManager({
                   type="button"
                   onClick={() => handleRevoke(k.id)}
                   disabled={isPending}
-                  className="text-[12px] text-red-500 hover:text-ud-danger disabled:opacity-50"
+                  className="text-[12px] text-ud-danger hover:text-ud-danger disabled:opacity-50"
                 >
                   Revoke
                 </button>

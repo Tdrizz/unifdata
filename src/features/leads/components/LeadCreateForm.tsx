@@ -73,7 +73,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.service_requested && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.service_requested}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.service_requested}</p>
             )}
           </div>
 
@@ -90,7 +90,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.estimated_value && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.estimated_value}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.estimated_value}</p>
             )}
           </div>
         </div>

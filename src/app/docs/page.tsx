@@ -42,111 +42,16 @@ const lifecycle = [
 ];
 
 const pages = [
-  {
-    name: "Today",
-    path: "/workspace",
-    tag: "Dashboard",
-    description:
-      "The daily operating brief. Shows follow-ups that are due, open opportunities, active work, unpaid revenue, and a data health score. Start here every morning.",
-  },
-  {
-    name: "Pipeline",
-    path: "/crm",
-    tag: "Overview",
-    description:
-      "Relationship and opportunity view. See where business is sitting across the full lifecycle and identify what needs a follow-up or next action.",
-  },
-  {
-    name: "Data Hub",
-    path: "/data-hub",
-    tag: "Health",
-    description:
-      "Business data command center. Tracks record completeness, flags missing fields, lists recent imports, and automatically reconciles incoming records — merging fuzzy matches and surfacing ambiguous cases for review.",
-  },
-  {
-    name: "People",
-    path: "/customers",
-    tag: "Records",
-    description:
-      "Stores all relationship records — customers, clients, patients, accounts, or companies depending on the business sector.",
-  },
-  {
-    name: "Contacts",
-    path: "/customers",
-    tag: "Records",
-    description:
-      "Unified contact view built on master customer records. Synced from every write path — manual entry, onboarding, CSV import, AI assistant, and integrations. Shows activity timeline, notes, linked jobs, sales, and follow-ups. Supports tag filtering and segment groups.",
-  },
-  {
-    name: "Communications",
-    path: "/communications",
-    tag: "Tools",
-    description:
-      "SMS thread inbox. Inbound messages are routed via Twilio to matched contacts automatically. Replies are sent directly from the thread. Best managed on desktop.",
-  },
-  {
-    name: "Process Board",
-    path: "/process",
-    tag: "Tools",
-    description:
-      "Custom drag-and-drop kanban board for tracking any internal business process. Stages, record values, and contact linking are fully configurable. Boards are created and managed in Settings.",
-  },
-  {
-    name: "Automations",
-    path: "/automations",
-    tag: "Tools",
-    description:
-      "Rule builder for contact-based automations. Rules fire when a contact is created, changes status, gains a tag, goes inactive for N days, sends an inbound SMS, or when a process record is created or completed — adding tags, setting status, sending SMS, creating follow-ups or board records, or notifying the owner. Conditions scope each rule, and every run is logged.",
-  },
-  {
-    name: "Opportunities",
-    path: "/crm",
-    tag: "Records",
-    description:
-      "Tracks potential business with status, source, estimated value, follow-up dates, and links to connected work and revenue records.",
-  },
-  {
-    name: "Work",
-    path: "/jobs",
-    tag: "Records",
-    description:
-      "Tracks delivery and fulfillment records: jobs, appointments, projects, service visits, or orders. Links back to the opportunity and customer.",
-  },
-  {
-    name: "Revenue",
-    path: "/sales",
-    tag: "Records",
-    description:
-      "Tracks all revenue records with amount, payment status, sale date, service type, and source. Separate from work status so unpaid records stay visible.",
-  },
-  {
-    name: "Actions",
-    path: "/follow-ups",
-    tag: "Records",
-    description:
-      "Tracks reminders, follow-ups, callbacks, and overdue tasks. Completed actions are logged so there is a record of what was done and when.",
-  },
-  {
-    name: "Imports",
-    path: "/imports",
-    tag: "Tools",
-    description:
-      "Import customer lists from CSV or connected integrations. Records are validated, created, and logged as an import batch so you can track what came in and when.",
-  },
-  {
-    name: "Integrations",
-    path: "/settings",
-    tag: "Tools",
-    description:
-      "Connect Jobber, QuickBooks, HubSpot, Square, and Google Sheets to pull records into the workspace. Manage connection status and re-sync from Settings.",
-  },
-  {
-    name: "AI Advisor",
-    path: "/ai-assistant",
-    tag: "Tools",
-    description:
-      "Persistent AI chat interface with full tool calling over live workspace data. Ask plain-language questions about customers, pipeline, revenue, and follow-ups. The AI can create follow-ups, update job status, and add customers directly from chat. Rate-limited per tier — 5 requests/day on Standard, 20 on Pro.",
-  },
+  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief. Opens with an Aria summary of what needs attention — follow-ups due, unpaid work, stale pipeline. Start here every morning." },
+  { name: "Customers", path: "/customers", tag: "Records", description: "Unified contact records. Every person or business the workspace has a relationship with, enriched with relationship status, activity history, and linked records." },
+  { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities. See where business sits across the full lifecycle and identify what needs a follow-up or next action." },
+  { name: "Jobs", path: "/jobs", tag: "Operations", description: "All active and scheduled work. Weekly calendar toggle. Filter by status — Scheduled, Active, Complete, Cancelled." },
+  { name: "Sales", path: "/sales", tag: "Revenue", description: "All revenue records with payment status. Overdue items surface prominently. The fastest way to see what's been completed but not collected." },
+  { name: "Follow-ups", path: "/follow-ups", tag: "Actions", description: "Every reminder and action item. List and calendar view. Overdue items surface on the workspace dashboard automatically." },
+  { name: "Aria", path: "/aria", tag: "AI", description: "Your AI business assistant. Opens with the overnight briefing already loaded — drafts ready to send, alerts worth reviewing. Chat freely after clearing the queue." },
+  { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Aria reads from this to prioritize what needs attention." },
+  { name: "Imports", path: "/imports", tag: "Data", description: "CSV and Google Sheets import with smart column mapping and staged review. Also manages connected integrations — Jobber, QuickBooks, HubSpot, Square." },
+  { name: "Settings", path: "/settings", tag: "Account", description: "Business profile, team members, industry labels, process boards, billing, and notification preferences." },
 ];
 
 const sectors = [
@@ -245,17 +150,11 @@ const integrations = [
 ];
 
 const navItems = [
-  ["Getting started", "#start"],
   ["Overview", "#overview"],
-  ["Core lifecycle", "#lifecycle"],
-  ["Product pages", "#pages"],
-  ["Industry language", "#industries"],
-  ["Connected workflow", "#sync"],
-  ["Integrations", "#integrations"],
-  ["Imports", "#imports"],
-  ["AI Advisor", "#ai"],
-  ["Contacts", "#contacts"],
-  ["Agent Inbox", "#agent"],
+  ["The lifecycle model", "#lifecycle"],
+  ["Pages", "#pages"],
+  ["Aria", "#aria"],
+  ["Imports & integrations", "#imports"],
 ];
 
 export default function DocsPage() {
@@ -398,6 +297,27 @@ export default function DocsPage() {
                         </div>
                       </div>
                       <p className="mt-3 text-[13px] leading-[1.65] text-slate-300">{page.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ARIA */}
+              <section id="aria" className="scroll-mt-20 py-10">
+                <h2 className="text-[24px] font-semibold mb-4">Aria</h2>
+                <p className="text-[13.5px] leading-[1.7] text-slate-300 mb-6">
+                  Aria is the AI assistant built into UnifData. Unlike a generic chatbot, Aria has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
+                </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  {[
+                    { title: "Overnight briefing", body: "Every morning, Aria surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
+                    { title: "Outreach drafts", body: "Aria writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
+                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown as alerts inside the Aria view." },
+                    { title: "Free-form chat", body: "After clearing the briefing queue, ask Aria anything. It can query your live data, create follow-ups, update job status, and add customers directly from chat." },
+                  ].map((item) => (
+                    <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
+                      <p className="text-[14px] font-semibold mb-2">{item.title}</p>
+                      <p className="text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
                     </div>
                   ))}
                 </div>

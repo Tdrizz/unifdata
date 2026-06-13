@@ -305,7 +305,7 @@ export function MobileSettingsView({
                   <form action={removeMember.bind(null, member.user_id)}>
                     <button
                       type="submit"
-                      className="text-[12.5px] font-medium text-red-500 hover:underline"
+                      className="text-[12.5px] font-medium text-ud-danger hover:underline"
                     >
                       Remove
                     </button>

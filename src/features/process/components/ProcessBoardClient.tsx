@@ -245,7 +245,7 @@ function NewRecordForm({
               className="w-full px-3 py-2 bg-transparent border border-ud rounded-[8px] text-[13px] text-ud-ink outline-none focus:border-ud-accent"
             />
           </div>
-          {error && <p className="text-[12px] text-red-500">{error}</p>}
+          {error && <p className="text-[12px] text-ud-danger">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button
               type="button"

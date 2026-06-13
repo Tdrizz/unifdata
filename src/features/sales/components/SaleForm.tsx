@@ -97,7 +97,7 @@ export function SaleForm({ sale, contacts }: Props) {
             <FormField label="Amount">
               <Input name="amount" type="number" step="0.01" min="0" required defaultValue={sale.amount ?? ""} placeholder="2500" />
               {state?.fieldErrors?.amount && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.amount}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.amount}</p>
               )}
             </FormField>
             <FormField label="Payment status">

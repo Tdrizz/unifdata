@@ -18,7 +18,7 @@ export default function RouteError({
   return (
     <main className="px-7 py-10">
       <div className="mx-auto max-w-lg rounded-[14px] border border-ud-danger/20 bg-ud-surface p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ud-danger">
           Something went wrong
         </p>
         <h1 className="mt-3 text-xl font-semibold text-ud-ink">

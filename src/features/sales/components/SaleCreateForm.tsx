@@ -49,7 +49,7 @@ export function SaleCreateForm({ profile, contacts = [] }: Props) {
               />
             </label>
             {state?.fieldErrors?.amount && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.amount}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.amount}</p>
             )}
           </div>
           <label className="block">

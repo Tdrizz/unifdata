@@ -75,7 +75,7 @@ export function TagsSettings({ orgId, initialTags }: Props) {
   return (
     <div>
       {error && (
-        <p className="text-[12px] text-red-500 mb-3">{error}</p>
+        <p className="text-[12px] text-ud-danger mb-3">{error}</p>
       )}
 
       {showNewForm && (

@@ -79,7 +79,7 @@ export function MonthlyGoalForm({ currentGoal, currentMonthRevenue }: Props) {
         </div>
       )}
 
-      {error && <p className="text-[12px] text-red-500 mt-1">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger mt-1">{error}</p>}
     </form>
   );
 }

@@ -65,7 +65,7 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
               <input name="name" required defaultValue={name} className={f} />
             </label>
             {state?.fieldErrors?.name && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.name}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.name}</p>
             )}
           </div>
           <label className="block">
@@ -90,7 +90,7 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
               <input name="email" type="email" defaultValue={contact.primary_email ?? ""} className={f} />
             </label>
             {state?.fieldErrors?.email && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.email}</p>
             )}
           </div>
         </div>
@@ -122,7 +122,7 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
         <div className="flex items-center justify-between pt-1">
           {confirmDelete ? (
             <span className="flex items-center gap-2">
-              <span className="text-[12px] text-red-600 font-medium">Delete this {customerLabel}?</span>
+              <span className="text-[12px] text-ud-danger font-medium">Delete this {customerLabel}?</span>
               <button
                 type="submit"
                 formAction={deleteContactAction.bind(null, contact.id)}
@@ -142,7 +142,7 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="text-[12px] text-red-600 hover:underline"
+              className="text-[12px] text-ud-danger hover:underline"
             >
               Delete {customerLabel}
             </button>

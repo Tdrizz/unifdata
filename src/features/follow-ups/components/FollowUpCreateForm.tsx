@@ -51,7 +51,7 @@ export function FollowUpCreateForm({ people }: Props) {
             />
           </label>
           {state?.fieldErrors?.message && (
-            <p className="mt-1 text-xs text-red-600">{state.fieldErrors.message}</p>
+            <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.message}</p>
           )}
         </div>
 

@@ -45,7 +45,7 @@ export function CustomerCreateForm({ profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.name && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.name}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.name}</p>
             )}
           </div>
           <label className="block">
@@ -80,7 +80,7 @@ export function CustomerCreateForm({ profile }: Props) {
               />
             </label>
             {state?.fieldErrors?.email && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.email}</p>
             )}
           </div>
         </div>

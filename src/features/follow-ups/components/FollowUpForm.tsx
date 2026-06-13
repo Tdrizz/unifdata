@@ -144,7 +144,7 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
                 placeholder="Call customer, send quote, check payment, schedule job..."
               />
               {state?.fieldErrors?.message && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.message}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.message}</p>
               )}
             </FormField>
 

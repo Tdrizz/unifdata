@@ -116,7 +116,7 @@ export function JobCreateForm({ contacts, leads }: Props) {
               />
             </label>
             {state?.fieldErrors?.service_type && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.service_type}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.service_type}</p>
             )}
           </div>
 
@@ -135,15 +135,15 @@ export function JobCreateForm({ contacts, leads }: Props) {
               />
             </label>
             {state?.fieldErrors?.job_value && (
-              <p className="mt-1 text-xs text-red-600">{state.fieldErrors.job_value}</p>
+              <p className="mt-1 text-xs text-ud-danger">{state.fieldErrors.job_value}</p>
             )}
           </div>
         </div>
 
         {belowAverage && pricingCtx?.sufficient && (
           <div className="flex items-start gap-2.5 rounded-[10px] border border-ud-warning/20 bg-ud-warning-bg px-4 py-3">
-            <span className="mt-0.5 text-amber-500 text-sm leading-none">⚠</span>
-            <p className="text-sm text-amber-800">
+            <span className="mt-0.5 text-ud-warning text-sm leading-none">⚠</span>
+            <p className="text-sm text-ud-warning">
               This is more than 25% below your workspace average of{" "}
               <strong>{formatCurrency(pricingCtx.averageAmount)}</strong> for similar work
               ({pricingCtx.sampleSize} jobs).

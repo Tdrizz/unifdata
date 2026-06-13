@@ -290,7 +290,7 @@ function NewAutomationBuilder({
                   <button
                     type="button"
                     onClick={() => setConditions((prev) => prev.filter((_, j) => j !== i))}
-                    className="text-ud-muted hover:text-red-500 text-[13px] px-1"
+                    className="text-ud-muted hover:text-ud-danger text-[13px] px-1"
                     aria-label="Remove condition"
                   >
                     ✕
@@ -438,7 +438,7 @@ function NewAutomationBuilder({
                 style={{ fontFamily: "var(--font)" }}
               />
             </div>
-            {error && <p className="text-[12px] text-red-500">{error}</p>}
+            {error && <p className="text-[12px] text-ud-danger">{error}</p>}
           </div>
         )}
 
@@ -628,7 +628,7 @@ export function AutomationsClient({
                                 })}
                               </span>
                               <span className="text-ud-faint">{triggerLabel(run.triggered_by)}</span>
-                              {run.error && <span className="text-red-600 truncate">{run.error}</span>}
+                              {run.error && <span className="text-ud-danger truncate">{run.error}</span>}
                             </div>
                           ))}
                         </div>

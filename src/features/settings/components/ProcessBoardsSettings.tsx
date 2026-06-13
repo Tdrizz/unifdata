@@ -41,8 +41,8 @@ function ColorSwatch({ color, selected, onSelect }: { color: string; selected: b
 
 type StageTypeKey = "active" | "completed" | "cancelled";
 const stageTypeBadgeColors: Record<StageTypeKey, string> = {
-  active: "bg-ud-info-bg text-blue-600",
-  completed: "bg-green-50 text-green-600",
+  active: "bg-ud-info-bg text-ud-info",
+  completed: "bg-ud-success-bg text-ud-success",
   cancelled: "bg-gray-100 text-gray-500",
 };
 
@@ -131,7 +131,7 @@ function StageRow({
   if (deleting) {
     return (
       <div className="flex flex-col gap-2 py-2.5 border-b border-[rgba(0,0,0,0.04)]">
-        {error && <p className="text-[12px] text-red-500">{error}</p>}
+        {error && <p className="text-[12px] text-ud-danger">{error}</p>}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13px] font-medium text-ud-ink flex-1">{stage.name}</span>
           {otherStages.length > 0 && (
@@ -159,7 +159,7 @@ function StageRow({
 
   return (
     <div className="flex flex-col gap-1 py-2.5 border-b border-[rgba(0,0,0,0.04)] last:border-b-0">
-      {error && <p className="text-[12px] text-red-500">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger">{error}</p>}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="w-3 h-3 rounded-full shrink-0" style={{ background: stage.color }} />
 
@@ -327,7 +327,7 @@ function BoardCard({
         )}
       </div>
 
-      {error && <p className="text-[12px] text-red-500 px-4 pb-2">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger px-4 pb-2">{error}</p>}
 
       {deleting && (
         <div className="px-4 pb-3 flex items-center gap-3">
@@ -433,7 +433,7 @@ export function ProcessBoardsSettings({ orgId, boards: initialBoards }: Props) {
 
   return (
     <div>
-      {error && <p className="text-[12px] text-red-500 mb-3">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger mb-3">{error}</p>}
 
       {showNewBoard && (
         <div className="flex items-center gap-3 mb-4 p-3 rounded-[10px] border border-ud bg-ud-bg">

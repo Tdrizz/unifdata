@@ -204,7 +204,7 @@ function FieldList({
 
   return (
     <div>
-      {error && <p className="text-[12px] text-red-500 mb-2">{error}</p>}
+      {error && <p className="text-[12px] text-ud-danger mb-2">{error}</p>}
 
       {sorted.length === 0 && !showAdd && (
         <p className="text-[12px] text-ud-muted mb-2">No custom fields yet.</p>

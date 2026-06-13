@@ -18,7 +18,7 @@ export default function GlobalError({
   return (
     <main className="min-h-screen bg-[#eef2f7] px-4 py-10 text-ud-ink">
       <div className="mx-auto max-w-2xl rounded-[14px] border border-ud-danger/20 bg-ud-surface p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ud-danger">
           Something went wrong
         </p>
 

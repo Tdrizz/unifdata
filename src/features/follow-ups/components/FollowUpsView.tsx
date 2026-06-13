@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { parseDateOnly, getTodayDateOnly, formatDateOnly } from "@/lib/date-format";
 import { isClosedOpportunity } from "@/lib/status";
 import type { FollowUpRow, LeadRow } from "../types";
@@ -10,7 +9,6 @@ import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { markFollowUpCompleteAction } from "../actions";
 import { FollowUpCreateForm } from "./FollowUpCreateForm";
-import { BottomSheet } from "@/components/ui/BottomSheet";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { Card } from "@/components/ui/Card";
@@ -90,7 +88,6 @@ type QueueEntry = {
 
 export function FollowUpsView({ followUps, opportunities, people, profile, count = 0 }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const personById = new Map(people.map((p) => [p.id, p]));
@@ -140,57 +137,6 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
   const filtered = filter === "overdue" ? overdueItems : filter === "today" ? todayItems : filter === "upcoming" ? upcomingItems : all;
 
   return (
-    <>
-    {/* Mobile follow-ups */}
-    <div className="md:hidden px-4 pt-5 pb-8">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.13em] text-ud-muted">{profile?.labels.followUpPlural ?? "Follow-ups"}</p>
-          <h1 className="text-[18px] font-bold text-ud-ink">Priority queue</h1>
-        </div>
-      </div>
-      <div className="overflow-x-auto no-scrollbar flex gap-2 pb-3">
-        {(["all", "overdue", "today", "upcoming"] as const).map((f) => {
-          const c = f === "all" ? all.length : f === "overdue" ? overdueItems.length : f === "today" ? todayItems.length : upcomingItems.length;
-          return (
-            <button key={f} type="button" onClick={() => setFilter(f)}
-              className={cn("flex-shrink-0 rounded-full px-[14px] py-[8px] text-[12px] font-semibold transition-colors",
-                filter === f ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud text-ud-muted")}>
-              {f === "all" ? "All" : f === "overdue" ? "Overdue" : f === "today" ? "Today" : "Upcoming"} {c}
-            </button>
-          );
-        })}
-      </div>
-      <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
-        {filtered.length === 0 ? (
-          <p className="text-[13px] text-ud-muted text-center py-8">No {profile?.labels.followUpPlural?.toLowerCase() ?? "follow-ups"} here.</p>
-        ) : (
-          filtered.map((item) => (
-            <Link key={item.id} href={item.href} className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(0,0,0,0.04)] last:border-b-0 hover:bg-[rgba(0,0,0,0.015)]">
-              <div className={getDotClass(item.due_date, item.status)} />
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-ud-ink truncate">{item.title}</p>
-                <p className="text-[11px] text-ud-muted truncate">{item.meta}</p>
-              </div>
-              <span className={getDueClass(item.due_date, item.status)}>{getDueLabel(item.due_date, item.status)}</span>
-            </Link>
-          ))
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={() => setSheetOpen(true)}
-        className="fixed bottom-6 right-5 z-30 w-14 h-14 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center hover:opacity-90 transition-opacity"
-        style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)" }}
-      >
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
-      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Add follow-up">
-        <FollowUpCreateForm people={people} />
-      </BottomSheet>
-    </div>
     <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
         eyebrow={profile?.labels.followUpPlural ?? "Follow-ups"}
@@ -282,6 +228,5 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
         <FollowUpCreateForm people={people} />
       </div>
     </div>
-    </>
   );
 }

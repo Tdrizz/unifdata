@@ -162,7 +162,7 @@ export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
                 placeholder="Flooring install, website build, service visit…"
               />
               {state?.fieldErrors?.service_type && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_type}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.service_type}</p>
               )}
             </FormField>
 
@@ -177,7 +177,7 @@ export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
                   placeholder="2500"
                 />
                 {state?.fieldErrors?.job_value && (
-                  <p className="mt-1 text-sm text-red-600">{state.fieldErrors.job_value}</p>
+                  <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.job_value}</p>
                 )}
               </FormField>
 

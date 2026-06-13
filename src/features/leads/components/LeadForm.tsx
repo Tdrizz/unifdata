@@ -130,7 +130,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
                 placeholder="Website redesign, flooring quote, monthly service plan…"
               />
               {state?.fieldErrors?.service_requested && (
-                <p className="mt-1 text-sm text-red-600">{state.fieldErrors.service_requested}</p>
+                <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.service_requested}</p>
               )}
             </FormField>
 
@@ -145,7 +145,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
                   placeholder="2500"
                 />
                 {state?.fieldErrors?.estimated_value && (
-                  <p className="mt-1 text-sm text-red-600">{state.fieldErrors.estimated_value}</p>
+                  <p className="mt-1 text-sm text-ud-danger">{state.fieldErrors.estimated_value}</p>
                 )}
               </FormField>
 
