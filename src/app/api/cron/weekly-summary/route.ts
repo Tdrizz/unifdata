@@ -25,7 +25,6 @@ export async function GET(request: Request) {
       `
       id,
       name,
-      tier,
       company_members (
         role,
         profiles (

@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { isPro } from "@/lib/feature-gates";
 import { compileTelemetry } from "./telemetry";
 import { runManagerAgent } from "./manager-agent";
 import { runOutreachWorker } from "./workers/outreach-worker";
@@ -19,7 +18,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     .eq("id", orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   const profile = getIndustryProfile(company.business_sector);
 

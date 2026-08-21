@@ -6,7 +6,6 @@ import { updatePreferencesAction } from "../actions";
 type Props = {
   autopilot: boolean;
   aiFirstMode: boolean;
-  isPro: boolean;
 };
 
 function Toggle({
@@ -38,7 +37,7 @@ function Toggle({
   );
 }
 
-export function AiSettingsToggles({ autopilot, aiFirstMode, isPro }: Props) {
+export function AiSettingsToggles({ autopilot, aiFirstMode }: Props) {
   const [autopilotEnabled, setAutopilotEnabled] = useState(autopilot);
   const [aiFirstEnabled, setAiFirstEnabled] = useState(aiFirstMode);
   const [confirmingAutopilot, setConfirmingAutopilot] = useState(false);
@@ -74,7 +73,7 @@ export function AiSettingsToggles({ autopilot, aiFirstMode, isPro }: Props) {
         <div className="flex-1">
           <p className="text-[13px] font-medium text-ud-ink">Autopilot mode</p>
           <p className="text-[12px] text-ud-muted mt-[1px]">
-            Routine outreach and data fixes execute automatically without approval. Only available on Pro.
+            Routine outreach and data fixes execute automatically without approval.
           </p>
           {confirmingAutopilot && (
             <div className="mt-2 p-3 rounded-[8px] border border-[rgba(234,179,8,0.3)] bg-[rgba(234,179,8,0.06)] text-[12px] text-ud-ink">
@@ -104,7 +103,7 @@ export function AiSettingsToggles({ autopilot, aiFirstMode, isPro }: Props) {
           <Toggle
             enabled={autopilotEnabled}
             onChange={handleAutopilotToggle}
-            disabled={!isPro || pending}
+            disabled={pending}
           />
         )}
       </div>

@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { isPro } from "@/lib/feature-gates";
 import { flushLangfuse } from "@/lib/observability/tracing";
 
 function capitalize(s: string): string {
@@ -17,7 +16,7 @@ export async function runPatternSpotterWorker(
     .eq("id", orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   // Fetch all completed jobs that have a service type and a linked customer
   const { data: jobs } = await supabase

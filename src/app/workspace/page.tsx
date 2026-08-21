@@ -6,7 +6,7 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
-import { isPro, isAiAllowed } from "@/lib/feature-gates";
+import { isAiAllowed } from "@/lib/feature-gates";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,6 @@ export default async function WorkspacePage() {
   if (prefs.ai_first_mode === true && isAiAllowed(company)) redirect("/ai-assistant");
 
   const profile = getIndustryProfile(company.business_sector);
-  const isProTier = isPro(company as { tier: string });
 
   const [data, draftsResult, alertsResult] = await Promise.all([
     getWorkspaceData(supabase, company.id),
@@ -81,7 +80,6 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
-          isPro={isProTier}
         />
         <MobileWorkspaceView
           {...data}
@@ -89,7 +87,6 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
-          isPro={isProTier}
         />
       </>
     </AppShell>

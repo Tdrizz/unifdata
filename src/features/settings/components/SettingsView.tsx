@@ -9,7 +9,6 @@ import { InviteMemberForm } from "./InviteMemberForm";
 import { NotificationToggles } from "./NotificationToggles";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { isPro } from "@/lib/feature-gates";
 import { AiSettingsToggles } from "./AiSettingsToggles";
 import { MonthlyGoalForm } from "./MonthlyGoalForm";
 import { TagsSettings, type TagItem } from "./TagsSettings";
@@ -216,23 +215,20 @@ export function SettingsView({
           <AiSettingsToggles
             autopilot={company.preferences?.autopilot === true}
             aiFirstMode={company.preferences?.ai_first_mode === true}
-            isPro={isPro(company)}
           />
         </div>
 
         {/* Revenue goal */}
-        {isPro(company) && (
-          <div className="py-[26px] border-b border-ud">
-            <div className="mb-[18px]">
-              <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Revenue goal</p>
-              <p className="text-[12px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
-            </div>
-            <MonthlyGoalForm
-              currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
-              currentMonthRevenue={currentMonthRevenue}
-            />
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Revenue goal</p>
+            <p className="text-[12px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
           </div>
-        )}
+          <MonthlyGoalForm
+            currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
+            currentMonthRevenue={currentMonthRevenue}
+          />
+        </div>
 
         {/* Tags */}
         <div className="py-[26px] border-b border-ud">

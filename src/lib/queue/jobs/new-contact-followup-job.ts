@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isPro } from "@/lib/feature-gates";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { runOutreachWorker } from "@/lib/agents/workers/outreach-worker";
 import { createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
@@ -21,7 +20,7 @@ export async function processNewContactFollowupJob(
     .eq("id", data.orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   // Skip if customer already has a follow-up or job history
   const [{ count: followUpCount }, { count: jobCount }] = await Promise.all([

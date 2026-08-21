@@ -7,7 +7,7 @@ import { compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { rateLimit } from "@/lib/rate-limit";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
-import { isPro, isAiAllowed } from "@/lib/feature-gates";
+import { isAiAllowed } from "@/lib/feature-gates";
 import { getOrCreateSession, saveMessages } from "@/features/ai-assistant/queries";
 import type { StoredMessage } from "@/features/ai-assistant/queries";
 import { CHAT_TOOLS } from "@/lib/ai/tools";
@@ -64,13 +64,9 @@ export async function POST(request: Request) {
   }
 
   const { company } = currentCompany;
-  const rateLimit_ = isPro(company as { tier: string }) ? 20 : 5;
 
-  if (!await rateLimit(`ai:${company.id}`, rateLimit_)) {
-    const isStandard = !isPro(company as { tier: string });
-    const msg = isStandard
-      ? "You're sending messages quickly. Wait a moment and try again. Pro accounts have higher limits — upgrade in Settings."
-      : "You're sending messages quickly. Wait a moment and try again.";
+  if (!await rateLimit(`ai:${company.id}`, 20)) {
+    const msg = "You're sending messages quickly. Wait a moment and try again.";
     const enc = new TextEncoder();
     const rl = new ReadableStream({
       start(controller) {
