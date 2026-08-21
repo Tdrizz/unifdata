@@ -70,10 +70,9 @@ type Props = WorkspaceData & {
   companyName: string;
   drafts?: Draft[];
   alerts?: Alert[];
-  isPro?: boolean;
 };
 
-export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false }: Props) {
+export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -188,7 +187,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   return (
     <div className="block md:hidden pb-8">
       {/* Aria briefing card (Pro tier) */}
-      {isPro && (drafts.length + alerts.length > 0) && (
+      {(drafts.length + alerts.length > 0) && (
         <Link
           href="/aria"
           className="mx-4 mt-4 flex items-center justify-between gap-3 rounded-[12px] border border-ud-accent/20 bg-ud-accent/[0.03] px-4 py-3.5 active:opacity-75"

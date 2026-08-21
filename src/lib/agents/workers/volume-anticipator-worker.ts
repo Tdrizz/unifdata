@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { isPro } from "@/lib/feature-gates";
 import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
 import { buildVocabularyBlock } from "@/lib/ai/prompts/shared";
 
@@ -22,7 +21,7 @@ export async function runVolumeAnticipatorWorker(
     .eq("id", orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   // Monthly counts are org-level aggregates; no per-contact filtering needed here.
   // Exclude closed contacts from any future per-contact analysis (unaffected here).

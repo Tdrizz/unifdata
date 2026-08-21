@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isPro } from "@/lib/feature-gates";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { runOutreachWorker } from "@/lib/agents/workers/outreach-worker";
 import { createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
@@ -23,7 +22,7 @@ export async function processPostCompletionOutreachJob(
     .eq("id", data.orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   // Check if a follow-up already exists for this customer
   const { count } = await supabase

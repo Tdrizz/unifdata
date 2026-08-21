@@ -195,30 +195,15 @@ export function SettingsView({
             <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Plan</p>
             <p className="text-[12px] text-ud-muted">Your current subscription and features.</p>
           </div>
-          {company.tier === "pro" ? (
-            <div className="flex items-center justify-between py-3 border border-[rgba(74,63,168,0.18)] rounded-[10px] px-4 bg-[rgba(74,63,168,0.04)]">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-[13px] font-semibold text-ud-ink">Pro</p>
-                  <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-accent text-white">Active</span>
-                </div>
-                <p className="text-[12px] text-ud-muted mt-[1px]">$199/mo · AI inbox, nightly agent pipeline, ROI tracking</p>
+          <div className="flex items-center justify-between py-3 border border-[rgba(74,63,168,0.18)] rounded-[10px] px-4 bg-[rgba(74,63,168,0.04)]">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[13px] font-semibold text-ud-ink">UnifData</p>
+                <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-accent text-white">Active</span>
               </div>
+              <p className="text-[12px] text-ud-muted mt-[1px]">$100/mo · Everything included — Aria, CRM, integrations, and imports</p>
             </div>
-          ) : (
-            <div className="flex items-center justify-between py-3 border border-ud rounded-[10px] px-4 gap-4">
-              <div>
-                <p className="text-[13px] font-semibold text-ud-ink">Standard</p>
-                <p className="text-[12px] text-ud-muted mt-[1px]">$49/mo · CRM, AI chat, integrations</p>
-              </div>
-              <Link
-                href="/api/billing/upgrade"
-                className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity"
-              >
-                Upgrade to Pro →
-              </Link>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* AI settings */}
@@ -230,23 +215,20 @@ export function SettingsView({
           <AiSettingsToggles
             autopilot={company.preferences?.autopilot === true}
             aiFirstMode={company.preferences?.ai_first_mode === true}
-            isPro={company.tier === "pro"}
           />
         </div>
 
         {/* Revenue goal */}
-        {company.tier === "pro" && (
-          <div className="py-[26px] border-b border-ud">
-            <div className="mb-[18px]">
-              <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Revenue goal</p>
-              <p className="text-[12px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
-            </div>
-            <MonthlyGoalForm
-              currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
-              currentMonthRevenue={currentMonthRevenue}
-            />
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Revenue goal</p>
+            <p className="text-[12px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
           </div>
-        )}
+          <MonthlyGoalForm
+            currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
+            currentMonthRevenue={currentMonthRevenue}
+          />
+        </div>
 
         {/* Tags */}
         <div className="py-[26px] border-b border-ud">

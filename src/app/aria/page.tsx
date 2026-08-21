@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { isAiAllowed, isPro } from "@/lib/feature-gates";
+import { isAiAllowed } from "@/lib/feature-gates";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { AiAssistantView } from "@/features/ai-assistant/AiAssistantView";
 import { MobileAiView } from "@/features/ai-assistant/MobileAiView";
@@ -40,7 +40,6 @@ export default async function AriaPage() {
 
   const { company } = currentCompany;
   const aiAllowed = isAiAllowed(company);
-  const isProTier = isPro(company as { tier: string });
   const profile = getIndustryProfile(company.business_sector);
 
   let initialSessionId: string | null = null;
@@ -56,24 +55,20 @@ export default async function AriaPage() {
   }
 
   const [draftsResult, alertsResult] = await Promise.all([
-    isProTier
-      ? supabase
-          .from("agent_drafts")
-          .select("id, draft_type, subject, body, action_label, reasoning, escalation_level")
-          .eq("organization_id", company.id)
-          .eq("status", "pending")
-          .order("created_at", { ascending: false })
-          .limit(10)
-      : Promise.resolve({ data: [] }),
-    isProTier
-      ? supabase
-          .from("agent_alerts")
-          .select("id, alert_type, severity, title, body, reasoning, escalation_level")
-          .eq("organization_id", company.id)
-          .eq("status", "unread")
-          .order("created_at", { ascending: false })
-          .limit(10)
-      : Promise.resolve({ data: [] }),
+    supabase
+      .from("agent_drafts")
+      .select("id, draft_type, subject, body, action_label, reasoning, escalation_level")
+      .eq("organization_id", company.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("agent_alerts")
+      .select("id, alert_type, severity, title, body, reasoning, escalation_level")
+      .eq("organization_id", company.id)
+      .eq("status", "unread")
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   const drafts = (draftsResult.data ?? []) as Draft[];
@@ -103,7 +98,6 @@ export default async function AriaPage() {
               profile={profile}
               drafts={drafts}
               alerts={alerts}
-              isPro={isProTier}
             />
           ) : notAllowedMessage}
         </div>
@@ -114,7 +108,6 @@ export default async function AriaPage() {
               initialSessionId={initialSessionId}
               drafts={drafts}
               alerts={alerts}
-              isPro={isProTier}
             />
           ) : (
             <div className="px-5 py-12 text-center">

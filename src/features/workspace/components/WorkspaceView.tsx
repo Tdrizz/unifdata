@@ -73,10 +73,9 @@ type Props = WorkspaceData & {
   companyName: string;
   drafts?: Draft[];
   alerts?: Alert[];
-  isPro?: boolean;
 };
 
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], isPro = false }: Props) {
+export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -210,7 +209,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
       />
 
       {/* Aria briefing card */}
-      {isPro && (drafts.length + alerts.length > 0) && (
+      {(drafts.length + alerts.length > 0) && (
         <Link
           href="/aria"
           className="flex items-center justify-between gap-4 mb-6 rounded-[12px] border border-ud-accent/20 bg-ud-accent/[0.03] px-5 py-4 hover:bg-ud-accent/[0.06] transition-colors group"
@@ -238,7 +237,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           </span>
         </Link>
       )}
-      {isPro && drafts.length === 0 && alerts.length === 0 && (
+      {drafts.length === 0 && alerts.length === 0 && (
         <div className="flex items-center gap-3 mb-6 rounded-[12px] border border-ud px-5 py-4">
           <div className="w-7 h-7 rounded-full bg-ud-surface-sunk flex items-center justify-center shrink-0">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-faint">

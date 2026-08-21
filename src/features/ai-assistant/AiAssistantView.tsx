@@ -98,10 +98,9 @@ type Props = {
   profile?: IndustryProfile;
   drafts?: Draft[];
   alerts?: Alert[];
-  isPro?: boolean;
 };
 
-export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile, drafts = [], alerts = [], isPro = false }: Props) {
+export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile, drafts = [], alerts = [] }: Props) {
   const customerPlural = profile?.labels.customerPlural ?? "clients";
   const jobPlural = profile?.labels.jobPlural ?? "jobs";
   const starterQuestions = [
@@ -113,7 +112,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
   const [messages, setMessages] = useState<Message[]>(() => {
     if (initialMessages.length > 0) return initialMessages;
     const total = drafts.length + alerts.length;
-    if (total === 0 || !isPro) return [];
+    if (total === 0) return [];
     return [{
       role: "model" as const,
       text: `Good ${getTimeOfDay()}. I reviewed your business overnight and found ${total === 1 ? "1 thing" : `${total} things`} that need your attention. Take a look below — tap any action to handle it, or ask me anything.`,
@@ -336,7 +335,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
             <div ref={chatBottomRef} />
           </div>
 
-          {isPro && (draftList.length > 0 || alertList.length > 0) && (
+          {(draftList.length > 0 || alertList.length > 0) && (
             <div className="px-5 pb-4 space-y-2.5">
               {draftList.map((draft) => (
                 <AriaDraftCard

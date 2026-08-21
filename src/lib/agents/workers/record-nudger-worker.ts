@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { isPro } from "@/lib/feature-gates";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince } from "@/lib/agents/memory";
 import {
   buildRecordNudgerPrompt,
@@ -33,7 +32,7 @@ export async function runRecordNudgerWorker(
     .eq("id", orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);

@@ -1,5 +1,4 @@
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
-import { isPro } from "@/lib/feature-gates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendWeeklySummary(
@@ -14,7 +13,7 @@ export async function sendWeeklySummary(
     .eq("id", orgId)
     .single();
 
-  if (!company || !isPro(company as { tier: string })) return;
+  if (!company) return;
 
   const now = new Date();
   const startOfThisWeek = new Date(now);
