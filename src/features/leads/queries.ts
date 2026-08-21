@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeSearchTerm } from "@/lib/search";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import type { LeadRow, CustomerRow } from "./types";
 
 type LeadsPageOpts = { q?: string; page?: number; pageSize?: number };
@@ -57,11 +58,14 @@ export async function getCustomersForLeadSelect(
   companyId: string,
 ) {
   const { data } = await supabase
-    .from("customers")
-    .select("id, name, email, phone")
-    .eq("company_id", companyId)
-    .order("name", { ascending: true })
+    .from("master_customers")
+    .select(MASTER_LEGACY_SELECT)
+    .eq("organization_id", companyId)
+    .order("first_name", { ascending: true })
     .limit(500);
 
-  return (data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  return ((data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape) as Pick<
+    CustomerRow,
+    "id" | "name" | "email" | "phone"
+  >[];
 }

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow, ProposalRow, AuditLogRow } from "./types";
 
 type DataHubCustomer = Pick<CustomerRow, "id" | "name" | "phone" | "email" | "address" | "customer_type" | "created_at">;
@@ -28,9 +29,9 @@ export async function getDataHubPageData(
     followUpsResult,
   ] = await Promise.all([
     supabase
-      .from("customers")
-      .select("id, name, phone, email, address, customer_type, created_at")
-      .eq("company_id", companyId)
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
 
@@ -70,7 +71,7 @@ export async function getDataHubPageData(
   ]);
 
   return {
-    customers: (customersResult.data ?? []) as DataHubCustomer[],
+    customers: ((customersResult.data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape) as unknown as DataHubCustomer[],
     opportunities: (opportunitiesResult.data ?? []) as DataHubLead[],
     workRecords: (workResult.data ?? []) as DataHubJob[],
     revenueRecords: (revenueResult.data ?? []) as DataHubSale[],

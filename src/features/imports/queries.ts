@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import type {
   CustomerRow,
   SyncConnectionRow,
@@ -84,9 +85,9 @@ export async function getImportsPageData(
     integrationsResult,
   ] = await Promise.all([
     supabase
-      .from("customers")
-      .select("id, name, phone, email, address, customer_type, created_at")
-      .eq("company_id", companyId)
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
 
@@ -134,7 +135,7 @@ export async function getImportsPageData(
   ]);
 
   return {
-    customers: (customersResult.data ?? []) as ImportsCustomer[],
+    customers: ((customersResult.data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape) as unknown as ImportsCustomer[],
     syncConnections: (syncConnectionsResult.data ?? []) as ImportsSyncConnection[],
     syncRuns: (syncRunsResult.data ?? []) as ImportsSyncRun[],
     importSessions: (importSessionsResult.data ?? []) as ImportsImportSession[],

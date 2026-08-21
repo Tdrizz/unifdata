@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
-import { syncEmbedding } from "@/lib/embeddings/sync";
-import { buildCustomerText } from "@/lib/embeddings/generate";
 import { triggerAutomations } from "@/lib/automations/evaluator";
 import type { Json } from "@/types/db";
 
@@ -89,32 +87,6 @@ export async function updateContactAction(
     }
   }
 
-  // Mirror to the legacy customers row — non-fatal, master is authoritative.
-  if (existing.legacy_customer_id) {
-    const { error: legacyError } = await supabase
-      .from("customers")
-      .update({
-        name,
-        phone,
-        email: email || null,
-        address,
-        customer_type: customerType,
-        notes,
-      })
-      .eq("id", existing.legacy_customer_id)
-      .eq("company_id", company.id);
-    if (legacyError) {
-      console.error("[contacts] legacy customers mirror failed", { id, error: legacyError.message });
-    } else {
-      syncEmbedding(
-        "customers",
-        existing.legacy_customer_id,
-        buildCustomerText({ name, customer_type: customerType, address, notes }),
-        company.id,
-      );
-    }
-  }
-
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
   revalidatePath(`/customers/${id}/edit`);
@@ -144,17 +116,6 @@ export async function deleteContactAction(id: string) {
     .eq("organization_id", company.id);
 
   if (error) redirect(`/customers/${id}/edit?error=${encodeURIComponent(error.message)}`);
-
-  if (existing.legacy_customer_id) {
-    const { error: legacyError } = await supabase
-      .from("customers")
-      .delete()
-      .eq("id", existing.legacy_customer_id)
-      .eq("company_id", company.id);
-    if (legacyError) {
-      console.error("[contacts] legacy customers delete failed", { id, error: legacyError.message });
-    }
-  }
 
   revalidatePath("/customers");
   revalidatePath("/workspace");

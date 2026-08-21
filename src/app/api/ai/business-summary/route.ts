@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getTodayString } from "@/lib/date-format";
 import { formatCurrency, compactText } from "@/lib/utils";
@@ -89,9 +90,9 @@ export async function POST() {
     followUpsResult,
   ] = await Promise.all([
     supabase
-      .from("customers")
-      .select("id, name, phone, email, address, customer_type, created_at")
-      .eq("company_id", company.id)
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", company.id)
       .order("created_at", { ascending: false })
       .limit(750),
 
@@ -165,7 +166,7 @@ export async function POST() {
     );
   }
 
-  const customers = customersResult.data || [];
+  const customers = ((customersResult.data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape);
   const leads = leadsResult.data || [];
   const jobs = jobsResult.data || [];
   const sales = salesResult.data || [];

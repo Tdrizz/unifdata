@@ -41,16 +41,8 @@ export async function revertImportSession(sessionId: string) {
 
     for (const [table, ids] of Object.entries(byTable)) {
       let deleteError: { message: string } | null = null;
-      if (table === "customers") {
-        // Remove the mirrored master_customers rows first so the revert
-        // doesn't orphan them (master rows reference legacy ids).
-        const { error: masterError } = await supabase
-          .from("master_customers")
-          .delete()
-          .in("legacy_customer_id", ids)
-          .eq("organization_id", company.id);
-        if (masterError) throw new Error(`Failed to delete contacts: ${masterError.message}`);
-        ({ error: deleteError } = await supabase.from("customers").delete().in("id", ids).eq("company_id", company.id));
+      if (table === "master_customers") {
+        ({ error: deleteError } = await supabase.from("master_customers").delete().in("id", ids).eq("organization_id", company.id));
       } else if (table === "leads") {
         ({ error: deleteError } = await supabase.from("leads").delete().in("id", ids).eq("company_id", company.id));
       } else if (table === "jobs") {

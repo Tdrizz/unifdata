@@ -38,9 +38,9 @@ export async function runVolumeAnticipatorWorker(
       .eq("company_id", orgId)
       .gte("created_at", sixMonthsAgoStr),
     supabase
-      .from("customers")
+      .from("master_customers")
       .select("created_at")
-      .eq("company_id", orgId)
+      .eq("organization_id", orgId)
       .gte("created_at", sixMonthsAgoStr),
   ]);
 

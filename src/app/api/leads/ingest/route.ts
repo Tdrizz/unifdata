@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { splitName } from "@/lib/crm/legacy-shape";
 
 export async function POST(req: NextRequest) {
   const rawKey = req.headers.get("x-api-key");
@@ -48,55 +49,58 @@ export async function POST(req: NextRequest) {
     .eq("id", keyId)
     .then(() => {});
 
-  let customerId: string | null = null;
+  let contactId: string | null = null;
 
   if (email) {
     const { data: existing } = await supabase
-      .from("customers")
+      .from("master_customers")
       .select("id")
-      .eq("company_id", company_id)
-      .eq("email", email)
+      .eq("organization_id", company_id)
+      .eq("primary_email", email)
       .maybeSingle();
 
-    if (existing) customerId = existing.id as string;
+    if (existing) contactId = existing.id as string;
   } else if (phone) {
     const { data: existing } = await supabase
-      .from("customers")
+      .from("master_customers")
       .select("id")
-      .eq("company_id", company_id)
-      .eq("phone", phone)
+      .eq("organization_id", company_id)
+      .eq("primary_phone", phone)
       .maybeSingle();
 
-    if (existing) customerId = existing.id as string;
+    if (existing) contactId = existing.id as string;
   }
 
-  if (!customerId) {
+  if (!contactId) {
+    const { first_name, last_name } = splitName(name);
     const { data: newCustomer, error: customerError } = await supabase
-      .from("customers")
+      .from("master_customers")
       .insert({
-        company_id,
-        name,
-        email: email || null,
-        phone: phone || null,
-        address: address || null,
-        customer_type: "Lead",
+        organization_id: company_id,
+        first_name,
+        last_name,
+        primary_email: email || null,
+        primary_phone: phone || null,
+        billing_address: address ? { line1: address } : null,
+        relationship_status: "new",
+        source: "api",
       })
       .select("id")
       .single();
 
     if (customerError || !newCustomer) {
-      console.error("Failed to create customer:", customerError);
-      return NextResponse.json({ error: "Failed to create customer" }, { status: 500 });
+      console.error("Failed to create contact:", customerError);
+      return NextResponse.json({ error: "Failed to create contact" }, { status: 500 });
     }
 
-    customerId = (newCustomer as { id: string }).id;
+    contactId = (newCustomer as { id: string }).id;
   }
 
   const { data: lead, error: leadError } = await supabase
     .from("leads")
     .insert({
       company_id,
-      customer_id: customerId,
+      contact_id: contactId,
       service_requested,
       source,
       status: "New",
@@ -113,6 +117,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success: true,
     lead_id: (lead as { id: string }).id,
-    customer_id: customerId,
+    contact_id: contactId,
   });
 }

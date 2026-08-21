@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import type { LeadRow, CustomerRow } from "./types";
 
 export type CRMLeadRow = Pick<
@@ -27,15 +28,15 @@ export async function getCRMPageData(
       .limit(500),
 
     supabase
-      .from("customers")
-      .select("id, name, email, phone")
-      .eq("company_id", companyId)
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
   ]);
 
   return {
     leads: (leadsResult.data ?? []) as CRMLeadRow[],
-    customers: (customersResult.data ?? []) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[],
+    customers: ((customersResult.data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape) as Pick<CustomerRow, "id" | "name" | "email" | "phone">[],
   };
 }

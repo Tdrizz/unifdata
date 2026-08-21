@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { syncLegacyCustomer } from "@/lib/crm/legacy-sync";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -191,8 +190,6 @@ export async function upsertMasterCustomer({
     .eq("id", existingRow.id);
 
   if (error) throw new Error(`master_customers update failed: ${error.message}`);
-
-  await syncLegacyCustomer(supabase, existingRow.id);
 
   return { id: existingRow.id, syncToken, wasCreated: false };
 }
