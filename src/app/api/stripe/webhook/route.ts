@@ -8,9 +8,13 @@ import type { Json } from "@/types/db";
 
 export const runtime = "nodejs";
 
+// `past_due` is treated as active so a failed-payment dunning window keeps
+// access (grace period) — revocation happens only on final dunning failure
+// (handlePaymentFailed) or on cancellation (status leaves this set).
 const ACTIVE_SUBSCRIPTION_STATUSES: Stripe.Subscription.Status[] = [
   "active",
   "trialing",
+  "past_due",
 ];
 
 function getClerkUserId(subscription: Stripe.Subscription) {
@@ -25,6 +29,33 @@ async function markSubscribed(clerkUserId: string, subscribed: boolean) {
   await client.users.updateUserMetadata(clerkUserId, {
     publicMetadata: { subscribed },
   });
+}
+
+// Mirror the live subscription state onto the owner's company, so access reflects
+// the company's billing state for EVERY member — not just the paying owner. This
+// is what stops an invited member from keeping access after the owner cancels.
+async function markCompanySubscribed(clerkUserId: string, active: boolean) {
+  const supabase = createAdminClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("clerk_user_id", clerkUserId)
+    .maybeSingle();
+  if (!profile) return;
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", profile.id)
+    .eq("role", "owner")
+    .limit(1)
+    .maybeSingle();
+  if (!membership) return;
+
+  await supabase
+    .from("companies")
+    .update({ subscription_active: active })
+    .eq("id", membership.company_id);
 }
 
 // Resolve a Clerk user from a Stripe customer id via the persisted profile
@@ -61,10 +92,9 @@ async function handleSubscription(subscription: Stripe.Subscription) {
       .eq("clerk_user_id", clerkUserId);
   }
 
-  await markSubscribed(
-    clerkUserId,
-    ACTIVE_SUBSCRIPTION_STATUSES.includes(subscription.status),
-  );
+  const active = ACTIVE_SUBSCRIPTION_STATUSES.includes(subscription.status);
+  await markSubscribed(clerkUserId, active);
+  await markCompanySubscribed(clerkUserId, active);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -82,6 +112,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const finalAttempt = invoice.next_payment_attempt == null;
   if (finalAttempt) {
     await markSubscribed(clerkUserId, false);
+    await markCompanySubscribed(clerkUserId, false);
   }
 
   // Surface the failure to the owner's workspace notification bell.
@@ -123,6 +154,7 @@ async function processEvent(event: Stripe.Event) {
 
       if (clerkUserId && session.mode === "subscription") {
         await markSubscribed(clerkUserId, true);
+        await markCompanySubscribed(clerkUserId, true);
       }
       return;
     }

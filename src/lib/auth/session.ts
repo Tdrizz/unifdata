@@ -192,6 +192,19 @@ export async function requireSubscription() {
     if (!membership || membership.role === "owner") {
       redirect("/subscribe");
     }
+
+    // Invited member: access must track the COMPANY's live subscription, not
+    // just the paying owner's flag. Otherwise a member keeps access forever
+    // after the owner cancels. The Stripe webhook maintains subscription_active.
+    const { data: company } = await supabase
+      .from("companies")
+      .select("subscription_active")
+      .eq("id", membership.company_id)
+      .maybeSingle();
+
+    if (!company?.subscription_active) {
+      redirect("/subscribe");
+    }
   }
 
   return user;

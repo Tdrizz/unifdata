@@ -35,7 +35,7 @@ export async function createCompanyStepAction(
 
   const { data: company, error: companyError } = await supabase
     .from("companies")
-    .insert({ name: companyName, industry: industry || null, business_sector: businessSector || "general" })
+    .insert({ name: companyName, industry: industry || null, business_sector: businessSector || "general", subscription_active: true })
     .select("id")
     .single();
   if (companyError) return { error: companyError.message };
@@ -256,6 +256,7 @@ export async function createCompanyAction(
       name: companyName,
       industry: industry || null,
       business_sector: businessSector || "general",
+      subscription_active: true,
     })
     .select("id")
     .single();
