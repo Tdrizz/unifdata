@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateQuickBooksSignature } from "@/lib/webhook-validation";
-import { getAutomationQueue, JOB_OVERDUE_INVOICE } from "@/lib/queue/client";
+import { JOB_OVERDUE_INVOICE } from "@/lib/queue/client";
+import { enqueueAutomationJob } from "@/lib/queue/enqueue";
 import type { OverdueInvoiceJobData } from "@/lib/queue/jobs/overdue-invoice";
 import { QuickBooksWebhookSchema } from "@/lib/webhook-schemas";
 
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
-  const queue = getAutomationQueue();
+  let enqueued = true;
 
   for (const notification of payload.eventNotifications ?? []) {
     const realmId = notification.realmId;
@@ -109,12 +110,19 @@ export async function POST(request: Request) {
       };
 
       // Delay 24 hours before the SMS fires — gives the customer time to pay.
-      await queue.add(JOB_OVERDUE_INVOICE, jobData, { delay: DAY_MS });
+      const ok = await enqueueAutomationJob(
+        JOB_OVERDUE_INVOICE,
+        jobData,
+        { delay: DAY_MS },
+        { org: companyId, detail: { event: "overdue_invoice", invoiceId: entity.id } },
+      );
+      if (!ok) enqueued = false;
 
       console.info("[quickbooks.webhook] Enqueued overdue-invoice job", {
         invoiceId: entity.id,
         companyId,
         delay: "24h",
+        enqueued: ok,
       });
 
       // ROI detection: check if a prior approved agent_draft for this sale triggered payment
@@ -138,6 +146,12 @@ export async function POST(request: Request) {
         });
       }
     }
+  }
+
+  // 503 (not 200) on a dropped enqueue so QuickBooks retries the notification;
+  // Sentry has already captured the reason.
+  if (!enqueued) {
+    return NextResponse.json({ received: true, queued: false }, { status: 503 });
   }
 
   return NextResponse.json({ received: true });

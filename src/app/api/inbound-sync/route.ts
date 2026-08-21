@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { safeSecretEqual } from "@/lib/security/secret";
 import { redis } from "@/lib/redis";
 import { rateLimit } from "@/lib/rate-limit";
 import { normalizePhone, normalizeEmail } from "@/lib/normalize";
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Endpoint not configured" }, { status: 503 });
   }
   const provided = req.headers.get("x-sync-secret");
-  if (provided !== secret) {
+  if (!safeSecretEqual(provided, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

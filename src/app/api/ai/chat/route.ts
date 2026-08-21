@@ -413,7 +413,7 @@ export async function POST(request: Request) {
         ];
         const isFirstMessage = session.messages.length === 0;
         const title = isFirstMessage ? userText.slice(0, 60) : undefined;
-        await saveMessages(supabase, session.id, updatedMessages, title);
+        await saveMessages(supabase, session.id, company.id, updatedMessages, title);
 
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ event: "session", sessionId: session.id })}\n\n`),

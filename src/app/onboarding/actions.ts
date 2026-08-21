@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireSubscription } from "@/lib/auth/requireSubscription";
 import { redirect } from "next/navigation";
 import { getIndustryProfile } from "@/lib/industry-profiles";
+import { isCompanyMember, verifyOwned } from "@/lib/security/ownership";
 
 export async function createCompanyStepAction(
   formData: FormData,
@@ -97,9 +98,22 @@ export async function createWizardCustomersAction(
   customers: Array<{ name: string; phone?: string; email?: string }>,
   companyId: string,
 ): Promise<{ created: Array<{ id: string; name: string }>; error?: string }> {
+  let user;
+  try {
+    user = await requireSubscription();
+  } catch {
+    return { created: [], error: "Session expired. Please sign in again." };
+  }
   if (!customers.length) return { created: [] };
 
   const supabase = await createClient();
+
+  // The company id arrives from the client — verify the caller is a member
+  // before writing into it (service role bypasses RLS).
+  if (!(await isCompanyMember(supabase, companyId, user.profileId))) {
+    return { created: [], error: "You don't have access to this workspace." };
+  }
+
   const rows = customers
     .map((c) => ({
       company_id: companyId,
@@ -140,9 +154,23 @@ export async function createWizardJobAction(
   data: { service_type: string; start_date?: string; customer_id?: string },
   companyId: string,
 ): Promise<{ error?: string }> {
+  let user;
+  try {
+    user = await requireSubscription();
+  } catch {
+    return { error: "Session expired. Please sign in again." };
+  }
   if (!data.service_type.trim()) return { error: "Service type is required." };
 
   const supabase = await createClient();
+
+  if (!(await isCompanyMember(supabase, companyId, user.profileId))) {
+    return { error: "You don't have access to this workspace." };
+  }
+  if (data.customer_id && !(await verifyOwned(supabase, "customers", data.customer_id, companyId))) {
+    return { error: "Invalid customer." };
+  }
+
   const { error } = await supabase.from("jobs").insert({
     company_id: companyId,
     service_type: data.service_type.trim(),
@@ -159,10 +187,24 @@ export async function createWizardFollowUpAction(
   data: { message: string; due_date: string; customer_id?: string },
   companyId: string,
 ): Promise<{ error?: string }> {
+  let user;
+  try {
+    user = await requireSubscription();
+  } catch {
+    return { error: "Session expired. Please sign in again." };
+  }
   if (!data.message.trim()) return { error: "Note is required." };
   if (!data.due_date) return { error: "Due date is required." };
 
   const supabase = await createClient();
+
+  if (!(await isCompanyMember(supabase, companyId, user.profileId))) {
+    return { error: "You don't have access to this workspace." };
+  }
+  if (data.customer_id && !(await verifyOwned(supabase, "customers", data.customer_id, companyId))) {
+    return { error: "Invalid customer." };
+  }
+
   const { error } = await supabase.from("follow_ups").insert({
     company_id: companyId,
     message: data.message.trim(),

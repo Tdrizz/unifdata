@@ -1,4 +1,6 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getAutomationQueue,
@@ -29,11 +31,15 @@ export async function GET(request: Request) {
   if (!cronSecret) {
     return NextResponse.json({ error: "CRON_SECRET not configured." }, { status: 500 });
   }
-  if (request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(request.headers.get("authorization"), cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   if (!isRedisConfigured()) {
+    Sentry.captureMessage(
+      "cron.event-check skipped — REDIS_URL not configured; event-driven agents are not running",
+      { level: "error", tags: { cron: "event-check", phase: "redis_gate" } },
+    );
     return NextResponse.json(
       { ok: false, error: "REDIS_URL is not configured — queue processing skipped." },
       { status: 503 },
@@ -105,6 +111,7 @@ export async function GET(request: Request) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    Sentry.captureException(err, { tags: { cron: "event-check", phase: "run" } });
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

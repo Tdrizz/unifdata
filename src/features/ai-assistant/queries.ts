@@ -31,20 +31,24 @@ export async function getOrCreateSession(
 export async function saveMessages(
   supabase: SupabaseClient,
   sessionId: string,
+  orgId: string,
   messages: StoredMessage[],
   title?: string,
 ): Promise<void> {
   const update: Record<string, unknown> = { messages, updated_at: new Date().toISOString() };
   if (title) update.title = title;
-  await supabase.from("chat_sessions").update(update).eq("id", sessionId);
+  // Scope by org — service role bypasses RLS, so an id alone is not a boundary.
+  await supabase.from("chat_sessions").update(update).eq("id", sessionId).eq("organization_id", orgId);
 }
 
 export async function clearSession(
   supabase: SupabaseClient,
   sessionId: string,
+  orgId: string,
 ): Promise<void> {
   await supabase
     .from("chat_sessions")
     .update({ messages: [], title: null, updated_at: new Date().toISOString() })
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .eq("organization_id", orgId);
 }

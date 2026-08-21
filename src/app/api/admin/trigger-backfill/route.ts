@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getDataKeeperQueue, isRedisConfigured, JOB_EMBEDDING_BACKFILL, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import type { EmbeddingBackfillJobData } from "@/lib/queue/jobs/embedding-backfill-job";
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    if (!verifyBearer(authHeader, cronSecret)) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
+import { verifyOwned } from "@/lib/security/ownership";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -31,6 +32,10 @@ export async function createLeadAction(
 
   if (estimatedValue !== null && estimatedValue < 0) {
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
+  }
+
+  if (customerId && !(await verifyOwned(supabase, "customers", customerId, company.id))) {
+    return { fieldErrors: { customer_id: "Selected customer isn't in your workspace." } };
   }
 
   let contactId: string | null = null;
@@ -88,6 +93,10 @@ export async function updateLeadAction(
 
   if (estimatedValue !== null && estimatedValue < 0) {
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
+  }
+
+  if (customerId && !(await verifyOwned(supabase, "customers", customerId, company.id))) {
+    return { fieldErrors: { customer_id: "Selected customer isn't in your workspace." } };
   }
 
   let contactId: string | null = null;

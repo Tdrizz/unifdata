@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { sanitizeSearchTerm } from "@/lib/search";
 import { AppShell } from "@/components/AppShell";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { ContactsTableClient } from "@/features/contacts/components/ContactsTableClient";
@@ -81,8 +82,9 @@ export default async function CustomersPage({
     .range(from, to);
 
   if (params.q) {
+    const term = sanitizeSearchTerm(params.q);
     query = query.or(
-      `first_name.ilike.%${params.q}%,last_name.ilike.%${params.q}%,primary_email.ilike.%${params.q}%,primary_phone.ilike.%${params.q}%`
+      `first_name.ilike.%${term}%,last_name.ilike.%${term}%,primary_email.ilike.%${term}%,primary_phone.ilike.%${term}%`
     );
   }
 

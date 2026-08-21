@@ -7,6 +7,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { logActivity } from "@/lib/crm/activity";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
+import { verifyOwned } from "@/lib/security/ownership";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildJobText } from "@/lib/embeddings/generate";
 
@@ -36,6 +37,10 @@ export async function createJobAction(
 
   if (jobValue !== null && jobValue < 0) {
     return { fieldErrors: { job_value: "Must be a positive number." } };
+  }
+
+  if (leadId && !(await verifyOwned(supabase, "leads", leadId, company.id))) {
+    return { fieldErrors: { lead_id: "Selected opportunity isn't in your workspace." } };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,6 +115,10 @@ export async function updateJobAction(
 
   if (jobValue !== null && jobValue < 0) {
     return { fieldErrors: { job_value: "Must be a positive number." } };
+  }
+
+  if (leadId && !(await verifyOwned(supabase, "leads", leadId, company.id))) {
+    return { fieldErrors: { lead_id: "Selected opportunity isn't in your workspace." } };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

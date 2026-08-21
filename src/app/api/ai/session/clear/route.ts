@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  await clearSession(supabase, body.sessionId);
+  await clearSession(supabase, body.sessionId, currentCompany.company.id);
 
   return NextResponse.json({ ok: true });
 }

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sanitizeSearchTerm } from "@/lib/search";
 import type { LeadRow, CustomerRow } from "./types";
 
 type LeadsPageOpts = { q?: string; page?: number; pageSize?: number };
@@ -22,8 +23,9 @@ export async function getLeadsPageData(
     .order("created_at", { ascending: false });
 
   if (q) {
+    const term = sanitizeSearchTerm(q);
     query = query.or(
-      `service_requested.ilike.%${q}%,source.ilike.%${q}%,status.ilike.%${q}%`,
+      `service_requested.ilike.%${term}%,source.ilike.%${term}%,status.ilike.%${term}%`,
     );
   }
 

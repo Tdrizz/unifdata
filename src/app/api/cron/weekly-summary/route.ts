@@ -1,4 +1,6 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWeeklySummary } from "@/lib/agents/weekly-summary";
 
@@ -12,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
@@ -59,6 +61,7 @@ export async function GET(request: Request) {
       sent++;
     } catch (err) {
       errors.push(`${org.id}: ${err instanceof Error ? err.message : String(err)}`);
+      Sentry.captureException(err, { tags: { cron: "weekly-summary", phase: "send" }, extra: { org: org.id } });
     }
   }
 

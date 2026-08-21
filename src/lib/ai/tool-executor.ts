@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { verifyOwned } from "@/lib/security/ownership";
 
 // Per-tool Zod schemas — validates before any DB write
 
@@ -45,6 +46,9 @@ export async function executeTool(
     switch (name) {
       case "create_followup": {
         const data = CreateFollowupSchema.parse(args);
+        if (!(await verifyOwned(supabase, "customers", data.customer_id, orgId))) {
+          return { success: false, message: "That customer isn't in your workspace." };
+        }
         const { error } = await supabase.from("follow_ups").insert({
           company_id: orgId,
           customer_id: data.customer_id,
@@ -101,6 +105,9 @@ export async function executeTool(
 
       case "log_sale": {
         const data = LogSaleSchema.parse(args);
+        if (!(await verifyOwned(supabase, "customers", data.customer_id, orgId))) {
+          return { success: false, message: "That customer isn't in your workspace." };
+        }
         const { error } = await supabase.from("sales").insert({
           company_id: orgId,
           customer_id: data.customer_id,

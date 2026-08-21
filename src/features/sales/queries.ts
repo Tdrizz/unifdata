@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sanitizeSearchTerm } from "@/lib/search";
 import type { SaleRow, JobRow } from "./types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
@@ -19,7 +20,10 @@ export async function getSalesPageData(
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
-  if (q) query = query.or(`service_type.ilike.%${q}%,source.ilike.%${q}%,payment_status.ilike.%${q}%`);
+  if (q) {
+    const term = sanitizeSearchTerm(q);
+    query = query.or(`service_type.ilike.%${term}%,source.ilike.%${term}%,payment_status.ilike.%${term}%`);
+  }
 
   const { data, count } = await query.range(from, to);
   return { sales: (data ?? []) as unknown as SaleRow[], count: count ?? 0 };
