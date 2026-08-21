@@ -33,8 +33,7 @@ export async function GET(request: Request) {
         )
       )
     `,
-    )
-    .eq("tier", "pro");
+    ); // tiers collapsed — weekly summary runs for every company
 
   if (!proOrgs || proOrgs.length === 0) {
     return NextResponse.json({ ok: true, sent: 0 });

@@ -83,8 +83,7 @@ export async function GET(request: Request) {
     const supabase = createAdminClient();
     const { data: proOrgs } = await supabase
       .from("companies")
-      .select("id")
-      .eq("tier", "pro");
+      .select("id"); // tiers collapsed — Aria runs for every company
 
     if (proOrgs && proOrgs.length > 0) {
       const automationQueue = getAutomationQueue();
