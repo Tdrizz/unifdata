@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sanitizeSearchTerm } from "@/lib/search";
 import type { JobListRow, LeadRow } from "./types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
@@ -23,8 +24,9 @@ export async function getJobsPageData(
     .order("created_at", { ascending: false });
 
   if (q) {
+    const term = sanitizeSearchTerm(q);
     query = query.or(
-      `service_type.ilike.%${q}%,status.ilike.%${q}%,paid_status.ilike.%${q}%`,
+      `service_type.ilike.%${term}%,status.ilike.%${term}%,paid_status.ilike.%${term}%`,
     );
   }
 

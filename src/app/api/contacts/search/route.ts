@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { sanitizeSearchTerm } from "@/lib/search";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,12 +17,13 @@ export async function GET(request: Request) {
 
   const { company } = currentCompany;
 
+  const term = sanitizeSearchTerm(q);
   const { data } = await supabase
     .from("master_customers")
     .select("id, first_name, last_name, primary_email, primary_phone")
     .eq("organization_id", company.id)
     .or(
-      `first_name.ilike.%${q}%,last_name.ilike.%${q}%,primary_email.ilike.%${q}%,primary_phone.ilike.%${q}%`,
+      `first_name.ilike.%${term}%,last_name.ilike.%${term}%,primary_email.ilike.%${term}%,primary_phone.ilike.%${term}%`,
     )
     .order("first_name", { ascending: true })
     .limit(10);

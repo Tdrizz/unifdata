@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
     );
   }
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

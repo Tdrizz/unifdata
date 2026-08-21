@@ -97,18 +97,9 @@ export async function POST(request: Request) {
     .contains("metadata", { account_id: accountId })
     .maybeSingle();
 
-  // Fall back: find the first active Jobber integration if account_id isn't stored.
-  const { data: fallbackIntegration } = !integration
-    ? await supabase
-        .from("integrations")
-        .select("company_id")
-        .eq("provider", "jobber")
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle()
-    : { data: null };
-
-  const companyId = (integration ?? fallbackIntegration)?.company_id as string | undefined;
+  // Strict match only: never fall back to "first active integration", which would
+  // misattribute a webhook to an arbitrary tenant when account_id isn't matched.
+  const companyId = integration?.company_id as string | undefined;
   if (!companyId) {
     console.warn("[jobber.webhook] No matching Jobber integration found", { accountId });
     return NextResponse.json({ received: true });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 
 export function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -7,7 +8,7 @@ export function GET(request: Request) {
   }
 
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(authHeader, cronSecret)) {
     return new NextResponse("Unauthorized.", { status: 401 });
   }
 

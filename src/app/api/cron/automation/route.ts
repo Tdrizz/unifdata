@@ -1,6 +1,7 @@
 import type { Worker } from "bullmq";
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } from "@/lib/queue/worker";
 import { getSweeperQueue, getAutomationQueue, isRedisConfigured, JOB_SWEEP_BATCH, JOB_RUN_NIGHTLY_COORDINATOR, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
 import { getOrgsWithPendingSweep } from "@/lib/data-keeper/sweeper";
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
   }
 
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

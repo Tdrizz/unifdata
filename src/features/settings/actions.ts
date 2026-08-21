@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany, getCurrentCompanyId, getCurrentUserRole } from "@/lib/current-company";
+import { verifyOwned } from "@/lib/security/ownership";
 import { industryProfiles } from "@/lib/industry-profiles";
 
 const validBusinessSectors = new Set(Object.keys(industryProfiles));
@@ -659,10 +660,17 @@ export async function createStageAction(
   const currentCompany = await getCurrentCompany();
   if (!currentCompany || currentCompany.company.id !== orgId) return { error: "Unauthorized" };
 
+  // The board id is client-supplied — confirm it belongs to this org before
+  // attaching a stage to it (service role bypasses RLS).
+  if (!(await verifyOwned(supabase, "process_boards", boardId, orgId, "organization_id"))) {
+    return { error: "Board not found" };
+  }
+
   const { data: existingStages } = await supabase
     .from("board_stages")
     .select("id, stage_type, position")
     .eq("board_id", boardId)
+    .eq("organization_id", orgId)
     .order("position", { ascending: false });
 
   const stages = (existingStages ?? []) as Array<{ id: string; stage_type: string; position: number }>;

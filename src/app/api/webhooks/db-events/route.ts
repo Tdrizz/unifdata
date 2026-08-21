@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safeSecretEqual } from "@/lib/security/secret";
 import {
   JOB_POST_COMPLETION_OUTREACH,
   JOB_NEW_CONTACT_FOLLOWUP,
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   const headerSecret = request.headers.get("x-webhook-secret");
-  if (headerSecret !== secret) {
+  if (!safeSecretEqual(headerSecret, secret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

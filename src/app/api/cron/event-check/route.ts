@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getAutomationQueue,
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   if (!cronSecret) {
     return NextResponse.json({ error: "CRON_SECRET not configured." }, { status: 500 });
   }
-  if (request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(request.headers.get("authorization"), cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

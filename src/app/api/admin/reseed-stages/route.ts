@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
+import { verifyBearer } from "@/lib/security/secret";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
   }
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  if (!verifyBearer(authHeader, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
