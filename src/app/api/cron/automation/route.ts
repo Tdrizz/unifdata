@@ -1,4 +1,5 @@
 import type { Worker } from "bullmq";
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { createAutomationWorker, createDataKeeperWorker, createSweeperWorker } from "@/lib/queue/worker";
 import { getSweeperQueue, getAutomationQueue, isRedisConfigured, JOB_SWEEP_BATCH, JOB_RUN_NIGHTLY_COORDINATOR, DEFAULT_JOB_OPTIONS } from "@/lib/queue/client";
@@ -48,9 +49,16 @@ export async function GET(request: Request) {
     daysInactiveFired = await evaluateDaysInactiveAutomations(createAdminClient());
   } catch (err) {
     console.warn("[cron.automation] days_inactive evaluation failed:", err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { cron: "automation", phase: "days_inactive" } });
   }
 
   if (!isRedisConfigured()) {
+    // Loud: every queued automation (invoice nudges, follow-ups, nightly briefs)
+    // is skipped until REDIS_URL is set. Surface it instead of a silent 503.
+    Sentry.captureMessage(
+      "cron.automation skipped — REDIS_URL not configured; queued automations are not running",
+      { level: "error", tags: { cron: "automation", phase: "redis_gate" } },
+    );
     return NextResponse.json(
       { ok: false, daysInactiveFired, error: "REDIS_URL is not configured — queue processing skipped." },
       { status: 503 },
@@ -76,6 +84,7 @@ export async function GET(request: Request) {
   } catch (err) {
     // Non-fatal: log and continue — the automation workers must still run
     console.warn("[cron.automation] Failed to schedule sweeper batches:", err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { cron: "automation", phase: "schedule_sweeper" } });
   }
 
   // Schedule nightly coordinator jobs for Pro orgs
@@ -100,6 +109,7 @@ export async function GET(request: Request) {
     }
   } catch (err) {
     console.warn("[cron.automation] Failed to schedule nightly coordinator jobs:", err instanceof Error ? err.message : err);
+    Sentry.captureException(err, { tags: { cron: "automation", phase: "schedule_coordinator" } });
   }
 
   const worker = createAutomationWorker();
@@ -116,6 +126,7 @@ export async function GET(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[cron.automation] Worker run failed", message);
+    Sentry.captureException(err, { tags: { cron: "automation", phase: "worker_run" } });
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

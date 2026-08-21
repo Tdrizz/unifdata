@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import {
-  getAutomationQueue,
   JOB_POST_COMPLETION_OUTREACH,
   JOB_NEW_CONTACT_FOLLOWUP,
   DEFAULT_JOB_OPTIONS,
 } from "@/lib/queue/client";
+import { enqueueAutomationJob } from "@/lib/queue/enqueue";
 
 export const runtime = "nodejs";
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const record = (body.record ?? {}) as Record<string, unknown>;
   const oldRecord = (body.old_record ?? {}) as Record<string, unknown>;
 
-  const queue = getAutomationQueue();
+  let enqueued = true;
 
   // Job marked complete → draft post-completion outreach
   if (table === "jobs" && type === "UPDATE") {
@@ -48,11 +48,13 @@ export async function POST(request: Request) {
       const customerName = String(record.customer_name ?? "");
 
       if (orgId && customerId) {
-        await queue.add(
+        const ok = await enqueueAutomationJob(
           JOB_POST_COMPLETION_OUTREACH,
           { orgId, jobId, customerId, customerName, serviceType },
           { ...DEFAULT_JOB_OPTIONS, jobId: `post-completion-${jobId}` },
+          { org: orgId, detail: { event: "job_completed", jobId } },
         );
+        if (!ok) enqueued = false;
       }
     }
   }
@@ -64,12 +66,20 @@ export async function POST(request: Request) {
     const customerName = String(record.name ?? record.full_name ?? "");
 
     if (orgId && customerId) {
-      await queue.add(
+      const ok = await enqueueAutomationJob(
         JOB_NEW_CONTACT_FOLLOWUP,
         { orgId, customerId, customerName },
         { ...DEFAULT_JOB_OPTIONS, jobId: `new-contact-${customerId}` },
+        { org: orgId, detail: { event: "contact_created", customerId } },
       );
+      if (!ok) enqueued = false;
     }
+  }
+
+  // Signal the failure so the sender (and our uptime view) sees a dropped
+  // automation instead of a silent 200. Sentry has already captured the detail.
+  if (!enqueued) {
+    return NextResponse.json({ ok: false, queued: false }, { status: 503 });
   }
 
   return NextResponse.json({ ok: true });

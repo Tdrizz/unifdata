@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendWeeklySummary } from "@/lib/agents/weekly-summary";
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
       sent++;
     } catch (err) {
       errors.push(`${org.id}: ${err instanceof Error ? err.message : String(err)}`);
+      Sentry.captureException(err, { tags: { cron: "weekly-summary", phase: "send" }, extra: { org: org.id } });
     }
   }
 

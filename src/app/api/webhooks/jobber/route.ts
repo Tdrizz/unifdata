@@ -2,7 +2,8 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
-import { getAutomationQueue, JOB_LOST_QUOTE_EMAIL } from "@/lib/queue/client";
+import { JOB_LOST_QUOTE_EMAIL } from "@/lib/queue/client";
+import { enqueueAutomationJob } from "@/lib/queue/enqueue";
 import type { LostQuoteEmailJobData } from "@/lib/queue/jobs/lost-quote";
 import { JobberWebhookSchema } from "@/lib/webhook-schemas";
 
@@ -138,15 +139,25 @@ export async function POST(request: Request) {
   };
 
   // Enqueue Day 7 email — fires 7 days from now.
-  const queue = getAutomationQueue();
-  await queue.add(JOB_LOST_QUOTE_EMAIL, jobData, { delay: 7 * DAY_MS });
+  const ok = await enqueueAutomationJob(
+    JOB_LOST_QUOTE_EMAIL,
+    jobData,
+    { delay: 7 * DAY_MS },
+    { org: companyId, detail: { event: "lost_quote", quoteId: jobData.quoteId } },
+  );
 
   console.info("[jobber.webhook] Enqueued lost-quote-email job", {
     quoteId: jobData.quoteId,
     companyId,
     quoteStatus,
     delay: "7d",
+    enqueued: ok,
   });
+
+  // 503 (not 200) on a dropped enqueue so Jobber retries; Sentry already has it.
+  if (!ok) {
+    return NextResponse.json({ received: true, queued: false }, { status: 503 });
+  }
 
   return NextResponse.json({ received: true });
 }

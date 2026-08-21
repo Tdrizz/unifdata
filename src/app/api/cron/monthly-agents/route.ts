@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
@@ -33,6 +34,10 @@ export async function GET(request: Request) {
   }
 
   if (!isRedisConfigured()) {
+    Sentry.captureMessage(
+      "cron.monthly-agents skipped — REDIS_URL not configured; monthly agents are not running",
+      { level: "error", tags: { cron: "monthly-agents", phase: "redis_gate" } },
+    );
     return NextResponse.json(
       { ok: false, error: "REDIS_URL is not configured — queue processing skipped." },
       { status: 503 },
@@ -70,6 +75,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, orgs: proOrgs?.length ?? 0 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    Sentry.captureException(err, { tags: { cron: "monthly-agents", phase: "run" } });
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
