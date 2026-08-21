@@ -116,42 +116,6 @@ export async function signOutAction() {
   redirect("/sign-in");
 }
 
-export async function changePasswordAction(formData: FormData) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/sign-in");
-  }
-
-  const currentPassword = formData.get("currentPassword") as string;
-  const newPassword = formData.get("newPassword") as string;
-
-  if (!currentPassword || !newPassword) {
-    redirect("/settings?error=Both+current+and+new+password+are+required.");
-  }
-
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email!,
-    password: currentPassword,
-  });
-
-  if (signInError) {
-    redirect("/settings?error=Current+password+is+incorrect.");
-  }
-
-  const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-
-  if (updateError) {
-    redirect(`/settings?error=${encodeURIComponent(updateError.message)}`);
-  }
-
-  redirect("/settings?toast=Password+updated");
-}
-
 export async function inviteMember(email: string, role: "owner" | "member" = "member") {
   const companyId = await getCurrentCompanyId();
   if (!companyId) throw new Error("Unauthorized");
