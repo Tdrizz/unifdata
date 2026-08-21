@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAutomationQueue, JOB_POST_COMPLETION_OUTREACH } from "@/lib/queue/client";
 
-export type SmartGroupRule = {
+export type AutomationCondition = {
   field: string;
   operator: string;
   value?: string;
@@ -18,7 +18,7 @@ type Automation = {
   id: string;
   organization_id: string;
   name: string;
-  conditions: SmartGroupRule[];
+  conditions: AutomationCondition[];
   actions: AutomationAction[];
   run_count: number | null;
 };
@@ -76,7 +76,7 @@ export async function triggerAutomations(
     if (recentRun) continue;
 
     // 2. Evaluate conditions
-    const conditions: SmartGroupRule[] = Array.isArray(automation.conditions)
+    const conditions: AutomationCondition[] = Array.isArray(automation.conditions)
       ? automation.conditions
       : [];
 
@@ -214,7 +214,7 @@ export async function evaluateDaysInactiveAutomations(supabase: SupabaseClient):
 }
 
 async function evaluateCondition(
-  rule: SmartGroupRule,
+  rule: AutomationCondition,
   contact: Record<string, unknown>,
   orgId: string,
   supabase: SupabaseClient
