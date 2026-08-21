@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ProductMark } from "@/components/ProductMark";
-
-const DEMO_FORM_URL = "DEMO_FORM_URL"; // TODO: Replace with Malachi's Google Form URL before launch
+import { DEMO_FORM_URL } from "@/lib/constants";
 
 type ActivePage = "pricing" | "docs" | "login" | "preview" | "waitlist";
 

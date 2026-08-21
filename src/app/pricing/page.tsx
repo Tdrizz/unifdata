@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicNav } from "@/components/PublicNav";
-
-const DEMO_FORM_URL = "DEMO_FORM_URL"; // TODO: Replace with Malachi's Google Form URL before launch
+import { DEMO_FORM_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Pricing — UnifData",

@@ -37,6 +37,27 @@ export async function POST(request: Request) {
 
   if (!board) return NextResponse.json({ error: "Board not found" }, { status: 404 });
 
+  // Service role bypasses RLS, so client-supplied ids must be verified to belong
+  // to this org before they are inserted or joined against — otherwise the
+  // master_customers embed below would echo back a foreign tenant's contact.
+  const { data: stage } = await (supabase as any)
+    .from("board_stages")
+    .select("id")
+    .eq("id", stageId)
+    .eq("organization_id", company.id)
+    .maybeSingle();
+
+  if (!stage) return NextResponse.json({ error: "Stage not found" }, { status: 400 });
+
+  const { data: contact } = await (supabase as any)
+    .from("master_customers")
+    .select("id")
+    .eq("id", contactId)
+    .eq("organization_id", company.id)
+    .maybeSingle();
+
+  if (!contact) return NextResponse.json({ error: "Contact not found" }, { status: 400 });
+
   const { data: record, error } = await (supabase as any)
     .from("process_records")
     .insert({
