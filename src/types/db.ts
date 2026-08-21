@@ -769,6 +769,7 @@ export type Database = {
           profile_overrides: Json | null
           sector_id: string | null
           status: string
+          subscription_active: boolean
           tier: string
         }
         Insert: {
@@ -785,6 +786,7 @@ export type Database = {
           profile_overrides?: Json | null
           sector_id?: string | null
           status?: string
+          subscription_active?: boolean
           tier?: string
         }
         Update: {
@@ -801,6 +803,7 @@ export type Database = {
           profile_overrides?: Json | null
           sector_id?: string | null
           status?: string
+          subscription_active?: boolean
           tier?: string
         }
         Relationships: []
