@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 
 const DISENGAGEMENT_DAYS = 60;
 const MIN_BOOKINGS_BEFORE_CHECK = 2;
@@ -20,30 +21,31 @@ export async function computeChurnSignals(
   const today = new Date().toISOString().slice(0, 10);
 
   // Customers with at least MIN_BOOKINGS jobs but no booking in the last DISENGAGEMENT_DAYS days
-  const { data: customers } = await supabase
-    .from("customers")
-    .select("id, name")
-    .eq("company_id", orgId);
+  const { data: customerRows } = await supabase
+    .from("master_customers")
+    .select(MASTER_LEGACY_SELECT)
+    .eq("organization_id", orgId);
 
-  if (!customers || customers.length === 0) return [];
+  if (!customerRows || customerRows.length === 0) return [];
+  const customers = (customerRows as MasterCustomerRow[]).map(masterToLegacyShape);
 
   const { data: jobs } = await supabase
     .from("jobs")
-    .select("customer_id, start_date, created_at")
+    .select("contact_id, start_date, created_at")
     .eq("company_id", orgId)
-    .not("customer_id", "is", null);
+    .not("contact_id", "is", null);
 
   if (!jobs || jobs.length === 0) return [];
 
-  // Group jobs by customer
+  // Group jobs by contact (master_customers.id)
   const jobsByCustomer = new Map<string, Array<{ date: string }>>();
   for (const job of jobs) {
-    if (!job.customer_id) continue;
+    if (!job.contact_id) continue;
     const dateStr = job.start_date ?? job.created_at?.slice(0, 10) ?? null;
     if (!dateStr) continue;
-    const list = jobsByCustomer.get(job.customer_id) ?? [];
+    const list = jobsByCustomer.get(job.contact_id) ?? [];
     list.push({ date: dateStr });
-    jobsByCustomer.set(job.customer_id, list);
+    jobsByCustomer.set(job.contact_id, list);
   }
 
   const signals: ChurnSignal[] = [];

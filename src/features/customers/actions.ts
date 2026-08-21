@@ -36,28 +36,10 @@ export async function createCustomerAction(
   const firstName = nameParts[0];
   const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
 
-  // Legacy mirror row — kept in sync until the customers table is sunset
-  const { data: legacyRow, error: legacyError } = await supabase
-    .from("customers")
-    .insert({
-      company_id: company.id,
-      name,
-      phone,
-      email: email || null,
-      address,
-      customer_type: customerType,
-      notes,
-    })
-    .select("id")
-    .single();
-
-  if (legacyError) return { error: legacyError.message };
-
   const { data: inserted, error } = await supabase
     .from("master_customers")
     .insert({
       organization_id: company.id,
-      legacy_customer_id: legacyRow.id,
       first_name: firstName,
       last_name: lastName,
       primary_email: email || null,
@@ -72,11 +54,7 @@ export async function createCustomerAction(
     .select("id")
     .single();
 
-  if (error) {
-    // Clean up the orphaned legacy row so the two tables stay in sync
-    await supabase.from("customers").delete().eq("id", legacyRow.id);
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
   if (inserted) {
     try {

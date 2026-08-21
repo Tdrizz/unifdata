@@ -8,6 +8,7 @@ import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
 import { rateLimit } from "@/lib/rate-limit";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { isAiAllowed } from "@/lib/feature-gates";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 import { getOrCreateSession, saveMessages } from "@/features/ai-assistant/queries";
 import type { StoredMessage } from "@/features/ai-assistant/queries";
 import { CHAT_TOOLS } from "@/lib/ai/tools";
@@ -99,17 +100,19 @@ export async function POST(request: Request) {
   const semanticIds: Partial<Record<"customers" | "jobs" | "sales", string[]>> = {};
   try {
     const { count: hasEmbeddings } = await supabase
-      .from("customers")
+      .from("jobs")
       .select("id", { count: "exact", head: true })
       .eq("company_id", company.id)
       .not("embedding", "is", null);
 
     if ((hasEmbeddings ?? 0) > 0) {
-      const topicTables: Array<"customers" | "jobs" | "sales"> =
-        topic === "customers" ? ["customers"] :
+      // Contacts live in master_customers, which has no embedding column, so
+      // semantic search covers jobs/sales only; customers fall back to recency.
+      const topicTables: Array<"jobs" | "sales"> =
         topic === "jobs" ? ["jobs"] :
         topic === "sales" ? ["sales"] :
-        ["customers", "jobs", "sales"];
+        topic === "customers" ? [] :
+        ["jobs", "sales"];
 
       const semResults = await Promise.all(
         topicTables.map((t) => semanticSearch(t, company.id, userText, 20)),
@@ -127,13 +130,12 @@ export async function POST(request: Request) {
   const fetchAll = topic === "all";
 
   function customersQuery() {
-    const base = supabase
-      .from("customers")
-      .select("id, name, phone, email, address, customer_type, created_at")
-      .eq("company_id", company.id);
-    return semanticIds.customers?.length
-      ? base.in("id", semanticIds.customers)
-      : base.order("created_at", { ascending: false }).limit(fetchAll ? 50 : 20);
+    return supabase
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(fetchAll ? 50 : 20);
   }
 
   function jobsQuery() {
@@ -179,13 +181,13 @@ export async function POST(request: Request) {
           .order("created_at", { ascending: false })
           .limit(fetchAll ? 50 : 20)
       : Promise.resolve({ data: [] }),
-    supabase.from("customers").select("id", { count: "exact", head: true }).eq("company_id", company.id),
+    supabase.from("master_customers").select("id", { count: "exact", head: true }).eq("organization_id", company.id),
     supabase.from("leads").select("id", { count: "exact", head: true }).eq("company_id", company.id),
     supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", company.id),
     supabase.from("follow_ups").select("id", { count: "exact", head: true }).eq("company_id", company.id),
   ]);
 
-  const customers = customersResult.data || [];
+  const customers = ((customersResult.data ?? []) as MasterCustomerRow[]).map(masterToLegacyShape);
   const leads = leadsResult.data || [];
   const jobs = jobsResult.data || [];
   const sales = salesResult.data || [];

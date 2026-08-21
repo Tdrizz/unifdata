@@ -74,18 +74,8 @@ export async function executeTool(
       case "create_customer": {
         const data = CreateCustomerSchema.parse(args);
         const name = `${data.first_name} ${data.last_name}`.trim();
-        const { data: created, error } = await supabase.from("customers").insert({
-          company_id: orgId,
-          name,
-          email: data.email || null,
-          phone: data.phone || null,
-        }).select("id").single();
-        if (error) return { success: false, message: `Failed to create customer: ${error.message}` };
-        // Await the master_customers write — a fire-and-forget insert gets killed on
-        // serverless before it runs, leaving the contact invisible in the Contacts view.
-        const { error: mcError } = await supabase.from("master_customers").insert({
+        const { error } = await supabase.from("master_customers").insert({
           organization_id: orgId,
-          legacy_customer_id: created.id,
           first_name: data.first_name,
           last_name: data.last_name,
           primary_email: data.email || null,
@@ -93,13 +83,7 @@ export async function executeTool(
           relationship_status: "new",
           source: "ai",
         });
-        if (mcError) {
-          // Roll back the legacy row so the two tables stay consistent and the
-          // AI reports the failure instead of claiming success.
-          await supabase.from("customers").delete().eq("id", created.id).eq("company_id", orgId);
-          console.error("[tool-executor] master_customers insert failed", mcError);
-          return { success: false, message: `Failed to create customer: ${mcError.message}` };
-        }
+        if (error) return { success: false, message: `Failed to create customer: ${error.message}` };
         return { success: true, message: `Customer "${name}" created.` };
       }
 

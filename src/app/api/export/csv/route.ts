@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { rateLimit } from "@/lib/rate-limit";
+import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
 
 const ALLOWED_TABLES = ["customers", "leads", "jobs", "sales", "follow_ups"] as const;
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
@@ -47,17 +48,32 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from(table as never)
-    .select("*")
-    .eq("company_id", companyId)
-    .limit(5000);
 
-  if (error) {
-    return NextResponse.json({ error: "Export failed" }, { status: 500 });
+  let data: Record<string, unknown>[];
+  if (table === "customers") {
+    // Contacts live in master_customers; export in the legacy column shape.
+    const { data: rows, error } = await supabase
+      .from("master_customers")
+      .select(MASTER_LEGACY_SELECT)
+      .eq("organization_id", companyId)
+      .limit(5000);
+    if (error) {
+      return NextResponse.json({ error: "Export failed" }, { status: 500 });
+    }
+    data = ((rows ?? []) as MasterCustomerRow[]).map(masterToLegacyShape) as unknown as Record<string, unknown>[];
+  } else {
+    const { data: rows, error } = await supabase
+      .from(table as never)
+      .select("*")
+      .eq("company_id", companyId)
+      .limit(5000);
+    if (error) {
+      return NextResponse.json({ error: "Export failed" }, { status: 500 });
+    }
+    data = (rows ?? []) as Record<string, unknown>[];
   }
 
-  const csv = rowsToCsv((data ?? []) as Record<string, unknown>[]);
+  const csv = rowsToCsv(data);
   const date = new Date().toISOString().split("T")[0];
   const filename = `${table}-export-${date}.csv`;
 

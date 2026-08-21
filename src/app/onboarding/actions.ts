@@ -6,6 +6,7 @@ import { requireSubscription } from "@/lib/auth/requireSubscription";
 import { redirect } from "next/navigation";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { isCompanyMember, verifyOwned } from "@/lib/security/ownership";
+import { splitName } from "@/lib/crm/legacy-shape";
 
 export async function createCompanyStepAction(
   formData: FormData,
@@ -114,40 +115,34 @@ export async function createWizardCustomersAction(
     return { created: [], error: "You don't have access to this workspace." };
   }
 
-  const rows = customers
-    .map((c) => ({
-      company_id: companyId,
-      name: c.name.trim(),
-      phone: c.phone?.trim() || null,
-      email: c.email?.trim() || null,
-    }))
-    .filter((r) => r.name);
+  const validCustomers = customers.filter((c) => c.name.trim());
+  if (!validCustomers.length) return { created: [] };
 
-  if (!rows.length) return { created: [] };
+  const masterRows = validCustomers.map((c) => {
+    const { first_name, last_name } = splitName(c.name);
+    return {
+      organization_id: companyId,
+      first_name,
+      last_name,
+      primary_email: c.email?.trim() || null,
+      primary_phone: c.phone?.trim() || null,
+      relationship_status: "new",
+      source: "manual",
+    };
+  });
 
-  const { data, error } = await supabase.from("customers").insert(rows).select("id, name");
+  const { data, error } = await supabase
+    .from("master_customers")
+    .insert(masterRows)
+    .select("id, first_name, last_name");
   if (error) return { created: [], error: error.message };
 
-  try {
-    const masterRows = (data ?? []).map((row, i) => {
-      const nameParts = customers[i].name.trim().split(/\s+/);
-      return {
-        organization_id: companyId,
-        legacy_customer_id: row.id,
-        first_name: nameParts[0],
-        last_name: nameParts.length > 1 ? nameParts.slice(1).join(" ") : null,
-        primary_email: customers[i].email ?? null,
-        primary_phone: customers[i].phone ?? null,
-        relationship_status: "new",
-        source: "manual",
-      };
-    });
-    await (supabase as any).from("master_customers").insert(masterRows);
-  } catch (syncErr) {
-    console.error("master_customers sync failed for wizard customers", syncErr);
-  }
-
-  return { created: (data ?? []).map((r) => ({ id: r.id, name: r.name })) };
+  return {
+    created: (data ?? []).map((r) => ({
+      id: r.id,
+      name: [r.first_name, r.last_name].filter(Boolean).join(" ").trim(),
+    })),
+  };
 }
 
 export async function createWizardJobAction(

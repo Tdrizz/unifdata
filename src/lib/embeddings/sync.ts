@@ -2,10 +2,9 @@ import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateEmbedding } from "./generate";
 
-type Table = "customers" | "jobs" | "sales";
+type Table = "jobs" | "sales";
 
 const RPC_NAMES: Record<Table, string> = {
-  customers: "search_customers_by_embedding",
   jobs: "search_jobs_by_embedding",
   sales: "search_sales_by_embedding",
 };

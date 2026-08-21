@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizePhone, normalizeEmail, normalizeName } from "./normalize";
+import { splitName } from "./crm/legacy-shape";
 export type { ImportRecordType, ImportFieldDefinition } from "./import-engine-fields";
 export { importFieldDefinitions } from "./import-engine-fields";
 import type { ImportRecordType } from "./import-engine-fields";
@@ -457,7 +458,7 @@ export function guessImportMapping(
 
 export function getTargetTable(recordType: ImportRecordType) {
   if (recordType === "relationships") {
-    return "customers";
+    return "master_customers";
   }
 
   if (recordType === "opportunities") {
@@ -670,15 +671,12 @@ async function findRelationshipDuplicate({
 }) {
   const email = normalizeEmail(cleanImportValue(normalizedData.email)) ?? cleanImportValue(normalizedData.email);
   const phone = normalizePhone(cleanImportValue(normalizedData.phone)) ?? cleanImportValue(normalizedData.phone);
-  const name = cleanImportValue(normalizedData.name);
-  const address = cleanImportValue(normalizedData.address);
-
   if (email) {
     const { data, error } = await supabase
-      .from("customers")
+      .from("master_customers")
       .select("id")
-      .eq("company_id", companyId)
-      .eq("email", email)
+      .eq("organization_id", companyId)
+      .eq("primary_email", email)
       .limit(1)
       .maybeSingle();
 
@@ -688,7 +686,7 @@ async function findRelationshipDuplicate({
 
     if (data) {
       return {
-        targetTable: "customers",
+        targetTable: "master_customers",
         targetId: data.id,
         matchConfidence: 0.95,
         duplicateReason: "Matched existing relationship by email.",
@@ -698,10 +696,10 @@ async function findRelationshipDuplicate({
 
   if (phone) {
     const { data, error } = await supabase
-      .from("customers")
+      .from("master_customers")
       .select("id")
-      .eq("company_id", companyId)
-      .eq("phone", phone)
+      .eq("organization_id", companyId)
+      .eq("primary_phone", phone)
       .limit(1)
       .maybeSingle();
 
@@ -711,34 +709,10 @@ async function findRelationshipDuplicate({
 
     if (data) {
       return {
-        targetTable: "customers",
+        targetTable: "master_customers",
         targetId: data.id,
         matchConfidence: 0.9,
         duplicateReason: "Matched existing relationship by phone.",
-      };
-    }
-  }
-
-  if (name && address) {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("company_id", companyId)
-      .eq("name", name)
-      .eq("address", address)
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (data) {
-      return {
-        targetTable: "customers",
-        targetId: data.id,
-        matchConfidence: 0.8,
-        duplicateReason: "Matched existing relationship by name and address.",
       };
     }
   }
@@ -1179,21 +1153,27 @@ function buildInsertPayload({
   }
 
   if (recordType === "relationships") {
+    const { first_name, last_name } = splitName(String(normalizedData.name ?? ""));
+    const md: Record<string, unknown> = {};
+    if (normalizedData.customer_type) md.customer_type = normalizedData.customer_type;
+    if (normalizedData.notes) md.notes = normalizedData.notes;
     return {
-      company_id: companyId,
-      name: normalizedData.name,
-      phone: normalizedData.phone || null,
-      email: normalizedData.email || null,
-      address: normalizedData.address || null,
-      customer_type: normalizedData.customer_type || null,
-      notes: normalizedData.notes || null,
+      organization_id: companyId,
+      first_name,
+      last_name,
+      primary_email: normalizedData.email || null,
+      primary_phone: normalizedData.phone || null,
+      billing_address: normalizedData.address ? { line1: normalizedData.address } : null,
+      metadata: Object.keys(md).length ? md : null,
+      relationship_status: "new",
+      source: "import",
     };
   }
 
   if (recordType === "opportunities") {
     return {
       company_id: companyId,
-      customer_id: resolvedCustomerId || null,
+      contact_id: resolvedCustomerId || null,
       service_requested: normalizedData.service_requested,
       status: normalizedData.status || "New",
       estimated_value: normalizedData.estimated_value || null,
@@ -1206,7 +1186,7 @@ function buildInsertPayload({
   if (recordType === "work") {
     return {
       company_id: companyId,
-      customer_id: resolvedCustomerId || null,
+      contact_id: resolvedCustomerId || null,
       lead_id: resolvedLeadId || null,
       service_type: normalizedData.service_type,
       status: normalizedData.status || "Scheduled",
@@ -1221,7 +1201,7 @@ function buildInsertPayload({
   if (recordType === "revenue") {
     return {
       company_id: companyId,
-      customer_id: resolvedCustomerId || null,
+      contact_id: resolvedCustomerId || null,
       amount: normalizedData.amount,
       payment_status: normalizedData.payment_status || "Paid",
       sale_date: safeDateOrToday(normalizedData.sale_date),
@@ -1232,7 +1212,7 @@ function buildInsertPayload({
 
   return {
     company_id: companyId,
-    customer_id: resolvedCustomerId || null,
+    contact_id: resolvedCustomerId || null,
     due_date: safeDateOrToday(normalizedData.due_date),
     status: normalizedData.status || "Open",
     message: normalizedData.message,
@@ -1294,10 +1274,8 @@ export async function commitImportSession({
 
   type CreatedJobInfo = { id: string; customer_id: string | null; service_type: string | null; start_date: string | null };
   type CreatedSaleInfo = { id: string; customer_id: string | null; service_type: string | null; sale_date: string | null; amount: number | null };
-  type CreatedCustomerInfo = { id: string; name: string | null; email: string | null; phone: string | null };
   const createdJobs: CreatedJobInfo[] = [];
   const createdSales: CreatedSaleInfo[] = [];
-  const createdCustomers: CreatedCustomerInfo[] = [];
 
   const { data: syncRun, error: syncRunError } = await supabase
     .from("sync_runs")
@@ -1335,26 +1313,31 @@ export async function commitImportSession({
       return { id: cached, unlinked: cached === null };
     }
 
-    // Try exact match first
-    const { data: exactMatch } = await supabase
-      .from("customers")
+    const { first_name, last_name } = splitName(customerName);
+
+    // Try exact match first (first + last name)
+    let exactQuery = supabase
+      .from("master_customers")
       .select("id")
-      .eq("company_id", companyId)
-      .eq("name", customerName.trim())
-      .limit(1)
-      .maybeSingle();
+      .eq("organization_id", companyId)
+      .eq("first_name", first_name);
+    exactQuery = last_name
+      ? exactQuery.eq("last_name", last_name)
+      : exactQuery.is("last_name", null);
+    const { data: exactMatch } = await exactQuery.limit(1).maybeSingle();
 
     if (exactMatch) {
       customerNameCache.set(key, exactMatch.id);
       return { id: exactMatch.id, unlinked: false };
     }
 
-    // Fuzzy fallback — check for single unambiguous match
+    // Fuzzy fallback — single unambiguous match on either name part
+    const escaped = customerName.trim().replace(/[%_\\,()"]/g, " ");
     const { data: fuzzyMatches } = await supabase
-      .from("customers")
+      .from("master_customers")
       .select("id")
-      .eq("company_id", companyId)
-      .ilike("name", `%${customerName.trim()}%`)
+      .eq("organization_id", companyId)
+      .or(`first_name.ilike.%${escaped}%,last_name.ilike.%${escaped}%`)
       .limit(2);
 
     if (fuzzyMatches && fuzzyMatches.length === 1) {
@@ -1387,7 +1370,7 @@ export async function commitImportSession({
       .limit(2);
 
     if (customerId) {
-      query = query.eq("customer_id", customerId);
+      query = query.eq("contact_id", customerId);
     }
 
     const { data } = await query;
@@ -1449,14 +1432,16 @@ export async function commitImportSession({
           throw new Error("Cannot update row without a target record.");
         }
 
-        const { company_id: _removedCompanyId, ...updatePayload } = payload;
-        void _removedCompanyId;
+        const { company_id: _rc, organization_id: _ro, ...updatePayload } =
+          payload as Record<string, unknown>;
+        void _rc;
+        void _ro;
 
         const { error: updateError } = await supabase
           .from(targetTable)
           .update(updatePayload)
           .eq("id", row.target_id)
-          .eq("company_id", companyId);
+          .eq(targetTable === "master_customers" ? "organization_id" : "company_id", companyId);
 
         if (updateError) {
           throw new Error(updateError.message);
@@ -1497,14 +1482,6 @@ export async function commitImportSession({
           });
         }
 
-        if (recordType === "relationships") {
-          createdCustomers.push({
-            id: internalId,
-            name: cleanImportValue(row.normalized_data.name) || null,
-            email: cleanImportValue(row.normalized_data.email) || null,
-            phone: cleanImportValue(row.normalized_data.phone) || null,
-          });
-        }
       }
 
       committedRowUpdates.push({ id: row.id, target_id: internalId });
@@ -1580,35 +1557,6 @@ export async function commitImportSession({
 
   await Promise.all(flushPromises);
 
-  if (recordType === "relationships" && createdCustomers.length > 0) {
-    // Must be awaited: fire-and-forget writes get killed when the serverless
-    // invocation ends, leaving imported customers invisible on /contacts.
-    const masterResults = await Promise.allSettled(
-      createdCustomers.map(async (c) => {
-        const nameParts = (c.name || "").trim().split(/\s+/);
-        const firstName = nameParts[0] || null;
-        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : null;
-        const { error } = await supabase.from("master_customers").insert({
-          organization_id: companyId,
-          legacy_customer_id: c.id,
-          first_name: firstName,
-          last_name: lastName,
-          primary_email: c.email || null,
-          primary_phone: c.phone || null,
-          relationship_status: "new",
-          source: "import",
-        });
-        if (error) throw new Error(error.message);
-      }),
-    );
-    const masterFailures = masterResults.filter((r) => r.status === "rejected").length;
-    if (masterFailures > 0) {
-      console.error(
-        `[import-engine] ${masterFailures}/${createdCustomers.length} master_customers writes failed for company ${companyId}`,
-      );
-    }
-  }
-
   const { error: importHistoryError } = await supabase.from("imports").insert({
     company_id: companyId,
     file_name: session.file_name || session.source_name || "import-session",
@@ -1665,7 +1613,7 @@ export async function commitImportSession({
         .from("leads")
         .select("id, service_requested, status")
         .eq("company_id", companyId)
-        .eq("customer_id", job.customer_id)
+        .eq("contact_id", job.customer_id)
         .not("status", "ilike", "%won%")
         .not("status", "ilike", "%lost%")
         .not("status", "ilike", "%cancel%")
@@ -1689,8 +1637,8 @@ export async function commitImportSession({
 
       if (bestLead && bestScore >= 0.4) {
         const { data: customer } = await supabase
-          .from("customers")
-          .select("name")
+          .from("master_customers")
+          .select("first_name, last_name")
           .eq("id", job.customer_id)
           .single();
 
@@ -1701,7 +1649,7 @@ export async function commitImportSession({
           field: "lead_id",
           suggested_id: bestLead.id,
           suggested_label: bestLead.service_requested ?? "Opportunity",
-          customer_name: customer?.name ?? null,
+          customer_name: customer ? ([customer.first_name, customer.last_name].filter(Boolean).join(" ").trim() || null) : null,
           reason: `Job and opportunity are for the same customer and share similar keywords.`,
           confidence: Math.round(bestScore * 100) / 100,
         });
@@ -1718,7 +1666,7 @@ export async function commitImportSession({
         .from("jobs")
         .select("id, service_type, start_date")
         .eq("company_id", companyId)
-        .eq("customer_id", sale.customer_id)
+        .eq("contact_id", sale.customer_id)
         .limit(5);
 
       if (sale.sale_date) {
@@ -1736,8 +1684,8 @@ export async function commitImportSession({
 
       const matchedJob = candidateJobs[0];
       const { data: customer } = await supabase
-        .from("customers")
-        .select("name")
+        .from("master_customers")
+        .select("first_name, last_name")
         .eq("id", sale.customer_id)
         .single();
 
@@ -1748,7 +1696,7 @@ export async function commitImportSession({
         field: "job_id",
         suggested_id: matchedJob.id,
         suggested_label: matchedJob.service_type ?? "Job",
-        customer_name: customer?.name ?? null,
+        customer_name: customer ? ([customer.first_name, customer.last_name].filter(Boolean).join(" ").trim() || null) : null,
         reason: `Sale and job are for the same customer within a similar time period.`,
         confidence: 0.7,
       });
