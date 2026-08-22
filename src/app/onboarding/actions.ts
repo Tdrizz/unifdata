@@ -162,7 +162,7 @@ export async function createWizardJobAction(
   if (!(await isCompanyMember(supabase, companyId, user.profileId))) {
     return { error: "You don't have access to this workspace." };
   }
-  if (data.customer_id && !(await verifyOwned(supabase, "customers", data.customer_id, companyId))) {
+  if (data.customer_id && !(await verifyOwned(supabase, "master_customers", data.customer_id, companyId, "organization_id"))) {
     return { error: "Invalid customer." };
   }
 
@@ -170,7 +170,7 @@ export async function createWizardJobAction(
     company_id: companyId,
     service_type: data.service_type.trim(),
     start_date: data.start_date || null,
-    customer_id: data.customer_id || null,
+    contact_id: data.customer_id || null,
     status: "Scheduled",
     paid_status: "Unpaid",
   });
@@ -196,7 +196,7 @@ export async function createWizardFollowUpAction(
   if (!(await isCompanyMember(supabase, companyId, user.profileId))) {
     return { error: "You don't have access to this workspace." };
   }
-  if (data.customer_id && !(await verifyOwned(supabase, "customers", data.customer_id, companyId))) {
+  if (data.customer_id && !(await verifyOwned(supabase, "master_customers", data.customer_id, companyId, "organization_id"))) {
     return { error: "Invalid customer." };
   }
 
@@ -204,7 +204,7 @@ export async function createWizardFollowUpAction(
     company_id: companyId,
     message: data.message.trim(),
     due_date: data.due_date,
-    customer_id: data.customer_id || null,
+    contact_id: data.customer_id || null,
     status: "Open",
   });
   if (error) return { error: error.message };

@@ -90,7 +90,8 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
       ) : (
         <div className="px-4 flex flex-col gap-3">
           {activeStageLeads.map((lead) => {
-            const customer = lead.customer_id ? customerById.get(lead.customer_id) : undefined;
+            const linkId = lead.contact_id ?? lead.customer_id;
+            const customer = linkId ? customerById.get(linkId) : undefined;
             return (
               <Link
                 key={lead.id}

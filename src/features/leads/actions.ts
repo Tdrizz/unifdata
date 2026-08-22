@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
-import { verifyOwned } from "@/lib/security/ownership";
+import { resolveOwnedContactId } from "@/lib/crm/contacts";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -34,24 +34,14 @@ export async function createLeadAction(
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
-  if (customerId && !(await verifyOwned(supabase, "customers", customerId, company.id))) {
+  const contactId = await resolveOwnedContactId(supabase, company.id, customerId);
+  if (customerId && contactId === null) {
     return { fieldErrors: { customer_id: "Selected customer isn't in your workspace." } };
-  }
-
-  let contactId: string | null = null;
-  if (customerId) {
-    const { data: mc } = await supabase
-      .from("master_customers")
-      .select("id")
-      .eq("organization_id", company.id)
-      .eq("legacy_customer_id", customerId)
-      .maybeSingle();
-    contactId = mc?.id ?? null;
   }
 
   const { error } = await supabase.from("leads").insert({
     company_id: company.id,
-    customer_id: customerId || null,
+    customer_id: null,
     contact_id: contactId,
     service_requested: serviceRequested,
     status,
@@ -95,25 +85,15 @@ export async function updateLeadAction(
     return { fieldErrors: { estimated_value: "Must be a positive number." } };
   }
 
-  if (customerId && !(await verifyOwned(supabase, "customers", customerId, company.id))) {
+  const contactId = await resolveOwnedContactId(supabase, company.id, customerId);
+  if (customerId && contactId === null) {
     return { fieldErrors: { customer_id: "Selected customer isn't in your workspace." } };
-  }
-
-  let contactId: string | null = null;
-  if (customerId) {
-    const { data: mc } = await supabase
-      .from("master_customers")
-      .select("id")
-      .eq("organization_id", company.id)
-      .eq("legacy_customer_id", customerId)
-      .maybeSingle();
-    contactId = mc?.id ?? null;
   }
 
   const { error } = await supabase
     .from("leads")
     .update({
-      customer_id: customerId || null,
+      customer_id: null,
       contact_id: contactId,
       service_requested: serviceRequested,
       status,

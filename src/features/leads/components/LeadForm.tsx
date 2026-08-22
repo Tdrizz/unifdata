@@ -31,7 +31,7 @@ function getOpportunityIssues(lead: LeadRow) {
     tone: "success" | "warning" | "danger" | "neutral";
   }[] = [];
 
-  if (!lead.customer_id) {
+  if (!(lead.contact_id ?? lead.customer_id)) {
     issues.push({ label: "Link person", tone: "warning" });
   }
   if (!lead.source) {
@@ -51,8 +51,9 @@ function getOpportunityIssues(lead: LeadRow) {
 
 export function LeadForm({ lead, customers, profile }: Props) {
   const issues = getOpportunityIssues(lead);
-  const linkedCustomer = lead.customer_id
-    ? customers.find((c) => c.id === lead.customer_id)
+  const linkId = lead.contact_id ?? lead.customer_id;
+  const linkedCustomer = linkId
+    ? customers.find((c) => c.id === linkId)
     : null;
 
   const boundUpdateAction = updateLeadAction.bind(null, lead.id);
@@ -98,7 +99,7 @@ export function LeadForm({ lead, customers, profile }: Props) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
-                <Select name="customer_id" defaultValue={lead.customer_id || ""}>
+                <Select name="customer_id" defaultValue={(lead.contact_id ?? lead.customer_id) || ""}>
                   <option value="">No linked person yet</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>

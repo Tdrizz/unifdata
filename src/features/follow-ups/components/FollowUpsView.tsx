@@ -110,7 +110,8 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
   const opportunityEntries: QueueEntry[] = opportunities
     .filter((o) => !isClosedOpportunity(o.status) && Boolean(o.next_follow_up_date))
     .map((o) => {
-      const person = o.customer_id ? personById.get(o.customer_id) : null; // leads still use customer_id from legacy customers table
+      const linkId = o.contact_id ?? o.customer_id;
+      const person = linkId ? personById.get(linkId) : null;
       return {
         id: `opportunity-${o.id}`,
         title: o.service_requested ? `Follow up: ${o.service_requested}` : "Follow up on opportunity",

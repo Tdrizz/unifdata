@@ -48,6 +48,13 @@ export async function updateWorkspaceAction(formData: FormData) {
 
   const { company } = currentCompany;
 
+  // Changing the workspace name and — especially — the business sector reshapes
+  // the whole industry profile, so restrict it to owners and admins.
+  const role = await getCurrentUserRole();
+  if (role !== "owner" && role !== "admin") {
+    throw new Error("Only owners and admins can change workspace settings.");
+  }
+
   const name = getFormString(formData, "name");
   const rawSector = getFormString(formData, "business_sector");
   const businessSector = validBusinessSectors.has(rawSector)

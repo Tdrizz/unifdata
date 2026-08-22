@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     }
 
     const queue = getDataKeeperQueue();
-    const tables = ["customers", "jobs", "sales"] as const;
+    const tables = ["jobs", "sales"] as const;
     let enqueued = 0;
 
     for (const company of companies ?? []) {
