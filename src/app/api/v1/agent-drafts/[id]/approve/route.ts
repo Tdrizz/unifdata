@@ -10,6 +10,8 @@ type DraftRow = {
   organization_id: string;
   signal_type: string | null;
   recipient_info: Record<string, string> | null;
+  subject: string | null;
+  body: string | null;
 };
 
 export async function POST(
@@ -26,7 +28,7 @@ export async function POST(
   // Load the draft (RLS ensures it belongs to this org)
   const { data: draft, error: fetchError } = await supabase
     .from("agent_drafts")
-    .select("approve_action, approve_args, record_id, organization_id, signal_type, recipient_info")
+    .select("approve_action, approve_args, record_id, organization_id, signal_type, recipient_info, subject, body")
     .eq("id", id)
     .eq("organization_id", currentCompany.company.id)
     .single() as { data: DraftRow | null; error: unknown };
@@ -35,6 +37,28 @@ export async function POST(
     return NextResponse.json({ error: "Draft not found." }, { status: 404 });
   }
 
+  // Resolve the message content and recipient. approve_args only carries
+  // { customer_id, customer_name }; the actual subject/body live on the draft row,
+  // and the recipient address on the linked contact in master_customers.
+  const args = (draft.approve_args ?? {}) as Record<string, string>;
+  const contactId = draft.recipient_info?.customer_id ?? args.customer_id ?? null;
+
+  let recipientEmail: string | null = null;
+  let recipientPhone: string | null = null;
+  if (contactId) {
+    const { data: contact } = await supabase
+      .from("master_customers")
+      .select("primary_email, primary_phone")
+      .eq("id", contactId)
+      .eq("organization_id", currentCompany.company.id)
+      .maybeSingle();
+    recipientEmail = contact?.primary_email ?? null;
+    recipientPhone = contact?.primary_phone ?? null;
+  }
+
+  const subject = draft.subject ?? args.subject ?? "Message from your service provider";
+  const body = draft.body ?? args.body ?? "";
+
   // Execute the approved action
   let sendSucceeded = false;
 
@@ -42,24 +66,19 @@ export async function POST(
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
     const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
-    const args = (draft.approve_args ?? {}) as Record<string, string>;
+    const toEmail = recipientEmail ?? args.email ?? null;
 
-    if (apiKey && domain && args.email) {
+    if (apiKey && domain && toEmail) {
       const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
         },
-        body: new URLSearchParams({
-          from,
-          to: args.email,
-          subject: args.subject ?? "Message from your service provider",
-          text: args.body ?? "",
-        }),
+        body: new URLSearchParams({ from, to: toEmail, subject, text: body }),
       });
       if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        return NextResponse.json({ error: `Email delivery failed: ${res.status} ${body}` }, { status: 502 });
+        const errBody = await res.text().catch(() => "");
+        return NextResponse.json({ error: `Email delivery failed: ${res.status} ${errBody}` }, { status: 502 });
       }
       sendSucceeded = true;
     }
@@ -67,20 +86,23 @@ export async function POST(
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const from = process.env.TWILIO_PHONE_NUMBER;
-    const args = (draft.approve_args ?? {}) as Record<string, string>;
+    const rawPhone = recipientPhone ?? args.phone ?? null;
+    const toPhone = rawPhone
+      ? (rawPhone.startsWith("+") ? rawPhone : `+1${rawPhone.replace(/\D/g, "")}`)
+      : null;
 
-    if (accountSid && authToken && from && args.phone) {
+    if (accountSid && authToken && from && toPhone) {
       const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
         method: "POST",
         headers: {
           Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ To: args.phone, From: from, Body: args.body ?? "" }),
+        body: new URLSearchParams({ To: toPhone, From: from, Body: body }),
       });
       if (!res.ok) {
-        const body = await res.text().catch(() => "");
-        return NextResponse.json({ error: `SMS delivery failed: ${res.status} ${body}` }, { status: 502 });
+        const errBody = await res.text().catch(() => "");
+        return NextResponse.json({ error: `SMS delivery failed: ${res.status} ${errBody}` }, { status: 502 });
       }
       sendSucceeded = true;
     }

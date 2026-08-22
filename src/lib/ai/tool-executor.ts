@@ -46,12 +46,12 @@ export async function executeTool(
     switch (name) {
       case "create_followup": {
         const data = CreateFollowupSchema.parse(args);
-        if (!(await verifyOwned(supabase, "customers", data.customer_id, orgId))) {
+        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
           return { success: false, message: "That customer isn't in your workspace." };
         }
         const { error } = await supabase.from("follow_ups").insert({
           company_id: orgId,
-          customer_id: data.customer_id,
+          contact_id: data.customer_id,
           due_date: data.due_date,
           message: data.note,
           status: "open",
@@ -89,12 +89,12 @@ export async function executeTool(
 
       case "log_sale": {
         const data = LogSaleSchema.parse(args);
-        if (!(await verifyOwned(supabase, "customers", data.customer_id, orgId))) {
+        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
           return { success: false, message: "That customer isn't in your workspace." };
         }
         const { error } = await supabase.from("sales").insert({
           company_id: orgId,
-          customer_id: data.customer_id,
+          contact_id: data.customer_id,
           amount: data.amount,
           service_type: data.service_type,
           payment_status: data.payment_status,
@@ -106,21 +106,32 @@ export async function executeTool(
 
       case "flag_for_review": {
         const data = FlagForReviewSchema.parse(args);
-        const tableMap: Record<string, string> = {
-          customer: "customers",
-          job: "jobs",
-          sale: "sales",
-          lead: "leads",
-          follow_up: "follow_ups",
-        };
-        const table = tableMap[data.record_type];
-        const { error } = await supabase
-          .from(table)
-          .update({ flagged_for_review: true, review_reason: data.reason })
-          .eq("id", data.record_id)
-          .eq("company_id", orgId);
+        const owned =
+          data.record_type === "customer"
+            ? await verifyOwned(supabase, "master_customers", data.record_id, orgId, "organization_id")
+            : await verifyOwned(
+                supabase,
+                { job: "jobs", sale: "sales", lead: "leads", follow_up: "follow_ups" }[data.record_type],
+                data.record_id,
+                orgId,
+                "company_id",
+              );
+        if (!owned) {
+          return { success: false, message: "That record isn't in your workspace." };
+        }
+        const { error } = await supabase.from("agent_alerts").insert({
+          organization_id: orgId,
+          alert_type: "review",
+          severity: "info",
+          title: `Review requested: ${data.record_type}`,
+          body: data.reason,
+          status: "unread",
+          reasoning: data.reason,
+          escalation_level: 0,
+          record_id: data.record_id,
+        });
         if (error) return { success: false, message: `Failed to flag record: ${error.message}` };
-        return { success: true, message: `${data.record_type} flagged for review.` };
+        return { success: true, message: "Flagged for review." };
       }
 
       default:

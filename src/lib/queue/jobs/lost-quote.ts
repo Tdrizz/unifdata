@@ -199,7 +199,7 @@ async function checkIfConverted(
     .from("jobs")
     .select("id", { count: "exact", head: true })
     .eq("company_id", companyId)
-    .eq("customer_id", customerId)
+    .eq("contact_id", customerId)
     .gte("created_at", since);
 
   return (count ?? 0) > 0;

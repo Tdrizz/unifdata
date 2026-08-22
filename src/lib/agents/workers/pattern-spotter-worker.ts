@@ -21,12 +21,12 @@ export async function runPatternSpotterWorker(
   // Fetch all completed jobs that have a service type and a linked customer
   const { data: jobs } = await supabase
     .from("jobs")
-    .select("customer_id, service_type, completed_date")
+    .select("contact_id, service_type, completed_date")
     .eq("company_id", orgId)
     .eq("status", "completed")
     .not("service_type", "is", null)
-    .not("customer_id", "is", null)
-    .order("customer_id")
+    .not("contact_id", "is", null)
+    .order("contact_id")
     .order("completed_date");
 
   if (!jobs || jobs.length < 5) return;
@@ -34,7 +34,7 @@ export async function runPatternSpotterWorker(
   // Build ordered service list per customer (unique services in first-seen order)
   const customerServices = new Map<string, string[]>();
   for (const job of jobs) {
-    const cid = job.customer_id as string;
+    const cid = job.contact_id as string;
     const svc = (job.service_type as string).trim().toLowerCase();
     if (!customerServices.has(cid)) customerServices.set(cid, []);
     const list = customerServices.get(cid)!;

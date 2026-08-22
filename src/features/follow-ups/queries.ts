@@ -18,7 +18,7 @@ export async function getFollowUpPageData(
       .range(from, to),
     supabase
       .from("leads")
-      .select("id, customer_id, service_requested, status, next_follow_up_date, source, estimated_value, created_at", { count: "exact" })
+      .select("id, customer_id, contact_id, service_requested, status, next_follow_up_date, source, estimated_value, created_at", { count: "exact" })
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .range(from, to),

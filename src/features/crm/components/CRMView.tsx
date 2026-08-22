@@ -62,7 +62,7 @@ export function CRMView({ leads, customers, profile }: Props) {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 
-  const missingPerson = openLeads.filter((l) => !l.customer_id);
+  const missingPerson = openLeads.filter((l) => !(l.contact_id ?? l.customer_id));
   const missingSource = openLeads.filter((l) => !l.source);
   const missingEstimate = openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined);
   const cleanupGroups = [
@@ -137,7 +137,8 @@ export function CRMView({ leads, customers, profile }: Props) {
               </div>
 
               {stageLeads.map((lead) => {
-                const customer = lead.customer_id ? customerById.get(lead.customer_id) : null;
+                const linkId = lead.contact_id ?? lead.customer_id;
+                const customer = linkId ? customerById.get(linkId) : null;
                 const urgent = isUrgent(lead);
                 const dl = dateLabel(lead);
                 return (

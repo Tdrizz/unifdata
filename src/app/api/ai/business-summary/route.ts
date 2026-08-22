@@ -99,7 +99,7 @@ export async function POST() {
     supabase
       .from("leads")
       .select(
-        "id, customer_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at",
+        "id, customer_id, contact_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at",
       )
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
@@ -108,7 +108,7 @@ export async function POST() {
     supabase
       .from("jobs")
       .select(
-        "id, customer_id, lead_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at",
+        "id, customer_id, contact_id, lead_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at",
       )
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
@@ -125,7 +125,7 @@ export async function POST() {
 
     supabase
       .from("follow_ups")
-      .select("id, customer_id, due_date, status, message, created_at")
+      .select("id, customer_id, contact_id, due_date, status, message, created_at")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
       .limit(750),
@@ -297,8 +297,8 @@ export async function POST() {
       })),
 
     [profile.labels.leadPlural.toLowerCase()]: leads.slice(0, 40).map((lead) => {
-      const customer = lead.customer_id
-        ? customerById.get(lead.customer_id)
+      const customer = lead.contact_id
+        ? customerById.get(lead.contact_id)
         : null;
 
       return {
@@ -312,8 +312,8 @@ export async function POST() {
     }),
 
     [profile.labels.jobPlural.toLowerCase()]: jobs.slice(0, 40).map((job) => {
-      const customer = job.customer_id
-        ? customerById.get(job.customer_id)
+      const customer = job.contact_id
+        ? customerById.get(job.contact_id)
         : null;
 
       return {
@@ -338,8 +338,8 @@ export async function POST() {
     [profile.labels.followUpPlural.toLowerCase()]: followUps
       .slice(0, 40)
       .map((followUp) => {
-        const customer = followUp.customer_id
-          ? customerById.get(followUp.customer_id)
+        const customer = followUp.contact_id
+          ? customerById.get(followUp.contact_id)
           : null;
 
         return {

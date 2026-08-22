@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-validation";
-import { checkAndDropEchoWebhook } from "@/lib/conflict-resolver";
 import { normalizePhone } from "@/lib/crm/phone";
 import { logActivity } from "@/lib/crm/activity";
 import { triggerAutomations } from "@/lib/automations/evaluator";
@@ -74,22 +73,8 @@ export async function POST(request: Request) {
     customer = byDigits ?? null;
   }
 
-  // Drop echo webhooks (messages we sent that bounced back).
   if (customer) {
     await setOrgScope(supabase, customer.organization_id as string);
-    const isEcho = await checkAndDropEchoWebhook({
-      supabase,
-      organizationId: customer.organization_id as string,
-      source: "quickbooks",
-      providerCustomerId: fromDigits,
-      incomingToken: messageSid,
-    });
-    if (isEcho) {
-      return new Response(`<Response/>`, {
-        status: 200,
-        headers: { "Content-Type": "text/xml" },
-      });
-    }
   }
 
   // Write to communications_log (backwards compat).

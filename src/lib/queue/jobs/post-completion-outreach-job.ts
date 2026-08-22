@@ -29,7 +29,7 @@ export async function processPostCompletionOutreachJob(
     .from("follow_ups")
     .select("id", { count: "exact", head: true })
     .eq("company_id", data.orgId)
-    .eq("customer_id", data.customerId)
+    .eq("contact_id", data.customerId)
     .neq("status", "complete");
 
   if ((count ?? 0) > 0) return;

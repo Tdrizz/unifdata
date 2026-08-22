@@ -80,21 +80,34 @@ export async function POST(request: Request) {
     for (const entity of entities) {
       if (entity.name !== "Invoice") continue;
 
-      // Stamp source_system and last_synced_at on any matching sale record
+      // Resolve the local sale via its external link (external_id = QB invoice Id).
+      // The stored service_type holds a DocNumber, so a service_type match is unreliable.
+      const { data: link } = await supabase
+        .from("external_record_links")
+        .select("internal_id")
+        .eq("company_id", companyId)
+        .eq("provider", "quickbooks")
+        .eq("internal_table", "sales")
+        .eq("external_id", entity.id)
+        .maybeSingle();
+      if (!link) continue;
+      const saleId = link.internal_id as string;
+
+      // Stamp source_system and last_synced_at on the linked sale.
       await supabase
         .from("sales")
         .update({ source_system: "quickbooks", last_synced_at: new Date().toISOString() })
-        .eq("company_id", companyId)
-        .ilike("service_type", `%${entity.id}%`);
+        .eq("id", saleId)
+        .eq("company_id", companyId);
 
       if (entity.operation !== "Update") continue;
 
-      // Check the local sales table: is this invoice recorded as unpaid/overdue?
+      // Is this invoice recorded as unpaid/overdue locally?
       const { data: sale } = await supabase
         .from("sales")
-        .select("id, payment_status, amount, customer_id")
+        .select("id, payment_status, amount, contact_id")
+        .eq("id", saleId)
         .eq("company_id", companyId)
-        .ilike("service_type", `%${entity.id}%`)
         .in("payment_status", ["Unpaid", "unpaid", "Overdue", "overdue"])
         .maybeSingle();
 
@@ -104,8 +117,7 @@ export async function POST(request: Request) {
         organizationId: companyId,
         companyId,
         invoiceId: entity.id,
-        // customerId is master_customers.id — not resolvable from the invoice entity alone;
-        // the job re-queries by sale.customer_id at execution time as its fallback
+        customerId: (sale.contact_id as string | null) ?? undefined,
         invoiceAmount: sale.amount as number | undefined,
       };
 

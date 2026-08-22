@@ -1,9 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { generateEmbedding, buildCustomerText, buildJobText, buildSaleText } from "@/lib/embeddings/generate";
+import { generateEmbedding, buildJobText, buildSaleText } from "@/lib/embeddings/generate";
 
 export type EmbeddingBackfillJobData = {
   companyId: string;
-  table: "customers" | "jobs" | "sales";
+  table: "jobs" | "sales";
 };
 
 const BATCH_SIZE = 50;
@@ -31,9 +31,7 @@ export async function processEmbeddingBackfillJob(
     for (const row of rows) {
       try {
         let text = "";
-        if (table === "customers") {
-          text = buildCustomerText(row as { name?: string | null; customer_type?: string | null; address?: string | null; notes?: string | null });
-        } else if (table === "jobs") {
+        if (table === "jobs") {
           text = buildJobText(row as { service_type?: string | null; status?: string | null; paid_status?: string | null; start_date?: string | null });
         } else {
           text = buildSaleText(row as { service_type?: string | null; payment_status?: string | null; sale_date?: string | null; source?: string | null });
