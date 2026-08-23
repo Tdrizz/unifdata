@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   // Queue Record Nudger for all Pro orgs (stale jobs + overdue follow-ups)
   const { data: proOrgs } = await supabase
     .from("companies")
-    .select("id"); // tiers collapsed — Aria runs for every company
+    .select("id"); // tiers collapsed — Vera runs for every company
 
   if (proOrgs && proOrgs.length > 0) {
     await Promise.all(

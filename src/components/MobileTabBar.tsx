@@ -75,7 +75,7 @@ export function MobileTabBar({
   const profile = getIndustryProfile(businessSector);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // Merging Leads/Jobs/Sales into one Pipeline tab (and folding Aria into the
+  // Merging Leads/Jobs/Sales into one Pipeline tab (and folding Vera into the
   // Home dashboard) freed up two tab slots, so Follow-ups and Communications
   // -- previously buried in "More" -- are now primary tabs too.
   const tabs = [
@@ -115,7 +115,7 @@ export function MobileTabBar({
     },
   ];
 
-  // Everything else -- Aria lives on Home now, and Data Hub/Automations/
+  // Everything else -- Vera lives on Home now, and Data Hub/Automations/
   // Process/Imports are all reachable through the single Tools entry.
   const moreItems = [
     { href: "/tools", label: "Tools", Icon: IconTools },

@@ -30,7 +30,7 @@ type Alert = {
   escalation_level?: number | null;
 };
 
-export default async function AriaPage() {
+export default async function VeraPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");

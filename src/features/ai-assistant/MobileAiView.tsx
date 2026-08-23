@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
 import ReactMarkdown from "react-markdown";
-import { AriaDraftCard, AriaAlertCard, getTimeOfDay } from "@/features/ai-assistant/AiAssistantView";
+import { VeraDraftCard, VeraAlertCard, getTimeOfDay } from "@/features/ai-assistant/AiAssistantView";
 import type { Draft, Alert } from "@/features/ai-assistant/AiAssistantView";
 
 type Message = {
@@ -286,7 +286,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
                     : "rounded-[12px] transition-shadow duration-300"
                 }
               >
-                <AriaDraftCard
+                <VeraDraftCard
                   draft={draft}
                   onApprove={() => handleApproveDraft(draft.id)}
                   onDismiss={() => handleDismissDraft(draft.id)}
@@ -303,7 +303,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
                     : "rounded-[12px] transition-shadow duration-300"
                 }
               >
-                <AriaAlertCard
+                <VeraAlertCard
                   alert={alert}
                   onDismiss={() => handleDismissAlert(alert.id)}
                 />

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AriaDraftCard, AriaAlertCard } from "@/features/ai-assistant/AiAssistantView";
+import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
 import {
   formatDateOnly,
   parseDateOnly,
@@ -266,12 +266,12 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
   const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
-  const ariaItems = [
+  const veraItems = [
     ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
     ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
   ];
-  const ariaPreview = ariaItems.slice(0, 3);
-  const ariaRemaining = ariaItems.length - ariaPreview.length;
+  const veraPreview = veraItems.slice(0, 3);
+  const veraRemaining = veraItems.length - veraPreview.length;
 
   const statusLine = (() => {
     const parts: string[] = [];
@@ -304,7 +304,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
-      {/* Aria panel — always has a live chat box, not just a link out */}
+      {/* Vera panel — always has a live chat box, not just a link out */}
       <Card padding={0} radius="md" className="overflow-hidden mb-6">
         <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
           <div className="flex items-center gap-2.5">
@@ -314,27 +314,27 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
               </svg>
             </div>
-            <p className="text-[13.5px] font-semibold text-ud-ink">Aria</p>
+            <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
           </div>
-          {ariaItems.length > 0 && (
-            <Link href="/aria" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">
-              {ariaRemaining > 0 ? `See all ${ariaItems.length} →` : "Open Aria →"}
+          {veraItems.length > 0 && (
+            <Link href="/vera" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">
+              {veraRemaining > 0 ? `See all ${veraItems.length} →` : "Open Vera →"}
             </Link>
           )}
         </div>
 
-        {ariaItems.length > 0 ? (
+        {veraItems.length > 0 ? (
           <div className="p-4 space-y-3 border-b border-ud-soft">
-            {ariaPreview.map((entry) =>
+            {veraPreview.map((entry) =>
               entry.kind === "draft" ? (
-                <AriaDraftCard
+                <VeraDraftCard
                   key={entry.item.id}
                   draft={entry.item}
                   onApprove={() => handleApproveDraft(entry.item.id)}
                   onDismiss={() => handleDismissDraft(entry.item.id)}
                 />
               ) : (
-                <AriaAlertCard
+                <VeraAlertCard
                   key={entry.item.id}
                   alert={entry.item}
                   onDismiss={() => handleDismissAlert(entry.item.id)}
@@ -344,7 +344,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           </div>
         ) : (
           <div className="px-[22px] py-4 border-b border-ud-soft">
-            <p className="text-[13px] text-ud-muted">Aria reviewed your business overnight. Everything looks good.</p>
+            <p className="text-[13px] text-ud-muted">Vera reviewed your business overnight. Everything looks good.</p>
           </div>
         )}
 
@@ -376,7 +376,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           <input
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Ask Aria anything about your business…"
+            placeholder="Ask Vera anything about your business…"
             disabled={chatLoading}
             className="flex-1 bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
           />

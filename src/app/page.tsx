@@ -68,17 +68,17 @@ const howItWorks = [
   {
     step: "01",
     title: "Connect your data",
-    body: "Import a spreadsheet or connect Jobber, QuickBooks, HubSpot, or Square. Aria maps your records automatically — customers, jobs, revenue, follow-ups.",
+    body: "Import a spreadsheet or connect Jobber, QuickBooks, HubSpot, or Square. Vera maps your records automatically — customers, jobs, revenue, follow-ups.",
   },
   {
     step: "02",
-    title: "Aria learns your business",
-    body: "Every night, Aria reviews everything. Stale customers. Unpaid work. Overdue follow-ups. Missed opportunities. It prepares a brief so you don't have to dig.",
+    title: "Vera learns your business",
+    body: "Every night, Vera reviews everything. Stale customers. Unpaid work. Overdue follow-ups. Missed opportunities. It prepares a brief so you don't have to dig.",
   },
   {
     step: "03",
     title: "You make the calls",
-    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment. Aria does the thinking. You make the decisions.",
+    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment. Vera does the thinking. You make the decisions.",
   },
 ];
 
@@ -99,13 +99,13 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center">
             <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[12.5px] font-medium text-slate-400 mb-8">
               <span className="h-1.5 w-1.5 rounded-full bg-[#7B72D4]" />
-              Aria — your AI business assistant
+              Vera — your AI business assistant
             </div>
             <h1 className="animate-fade-up [animation-delay:60ms] text-[52px] sm:text-[64px] lg:text-[76px] font-semibold leading-[1.02] tracking-[-0.03em] mb-6">
               Your business,<br />briefed every morning.
             </h1>
             <p className="animate-fade-up [animation-delay:120ms] text-[18px] leading-[1.75] text-slate-300 max-w-xl mx-auto mb-10">
-              Stop running your business from memory. Aria reviews your customers, jobs, revenue, and follow-ups overnight — and tells you exactly what needs attention when you wake up.
+              Stop running your business from memory. Vera reviews your customers, jobs, revenue, and follow-ups overnight — and tells you exactly what needs attention when you wake up.
             </p>
             <div className="animate-fade-up [animation-delay:180ms] flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
@@ -128,7 +128,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Industry picker + Aria mock */}
+          {/* Industry picker + Vera mock */}
           <div className="mt-16 animate-fade-up [animation-delay:300ms]">
             <div className="flex flex-wrap justify-center gap-2 mb-8">
               {industries.map((ind, i) => (
@@ -155,7 +155,7 @@ export default function HomePage() {
                         <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
                       </svg>
                     </div>
-                    <span className="text-[12px] font-semibold text-slate-700">Aria</span>
+                    <span className="text-[12px] font-semibold text-slate-700">Vera</span>
                   </div>
                   <span className="text-[11px] text-slate-400">Today</span>
                 </div>
@@ -219,7 +219,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">How it works</p>
-            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Set it up once.<br />Aria handles the rest.</h2>
+            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Set it up once.<br />Vera handles the rest.</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {howItWorks.map((step) => (
@@ -233,29 +233,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What Aria does */}
+      {/* What Vera does */}
       <section className="border-t border-white/[0.06] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Meet Aria</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Meet Vera</p>
               <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em] mb-5">The assistant that works while you sleep.</h2>
               <p className="text-[16px] leading-[1.8] text-slate-400 mb-8">
-                Every night, Aria reviews your entire business. Customers who haven&apos;t been contacted. Jobs sitting unpaid. Follow-ups that slipped through. Proposals that went quiet.
+                Every night, Vera reviews your entire business. Customers who haven&apos;t been contacted. Jobs sitting unpaid. Follow-ups that slipped through. Proposals that went quiet.
               </p>
               <p className="text-[16px] leading-[1.8] text-slate-400 mb-10">
                 By morning, it&apos;s prepared a briefing with the specific actions that matter most — and drafts the messages to go with them. You review, approve, and move on.
               </p>
               <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.4)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
-                See Aria in action →
+                See Vera in action →
               </a>
             </div>
             <div className="space-y-3">
               {[
-                { icon: "📬", title: "Outreach drafts", body: "Aria writes follow-up messages for customers who need contact. You approve or skip — nothing sends without your sign-off." },
+                { icon: "📬", title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. You approve or skip — nothing sends without your sign-off." },
                 { icon: "⚠️", title: "Revenue alerts", body: "Flags unpaid invoices, stalling jobs, and revenue drops before they become problems." },
                 { icon: "🔁", title: "Runs every night", body: "The briefing refreshes automatically. You start every morning knowing exactly where things stand." },
-                { icon: "🎯", title: "Adapts to your business", body: "Aria learns your patterns. The longer you use it, the better its prioritization gets." },
+                { icon: "🎯", title: "Adapts to your business", body: "Vera learns your patterns. The longer you use it, the better its prioritization gets." },
               ].map((item) => (
                 <div key={item.title} className="flex gap-4 rounded-[14px] border border-white/[0.07] bg-white/[0.03] p-5">
                   <span className="text-[20px] shrink-0 mt-0.5">{item.icon}</span>
@@ -293,7 +293,7 @@ export default function HomePage() {
             </div>
             <div className="h-px bg-white/[0.08] mb-7" />
             <ul className="space-y-2.5 mb-8">
-              {["Everything — no feature tiers","Aria AI briefings every morning","Customers, pipeline, jobs, sales","Imports + integrations included","Hands-on setup session included","Cancel any time, no contracts"].map((f) => (
+              {["Everything — no feature tiers","Vera AI briefings every morning","Customers, pipeline, jobs, sales","Imports + integrations included","Hands-on setup session included","Cancel any time, no contracts"].map((f) => (
                 <li key={f} className="flex items-center gap-3 text-[13.5px] text-slate-300">
                   <svg className="w-4 h-4 shrink-0 text-[#7B72D4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                   {f}

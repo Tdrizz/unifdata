@@ -42,14 +42,14 @@ const lifecycle = [
 ];
 
 const pages = [
-  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief. Opens with an Aria summary of what needs attention — follow-ups due, unpaid work, stale pipeline. Start here every morning." },
+  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief. Opens with a Vera summary of what needs attention — follow-ups due, unpaid work, stale pipeline. Start here every morning." },
   { name: "Customers", path: "/customers", tag: "Records", description: "Unified contact records. Every person or business the workspace has a relationship with, enriched with relationship status, activity history, and linked records." },
   { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities. See where business sits across the full lifecycle and identify what needs a follow-up or next action." },
   { name: "Jobs", path: "/jobs", tag: "Operations", description: "All active and scheduled work. Weekly calendar toggle. Filter by status — Scheduled, Active, Complete, Cancelled." },
   { name: "Sales", path: "/sales", tag: "Revenue", description: "All revenue records with payment status. Overdue items surface prominently. The fastest way to see what's been completed but not collected." },
   { name: "Follow-ups", path: "/follow-ups", tag: "Actions", description: "Every reminder and action item. List and calendar view. Overdue items surface on the workspace dashboard automatically." },
-  { name: "Aria", path: "/aria", tag: "AI", description: "Your AI business assistant. Opens with the overnight briefing already loaded — drafts ready to send, alerts worth reviewing. Chat freely after clearing the queue." },
-  { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Aria reads from this to prioritize what needs attention." },
+  { name: "Vera", path: "/vera", tag: "AI", description: "Your AI business assistant. Opens with the overnight briefing already loaded — drafts ready to send, alerts worth reviewing. Chat freely any time." },
+  { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Vera reads from this to prioritize what needs attention." },
   { name: "Imports", path: "/imports", tag: "Data", description: "CSV and Google Sheets import with smart column mapping and staged review. Also manages connected integrations — Jobber, QuickBooks, HubSpot, Square." },
   { name: "Settings", path: "/settings", tag: "Account", description: "Business profile, team members, industry labels, process boards, billing, and notification preferences." },
 ];
@@ -153,7 +153,7 @@ const navItems = [
   ["Overview", "#overview"],
   ["The lifecycle model", "#lifecycle"],
   ["Pages", "#pages"],
-  ["Aria", "#aria"],
+  ["Vera", "#vera"],
   ["Imports & integrations", "#imports"],
 ];
 
@@ -302,18 +302,18 @@ export default function DocsPage() {
                 </div>
               </section>
 
-              {/* ARIA */}
-              <section id="aria" className="scroll-mt-20 py-10">
-                <h2 className="text-[24px] font-semibold mb-4">Aria</h2>
+              {/* VERA */}
+              <section id="vera" className="scroll-mt-20 py-10">
+                <h2 className="text-[24px] font-semibold mb-4">Vera</h2>
                 <p className="text-[13.5px] leading-[1.7] text-slate-300 mb-6">
-                  Aria is the AI assistant built into UnifData. Unlike a generic chatbot, Aria has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
+                  Vera is the AI assistant built into UnifData. Unlike a generic chatbot, Vera has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
                 </p>
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   {[
-                    { title: "Overnight briefing", body: "Every morning, Aria surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
-                    { title: "Outreach drafts", body: "Aria writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
-                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown as alerts inside the Aria view." },
-                    { title: "Free-form chat", body: "After clearing the briefing queue, ask Aria anything. It can query your live data, create follow-ups, update job status, and add customers directly from chat." },
+                    { title: "Overnight briefing", body: "Every morning, Vera surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
+                    { title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
+                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown as alerts inside the Vera view." },
+                    { title: "Free-form chat", body: "Ask Vera anything, any time. It can query your live data, create follow-ups, update job status, and add customers directly from chat." },
                   ].map((item) => (
                     <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
                       <p className="text-[14px] font-semibold mb-2">{item.title}</p>

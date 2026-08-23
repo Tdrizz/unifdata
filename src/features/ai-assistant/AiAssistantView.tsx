@@ -40,7 +40,7 @@ export function getTimeOfDay() {
   return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
 }
 
-export function AriaDraftCard({ draft, onApprove, onDismiss }: { draft: Draft; onApprove: () => Promise<void>; onDismiss: () => Promise<void> }) {
+export function VeraDraftCard({ draft, onApprove, onDismiss }: { draft: Draft; onApprove: () => Promise<void>; onDismiss: () => Promise<void> }) {
   const [actioning, setActioning] = useState(false);
   const [dismissing, setDismissing] = useState(false);
   const label = draft.draft_type === "outreach_email" || draft.draft_type === "outreach_sms" ? "Send" : draft.action_label ?? "Approve";
@@ -68,7 +68,7 @@ export function AriaDraftCard({ draft, onApprove, onDismiss }: { draft: Draft; o
   );
 }
 
-export function AriaAlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => Promise<void> }) {
+export function VeraAlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => Promise<void> }) {
   const [dismissing, setDismissing] = useState(false);
   const toneClass = alert.severity === "critical"
     ? "border-ud-danger/30 bg-ud-danger-bg/30"
@@ -360,7 +360,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                       : "rounded-[12px] transition-shadow duration-300"
                   }
                 >
-                  <AriaDraftCard
+                  <VeraDraftCard
                     draft={draft}
                     onApprove={() => handleApproveDraft(draft.id)}
                     onDismiss={() => handleDismissDraft(draft.id)}
@@ -377,7 +377,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                       : "rounded-[12px] transition-shadow duration-300"
                   }
                 >
-                  <AriaAlertCard
+                  <VeraAlertCard
                     alert={alert}
                     onDismiss={() => handleDismissAlert(alert.id)}
                   />

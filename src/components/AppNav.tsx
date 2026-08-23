@@ -36,8 +36,8 @@ export function AppNav({
   const profile = getIndustryProfile(businessSector);
 
   // One dashboard (Home), one merged Pipeline (leads/jobs/sales), Contacts,
-  // Follow-ups, and Communications -- everything else (Aria, Data Hub,
-  // Automations, Process, Imports) is either folded into Home (Aria) or
+  // Follow-ups, and Communications -- everything else (Vera, Data Hub,
+  // Automations, Process, Imports) is either folded into Home (Vera) or
   // reachable through the single Tools entry below, instead of each being a
   // co-equal top-level destination.
   const primaryItems: NavItem[] = [
