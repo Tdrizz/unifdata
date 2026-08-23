@@ -19,7 +19,7 @@ export function PublicNav({ active }: { active?: ActivePage }) {
         <div className="flex items-center gap-1">
           <Link href="/pricing" className={`hidden sm:inline-flex ${linkClass("pricing")}`}>Pricing</Link>
           <Link href="/docs" className={`hidden sm:inline-flex ${linkClass("docs")}`}>Docs</Link>
-          <Link href="/sign-in" className="hidden sm:inline-flex rounded-full px-4 py-2 text-[13px] font-medium text-slate-400 hover:text-white transition-colors">
+          <Link href="/sign-in" className="inline-flex rounded-full px-3 py-2 sm:px-4 text-[13px] font-medium text-slate-400 hover:text-white transition-colors">
             Log in
           </Link>
           <a
