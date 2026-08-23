@@ -8,6 +8,7 @@ import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { getTodayString } from "@/lib/date-format";
 import { logActivity } from "@/lib/crm/activity";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
+import { verifyOwned } from "@/lib/security/ownership";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildSaleText } from "@/lib/embeddings/generate";
 
@@ -28,6 +29,7 @@ export async function createSaleAction(
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
   const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
+  const jobId = getFormString(formData, "job_id");
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };
@@ -37,12 +39,17 @@ export async function createSaleAction(
     return { fieldErrors: { amount: "Must be a positive number." } };
   }
 
+  if (jobId && !(await verifyOwned(supabase, "jobs", jobId, company.id))) {
+    return { fieldErrors: { job_id: "Selected job isn't in your workspace." } };
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: inserted, error } = await (supabase as any)
     .from("sales")
     .insert({
       company_id: company.id,
       contact_id: contactId || null,
+      job_id: jobId || null,
       amount,
       payment_status: paymentStatus,
       sale_date: saleDate || undefined,
@@ -98,6 +105,7 @@ export async function updateSaleAction(
   const serviceType = getFormString(formData, "service_type");
   const source = getFormString(formData, "source");
   const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
+  const jobId = getFormString(formData, "job_id");
 
   if (amount === null) {
     return { fieldErrors: { amount: "Revenue amount is required." } };
@@ -105,6 +113,10 @@ export async function updateSaleAction(
 
   if (amount < 0) {
     return { fieldErrors: { amount: "Must be a positive number." } };
+  }
+
+  if (jobId && !(await verifyOwned(supabase, "jobs", jobId, company.id))) {
+    return { fieldErrors: { job_id: "Selected job isn't in your workspace." } };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,6 +129,7 @@ export async function updateSaleAction(
       service_type: serviceType || null,
       source: source || null,
       contact_id: contactId || null,
+      job_id: jobId || null,
     })
     .eq("id", id)
     .eq("company_id", company.id);

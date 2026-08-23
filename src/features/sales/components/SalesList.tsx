@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { useProfile } from "@/lib/profile-context";
-import type { SaleRow } from "../types";
+import type { SaleRow, JobRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import { SaleCreateForm } from "./SaleCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -21,6 +21,7 @@ type Props = {
   selectedStatus: string;
   selectedSource: string;
   contacts?: ContactForSelect[];
+  jobs?: Pick<JobRow, "id" | "service_type">[];
 };
 
 type FilterType = "all" | "overdue" | "pending" | "paid";
@@ -92,7 +93,7 @@ function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
 }
 
 
-export function SalesList({ sales, count, page: _page, q: _q, contacts = [], selectedStatus, selectedSource, profile }: Props) {
+export function SalesList({ sales, count, page: _page, q: _q, contacts = [], jobs = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
     selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
@@ -336,7 +337,7 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], sel
 
       {/* Quick add */}
       <div id="sale-quick-add" style={{ marginTop: "20px" }}>
-        <SaleCreateForm profile={profile} contacts={contacts} />
+        <SaleCreateForm profile={profile} contacts={contacts} jobs={jobs} />
       </div>
     </div>
   );

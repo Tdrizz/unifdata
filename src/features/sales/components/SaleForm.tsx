@@ -13,12 +13,13 @@ import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getDateInputValue, formatCurrency } from "@/lib/utils";
 import { getRevenueTone, isUnpaid } from "@/lib/status";
 import { updateSaleAction, deleteSaleAction, type ActionState } from "../actions";
-import type { SaleRow } from "../types";
+import type { SaleRow, JobRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   sale: SaleRow;
   contacts: ContactForSelect[];
+  jobs?: Pick<JobRow, "id" | "service_type">[];
   errorParam?: string;
 };
 
@@ -68,7 +69,7 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SaleForm({ sale, contacts }: Props) {
+export function SaleForm({ sale, contacts, jobs = [] }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saleContactId = (sale as any).contact_id ?? sale.customer_id ?? "";
   const boundUpdateAction = updateSaleAction.bind(null, sale.id);
@@ -122,16 +123,28 @@ export function SaleForm({ sale, contacts }: Props) {
             </FormField>
           </div>
 
-          {contacts.length > 0 && (
-            <FormField label="Link to person">
-              <Select name="contact_id" defaultValue={saleContactId}>
-                <option value="">No person linked</option>
-                {contacts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </Select>
-            </FormField>
-          )}
+          <div className="grid gap-4 md:grid-cols-2">
+            {contacts.length > 0 && (
+              <FormField label="Link to person">
+                <Select name="contact_id" defaultValue={saleContactId}>
+                  <option value="">No person linked</option>
+                  {contacts.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </Select>
+              </FormField>
+            )}
+            {jobs.length > 0 && (
+              <FormField label="Link to job">
+                <Select name="job_id" defaultValue={sale.job_id ?? ""}>
+                  <option value="">No job linked</option>
+                  {jobs.map((j) => (
+                    <option key={j.id} value={j.id}>{j.service_type || "Untitled job"}</option>
+                  ))}
+                </Select>
+              </FormField>
+            )}
+          </div>
 
           <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
             <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">

@@ -14,12 +14,13 @@ import { getActionTone } from "@/lib/status";
 import { getDateInputValue } from "@/lib/utils";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { updateFollowUpAction, deleteFollowUpAction, type ActionState } from "../actions";
-import type { FollowUpRow } from "../types";
+import type { FollowUpRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   followUp: FollowUpRow;
   people: ContactForSelect[];
+  leads?: Pick<LeadRow, "id" | "service_requested" | "status">[];
   profile: IndustryProfile;
   errorParam?: string;
 };
@@ -97,7 +98,7 @@ function getActionIssues(action: FollowUpRow) {
   return issues;
 }
 
-export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
+export function FollowUpForm({ followUp, people, leads = [], profile: _profile }: Props) {
   const boundUpdateAction = updateFollowUpAction.bind(null, followUp.id);
   const deleteAction = deleteFollowUpAction.bind(null, followUp.id);
 
@@ -125,16 +126,30 @@ export function FollowUpForm({ followUp, people, profile: _profile }: Props) {
               </p>
             )}
 
-            <FormField label="Link to person or business">
-              <Select name="contact_id" defaultValue={followUpContactId || ""}>
-                <option value="">No linked person yet</option>
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.name || person.email || person.phone || "Unnamed person"}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField label="Link to person or business">
+                <Select name="contact_id" defaultValue={followUpContactId || ""}>
+                  <option value="">No linked person yet</option>
+                  {people.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.name || person.email || person.phone || "Unnamed person"}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              {leads.length > 0 && (
+                <FormField label="Link to opportunity">
+                  <Select name="lead_id" defaultValue={followUp.lead_id ?? ""}>
+                    <option value="">No linked opportunity yet</option>
+                    {leads.map((lead) => (
+                      <option key={lead.id} value={lead.id}>
+                        {lead.service_requested || "Untitled opportunity"}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+              )}
+            </div>
 
             <FormField label="Follow-up action">
               <Input
