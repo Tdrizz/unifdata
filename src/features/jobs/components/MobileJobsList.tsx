@@ -56,10 +56,8 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
           {eyebrow}
         </p>
-        <h1 className="mt-[4px] text-[22px] leading-[1.2] text-ud-ink">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic">
-            {count} {profile.labels.jobPlural.toLowerCase()}
-          </span>
+        <h1 className="mt-[4px] text-[22px] font-semibold leading-[1.2] tracking-[-0.01em] text-ud-ink">
+          {count} {profile.labels.jobPlural.toLowerCase()}
         </h1>
         <p className="mt-[4px] text-[13px] text-ud-muted [font-variant-numeric:tabular-nums]">
           {formatCurrency(totalValue)} total value
