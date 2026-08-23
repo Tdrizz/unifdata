@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: "%s | UnifData",
   },
   description:
-    "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, medical offices, and service businesses.",
+    "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, and service businesses.",
   keywords: [
     "CRM for service businesses",
     "small business CRM",

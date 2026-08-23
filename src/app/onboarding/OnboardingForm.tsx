@@ -15,7 +15,6 @@ import { acceptedFileExtensions } from "@/lib/imports/parser";
 import type { ColumnMapping } from "@/lib/imports/fuzzy-mapper";
 
 const SECTOR_CATEGORIES = [
-  { key: "healthcare", label: "Healthcare", icon: "🩺", description: "Medical, dental, chiropractic, veterinary", sectors: ["dental","physical_therapy","mental_health","chiropractic","medical","veterinary"] },
   { key: "trades", label: "Trades", icon: "🔧", description: "Construction, electrical, plumbing, HVAC, roofing", sectors: ["construction","electrical","plumbing","hvac","roofing","general_contractor"] },
   { key: "home", label: "Home Services", icon: "🏠", description: "Landscaping, cleaning, pest control, painting", sectors: ["home_services","landscaping","cleaning","pest_control","painting"] },
   { key: "professional", label: "Professional Services", icon: "💼", description: "Legal, accounting, consulting, agency, IT", sectors: ["professional_services","legal","accounting","consulting","agency","it_services","financial_advisory"] },
