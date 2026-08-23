@@ -10,6 +10,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { CRMPageData } from "../queries";
 import { STAGES, mapToStage, isOpenLead } from "../stages";
 import { LeadCreateForm } from "@/features/leads/components/LeadCreateForm";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 
 type Lead = CRMPageData["leads"][number];
 
@@ -39,6 +40,7 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
     STAGES.find((s) => (leadsByStage.get(s.name) ?? []).length > 0)?.name ?? "Lead";
 
   const [activeStage, setActiveStage] = useState(defaultStage);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const activeStageLeads = leadsByStage.get(activeStage) ?? [];
   const leadPlural = profile.labels.leadPlural;
@@ -129,10 +131,18 @@ export function MobileCrmView({ leads, customers, profile }: Props) {
         </div>
       )}
 
-      {/* Quick add */}
-      <div id="leads-quick-add" className="px-4 mt-6">
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="fixed bottom-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
+        aria-label={"Add " + profile.labels.leadSingular}
+      >
+        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + profile.labels.leadSingular}>
         <LeadCreateForm customers={customers} profile={profile} />
-      </div>
+      </BottomSheet>
     </div>
   );
 }

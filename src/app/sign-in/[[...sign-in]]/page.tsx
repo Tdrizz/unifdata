@@ -8,27 +8,12 @@ export default function SignInPage() {
       <PublicNav active="login" />
 
       <div className="mx-auto flex min-h-[calc(100vh-56px)] w-full max-w-6xl flex-col justify-center px-6 py-10">
-        <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
-          <section>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Pilot access
-            </p>
-            <h1 className="mt-4 max-w-xl text-5xl font-semibold leading-tight tracking-tight">
-              Sign in to your UnifData workspace.
-            </h1>
-            <p className="mt-5 max-w-lg text-base leading-8 text-slate-300">
-              Access is limited to approved beta customers. Request access if
-              your company has not been invited yet.
-            </p>
-            <Link
-              href="/waitlist"
-              className="mt-8 inline-flex rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
-            >
-              Request access
-            </Link>
-          </section>
-
-          <section className="flex justify-center lg:justify-end">
+        {/* Sign-in form leads on every screen size — it's the primary action
+            here, not a secondary one. The "not invited yet" messaging is a
+            small, clearly secondary link, not a competing hero block that
+            pushes the real form below the fold on mobile. */}
+        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+          <section className="flex justify-center lg:justify-start lg:order-2">
             <SignIn
               routing="path"
               path="/sign-in"
@@ -40,6 +25,21 @@ export default function SignInPage() {
                 },
               }}
             />
+          </section>
+
+          <section className="mt-8 text-center lg:mt-0 lg:order-1 lg:text-left">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Pilot access
+            </p>
+            <h1 className="mt-4 text-2xl font-semibold leading-tight tracking-tight lg:text-5xl">
+              Sign in to your UnifData workspace.
+            </h1>
+            <p className="mt-3 text-[14px] leading-6 text-slate-400 lg:mt-5 lg:max-w-lg lg:text-base lg:leading-8 lg:text-slate-300">
+              Not invited yet?{" "}
+              <Link href="/waitlist" className="font-semibold text-white underline underline-offset-2 hover:text-slate-200">
+                Request access
+              </Link>
+            </p>
           </section>
         </div>
       </div>
