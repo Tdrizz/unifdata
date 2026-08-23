@@ -192,7 +192,7 @@ export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
 
       <button
         onClick={() => setSheetOpen(true)}
-        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
+        className="fixed bottom-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
         aria-label={"Add " + (profile.labels.saleSingular ?? "invoice")}
       >
         <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">

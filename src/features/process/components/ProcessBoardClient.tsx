@@ -680,7 +680,7 @@ export function ProcessBoardClient({ board, stages, records: initialRecords, org
   return (
     <>
       {moveError && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-red-600 text-white text-[13px] font-medium rounded-[10px] shadow-lg pointer-events-none">
+        <div className="fixed bottom-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom)+12px)] md:bottom-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 bg-red-600 text-white text-[13px] font-medium rounded-[10px] shadow-lg pointer-events-none">
           {moveError}
         </div>
       )}

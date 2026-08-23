@@ -154,7 +154,7 @@ export async function AppShell({
             </div>
           </header>
         )}
-        <main className="flex-1 pb-[calc(80px+env(safe-area-inset-bottom))]">
+        <main className="flex-1 pb-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom))]">
           {children}
         </main>
       </div>

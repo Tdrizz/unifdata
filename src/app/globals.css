@@ -56,6 +56,12 @@
 }
 
 :root {
+  /* Mobile shell layout — single source of truth. Every page/FAB/toast that
+     needs to clear the bottom tab bar reads this instead of guessing a pixel
+     value; previously five different files each hardcoded a different guess
+     (72px in FABs, 80px in shells/prompts), none of which matched the tab
+     bar's actual ~59px box, causing real overlap on some devices. */
+  --mobile-tabbar-h:  64px;
   --ud-page:          #f6f5f2;
   --ud-surface:       #ffffff;
   --ud-surface-soft:  #fbfaf8;

@@ -18,7 +18,7 @@ export function MobileShell({ children, back, trailing, companyName }: Props) {
     <div className="flex flex-col min-h-[100dvh] bg-ud-page overflow-x-hidden">
       {/* Header */}
       <header
-        className="flex items-center justify-between px-4 gap-[10px] border-b border-ud/60 bg-ud-page/95 backdrop-blur-[20px] saturate-[160%] sticky top-0 z-20"
+        className="flex items-center justify-between px-4 gap-[10px] border-b border-ud/60 bg-ud-page/95 backdrop-blur-[20px] saturate-[160%] sticky top-0 z-30"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 10px)", paddingBottom: "12px" }}
       >
         {back ? (
@@ -45,7 +45,7 @@ export function MobileShell({ children, back, trailing, companyName }: Props) {
       {/* Scrollable content */}
       <main
         className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-none"
-        style={{ paddingBottom: "calc(80px + env(safe-area-inset-bottom))" }}
+        style={{ paddingBottom: "calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom))" }}
       >
         {children}
       </main>
