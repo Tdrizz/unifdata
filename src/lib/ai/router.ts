@@ -1,12 +1,15 @@
 import OpenAI from "openai";
 
+// "openrouter/auto" lets OpenRouter pick the best available model per-request
+// instead of pinning to one provider's model id, which breaks outright whenever
+// that specific id is renamed, deprecated, or temporarily unavailable upstream.
 export const AI_MODELS = {
-  manager: "openai/gpt-4o-mini",
-  chat: "anthropic/claude-3.5-haiku",
-  outreach: "anthropic/claude-3.5-sonnet",
-  revenue: "openai/gpt-4o-mini",
-  dataQuality: "google/gemini-flash-1.5",
-  alertFormatter: "openai/gpt-4o-mini",
+  manager: "openrouter/auto",
+  chat: "openrouter/auto",
+  outreach: "openrouter/auto",
+  revenue: "openrouter/auto",
+  dataQuality: "openrouter/auto",
+  alertFormatter: "openrouter/auto",
 } as const;
 
 let _client: OpenAI | null = null;

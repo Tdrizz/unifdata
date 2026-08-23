@@ -367,7 +367,8 @@ export async function POST(request: Request) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
               }
             }
-          } catch {
+          } catch (err) {
+            console.error("[chat] follow-up stream failed:", err);
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
@@ -397,7 +398,8 @@ export async function POST(request: Request) {
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
                 }
               }
-            } catch {
+            } catch (err) {
+              console.error("[chat] fallback stream failed:", err);
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
@@ -433,6 +435,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    console.error("[chat] AI request failed:", error);
     const message = error instanceof Error ? error.message : "Failed to get response.";
     const isOverloaded = message.includes("503") || message.toLowerCase().includes("unavailable") || message.toLowerCase().includes("high demand") || message.toLowerCase().includes("try again later");
     const userMsg = isOverloaded
