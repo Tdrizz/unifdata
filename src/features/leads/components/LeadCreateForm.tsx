@@ -1,10 +1,23 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createLeadAction, type ActionState } from "../actions";
 import type { CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+
+// The Kanban board's stage names (Lead/Quoted/In progress/Won/Lost) and this
+// form's status options are two different vocabularies — clicking "Add" in
+// the Quoted column should default here to a status that actually lands the
+// new record back in that column, not silently default to "New" regardless.
+const STAGE_TO_DEFAULT_STATUS: Record<string, string> = {
+  Lead: "New",
+  Quoted: "Estimate Sent",
+  "In progress": "Follow Up",
+  Won: "Won",
+  Lost: "Lost",
+};
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
@@ -18,6 +31,9 @@ export function LeadCreateForm({ customers, profile }: Props) {
     createLeadAction,
     null,
   );
+  const searchParams = useSearchParams();
+  const requestedStage = searchParams.get("add");
+  const defaultStatus = (requestedStage && STAGE_TO_DEFAULT_STATUS[requestedStage]) || "New";
 
   return (
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
@@ -48,7 +64,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
 
           <label className="block">
             <span className="block text-xs font-semibold text-ud-muted">Status</span>
-            <select name="status" defaultValue="New" className={f}>
+            <select name="status" defaultValue={defaultStatus} className={f}>
               <option value="New">New</option>
               <option value="Contacted">Contacted</option>
               <option value="Estimate Sent">Estimate Sent</option>

@@ -47,14 +47,9 @@ export default async function EditWorkPage({
           title={job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
           description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, ${profile.labels.leadSingular.toLowerCase()}, stage, payment status, dates, and value.`}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <Link href="/jobs" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
-                Back to {profile.labels.jobPlural}
-              </Link>
-              <Link href="/sales" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-                {profile.labels.salePlural}
-              </Link>
-            </div>
+            <Link href="/jobs" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
+              Back to {profile.labels.jobPlural}
+            </Link>
           }
         />
         <JobForm job={job} contacts={contacts} leads={leads} profile={profile} />

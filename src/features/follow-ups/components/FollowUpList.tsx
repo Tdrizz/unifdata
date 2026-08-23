@@ -121,7 +121,10 @@ function buildFollowUpItems(
     id: `manual-${action.id}`,
     source_type: "manual",
     source_label: "Manual follow-up",
-    customer_id: action.customer_id,
+    // contact_id (-> master_customers) is the live link; customer_id is an
+    // orphaned legacy column left null on every current row. Falling back to
+    // it only matters for pre-cutover records that were never backfilled.
+    customer_id: action.contact_id ?? action.customer_id,
     title: action.message || `Untitled ${followUpSingularLabel.toLowerCase()}`,
     due_date: action.due_date,
     status: action.status || "Open",
@@ -137,7 +140,7 @@ function buildFollowUpItems(
       id: `opportunity-${opp.id}`,
       source_type: "opportunity",
       source_label: `${leadSingularLabel} follow-up`,
-      customer_id: opp.customer_id,
+      customer_id: opp.contact_id ?? opp.customer_id,
       title: opp.service_requested
         ? `Follow up: ${opp.service_requested}`
         : `Follow up on ${leadSingularLabel.toLowerCase()}`,

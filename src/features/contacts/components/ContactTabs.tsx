@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ContactActivityTab } from "./ContactActivityTab";
 import { ContactNotesTab } from "./ContactNotesTab";
+import { ContactCommunicationsTab } from "./ContactCommunicationsTab";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 type Tone = "neutral" | "success" | "warning" | "danger" | "info";
@@ -219,13 +220,7 @@ export function ContactTabs({
           <RecordsTab jobs={jobs} sales={sales} followUps={followUps} />
         )}
         {tab === "communications" && (
-          <div className="py-10 text-center">
-            <p className="text-[13px] font-semibold text-ud-ink mb-1">No messages yet</p>
-            <p className="text-[12.5px] text-ud-muted mb-4">SMS conversations with this contact will appear here.</p>
-            <a href="/communications" className="text-[12.5px] text-ud-accent hover:underline">
-              View all communications →
-            </a>
-          </div>
+          <ContactCommunicationsTab contactId={contactId} orgId={orgId} />
         )}
       </div>
     </div>

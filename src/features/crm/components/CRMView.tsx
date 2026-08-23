@@ -157,7 +157,7 @@ export function CRMView({ leads, customers, profile }: Props) {
                 );
               })}
 
-              <Link href="#leads-quick-add" className="flex items-center gap-1.5 p-2 rounded-[8px] text-[12px] text-ud-faint cursor-pointer w-full border border-dashed border-transparent hover:bg-[rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.10)] hover:text-ud-muted transition-[background-color,border-color,color] duration-[120ms]" style={{ textDecoration: "none" }}>
+              <Link href={`?add=${encodeURIComponent(stage.name)}#leads-quick-add`} className="flex items-center gap-1.5 p-2 rounded-[8px] text-[12px] text-ud-faint cursor-pointer w-full border border-dashed border-transparent hover:bg-[rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.10)] hover:text-ud-muted transition-[background-color,border-color,color] duration-[120ms]" style={{ textDecoration: "none" }}>
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>

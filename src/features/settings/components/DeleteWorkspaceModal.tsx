@@ -71,7 +71,7 @@ export function DeleteWorkspaceModal({ companyName }: Props) {
               </ul>
               <p>
                 <strong style={{ color: "var(--ink)" }}>Next steps after deletion:</strong> You will be signed out immediately. If you need a data export before deleting, contact{" "}
-                <a href="mailto:support@frontierops.io" style={{ color: "var(--accent)" }}>support@frontierops.io</a> first.
+                <a href="mailto:unifdata@gmail.com" style={{ color: "var(--accent)" }}>unifdata@gmail.com</a> first.
               </p>
             </div>
 

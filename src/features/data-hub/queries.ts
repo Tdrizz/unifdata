@@ -4,10 +4,10 @@ import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } fro
 import type { CustomerRow, LeadRow, JobRow, SaleRow, FollowUpRow, ProposalRow, AuditLogRow } from "./types";
 
 type DataHubCustomer = Pick<CustomerRow, "id" | "name" | "phone" | "email" | "address" | "customer_type" | "created_at">;
-type DataHubLead = Pick<LeadRow, "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
-type DataHubJob = Pick<JobRow, "id" | "customer_id" | "lead_id" | "service_type" | "status" | "job_value" | "start_date" | "completed_date" | "paid_status" | "created_at">;
+type DataHubLead = Pick<LeadRow, "id" | "customer_id" | "contact_id" | "service_requested" | "status" | "estimated_value" | "source" | "next_follow_up_date" | "created_at">;
+type DataHubJob = Pick<JobRow, "id" | "customer_id" | "contact_id" | "lead_id" | "service_type" | "status" | "job_value" | "start_date" | "completed_date" | "paid_status" | "created_at">;
 type DataHubSale = Pick<SaleRow, "id" | "amount" | "payment_status" | "sale_date" | "service_type" | "source" | "created_at">;
-type DataHubFollowUp = Pick<FollowUpRow, "id" | "customer_id" | "message" | "due_date" | "status" | "created_at">;
+type DataHubFollowUp = Pick<FollowUpRow, "id" | "customer_id" | "contact_id" | "message" | "due_date" | "status" | "created_at">;
 
 export type DataHubPageData = {
   customers: DataHubCustomer[];
@@ -38,7 +38,7 @@ export async function getDataHubPageData(
     supabase
       .from("leads")
       .select(
-        "id, customer_id, service_requested, status, estimated_value, source, next_follow_up_date, created_at",
+        "id, customer_id, contact_id, service_requested, status, estimated_value, source, next_follow_up_date, created_at",
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
@@ -47,7 +47,7 @@ export async function getDataHubPageData(
     supabase
       .from("jobs")
       .select(
-        "id, customer_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
+        "id, customer_id, contact_id, lead_id, service_type, status, job_value, start_date, completed_date, paid_status, created_at",
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
@@ -64,7 +64,7 @@ export async function getDataHubPageData(
 
     supabase
       .from("follow_ups")
-      .select("id, customer_id, message, due_date, status, created_at")
+      .select("id, customer_id, contact_id, message, due_date, status, created_at")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),

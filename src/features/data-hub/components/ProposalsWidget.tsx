@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { ProposalRow, FieldDelta } from "@/lib/data-keeper/types";
 
 type Props = {
@@ -60,8 +61,16 @@ function ProposalRow({
     <div className="queue-item">
       <div className="queue-dot queue-dot-warning" />
       <div className="queue-body" style={{ flex: 1 }}>
-        <div className="queue-action" style={{ marginBottom: "4px" }}>
+        <div className="queue-action" style={{ marginBottom: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
           {Math.round(proposal.confidence_score * 100)}% confidence match
+          {proposal.target_table === "master_customers" && proposal.target_record_id && (
+            <Link
+              href={`/customers/${proposal.target_record_id}`}
+              style={{ fontSize: "12px", fontWeight: 500, textDecoration: "underline" }}
+            >
+              View contact
+            </Link>
+          )}
         </div>
 
         {hasDiff && (

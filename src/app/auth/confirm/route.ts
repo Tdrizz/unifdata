@@ -38,6 +38,6 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent("The link is invalid or has expired. Request a new one.")}`,
+    `${origin}/sign-in?error=${encodeURIComponent("The link is invalid or has expired. Request a new one.")}`,
   );
 }
