@@ -201,7 +201,7 @@ export function SettingsView({
                 <p className="text-[13px] font-semibold text-ud-ink">UnifData</p>
                 <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-accent text-white">Active</span>
               </div>
-              <p className="text-[12px] text-ud-muted mt-[1px]">$100/mo · Everything included — Aria, CRM, integrations, and imports</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">$100/mo · Everything included — Vera, CRM, integrations, and imports</p>
             </div>
           </div>
         </div>

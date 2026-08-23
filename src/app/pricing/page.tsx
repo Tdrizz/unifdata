@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const included = [
   "Everything — no feature tiers or upgrade walls",
-  "Aria AI briefings every morning",
+  "Vera AI briefings every morning",
   "Customers, pipeline, jobs, sales, and follow-ups",
   "CSV imports with smart deduplication",
   "QuickBooks, Jobber, HubSpot, and Square sync",
@@ -97,7 +97,7 @@ export default function PricingPage() {
             {[
               { step: "01", title: "Before the call", body: "Export a spreadsheet of your customers, jobs, or contacts from wherever you're storing them now. We handle the rest." },
               { step: "02", title: "During the call", body: "We configure your workspace, import your data, connect your tools, and walk you through the app with your real customers and jobs." },
-              { step: "03", title: "After the call", body: "You're running on UnifData. Aria starts reviewing your business that night and your first briefing is ready the next morning." },
+              { step: "03", title: "After the call", body: "You're running on UnifData. Vera starts reviewing your business that night and your first briefing is ready the next morning." },
             ].map((step) => (
               <div key={step.step} className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-7">
                 <div className="w-8 h-8 rounded-[9px] bg-[#4A3FA8]/20 flex items-center justify-center text-[12px] font-bold text-[#8B80E0] mb-5">{step.step}</div>

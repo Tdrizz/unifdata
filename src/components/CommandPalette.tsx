@@ -16,7 +16,7 @@ function buildCommands(businessSector?: string | null) {
     { id: "sales",      label: `Go to ${profile.labels.salePlural}`,     href: "/sales",      group: "Navigate" },
     { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },
     { id: "communications", label: "Go to Communications",               href: "/communications", group: "Navigate" },
-    { id: "aria",       label: "Open Aria",                              href: "/aria",       group: "Navigate" },
+    { id: "vera",       label: "Open Vera",                              href: "/vera",       group: "Navigate" },
     { id: "tools",      label: "Go to Tools",                            href: "/tools",      group: "Navigate" },
     { id: "process",    label: `Go to ${profile.recordPlural}`,          href: "/process",    group: "Navigate" },
     { id: "automations", label: "Go to Automations",                     href: "/automations", group: "Navigate" },
