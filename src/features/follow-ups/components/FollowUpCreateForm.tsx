@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { ContactForSelect } from "@/lib/crm/types";
+import type { LeadRow } from "../types";
 import { createFollowUpAction, type ActionState } from "../actions";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -9,9 +10,10 @@ const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4
 
 type Props = {
   people: ContactForSelect[];
+  leads?: Pick<LeadRow, "id" | "service_requested" | "status">[];
 };
 
-export function FollowUpCreateForm({ people }: Props) {
+export function FollowUpCreateForm({ people, leads = [] }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(createFollowUpAction, null);
 
   return (
@@ -26,17 +28,32 @@ export function FollowUpCreateForm({ people }: Props) {
           </p>
         )}
 
-        <label className="block">
-          <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-          <select name="contact_id" className={f}>
-            <option value="">No linked person yet</option>
-            {people.map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name || person.email || person.phone || "Unnamed person"}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
+            <select name="contact_id" className={f}>
+              <option value="">No linked person yet</option>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.name || person.email || person.phone || "Unnamed person"}
+                </option>
+              ))}
+            </select>
+          </label>
+          {leads.length > 0 && (
+            <label className="block">
+              <span className="block text-xs font-semibold text-ud-muted">Link to opportunity</span>
+              <select name="lead_id" className={f}>
+                <option value="">No linked opportunity yet</option>
+                {leads.map((lead) => (
+                  <option key={lead.id} value={lead.id}>
+                    {lead.service_requested || "Untitled opportunity"}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
 
         <div>
           <label className="block">

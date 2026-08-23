@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
+import { isAcceptedOpportunityStatus, syncAcceptedOpportunity } from "@/lib/lifecycle";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -39,19 +40,38 @@ export async function createLeadAction(
     return { fieldErrors: { customer_id: "Selected customer isn't in your workspace." } };
   }
 
-  const { error } = await supabase.from("leads").insert({
-    company_id: company.id,
-    customer_id: null,
-    contact_id: contactId,
-    service_requested: serviceRequested,
-    status,
-    estimated_value: estimatedValue,
-    source: source || null,
-    next_follow_up_date: nextFollowUpDate || null,
-    notes: notes || null,
-  });
+  const { data: inserted, error } = await supabase
+    .from("leads")
+    .insert({
+      company_id: company.id,
+      customer_id: null,
+      contact_id: contactId,
+      service_requested: serviceRequested,
+      status,
+      estimated_value: estimatedValue,
+      source: source || null,
+      next_follow_up_date: nextFollowUpDate || null,
+      notes: notes || null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  if (inserted && isAcceptedOpportunityStatus(status)) {
+    try {
+      await syncAcceptedOpportunity({
+        supabase,
+        companyId: company.id,
+        opportunityId: inserted.id,
+        contactId,
+        opportunityName: serviceRequested,
+        amount: estimatedValue,
+      });
+    } catch (err) {
+      console.error("[lifecycle] syncAcceptedOpportunity failed", err);
+    }
+  }
 
   revalidatePath("/crm");
   revalidatePath("/workspace");
@@ -106,6 +126,21 @@ export async function updateLeadAction(
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
+
+  if (isAcceptedOpportunityStatus(status)) {
+    try {
+      await syncAcceptedOpportunity({
+        supabase,
+        companyId: company.id,
+        opportunityId: id,
+        contactId,
+        opportunityName: serviceRequested,
+        amount: estimatedValue,
+      });
+    } catch (err) {
+      console.error("[lifecycle] syncAcceptedOpportunity failed", err);
+    }
+  }
 
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");

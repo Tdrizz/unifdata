@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { formatCurrency } from "@/lib/utils";
-import { getSaleById, getCustomersForSaleSelect } from "@/features/sales/queries";
+import { getSaleById, getCustomersForSaleSelect, getJobsForSaleSelect } from "@/features/sales/queries";
 import { SaleForm } from "@/features/sales/components/SaleForm";
 
 export const dynamic = 'force-dynamic';
@@ -28,9 +28,10 @@ export default async function EditRevenuePage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [sale, contacts] = await Promise.all([
+  const [sale, contacts, jobs] = await Promise.all([
     getSaleById(supabase, company.id, id),
     getCustomersForSaleSelect(supabase, company.id),
+    getJobsForSaleSelect(supabase, company.id),
   ]);
 
   if (!sale) redirect("/sales");
@@ -52,7 +53,7 @@ export default async function EditRevenuePage({
             </Link>
           }
         />
-        <SaleForm sale={sale} contacts={contacts} />
+        <SaleForm sale={sale} contacts={contacts} jobs={jobs} />
       </div>
     </AppShell>
   );

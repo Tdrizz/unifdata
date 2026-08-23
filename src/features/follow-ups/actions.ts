@@ -7,6 +7,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { logActivity } from "@/lib/crm/activity";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
+import { verifyOwned } from "@/lib/security/ownership";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -25,11 +26,16 @@ export async function createFollowUpAction(
   if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
   const contactId = await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id"));
+  const leadId = getFormString(formData, "lead_id");
+  if (leadId && !(await verifyOwned(supabase, "leads", leadId, company.id))) {
+    return { fieldErrors: { lead_id: "Selected opportunity isn't in your workspace." } };
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: inserted, error } = await (supabase as any).from("follow_ups").insert({
     company_id: company.id,
     contact_id: contactId,
+    lead_id: leadId || null,
     message,
     due_date: dueDate,
     status: getFormString(formData, "status") || "Open",
@@ -72,11 +78,17 @@ export async function updateFollowUpAction(
   const dueDate = getFormString(formData, "due_date");
   if (!dueDate) return { fieldErrors: { due_date: "Due date is required." } };
 
+  const leadId = getFormString(formData, "lead_id");
+  if (leadId && !(await verifyOwned(supabase, "leads", leadId, company.id))) {
+    return { fieldErrors: { lead_id: "Selected opportunity isn't in your workspace." } };
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from("follow_ups")
     .update({
       contact_id: await resolveOwnedContactId(supabase, company.id, getFormString(formData, "contact_id")),
+      lead_id: leadId || null,
       message,
       due_date: dueDate,
       status: getFormString(formData, "status") || "Open",

@@ -61,6 +61,20 @@ export async function getFollowUpById(
   return data as FollowUpRow;
 }
 
+export async function getLeadsForFollowUpSelect(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<Pick<LeadRow, "id" | "service_requested" | "status">[]> {
+  const { data } = await supabase
+    .from("leads")
+    .select("id, service_requested, status")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  return (data ?? []) as Pick<LeadRow, "id" | "service_requested" | "status">[];
+}
+
 export async function getCustomersForSelect(
   supabase: SupabaseClient,
   companyId: string,

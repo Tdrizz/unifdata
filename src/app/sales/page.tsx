@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getSalesPageData, getCustomersForSaleSelect } from "@/features/sales/queries";
+import { getSalesPageData, getCustomersForSaleSelect, getJobsForSaleSelect } from "@/features/sales/queries";
 import { SalesList } from "@/features/sales/components/SalesList";
 import { MobileSalesView } from "@/features/sales/components/MobileSalesView";
 
@@ -28,9 +28,10 @@ export default async function RevenuePage({
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const [{ sales, count }, contacts] = await Promise.all([
+  const [{ sales, count }, contacts, jobs] = await Promise.all([
     getSalesPageData(supabase, company.id, { q: params.q, page }),
     getCustomersForSaleSelect(supabase, company.id),
+    getJobsForSaleSelect(supabase, company.id),
   ]);
 
   return (
@@ -39,7 +40,7 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <MobileSalesView sales={sales} profile={profile} contacts={contacts} />
+      <MobileSalesView sales={sales} profile={profile} contacts={contacts} jobs={jobs} />
       <SalesList
         sales={sales}
         count={count}
@@ -49,6 +50,7 @@ export default async function RevenuePage({
         selectedStatus={selectedStatus}
         selectedSource={selectedSource}
         contacts={contacts}
+        jobs={jobs}
       />
     </AppShell>
   );

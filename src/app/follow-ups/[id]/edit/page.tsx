@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getFollowUpById, getCustomersForSelect } from "@/features/follow-ups/queries";
+import { getFollowUpById, getCustomersForSelect, getLeadsForFollowUpSelect } from "@/features/follow-ups/queries";
 import { FollowUpForm } from "@/features/follow-ups/components/FollowUpForm";
 
 export const dynamic = 'force-dynamic';
@@ -26,9 +26,10 @@ export default async function EditFollowUpPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [followUp, people] = await Promise.all([
+  const [followUp, people, leads] = await Promise.all([
     getFollowUpById(supabase, company.id, id),
     getCustomersForSelect(supabase, company.id),
+    getLeadsForFollowUpSelect(supabase, company.id),
   ]);
 
   if (!followUp) redirect("/follow-ups");
@@ -42,7 +43,7 @@ export default async function EditFollowUpPage({
       <div className="px-6 pt-5">
         <PageHeader eyebrow={profile.labels.followUpPlural} title="Edit follow-up" />
       </div>
-      <FollowUpForm followUp={followUp} people={people} profile={profile} />
+      <FollowUpForm followUp={followUp} people={people} leads={leads} profile={profile} />
     </AppShell>
   );
 }

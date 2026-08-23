@@ -10,6 +10,7 @@ import { resolveOwnedContactId } from "@/lib/crm/contacts";
 import { verifyOwned } from "@/lib/security/ownership";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildJobText } from "@/lib/embeddings/generate";
+import { isCompletedPaidJob, syncSaleForJob } from "@/lib/lifecycle";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -82,6 +83,21 @@ export async function createJobAction(
         // Non-fatal
       }
     }
+    if (isCompletedPaidJob(status, paidStatus)) {
+      try {
+        await syncSaleForJob({
+          supabase,
+          companyId: company.id,
+          jobId: inserted.id,
+          contactId: contactId || null,
+          serviceType,
+          amount: jobValue,
+          source: null,
+        });
+      } catch (err) {
+        console.error("[lifecycle] syncSaleForJob failed", err);
+      }
+    }
   }
 
   revalidatePath("/jobs");
@@ -145,6 +161,22 @@ export async function updateJobAction(
     buildJobText({ service_type: serviceType, status, paid_status: paidStatus, start_date: startDate || null }),
     company.id,
   );
+
+  if (isCompletedPaidJob(status, paidStatus)) {
+    try {
+      await syncSaleForJob({
+        supabase,
+        companyId: company.id,
+        jobId: id,
+        contactId: contactId || null,
+        serviceType,
+        amount: jobValue,
+        source: null,
+      });
+    } catch (err) {
+      console.error("[lifecycle] syncSaleForJob failed", err);
+    }
+  }
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);

@@ -116,7 +116,7 @@ export function FollowUpViewToggle({ followUps, opportunities, people, filters, 
       </button>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile?.labels.followUpSingular ?? "follow-up")}>
-        <FollowUpCreateForm people={people} />
+        <FollowUpCreateForm people={people} leads={opportunities} />
       </BottomSheet>
     </div>
   );

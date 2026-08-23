@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatCurrency, cn } from "@/lib/utils";
 import { SaleCreateForm } from "./SaleCreateForm";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import type { SaleRow } from "../types";
+import type { SaleRow, JobRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
@@ -13,6 +13,7 @@ type Props = {
   sales: SaleRow[];
   profile: IndustryProfile;
   contacts?: ContactForSelect[];
+  jobs?: Pick<JobRow, "id" | "service_type">[];
 };
 
 type Filter = "all" | "overdue" | "pending" | "paid";
@@ -49,7 +50,7 @@ function sourceBadge(sourceSystem: string | null | undefined) {
   return labels[sourceSystem.toLowerCase()] ?? sourceSystem.toUpperCase().slice(0, 4);
 }
 
-export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
+export function MobileSalesView({ sales, profile, contacts = [], jobs = [] }: Props) {
   const [filter, setFilter] = useState<Filter>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -200,7 +201,7 @@ export function MobileSalesView({ sales, profile, contacts = [] }: Props) {
         </svg>
       </button>
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile.labels.saleSingular ?? "invoice")}>
-        <SaleCreateForm profile={profile} contacts={contacts} />
+        <SaleCreateForm profile={profile} contacts={contacts} jobs={jobs} />
       </BottomSheet>
     </div>
   );
