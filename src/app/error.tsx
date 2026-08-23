@@ -47,7 +47,7 @@ export default function GlobalError({
           </button>
 
           <Link
-            href="/"
+            href="/workspace"
             className="rounded-[8px] border border-ud bg-ud-surface px-4 py-2.5 text-[13px] font-semibold text-ud-muted hover:bg-ud-surface-sunk transition-colors"
           >
             Back to Home

@@ -47,14 +47,9 @@ export default async function EditRevenuePage({
           title={sale.service_type || formatCurrency(sale.amount)}
           description={`Update amount, payment status, ${profile.labels.saleSingular.toLowerCase()} date, source, and service category.`}
           actions={
-            <div className="flex flex-wrap gap-2">
-              <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
-                Back to {profile.labels.salePlural}
-              </Link>
-              <Link href="/jobs" className="rounded-[10px] bg-ud-accent px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
-                {profile.labels.jobPlural}
-              </Link>
-            </div>
+            <Link href="/sales" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
+              Back to {profile.labels.salePlural}
+            </Link>
           }
         />
         <SaleForm sale={sale} contacts={contacts} />

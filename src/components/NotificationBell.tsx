@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useId, useState, useRef } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { markNotificationsRead } from "@/lib/notifications";
+
+// Notifications carry no per-record link — route by type to the page that's
+// actually about it, instead of the click doing nothing. Every `type` value
+// any insert site in the app actually uses (cron overdue-follow-up sweep,
+// Stripe webhook, automation actions, integration sync) is covered here.
+const NOTIFICATION_TYPE_ROUTES: Record<string, string> = {
+  follow_up_overdue: "/follow-ups",
+  billing: "/settings",
+  automation: "/automations",
+  sync_complete: "/imports",
+};
 
 interface Notification {
   id: string;
@@ -82,13 +94,26 @@ export function NotificationBell({ companyId, initialNotifications }: Notificati
             {notifications.length === 0 ? (
               <p style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: "var(--faint)" }}>No notifications</p>
             ) : (
-              notifications.slice(0, 10).map((n) => (
-                <div key={n.id} style={{ borderBottom: "1px solid var(--border)", padding: "12px 16px", background: !n.read ? "var(--accent-light)" : undefined }}>
-                  <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)", margin: 0 }}>{n.title}</p>
-                  {n.body && <p style={{ marginTop: "2px", fontSize: "12px", color: "var(--muted)", margin: "2px 0 0" }}>{n.body}</p>}
-                  <p style={{ marginTop: "4px", fontSize: "11px", color: "var(--faint)", margin: "4px 0 0" }}>{new Date(n.created_at).toLocaleDateString()}</p>
-                </div>
-              ))
+              notifications.slice(0, 10).map((n) => {
+                const href = NOTIFICATION_TYPE_ROUTES[n.type];
+                const content = (
+                  <>
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)", margin: 0 }}>{n.title}</p>
+                    {n.body && <p style={{ marginTop: "2px", fontSize: "12px", color: "var(--muted)", margin: "2px 0 0" }}>{n.body}</p>}
+                    <p style={{ marginTop: "4px", fontSize: "11px", color: "var(--faint)", margin: "4px 0 0" }}>{new Date(n.created_at).toLocaleDateString()}</p>
+                  </>
+                );
+                const rowStyle = { borderBottom: "1px solid var(--border)", padding: "12px 16px", background: !n.read ? "var(--accent-light)" : undefined };
+                return href ? (
+                  <Link key={n.id} href={href} onClick={() => setOpen(false)} style={{ ...rowStyle, display: "block", textDecoration: "none" }}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={n.id} style={rowStyle}>
+                    {content}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

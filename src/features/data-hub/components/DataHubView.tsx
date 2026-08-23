@@ -29,12 +29,15 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
   const missingAddress = customers.filter((c) => !c.address);
 
   const openLeads = opportunities.filter((l) => isOpenStatus(l.status));
-  const leadMissingCustomer = openLeads.filter((l) => !l.customer_id);
+  // contact_id (-> master_customers) is the live link; customer_id is an
+  // orphaned legacy column, null on every current row. Filtering on it alone
+  // flagged every correctly-linked lead/job as "missing a customer".
+  const leadMissingCustomer = openLeads.filter((l) => !(l.contact_id ?? l.customer_id));
   const leadMissingValue = openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined);
   const leadMissingSource = openLeads.filter((l) => !l.source);
   const leadNoFollowUp = openLeads.filter((l) => !l.next_follow_up_date);
 
-  const orphanJobs = workRecords.filter((w) => !w.customer_id);
+  const orphanJobs = workRecords.filter((w) => !(w.contact_id ?? w.customer_id));
   const jobMissingValue = workRecords.filter((w) => w.job_value === null || w.job_value === undefined);
 
   const openFollowUps = followUps.filter((f) => {

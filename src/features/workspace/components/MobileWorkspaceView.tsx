@@ -159,6 +159,11 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
   const visibleQueue = priorityQueue.slice(0, 8);
   const overdueCount = priorityQueue.filter((i) => i.tone === "danger").length;
+  // /follow-ups only ever shows follow-up-sourced items (manual + opportunity),
+  // never the unpaid-payment or AI items also in this list — so the "See all"
+  // count must reflect just that subset, or the number wouldn't match what's
+  // actually there when you tap through.
+  const followUpSourcedCount = manualFollowUpItems.length + opportunityFollowUpItems.length;
 
   const jobPlural = profile.labels.jobPlural;
   const dayLabel = getDayLabel();
@@ -194,9 +199,9 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
               <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em]">
                 Needs your attention
               </p>
-              {priorityQueue.length > visibleQueue.length && (
+              {followUpSourcedCount > 0 && (
                 <Link href="/follow-ups" className="text-[13px] font-semibold text-ud-accent">
-                  See all {priorityQueue.length}
+                  See all {followUpSourcedCount} follow-ups
                 </Link>
               )}
             </div>
