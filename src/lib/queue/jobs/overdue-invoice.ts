@@ -25,7 +25,7 @@ export async function processOverdueInvoice(
   // Re-verify: is this invoice still unpaid in the local sales table?
   const { data: sale } = await supabase
     .from("sales")
-    .select("id, payment_status, amount, customer_id")
+    .select("id, payment_status, amount, contact_id")
     .eq("company_id", companyId)
     .or(`source.eq.quickbooks,service_type.ilike.%${invoiceId}%`)
     .in("payment_status", ["Unpaid", "unpaid", "Overdue", "overdue"])
@@ -43,7 +43,7 @@ export async function processOverdueInvoice(
 
   const { data: customer } = customerId
     ? await mcQuery.eq("id", customerId).maybeSingle()
-    : await mcQuery.eq("id", sale.customer_id ?? "").maybeSingle();
+    : await mcQuery.eq("id", sale.contact_id ?? "").maybeSingle();
 
   if (!customer?.primary_phone) {
     return { sent: false, reason: "No phone number on file for this customer." };

@@ -57,8 +57,11 @@ export async function GET(request: Request) {
     );
   }
 
-  // Fetch account name from Jobber
+  // Fetch account id + name from Jobber. The account id is required so the
+  // inbound webhook can match events to this tenant (it filters integrations by
+  // metadata.account_id) — without it, every Jobber webhook is dropped.
   let accountName = "Jobber Account";
+  let accountId: string | null = null;
   try {
     const infoRes = await fetch("https://api.getjobber.com/api/graphql", {
       method: "POST",
@@ -67,11 +70,12 @@ export async function GET(request: Request) {
         "Content-Type": "application/json",
         "X-JOBBER-GRAPHQL-VERSION": "2024-01-10",
       },
-      body: JSON.stringify({ query: "{ account { name } }" }),
+      body: JSON.stringify({ query: "{ account { id name } }" }),
     });
     if (infoRes.ok) {
-      const info = (await infoRes.json()) as { data?: { account?: { name?: string } } };
+      const info = (await infoRes.json()) as { data?: { account?: { id?: string; name?: string } } };
       accountName = info.data?.account?.name || accountName;
+      accountId = info.data?.account?.id ?? null;
     }
   } catch {
     // non-fatal
@@ -99,7 +103,7 @@ export async function GET(request: Request) {
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token || null,
       token_expires_at: expiresAt,
-      metadata: { token_type: tokenData.token_type || null },
+      metadata: { token_type: tokenData.token_type || null, account_id: accountId },
     })
     .select("id")
     .single();

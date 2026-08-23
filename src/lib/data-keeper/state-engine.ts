@@ -95,13 +95,22 @@ export async function executeDecision(
 
       const { data: current } = await supabase
         .from("master_customers")
-        .select("data_health_score")
+        .select("data_health_score, metadata")
         .eq("id", decision.targetId)
         .eq("organization_id", organizationId)
         .maybeSingle();
 
       const currentScore = current?.data_health_score ?? 100;
       const newScore = Math.min(100, currentScore + healthDelta);
+
+      // Merge metadata — a plain .update() replaces the whole jsonb column, which
+      // would wipe existing keys (customer_type, notes, …) on every sync merge.
+      if (updateData.metadata && typeof updateData.metadata === "object") {
+        updateData.metadata = {
+          ...((current?.metadata as Record<string, unknown> | null) ?? {}),
+          ...(updateData.metadata as Record<string, unknown>),
+        };
+      }
 
       await supabase
         .from("master_customers")

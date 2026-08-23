@@ -5,7 +5,7 @@ import type { LeadRow, CustomerRow } from "./types";
 
 export type CRMLeadRow = Pick<
   LeadRow,
-  "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "next_follow_up_date" | "source" | "created_at"
+  "id" | "customer_id" | "contact_id" | "service_requested" | "status" | "estimated_value" | "next_follow_up_date" | "source" | "created_at"
 >;
 
 export type CRMPageData = {
@@ -13,7 +13,7 @@ export type CRMPageData = {
   customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
 };
 
-const LEAD_FIELDS = "id, customer_id, service_requested, status, estimated_value, next_follow_up_date, source, created_at";
+const LEAD_FIELDS = "id, customer_id, contact_id, service_requested, status, estimated_value, next_follow_up_date, source, created_at";
 
 export async function getCRMPageData(
   supabase: SupabaseClient<Database>,

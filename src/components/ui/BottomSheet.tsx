@@ -11,7 +11,10 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] md:hidden" onClick={onClose} aria-hidden="true" />
+      {/* z-45: must sit above the tab bar (z-40) so the sheet visibly dims it,
+          not tie with it — a tie makes stacking order depend on DOM mount
+          order instead of design. */}
+      <div className="fixed inset-0 z-[45] bg-black/40 backdrop-blur-[2px] md:hidden" onClick={onClose} aria-hidden="true" />
       <div className={cn("fixed bottom-0 left-0 right-0 z-50 md:hidden","bg-ud-surface rounded-t-[20px] shadow-ud-pop","max-h-[90dvh] overflow-y-auto","animate-[sheet-up_280ms_cubic-bezier(0.32,0.72,0,1)_both]")}
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
         <div className="sticky top-0 bg-ud-surface rounded-t-[20px] px-5 pt-4 pb-3 border-b border-ud z-10">

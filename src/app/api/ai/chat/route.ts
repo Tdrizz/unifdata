@@ -141,7 +141,7 @@ export async function POST(request: Request) {
   function jobsQuery() {
     const base = supabase
       .from("jobs")
-      .select("id, customer_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
+      .select("id, customer_id, contact_id, status, job_value, service_type, paid_status, start_date, completed_date, created_at")
       .eq("company_id", company.id);
     return semanticIds.jobs?.length
       ? base.in("id", semanticIds.jobs)
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
     (fetchAll || topic === "leads")
       ? supabase
           .from("leads")
-          .select("id, customer_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at")
+          .select("id, customer_id, contact_id, status, estimated_value, source, service_requested, next_follow_up_date, created_at")
           .eq("company_id", company.id)
           .order("created_at", { ascending: false })
           .limit(fetchAll ? 50 : 20)
@@ -176,7 +176,7 @@ export async function POST(request: Request) {
     (fetchAll || topic === "followups")
       ? supabase
           .from("follow_ups")
-          .select("id, customer_id, due_date, status, message, created_at")
+          .select("id, customer_id, contact_id, due_date, status, message, created_at")
           .eq("company_id", company.id)
           .order("created_at", { ascending: false })
           .limit(fetchAll ? 50 : 20)
@@ -237,8 +237,8 @@ export async function POST(request: Request) {
       [profile.labels.leadPlural]: openLeads.slice(0, 50).map((l) => ({
         id: l.id,
         service: compactText(l.service_requested, "Untitled"),
-        linkedTo: anonymizeName(customerById.get(l.customer_id ?? "")?.name),
-        linkedToId: l.customer_id ?? null,
+        linkedTo: anonymizeName(customerById.get(l.contact_id ?? "")?.name),
+        linkedToId: l.contact_id ?? null,
         status: compactText(l.status, "New"),
         value: Number(l.estimated_value || 0),
       })),
@@ -247,8 +247,8 @@ export async function POST(request: Request) {
       [profile.labels.jobPlural]: jobs.slice(0, 50).map((j) => ({
         id: j.id,
         service: compactText(j.service_type, "Untitled"),
-        linkedTo: anonymizeName(customerById.get(j.customer_id ?? "")?.name),
-        linkedToId: j.customer_id ?? null,
+        linkedTo: anonymizeName(customerById.get(j.contact_id ?? "")?.name),
+        linkedToId: j.contact_id ?? null,
         status: compactText(j.status),
         value: Number(j.job_value || 0),
       })),
@@ -264,7 +264,7 @@ export async function POST(request: Request) {
     ...(followUps.length > 0 && {
       [profile.labels.followUpPlural]: followUps.slice(0, 50).map((f) => ({
         message: compactText(f.message, "Follow up"),
-        linkedTo: anonymizeName(customerById.get(f.customer_id ?? "")?.name),
+        linkedTo: anonymizeName(customerById.get(f.contact_id ?? "")?.name),
         status: compactText(f.status, "Open"),
         dueDate: f.due_date || null,
       })),

@@ -61,7 +61,7 @@ export function InstallPrompt() {
   if (dismissed || !platform) return null;
 
   return (
-    <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom)+12px)] left-4 right-4 z-50 md:hidden">
+    <div className="fixed bottom-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom)+12px)] left-4 right-4 z-50 md:hidden">
       <div className="bg-ud-surface border border-ud rounded-[14px] shadow-ud-pop p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">

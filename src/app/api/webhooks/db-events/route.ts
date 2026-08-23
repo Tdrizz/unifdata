@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     if (completedStatuses.includes(newStatus) && !completedStatuses.includes(oldStatus)) {
       const orgId = String(record.company_id ?? "");
       const jobId = String(record.id ?? "");
-      const customerId = String(record.customer_id ?? "");
+      const customerId = String(record.contact_id ?? "");
       const serviceType = String(record.service_type ?? record.job_type ?? "service");
       const customerName = String(record.customer_name ?? "");
 
@@ -61,10 +61,13 @@ export async function POST(request: Request) {
   }
 
   // New customer added → draft new contact follow-up
-  if (table === "customers" && type === "INSERT") {
-    const orgId = String(record.company_id ?? "");
+  if (table === "master_customers" && type === "INSERT") {
+    const orgId = String(record.organization_id ?? "");
     const customerId = String(record.id ?? "");
-    const customerName = String(record.name ?? record.full_name ?? "");
+    const customerName = [record.first_name, record.last_name]
+      .map((v) => String(v ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
 
     if (orgId && customerId) {
       const ok = await enqueueAutomationJob(

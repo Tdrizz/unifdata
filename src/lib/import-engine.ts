@@ -531,7 +531,11 @@ function getMappedValue(
   mapping: ImportMapping,
   fieldKey: string,
 ) {
-  const sourceColumn = mapping[fieldKey];
+  // When no mapping is provided (integration syncers pass {} because their rows
+  // already use canonical field keys), fall back to an identity mapping. CSV/Sheet
+  // imports always provide an explicit mapping, so this only affects inbound sync.
+  const sourceColumn =
+    mapping[fieldKey] ?? (Object.keys(mapping).length === 0 ? fieldKey : undefined);
 
   if (!sourceColumn) {
     return "";

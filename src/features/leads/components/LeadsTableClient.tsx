@@ -13,7 +13,7 @@ import type { LeadRow, CustomerRow } from "../types";
 
 type LeadItem = Pick<
   LeadRow,
-  "id" | "customer_id" | "service_requested" | "status" | "estimated_value" | "next_follow_up_date" | "source"
+  "id" | "customer_id" | "contact_id" | "service_requested" | "status" | "estimated_value" | "next_follow_up_date" | "source"
 > & { notes?: string | null };
 
 type Props = {
@@ -123,8 +123,8 @@ export function LeadsTableClient({ leads, customers, profile, sectionTitle }: Pr
         </div>
 
         {leads.map((opportunity) => {
-          const customer = opportunity.customer_id
-            ? customerById.get(opportunity.customer_id)
+          const customer = (opportunity.contact_id ?? opportunity.customer_id)
+            ? customerById.get((opportunity.contact_id ?? opportunity.customer_id)!)
             : null;
 
           return (

@@ -99,6 +99,7 @@ export function MobileTabBar({
       className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-ud backdrop-blur-[24px] saturate-[160%]"
       style={{
         background: "var(--ud-tabbar-bg)",
+        minHeight: "var(--mobile-tabbar-h)",
         paddingBottom: "env(safe-area-inset-bottom)",
         paddingLeft: 4,
         paddingRight: 4,

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAutomationQueue, JOB_POST_COMPLETION_OUTREACH } from "@/lib/queue/client";
+import { JOB_NEW_CONTACT_FOLLOWUP } from "@/lib/queue/client";
+import { enqueueAutomationJob } from "@/lib/queue/enqueue";
 
 export type AutomationCondition = {
   field: string;
@@ -438,12 +439,15 @@ async function executeAction(
     }
 
     case "request_ai_outreach": {
-      const queue = getAutomationQueue();
-      await queue.add(JOB_POST_COMPLETION_OUTREACH, {
-        organizationId: orgId,
-        contactId,
-        source: "automation",
-      });
+      // Draft AI outreach for this contact via the fail-loud enqueue helper.
+      // NewContactFollowupJobData = { orgId, customerId, customerName }.
+      const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+      await enqueueAutomationJob(
+        JOB_NEW_CONTACT_FOLLOWUP,
+        { orgId, customerId: contactId, customerName: contactName },
+        { jobId: `automation-outreach-${contactId}` },
+        { org: orgId, detail: { event: "request_ai_outreach", contactId } },
+      );
       break;
     }
 
