@@ -77,9 +77,80 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
 };
 
+type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
+
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+
+  async function sendChatMessage(text: string) {
+    if (!text.trim() || chatLoading) return;
+    const userMessage: ChatMessage = { role: "user", text: text.trim() };
+    setChatMessages((prev) => [...prev, userMessage, { role: "model", text: "", streaming: true }]);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [userMessage], sessionId: chatSessionId }),
+      });
+
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        setChatMessages((prev) => [...prev.slice(0, -1), { role: "model", text: data.error || "Something went wrong." }]);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.delta) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.streaming) updated[updated.length - 1] = { ...last, text: last.text + parsed.delta };
+                return updated;
+              });
+            }
+            if (parsed.event === "session" && parsed.sessionId) setChatSessionId(parsed.sessionId);
+          } catch {
+            // ignore malformed chunks
+          }
+        }
+      }
+
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.streaming) updated[updated.length - 1] = { ...last, streaming: false };
+        return updated;
+      });
+    } catch {
+      setChatMessages((prev) => [...prev.slice(0, -1), { role: "model", text: "Could not reach the server." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
 
   async function handleApproveDraft(id: string) {
     const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
@@ -233,24 +304,27 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
-      {/* Aria panel */}
-      {ariaItems.length > 0 ? (
-        <Card padding={0} radius="md" className="overflow-hidden mb-6">
-          <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
-                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
-                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-                  <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
-                </svg>
-              </div>
-              <p className="text-[13.5px] font-semibold text-ud-ink">Aria</p>
+      {/* Aria panel — always has a live chat box, not just a link out */}
+      <Card padding={0} radius="md" className="overflow-hidden mb-6">
+        <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
+                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
+              </svg>
             </div>
+            <p className="text-[13.5px] font-semibold text-ud-ink">Aria</p>
+          </div>
+          {ariaItems.length > 0 && (
             <Link href="/aria" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">
               {ariaRemaining > 0 ? `See all ${ariaItems.length} →` : "Open Aria →"}
             </Link>
-          </div>
-          <div className="p-4 space-y-3">
+          )}
+        </div>
+
+        {ariaItems.length > 0 ? (
+          <div className="p-4 space-y-3 border-b border-ud-soft">
             {ariaPreview.map((entry) =>
               entry.kind === "draft" ? (
                 <AriaDraftCard
@@ -268,17 +342,53 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               ),
             )}
           </div>
-        </Card>
-      ) : (
-        <div className="flex items-center gap-3 mb-6 rounded-[12px] border border-ud px-5 py-4">
-          <div className="w-7 h-7 rounded-full bg-ud-surface-sunk flex items-center justify-center shrink-0">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-faint">
-              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-            </svg>
+        ) : (
+          <div className="px-[22px] py-4 border-b border-ud-soft">
+            <p className="text-[13px] text-ud-muted">Aria reviewed your business overnight. Everything looks good.</p>
           </div>
-          <p className="text-[13px] text-ud-muted">Aria reviewed your business overnight. Everything looks good.</p>
-        </div>
-      )}
+        )}
+
+        {chatMessages.length > 0 && (
+          <div className="max-h-[280px] overflow-y-auto px-[22px] py-4 space-y-2.5 border-b border-ud-soft">
+            {chatMessages.map((m, i) => (
+              <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
+                <span
+                  className={
+                    m.role === "user"
+                      ? "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-accent text-white"
+                      : "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-surface-sunk text-ud-ink"
+                  }
+                >
+                  {m.text || (m.streaming ? "…" : "")}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendChatMessage(chatInput);
+          }}
+          className="flex items-center gap-2 px-[18px] py-3"
+        >
+          <input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="Ask Aria anything about your business…"
+            disabled={chatLoading}
+            className="flex-1 bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={chatLoading || !chatInput.trim()}
+            className="rounded-[8px] bg-ud-accent text-white text-[12.5px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+          >
+            {chatLoading ? "…" : "Ask"}
+          </button>
+        </form>
+      </Card>
 
       {/* KPI row */}
       <div className="grid grid-cols-5 gap-3 mb-6">

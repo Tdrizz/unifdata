@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
@@ -46,10 +47,22 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const [highlightId, setHighlightId] = useState<string | null>(() => searchParams.get("item"));
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // Deep link from Home's priority queue ("?item=draft-<id>" / "alert-<id>")
+  // should land directly on that item, not just the generic page.
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById(highlightId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => setHighlightId(null), 2500);
+    return () => clearTimeout(t);
+  }, [highlightId]);
 
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
@@ -264,19 +277,37 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
         {(draftList.length > 0 || alertList.length > 0) && (
           <div className="space-y-2.5">
             {draftList.map((draft) => (
-              <AriaDraftCard
+              <div
                 key={draft.id}
-                draft={draft}
-                onApprove={() => handleApproveDraft(draft.id)}
-                onDismiss={() => handleDismissDraft(draft.id)}
-              />
+                id={`draft-${draft.id}`}
+                className={
+                  highlightId === `draft-${draft.id}`
+                    ? "rounded-[12px] ring-2 ring-ud-accent transition-shadow duration-300"
+                    : "rounded-[12px] transition-shadow duration-300"
+                }
+              >
+                <AriaDraftCard
+                  draft={draft}
+                  onApprove={() => handleApproveDraft(draft.id)}
+                  onDismiss={() => handleDismissDraft(draft.id)}
+                />
+              </div>
             ))}
             {alertList.map((alert) => (
-              <AriaAlertCard
+              <div
                 key={alert.id}
-                alert={alert}
-                onDismiss={() => handleDismissAlert(alert.id)}
-              />
+                id={`alert-${alert.id}`}
+                className={
+                  highlightId === `alert-${alert.id}`
+                    ? "rounded-[12px] ring-2 ring-ud-accent transition-shadow duration-300"
+                    : "rounded-[12px] transition-shadow duration-300"
+                }
+              >
+                <AriaAlertCard
+                  alert={alert}
+                  onDismiss={() => handleDismissAlert(alert.id)}
+                />
+              </div>
             ))}
           </div>
         )}
