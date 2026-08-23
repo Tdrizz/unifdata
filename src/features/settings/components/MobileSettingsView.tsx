@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { businessSectorOptions as businessSectorGroups, getIndustryProfile } from "@/lib/industry-profiles";
+import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
 import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
@@ -81,48 +81,8 @@ export function MobileSettingsView({
       .includes("google"),
   );
 
-  const profile = getIndustryProfile(company.business_sector);
-
-  const morePages = [
-    { href: "/follow-ups", label: profile.labels.followUpPlural },
-    { href: "/sales",      label: profile.labels.salePlural },
-    { href: "/data-hub",   label: "Data Hub" },
-    { href: "/aria", label: "Aria" },
-    { href: "/imports",    label: "Import Data" },
-  ];
-
   return (
-    <div className="space-y-4">
-      <PageHeader
-        eyebrow="More"
-        title="More pages"
-        description="Access all pages in your workspace."
-        actions={
-          <Link
-            href="/workspace"
-            className="rounded-[10px] bg-ud-ink px-[16px] py-[9px] text-[13.5px] font-semibold text-white hover:opacity-90"
-          >
-            Home
-          </Link>
-        }
-      />
-
-      {/* Quick nav to pages not in tab bar */}
-      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
-        {morePages.map((page, i) => (
-          <Link
-            key={page.href}
-            href={page.href}
-            className={`flex items-center justify-between px-[22px] py-[16px] text-[14px] font-medium text-ud-ink hover:bg-ud-surface-soft active:bg-ud-surface-sunk ${i < morePages.length - 1 ? "border-b border-ud" : ""}`}
-          >
-            {page.label}
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="text-ud-faint">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </Link>
-        ))}
-      </div>
-
+    <div className="px-4 pt-[22px] pb-8 space-y-6">
       <PageHeader
         eyebrow="Settings"
         title="Workspace settings"
