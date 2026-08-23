@@ -18,7 +18,7 @@ function buildBreadcrumbs(
   profile: ReturnType<typeof getIndustryProfile>,
 ): Record<string, [string, string]> {
   return {
-    "/workspace":    ["Workspace", "Today"],
+    "/workspace":    ["Workspace", "Home"],
     "/customers":    ["Workspace", profile.labels.customerPlural],
     "/contacts":     ["Workspace", profile.labels.customerPlural],
     "/crm":          ["Workspace", "Pipeline"],
@@ -26,10 +26,14 @@ function buildBreadcrumbs(
     "/jobs":         ["Workspace", profile.labels.jobPlural],
     "/sales":        ["Workspace", profile.labels.salePlural],
     "/follow-ups":   ["Workspace", profile.labels.followUpPlural],
-    "/aria":         ["Intelligence", "Aria"],
-    "/ai-assistant": ["Intelligence", "Aria"],
-    "/data-hub":     ["Intelligence", "Data Hub"],
-    "/imports":      ["Intelligence", "Imports"],
+    "/communications": ["Workspace", "Communications"],
+    "/aria":         ["Home", "Aria"],
+    "/ai-assistant": ["Home", "Aria"],
+    "/tools":        ["Tools", "Tools"],
+    "/data-hub":     ["Tools", "Data Hub"],
+    "/automations":  ["Tools", "Automations"],
+    "/process":      ["Tools", profile.recordPlural],
+    "/imports":      ["Tools", "Imports"],
     "/settings":     ["Account", "Settings"],
     "/onboarding":   ["", "Onboarding"],
   };

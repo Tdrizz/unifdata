@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { AriaDraftCard, AriaAlertCard } from "@/features/ai-assistant/AiAssistantView";
 import {
   formatDateOnly,
   parseDateOnly,
@@ -76,6 +78,22 @@ type Props = WorkspaceData & {
 };
 
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
+  const [draftList, setDraftList] = useState<Draft[]>(drafts);
+  const [alertList, setAlertList] = useState<Alert[]>(alerts);
+
+  async function handleApproveDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+    if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+  async function handleDismissDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+    if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+  async function handleDismissAlert(id: string) {
+    const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+    if (res.ok) setAlertList((prev) => prev.filter((a) => a.id !== id));
+  }
+
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
@@ -177,6 +195,13 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
   const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
   const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
+  const ariaItems = [
+    ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
+    ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
+  ];
+  const ariaPreview = ariaItems.slice(0, 3);
+  const ariaRemaining = ariaItems.length - ariaPreview.length;
+
   const statusLine = (() => {
     const parts: string[] = [];
     if (overdueCount > 0) parts.push(`${overdueCount} overdue`);
@@ -208,36 +233,43 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         }
       />
 
-      {/* Aria briefing card */}
-      {(drafts.length + alerts.length > 0) && (
-        <Link
-          href="/aria"
-          className="flex items-center justify-between gap-4 mb-6 rounded-[12px] border border-ud-accent/20 bg-ud-accent/[0.03] px-5 py-4 hover:bg-ud-accent/[0.06] transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
-                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-                <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
-              </svg>
+      {/* Aria panel */}
+      {ariaItems.length > 0 ? (
+        <Card padding={0} radius="md" className="overflow-hidden mb-6">
+          <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                  <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
+                </svg>
+              </div>
+              <p className="text-[13.5px] font-semibold text-ud-ink">Aria</p>
             </div>
-            <div>
-              <p className="text-[13px] font-semibold text-ud-ink">
-                Aria found {drafts.length + alerts.length} {drafts.length + alerts.length === 1 ? "item" : "items"} to review
-              </p>
-              <p className="text-[12px] text-ud-muted mt-0.5">
-                {drafts.length > 0 && `${drafts.length} draft${drafts.length !== 1 ? "s" : ""} ready to send`}
-                {drafts.length > 0 && alerts.length > 0 && " · "}
-                {alerts.length > 0 && `${alerts.length} alert${alerts.length !== 1 ? "s" : ""}`}
-              </p>
-            </div>
+            <Link href="/aria" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">
+              {ariaRemaining > 0 ? `See all ${ariaItems.length} →` : "Open Aria →"}
+            </Link>
           </div>
-          <span className="text-[12.5px] font-semibold text-ud-accent group-hover:translate-x-[2px] transition-transform shrink-0">
-            Review →
-          </span>
-        </Link>
-      )}
-      {drafts.length === 0 && alerts.length === 0 && (
+          <div className="p-4 space-y-3">
+            {ariaPreview.map((entry) =>
+              entry.kind === "draft" ? (
+                <AriaDraftCard
+                  key={entry.item.id}
+                  draft={entry.item}
+                  onApprove={() => handleApproveDraft(entry.item.id)}
+                  onDismiss={() => handleDismissDraft(entry.item.id)}
+                />
+              ) : (
+                <AriaAlertCard
+                  key={entry.item.id}
+                  alert={entry.item}
+                  onDismiss={() => handleDismissAlert(entry.item.id)}
+                />
+              ),
+            )}
+          </div>
+        </Card>
+      ) : (
         <div className="flex items-center gap-3 mb-6 rounded-[12px] border border-ud px-5 py-4">
           <div className="w-7 h-7 rounded-full bg-ud-surface-sunk flex items-center justify-center shrink-0">
             <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-faint">

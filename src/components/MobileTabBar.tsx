@@ -36,11 +36,18 @@ function SvgBriefcase({ active }: { active: boolean }) {
     </svg>
   );
 }
-function SvgCalendar({ active }: { active: boolean }) {
+function SvgBell({ active }: { active: boolean }) {
   return (
     <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4M8 2v4M3 10h18" />
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+function SvgMessage({ active }: { active: boolean }) {
+  return (
+    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
 }
@@ -54,15 +61,9 @@ function SvgMore({ active }: { active: boolean }) {
   );
 }
 
-// ── "More" sheet icons (16px, matches AppNav's desktop set) ────────────────
-function IconDollar() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>; }
-function IconBell() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>; }
-function IconDatabase() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>; }
-function IconUpload() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>; }
+// ── "More" sheet icons (17px, matches AppNav's desktop set) ────────────────
+function IconTools() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L2 19l3 3 7.1-7.1a4 4 0 0 0 5.6-5.6L14.5 12 12 9.5l2.7-3.2z"/></svg>; }
 function IconSettings() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>; }
-function IconLayers() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>; }
-function IconMessage() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>; }
-function IconZap() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>; }
 
 // ── Component ───────────────────────────────────────────────────────────────
 export function MobileTabBar({
@@ -74,10 +75,13 @@ export function MobileTabBar({
   const profile = getIndustryProfile(businessSector);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  // Merging Leads/Jobs/Sales into one Pipeline tab (and folding Aria into the
+  // Home dashboard) freed up two tab slots, so Follow-ups and Communications
+  // -- previously buried in "More" -- are now primary tabs too.
   const tabs = [
     {
       href: "/workspace",
-      label: "Today",
+      label: "Home",
       Icon: SvgHome,
       match: (p: string) => p === "/workspace",
     },
@@ -91,40 +95,36 @@ export function MobileTabBar({
       href: "/crm",
       label: "Pipeline",
       Icon: SvgBriefcase,
-      match: (p: string) => p === "/crm" || p === "/leads" || p.startsWith("/leads/"),
+      match: (p: string) =>
+        p === "/crm" ||
+        p === "/leads" || p.startsWith("/leads/") ||
+        p === "/jobs" || p.startsWith("/jobs/") ||
+        p === "/sales" || p.startsWith("/sales/"),
     },
     {
-      href: "/jobs",
-      label: profile.labels.jobPlural ?? "Jobs",
-      Icon: SvgCalendar,
-      match: (p: string) => p === "/jobs" || p.startsWith("/jobs/"),
+      href: "/follow-ups",
+      label: profile.labels.followUpPlural ?? "Follow-ups",
+      Icon: SvgBell,
+      match: (p: string) => p === "/follow-ups" || p.startsWith("/follow-ups/"),
+    },
+    {
+      href: "/communications",
+      label: "Messages",
+      Icon: SvgMessage,
+      match: (p: string) => p === "/communications",
     },
   ];
 
-  // Every other primary destination the desktop nav (AppNav.tsx) exposes but
-  // the 5-tab bar has no room for. Previously the ONLY way to reach these on
-  // mobile was the search/command-palette icon — not discoverable.
+  // Everything else -- Aria lives on Home now, and Data Hub/Automations/
+  // Process/Imports are all reachable through the single Tools entry.
   const moreItems = [
-    { href: "/sales", label: profile.labels.salePlural ?? "Sales", Icon: IconDollar },
-    { href: "/follow-ups", label: profile.labels.followUpPlural ?? "Follow-ups", Icon: IconBell },
-    { href: "/process", label: profile.recordPlural, Icon: IconLayers },
-    { href: "/communications", label: "Communications", Icon: IconMessage },
-    { href: "/data-hub", label: "Data Hub", Icon: IconDatabase },
-    { href: "/automations", label: "Automations", Icon: IconZap },
-    { href: "/imports", label: "Imports", Icon: IconUpload },
+    { href: "/tools", label: "Tools", Icon: IconTools },
     { href: "/settings", label: "Settings", Icon: IconSettings },
   ];
 
   const isMoreActive = [
-    "/sales", "/follow-ups", "/process", "/communications",
-    "/data-hub", "/automations", "/imports", "/settings",
+    "/tools", "/data-hub", "/automations", "/process", "/imports", "/settings",
   ].some((p) => pathname === p || pathname.startsWith(`${p}/`));
-
-  const ariaTab = {
-    href: "/aria",
-    label: "Aria",
-    match: (p: string) => p === "/aria" || p === "/ai-assistant" || p.startsWith("/ai-assistant/"),
-  };
 
   return (
     <>
@@ -172,34 +172,8 @@ export function MobileTabBar({
           );
         })}
 
-        {/* Aria keeps its own tab — it's the headline feature, not tucked in More */}
-        <Link
-          href={ariaTab.href}
-          onTouchStart={() => haptic("light")}
-          className={cn(
-            "flex flex-1 flex-col items-center gap-1 pb-1 active:opacity-60 transition-opacity duration-75",
-            ariaTab.match(pathname) ? "text-ud-accent" : "text-ud-faint",
-          )}
-        >
-          <div
-            className={cn(
-              "flex items-center justify-center w-[46px] h-[28px] rounded-[10px] transition-colors duration-200",
-              ariaTab.match(pathname) ? "bg-ud-accent/[0.10]" : "",
-            )}
-          >
-            <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={ariaTab.match(pathname) ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-              <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z" />
-              <path d="M5 17l.5 1.5L7 19l-1.5.5L5 21l-.5-1.5L3 19l1.5-.5L5 17z" />
-            </svg>
-          </div>
-          <span className={cn("text-[11px] tracking-[-0.005em]", ariaTab.match(pathname) ? "font-bold" : "font-medium")}>
-            Aria
-          </span>
-        </Link>
-
-        {/* More — everything else the desktop nav exposes that doesn't fit
-            in the tab bar. Previously only reachable via search/cmd+k. */}
+        {/* More — Tools and Settings, the only two destinations left outside
+            the primary tabs. */}
         <button
           type="button"
           onClick={() => {
