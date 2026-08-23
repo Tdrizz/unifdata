@@ -63,6 +63,7 @@ export async function createJobAction(
 
   if (error) return { error: error.message };
 
+  let convertedSaleId: string | null = null;
   if (inserted) {
     syncEmbedding(
       "jobs",
@@ -85,7 +86,7 @@ export async function createJobAction(
     }
     if (isCompletedPaidJob(status, paidStatus)) {
       try {
-        await syncSaleForJob({
+        convertedSaleId = await syncSaleForJob({
           supabase,
           companyId: company.id,
           jobId: inserted.id,
@@ -101,9 +102,13 @@ export async function createJobAction(
   }
 
   revalidatePath("/jobs");
+  revalidatePath("/sales");
   revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
+  // Created already complete + paid -> a Sale now exists; land there, not
+  // back on the board, so the job-to-sale transition reads as one step.
+  if (convertedSaleId) redirect(`/sales/${convertedSaleId}/edit?toast=Job+complete+%E2%80%94+Sale+recorded`);
   redirect("/crm?toast=Job+created");
 }
 
@@ -163,9 +168,10 @@ export async function updateJobAction(
     company.id,
   );
 
+  let convertedSaleId: string | null = null;
   if (isCompletedPaidJob(status, paidStatus)) {
     try {
-      await syncSaleForJob({
+      convertedSaleId = await syncSaleForJob({
         supabase,
         companyId: company.id,
         jobId: id,
@@ -182,9 +188,14 @@ export async function updateJobAction(
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);
   revalidatePath(`/jobs/${id}/edit`);
+  revalidatePath("/sales");
   revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
+  // Marking complete + paid just superseded this job with a Sale (see
+  // Pipeline's dedup rules) -- land there directly instead of back on the
+  // board, so the transition reads as one continuous step.
+  if (convertedSaleId) redirect(`/sales/${convertedSaleId}/edit?toast=Job+complete+%E2%80%94+Sale+recorded`);
   redirect("/crm?toast=Job+updated");
 }
 

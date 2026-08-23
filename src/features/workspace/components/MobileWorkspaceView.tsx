@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
@@ -72,6 +73,8 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
 };
 
+type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
+
 // The whole point of this screen: one clear answer to "what do I need to do
 // today," not a dashboard of everything at once. Every item — manual
 // follow-ups, opportunities due for follow-up, unpaid work, and anything the
@@ -79,6 +82,76 @@ type Props = WorkspaceData & {
 // competing sections.
 export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
+
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+
+  async function sendChatMessage(text: string) {
+    if (!text.trim() || chatLoading) return;
+    const userMessage: ChatMessage = { role: "user", text: text.trim() };
+    setChatMessages((prev) => [...prev, userMessage, { role: "model", text: "", streaming: true }]);
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [userMessage], sessionId: chatSessionId }),
+      });
+
+      if (!response.ok || !response.body) {
+        const data = await response.json().catch(() => ({}));
+        setChatMessages((prev) => [...prev.slice(0, -1), { role: "model", text: data.error || "Something went wrong." }]);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.delta) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last?.streaming) updated[updated.length - 1] = { ...last, text: last.text + parsed.delta };
+                return updated;
+              });
+            }
+            if (parsed.event === "session" && parsed.sessionId) setChatSessionId(parsed.sessionId);
+          } catch {
+            // ignore malformed chunks
+          }
+        }
+      }
+
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last?.streaming) updated[updated.length - 1] = { ...last, streaming: false };
+        return updated;
+      });
+    } catch {
+      setChatMessages((prev) => [...prev.slice(0, -1), { role: "model", text: "Could not reach the server." }]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
 
   const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
   const activeWork = jobs.filter((work) => isRecentActiveWork(work.status, work.start_date));
@@ -189,6 +262,51 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         <p className={cn("text-[15px]", overdueCount > 0 ? "text-ud-danger font-medium" : "text-ud-muted")}>
           {statusLine}
         </p>
+      </div>
+
+      {/* Ask Vera — live chat box, always available */}
+      <div className="px-4 pb-6">
+        <Card padding={0} radius="md" className="overflow-hidden">
+          {chatMessages.length > 0 && (
+            <div className="max-h-[240px] overflow-y-auto px-4 py-3 space-y-2.5 border-b border-ud-soft">
+              {chatMessages.map((m, i) => (
+                <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
+                  <span
+                    className={
+                      m.role === "user"
+                        ? "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-accent text-white"
+                        : "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-surface-sunk text-ud-ink"
+                    }
+                  >
+                    {m.text || (m.streaming ? "…" : "")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendChatMessage(chatInput);
+            }}
+            className="flex items-center gap-2 px-4 py-3"
+          >
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask Vera anything…"
+              disabled={chatLoading}
+              className="flex-1 bg-transparent text-[15px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={chatLoading || !chatInput.trim()}
+              className="rounded-[8px] bg-ud-accent text-white text-[13px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+            >
+              {chatLoading ? "…" : "Ask"}
+            </button>
+          </form>
+        </Card>
       </div>
 
       {/* Needs attention — the one list */}

@@ -17,6 +17,8 @@ type SupabaseWriteClient = {
 
 // Lead marked Won -> find-or-create its Job. Idempotent: keyed on (company_id,
 // lead_id), so toggling Won/Lost/Won repeatedly just updates the same row.
+// Returns the job's id so the caller can send the user straight to it instead
+// of leaving them on the now-superseded lead.
 export async function syncAcceptedOpportunity({
   supabase,
   companyId,
@@ -31,7 +33,7 @@ export async function syncAcceptedOpportunity({
   contactId: string | null;
   opportunityName: string;
   amount: number | null;
-}) {
+}): Promise<string> {
   const { data: existingJob, error: existingJobError } = await supabase
     .from("jobs")
     .select("id")
@@ -44,23 +46,27 @@ export async function syncAcceptedOpportunity({
   }
 
   if (!existingJob) {
-    const { error: createdJobError } = await supabase.from("jobs").insert({
-      company_id: companyId,
-      contact_id: contactId,
-      lead_id: opportunityId,
-      service_type: opportunityName,
-      status: "Scheduled",
-      job_value: amount,
-      start_date: null,
-      completed_date: null,
-      paid_status: "Unpaid",
-      notes: "Created automatically when this opportunity was accepted.",
-    });
+    const { data: createdJob, error: createdJobError } = await supabase
+      .from("jobs")
+      .insert({
+        company_id: companyId,
+        contact_id: contactId,
+        lead_id: opportunityId,
+        service_type: opportunityName,
+        status: "Scheduled",
+        job_value: amount,
+        start_date: null,
+        completed_date: null,
+        paid_status: "Unpaid",
+        notes: "Created automatically when this opportunity was accepted.",
+      })
+      .select("id")
+      .single();
 
     if (createdJobError) {
       throw new Error(createdJobError.message);
     }
-    return;
+    return createdJob.id as string;
   }
 
   const { error: updateJobError } = await supabase
@@ -76,10 +82,13 @@ export async function syncAcceptedOpportunity({
   if (updateJobError) {
     throw new Error(updateJobError.message);
   }
+
+  return existingJob.id as string;
 }
 
 // Job marked complete + paid -> find-or-create its Sale. Idempotent: keyed on
-// (company_id, job_id).
+// (company_id, job_id). Returns the sale's id (or null if no sale was created,
+// e.g. the job has no value yet) so the caller can send the user straight to it.
 export async function syncSaleForJob({
   supabase,
   companyId,
@@ -96,8 +105,8 @@ export async function syncSaleForJob({
   serviceType: string;
   amount: number | null;
   source: string | null;
-}) {
-  if (amount == null || amount <= 0) return;
+}): Promise<string | null> {
+  if (amount == null || amount <= 0) return null;
 
   const { data: existingSale, error: existingSaleError } = await supabase
     .from("sales")
@@ -111,21 +120,25 @@ export async function syncSaleForJob({
   }
 
   if (!existingSale) {
-    const { error: createSaleError } = await supabase.from("sales").insert({
-      company_id: companyId,
-      contact_id: contactId,
-      job_id: jobId,
-      amount,
-      payment_status: "Paid",
-      sale_date: new Date().toISOString().slice(0, 10),
-      service_type: serviceType,
-      source,
-    });
+    const { data: createdSale, error: createSaleError } = await supabase
+      .from("sales")
+      .insert({
+        company_id: companyId,
+        contact_id: contactId,
+        job_id: jobId,
+        amount,
+        payment_status: "Paid",
+        sale_date: new Date().toISOString().slice(0, 10),
+        service_type: serviceType,
+        source,
+      })
+      .select("id")
+      .single();
 
     if (createSaleError) {
       throw new Error(createSaleError.message);
     }
-    return;
+    return createdSale.id as string;
   }
 
   const { error: updateSaleError } = await supabase
@@ -143,4 +156,6 @@ export async function syncSaleForJob({
   if (updateSaleError) {
     throw new Error(updateSaleError.message);
   }
+
+  return existingSale.id as string;
 }

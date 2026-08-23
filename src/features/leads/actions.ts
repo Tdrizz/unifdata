@@ -58,9 +58,10 @@ export async function createLeadAction(
 
   if (error) return { error: error.message };
 
+  let convertedJobId: string | null = null;
   if (inserted && isAcceptedOpportunityStatus(status)) {
     try {
-      await syncAcceptedOpportunity({
+      convertedJobId = await syncAcceptedOpportunity({
         supabase,
         companyId: company.id,
         opportunityId: inserted.id,
@@ -74,8 +75,12 @@ export async function createLeadAction(
   }
 
   revalidatePath("/crm");
+  revalidatePath("/jobs");
   revalidatePath("/workspace");
   revalidatePath("/customers");
+  // Won on creation -> a Job now exists; land there, not back on the board,
+  // so the win-to-job transition reads as one continuous step, not a jump.
+  if (convertedJobId) redirect(`/jobs/${convertedJobId}/edit?toast=Marked+Won+%E2%80%94+Job+created`);
   redirect("/crm?toast=Opportunity+created");
 }
 
@@ -127,9 +132,10 @@ export async function updateLeadAction(
 
   if (error) return { error: error.message };
 
+  let convertedJobId: string | null = null;
   if (isAcceptedOpportunityStatus(status)) {
     try {
-      await syncAcceptedOpportunity({
+      convertedJobId = await syncAcceptedOpportunity({
         supabase,
         companyId: company.id,
         opportunityId: id,
@@ -144,8 +150,13 @@ export async function updateLeadAction(
 
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
+  revalidatePath("/jobs");
   revalidatePath("/workspace");
   revalidatePath("/customers");
+  // Marking Won just superseded this lead with a Job (see Pipeline's dedup
+  // rules) -- land there directly instead of back on the board, so the
+  // transition reads as one continuous step, not a jump to a random page.
+  if (convertedJobId) redirect(`/jobs/${convertedJobId}/edit?toast=Marked+Won+%E2%80%94+Job+created`);
   redirect("/crm?toast=Opportunity+updated");
 }
 

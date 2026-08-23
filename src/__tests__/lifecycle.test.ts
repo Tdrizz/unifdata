@@ -55,6 +55,7 @@ function makeFakeSupabase() {
         return builder;
       },
       maybeSingle: async () => exec(),
+      single: async () => exec(),
       then: (resolve: (v: unknown) => void) => resolve(exec()),
     };
     return builder;
@@ -87,9 +88,9 @@ describe("isCompletedPaidJob", () => {
 });
 
 describe("syncAcceptedOpportunity", () => {
-  it("creates a job keyed on contact_id, not the deprecated customer_id", async () => {
+  it("creates a job keyed on contact_id, not the deprecated customer_id, and returns its id", async () => {
     const { store, client } = makeFakeSupabase();
-    await syncAcceptedOpportunity({
+    const jobId = await syncAcceptedOpportunity({
       supabase: client,
       companyId: "c1",
       opportunityId: "lead-1",
@@ -98,6 +99,7 @@ describe("syncAcceptedOpportunity", () => {
       amount: 5000,
     });
 
+    expect(jobId).toBe(store.jobs[0]?.id);
     expect(store.jobs).toHaveLength(1);
     expect(store.jobs[0]).toMatchObject({
       company_id: "c1",
@@ -120,19 +122,20 @@ describe("syncAcceptedOpportunity", () => {
       opportunityName: "Kitchen remodel",
       amount: 5000,
     };
-    await syncAcceptedOpportunity(args);
+    const firstId = await syncAcceptedOpportunity(args);
     await syncAcceptedOpportunity({ ...args, amount: 6000 });
-    await syncAcceptedOpportunity(args);
+    const thirdId = await syncAcceptedOpportunity(args);
 
     expect(store.jobs).toHaveLength(1);
     expect(store.jobs[0].job_value).toBe(5000);
+    expect(thirdId).toBe(firstId);
   });
 });
 
 describe("syncSaleForJob", () => {
-  it("creates a Paid sale keyed on contact_id, not customer_id", async () => {
+  it("creates a Paid sale keyed on contact_id, not customer_id, and returns its id", async () => {
     const { store, client } = makeFakeSupabase();
-    await syncSaleForJob({
+    const saleId = await syncSaleForJob({
       supabase: client,
       companyId: "c1",
       jobId: "job-1",
@@ -142,6 +145,7 @@ describe("syncSaleForJob", () => {
       source: null,
     });
 
+    expect(saleId).toBe(store.sales[0]?.id);
     expect(store.sales).toHaveLength(1);
     expect(store.sales[0]).toMatchObject({
       company_id: "c1",
@@ -170,9 +174,9 @@ describe("syncSaleForJob", () => {
     expect(store.sales).toHaveLength(1);
   });
 
-  it("does not create a sale for a null or zero amount", async () => {
+  it("does not create a sale for a null or zero amount, and returns null", async () => {
     const { store, client } = makeFakeSupabase();
-    await syncSaleForJob({
+    const nullResult = await syncSaleForJob({
       supabase: client,
       companyId: "c1",
       jobId: "job-1",
@@ -181,6 +185,7 @@ describe("syncSaleForJob", () => {
       amount: null,
       source: null,
     });
+    expect(nullResult).toBeNull();
     await syncSaleForJob({
       supabase: client,
       companyId: "c1",
