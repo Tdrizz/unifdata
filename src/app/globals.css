@@ -220,7 +220,13 @@ button, a {
   .no-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
 }
 
-.shell { height: 100vh; overflow: hidden; display: flex; }
+/* display is intentionally NOT set here — it's owned by the Tailwind
+   utilities on the element itself ("hidden md:flex" in AppShell.tsx).
+   Tailwind v4 utilities live in a low-priority CSS cascade layer, so any
+   plain, unlayered class that also sets `display` here would permanently
+   win over `hidden` regardless of viewport — which is exactly what was
+   happening: the desktop sidebar rendered on every screen size, always. */
+.shell { height: 100vh; overflow: hidden; }
 
 .sidebar {
   width: 224px; flex-shrink: 0;
