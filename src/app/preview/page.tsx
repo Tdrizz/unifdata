@@ -6,7 +6,7 @@ import { SectorSelector } from "./SectorSelector";
 export const metadata: Metadata = {
   title: "Product Preview",
   description:
-    "See how UnifData adapts to different business types — home services, construction, medical, professional services, and general business.",
+    "See how UnifData adapts to different business types — home services, construction, professional services, and general business.",
 };
 
 const sectors = [
@@ -38,21 +38,6 @@ const sectors = [
       "Roofing estimates are converting fastest this month.",
       "Two repeat customers haven't been followed up in 30 days.",
       "Several project records are missing completed dates.",
-    ],
-  },
-  {
-    sector: "Medical & Dental",
-    focus: "Patient inquiries, appointments, treatment follow-ups, collections",
-    metrics: [
-      ["Open treatment value", "$8,200"],
-      ["Appointments", "18"],
-      ["Outstanding balances", "$4,100"],
-      ["Data health", "91%"],
-    ],
-    insights: [
-      "Recall follow-ups are the highest priority today.",
-      "New patient inquiries are converting from Google.",
-      "Most patient records have usable contact details.",
     ],
   },
   {
@@ -136,7 +121,7 @@ export default function PreviewPage() {
             One workspace.<br />Every business type.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[16px] leading-[1.7] text-slate-300">
-            UnifData adapts to your industry. A medical office, a contractor, and a home services crew each get a workspace configured for how they actually work.
+            UnifData adapts to your industry. A contractor, a home services crew, and a professional services firm each get a workspace configured for how they actually work.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link

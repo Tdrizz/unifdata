@@ -35,20 +35,6 @@ const industries = [
     ],
   },
   {
-    label: "Medical & dental",
-    brief: "Good morning. Here's what needs your attention.",
-    stats: [
-      { label: "Recall follow-ups", value: "6", urgent: true },
-      { label: "Appointments today", value: "18", urgent: false },
-      { label: "Outstanding balances", value: "$4.1k", urgent: true },
-      { label: "Data health", value: "91%", urgent: false },
-    ],
-    actions: [
-      { type: "draft", text: "Linda Chen is 6 months overdue for a recall appointment.", cta: "Send recall" },
-      { type: "alert", text: "4 patient records are missing a primary contact email." },
-    ],
-  },
-  {
     label: "Professional services",
     brief: "Good morning. Here's what needs your attention.",
     stats: [

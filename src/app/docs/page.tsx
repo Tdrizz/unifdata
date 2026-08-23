@@ -60,10 +60,6 @@ const sectors = [
     wording: "Relationships, opportunities, work items, revenue records, and actions.",
   },
   {
-    sector: "Medical / Dental / Healthcare",
-    wording: "Patients, treatment opportunities, appointments, collections, and patient actions.",
-  },
-  {
     sector: "Construction / Contractor",
     wording: "Customers, estimates, projects, payments, and project actions.",
   },
@@ -327,7 +323,7 @@ export default function DocsPage() {
               <section id="industries" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Industry-aware language</h2>
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
-                  The same five-layer lifecycle powers every workspace. What changes is the language. A dental office should see &quot;Patients&quot; and &quot;Appointments&quot; — not &quot;Customers&quot; and &quot;Jobs.&quot; UnifData adapts the workspace labels and priorities to the company&apos;s operating model during onboarding.
+                  The same five-layer lifecycle powers every workspace. What changes is the language. A law firm should see &quot;Matters&quot; and &quot;Clients&quot; — not &quot;Jobs&quot; and &quot;Customers.&quot; UnifData adapts the workspace labels and priorities to the company&apos;s operating model during onboarding.
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10">
