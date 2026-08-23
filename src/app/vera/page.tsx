@@ -78,7 +78,7 @@ export default async function VeraPage() {
     <div className="flex flex-col items-center justify-center py-24 px-8 text-center max-w-md mx-auto">
       <p className="text-[15px] font-semibold text-ud-ink mb-2">AI features unavailable</p>
       <p className="text-[13px] text-ud-muted leading-relaxed">
-        AI features require a Business Associate Agreement (BAA) with each AI provider before patient data can be processed. Contact us to discuss a HIPAA-compliant plan.
+        AI features aren&apos;t available for this workspace right now.
       </p>
     </div>
   );
@@ -112,7 +112,7 @@ export default async function VeraPage() {
           ) : (
             <div className="px-5 py-12 text-center">
               <p className="text-[14px] font-semibold text-ud-ink mb-2">AI features unavailable</p>
-              <p className="text-[13px] text-ud-muted leading-relaxed">A Business Associate Agreement (BAA) is required for healthcare businesses.</p>
+              <p className="text-[13px] text-ud-muted leading-relaxed">AI features aren&apos;t available for this workspace right now.</p>
             </div>
           )}
         </div>

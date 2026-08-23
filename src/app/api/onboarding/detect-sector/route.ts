@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const KEYWORDS: Record<string, string[]> = {
-  dental: ["dental", "dentist", "orthodont", "smile"],
-  veterinary: ["vet", "animal", "pet ", "paws", "clinic"],
   legal: ["law ", "legal", "attorney", "lawyer", "firm"],
   accounting: ["account", "cpa ", "bookkeep", "tax ", "payroll"],
   hvac: ["hvac", "heating", "cooling", "air condition"],

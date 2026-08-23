@@ -34,9 +34,9 @@ export default async function OnboardingPage() {
             </h1>
 
             <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              A medical office, a contractor, and a home services crew each
-              need different language and priorities. Pick yours and the
-              workspace configures itself.
+              A contractor, a home services crew, and a professional services
+              firm each need different language and priorities. Pick yours
+              and the workspace configures itself.
             </p>
           </div>
         </section>
