@@ -3,9 +3,9 @@
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createLeadAction, type ActionState } from "../actions";
-import type { CustomerRow } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 
 // The Kanban board's stage names (Lead/Quoted/In progress/Won/Lost) and this
 // form's status options are two different vocabularies — clicking "Add" in
@@ -22,11 +22,10 @@ const STAGE_TO_DEFAULT_STATUS: Record<string, string> = {
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
   profile: IndustryProfile;
 };
 
-export function LeadCreateForm({ customers, profile }: Props) {
+export function LeadCreateForm({ profile }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createLeadAction,
     null,
@@ -52,14 +51,7 @@ export function LeadCreateForm({ customers, profile }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-            <select name="customer_id" className={f}>
-              <option value="">No linked {profile.labels.customerSingular.toLowerCase()} yet</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name || customer.email || customer.phone || "Unnamed person"}
-                </option>
-              ))}
-            </select>
+            <ContactCombobox name="customer_id" className={f} />
           </label>
 
           <label className="block">

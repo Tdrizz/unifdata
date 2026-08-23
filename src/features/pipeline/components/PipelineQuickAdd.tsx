@@ -39,7 +39,7 @@ export function PipelineQuickAdd({ profile, contacts, leads, jobs }: Props) {
           { id: "sale", label: profile.labels.saleSingular },
         ]}
       />
-      {type === "lead" && <LeadCreateForm customers={contacts} profile={profile} />}
+      {type === "lead" && <LeadCreateForm profile={profile} />}
       {type === "job" && <JobCreateForm contacts={contacts} leads={leads} />}
       {type === "sale" && <SaleCreateForm profile={profile} contacts={contacts} jobs={jobs} />}
     </div>
