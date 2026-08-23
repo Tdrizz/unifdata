@@ -101,9 +101,10 @@ export async function createJobAction(
   }
 
   revalidatePath("/jobs");
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/jobs?toast=Job+created");
+  redirect("/crm?toast=Job+created");
 }
 
 export async function updateJobAction(
@@ -181,9 +182,10 @@ export async function updateJobAction(
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${id}`);
   revalidatePath(`/jobs/${id}/edit`);
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/jobs?toast=Job+updated");
+  redirect("/crm?toast=Job+updated");
 }
 
 export async function deleteJobAction(id: string) {
@@ -201,7 +203,8 @@ export async function deleteJobAction(id: string) {
   if (error) redirect(`/jobs/${id}/edit?error=${encodeURIComponent(error.message)}`);
 
   revalidatePath("/jobs");
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/jobs?toast=Job+deleted");
+  redirect("/crm?toast=Job+deleted");
 }
