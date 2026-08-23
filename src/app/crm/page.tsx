@@ -3,9 +3,11 @@ import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getCRMPageData } from "@/features/crm/queries";
-import { CRMView } from "@/features/crm/components/CRMView";
-import { MobileCrmView } from "@/features/crm/components/MobileCrmView";
+import { getPipelinePageData } from "@/features/pipeline/queries";
+import { PipelineView } from "@/features/pipeline/components/PipelineView";
+import { MobilePipelineView } from "@/features/pipeline/components/MobilePipelineView";
+import { getCustomersForJobSelect, getLeadsForJobSelect } from "@/features/jobs/queries";
+import { getJobsForSaleSelect } from "@/features/sales/queries";
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +23,12 @@ export default async function PipelinePage() {
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const { leads, customers } = await getCRMPageData(supabase, company.id);
+  const [pipelineData, contacts, jobPickerLeads, leadPickerJobs] = await Promise.all([
+    getPipelinePageData(supabase, company.id),
+    getCustomersForJobSelect(supabase, company.id),
+    getLeadsForJobSelect(supabase, company.id),
+    getJobsForSaleSelect(supabase, company.id),
+  ]);
 
   return (
     <AppShell
@@ -30,8 +37,20 @@ export default async function PipelinePage() {
       businessSector={company.business_sector}
     >
       <>
-        <CRMView leads={leads} customers={customers} profile={profile} />
-        <MobileCrmView leads={leads} customers={customers} profile={profile} />
+        <PipelineView
+          {...pipelineData}
+          profile={profile}
+          contacts={contacts}
+          jobPickerLeads={jobPickerLeads}
+          leadPickerJobs={leadPickerJobs}
+        />
+        <MobilePipelineView
+          {...pipelineData}
+          profile={profile}
+          contacts={contacts}
+          jobPickerLeads={jobPickerLeads}
+          leadPickerJobs={leadPickerJobs}
+        />
       </>
     </AppShell>
   );
