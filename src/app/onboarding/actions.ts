@@ -84,14 +84,6 @@ export async function createCompanyStepAction(
     );
   }
 
-  if (businessSector === "veterinary") {
-    await (supabase as any).from("custom_field_definitions").insert([
-      { organization_id: company.id, entity_type: "contact", label: "Patient Name", field_key: "patient_name", field_type: "text", position: 0 },
-      { organization_id: company.id, entity_type: "contact", label: "Species", field_key: "species", field_type: "select", options: ["Dog", "Cat", "Bird", "Rabbit", "Other"], position: 1 },
-      { organization_id: company.id, entity_type: "contact", label: "Breed", field_key: "breed", field_type: "text", position: 2 },
-    ]);
-  }
-
   return { companyId: company.id };
 }
 

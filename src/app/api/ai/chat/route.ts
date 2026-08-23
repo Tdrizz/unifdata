@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   if (!isAiAllowed(currentCompany.company)) {
     return NextResponse.json(
-      { error: "AI features are not available for healthcare businesses. A Business Associate Agreement (BAA) is required to process patient data with third-party AI providers." },
+      { error: "AI features aren't available for this workspace right now." },
       { status: 403 },
     );
   }
