@@ -9,15 +9,16 @@ import { cn } from "@/lib/utils";
 function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
   return [
-    { id: "workspace",  label: "Go to Today",                            href: "/workspace",  group: "Navigate" },
+    { id: "workspace",  label: "Go to Home",                             href: "/workspace",  group: "Navigate" },
     { id: "customers",  label: `Go to ${profile.labels.customerPlural}`, href: "/customers",  group: "Navigate" },
     { id: "crm",        label: "Go to Pipeline",                         href: "/crm",        group: "Navigate" },
     { id: "jobs",       label: `Go to ${profile.labels.jobPlural}`,      href: "/jobs",       group: "Navigate" },
     { id: "sales",      label: `Go to ${profile.labels.salePlural}`,     href: "/sales",      group: "Navigate" },
     { id: "follow-ups", label: `Go to ${profile.labels.followUpPlural}`, href: "/follow-ups", group: "Navigate" },
-    { id: "aria",       label: "Open Aria",                              href: "/aria",       group: "Navigate" },
-    { id: "process",    label: `Go to ${profile.recordPlural}`,          href: "/process",    group: "Navigate" },
     { id: "communications", label: "Go to Communications",               href: "/communications", group: "Navigate" },
+    { id: "aria",       label: "Open Aria",                              href: "/aria",       group: "Navigate" },
+    { id: "tools",      label: "Go to Tools",                            href: "/tools",      group: "Navigate" },
+    { id: "process",    label: `Go to ${profile.recordPlural}`,          href: "/process",    group: "Navigate" },
     { id: "automations", label: "Go to Automations",                     href: "/automations", group: "Navigate" },
     { id: "data-hub",   label: "Go to Data Hub",                         href: "/data-hub",   group: "Navigate" },
     { id: "imports",    label: "Go to Imports",                          href: "/imports",    group: "Navigate" },
