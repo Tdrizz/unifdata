@@ -23,15 +23,19 @@ const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4
 
 type Props = {
   profile: IndustryProfile;
+  // Overrides the `?add=` URL param — used by callers (like the mobile
+  // pipeline FAB) that open this form outside of a real navigation, where
+  // relying on useSearchParams() picking up a just-replaced URL would race.
+  initialStage?: string;
 };
 
-export function LeadCreateForm({ profile }: Props) {
+export function LeadCreateForm({ profile, initialStage }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createLeadAction,
     null,
   );
   const searchParams = useSearchParams();
-  const requestedStage = searchParams.get("add");
+  const requestedStage = initialStage ?? searchParams.get("add");
   const defaultStatus = (requestedStage && STAGE_TO_DEFAULT_STATUS[requestedStage]) || "New";
 
   return (

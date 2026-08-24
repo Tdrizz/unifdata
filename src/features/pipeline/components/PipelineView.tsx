@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { PIPELINE_STAGES, groupCardsByStage } from "../stages";
+import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import type { PipelineCard as PipelineCardType, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -18,14 +18,6 @@ type Props = PipelinePageData & {
   profile: IndustryProfile;
   jobPickerLeads: Pick<JobsLeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   leadPickerJobs: Pick<JobRow, "id" | "service_type">[];
-};
-
-const STAGE_TO_QUICK_ADD_TYPE: Record<string, "lead" | "job" | "sale"> = {
-  Lead: "lead",
-  Quoted: "lead",
-  Active: "job",
-  Complete: "job",
-  Paid: "sale",
 };
 
 const SOURCE_TYPE_LABEL: Record<PipelineCardType["sourceType"], string> = {

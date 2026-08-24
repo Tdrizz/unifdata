@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { Pill } from "@/components/ui/Pill";
 import { formatCurrency } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { PIPELINE_STAGES, groupCardsByStage } from "../stages";
+import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import type { PipelineCard, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -27,6 +29,7 @@ const SOURCE_TYPE_LABEL: Record<PipelineCard["sourceType"], string> = {
 
 export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
   const grouped = groupCardsByStage(cards);
+  const lostCards = grouped.get("Lost") ?? [];
   const activeCards = cards.filter((c) => c.stage !== "Lost");
   const pipelineValue = activeCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
 
@@ -35,6 +38,13 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const activeStageCards = grouped.get(activeStage) ?? [];
+
+  // Same targeting desktop's per-column "Add" links use: opening the sheet
+  // from a given stage defaults the quick-add tab to whatever record type
+  // actually lands in that stage, not always "lead". Passed directly as
+  // props rather than through the URL — the sheet's contents mount fresh
+  // every time it opens, so there's no navigation round-trip to race.
+  const quickAddType = STAGE_TO_QUICK_ADD_TYPE[activeStage] ?? "lead";
 
   return (
     <div className="block md:hidden pb-8">
@@ -49,9 +59,9 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
         </p>
       </div>
 
-      {/* Stage chips */}
+      {/* Stage chips — all 5, same as desktop's always-visible kanban columns */}
       <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
-        {PIPELINE_STAGES.filter((stage) => (grouped.get(stage.name) ?? []).length > 0 || stage.name === activeStage).map((stage) => {
+        {PIPELINE_STAGES.map((stage) => {
           const count = (grouped.get(stage.name) ?? []).length;
           const isActive = activeStage === stage.name;
           return (
@@ -107,6 +117,40 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
         </div>
       )}
 
+      {/* Recently closed — same lost/cancelled section desktop shows below the kanban */}
+      <div className="px-4 pt-6">
+        <SectionCard
+          title="Recently closed"
+          description="Lost opportunities and cancelled work out of the active pipeline."
+        >
+          {lostCards.length === 0 ? (
+            <EmptyState
+              title="Nothing closed out yet"
+              description="Lost or cancelled records appear here once statuses are updated."
+            />
+          ) : (
+            <div>
+              {lostCards.slice(0, 8).map((card) => (
+                <Link
+                  key={card.id}
+                  href={card.editHref}
+                  className="flex items-center gap-3 px-4 py-[13px] border-b border-[rgba(23,22,20,0.04)] last:border-0 active:bg-ud-surface-soft"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[14px] text-ud-ink truncate">{card.title}</p>
+                    <p className="mt-0.5 text-[12px] text-ud-faint truncate">{card.contactName || "No contact linked"}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[13px] font-semibold text-ud-muted [font-variant-numeric:tabular-nums]">{formatCurrency(card.value)}</p>
+                    <StatusBadge tone="neutral">{card.statusLabel}</StatusBadge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+
       <button
         onClick={() => setSheetOpen(true)}
         className="fixed bottom-[calc(var(--mobile-tabbar-h)+env(safe-area-inset-bottom)+12px)] right-4 z-30 w-12 h-12 rounded-full bg-ud-accent text-white shadow-ud-pop flex items-center justify-center active:scale-95 transition-transform md:hidden"
@@ -117,7 +161,13 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
         </svg>
       </button>
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add to " + profile.pipelineLabel}>
-        <PipelineQuickAdd profile={profile} leads={jobPickerLeads} jobs={leadPickerJobs} />
+        <PipelineQuickAdd
+          profile={profile}
+          leads={jobPickerLeads}
+          jobs={leadPickerJobs}
+          initialType={quickAddType}
+          initialStage={activeStage}
+        />
       </BottomSheet>
     </div>
   );
