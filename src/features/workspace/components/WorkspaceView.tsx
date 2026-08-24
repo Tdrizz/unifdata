@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
+import { VeraDraftCard, VeraAlertCard } from "@/components/vera/VeraCards";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 import { isOverdue, isDueToday } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
@@ -42,6 +42,7 @@ type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean }
 export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
+  const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -220,8 +221,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
     ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
     ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
   ];
-  const veraPreview = veraItems.slice(0, 3);
-  const veraRemaining = veraItems.length - veraPreview.length;
+  const veraPreview = showAllVera ? veraItems : veraItems.slice(0, 3);
 
   const statusLine = (() => {
     const parts: string[] = [];
@@ -266,10 +266,14 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
             </div>
             <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
           </div>
-          {veraItems.length > 0 && (
-            <Link href="/vera" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">
-              {veraRemaining > 0 ? `See all ${veraItems.length} →` : "Open Vera →"}
-            </Link>
+          {veraItems.length > 3 && (
+            <button
+              type="button"
+              onClick={() => setShowAllVera((v) => !v)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]"
+            >
+              {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
+            </button>
           )}
         </div>
 
