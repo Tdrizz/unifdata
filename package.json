@@ -27,7 +27,7 @@
     "cmdk": "^1.1.1",
     "ioredis": "^5.10.1",
     "langfuse": "^3.38.20",
-    "next": "15.5.18",
+    "next": "^15.5.23",
     "openai": "^6.39.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
@@ -51,10 +51,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.6",
-    "sharp": "^0.34.5"
+    "vitest": "^4.1.6"
   }
 }
