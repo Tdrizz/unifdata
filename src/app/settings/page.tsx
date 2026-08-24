@@ -118,6 +118,8 @@ export default async function SettingsPage() {
               business_sector: company.business_sector,
               tier: company.tier,
               preferences: company.preferences as Record<string, unknown> | undefined,
+              brand_color: company.brand_color || "#1D2D3E",
+              accent_color: company.accent_color || "#4A3FA8",
             }}
             user={{ email: user.email || "" }}
             integrations={integrations}
@@ -142,12 +144,21 @@ export default async function SettingsPage() {
               business_sector: company.business_sector,
               brand_color: company.brand_color || "#1D2D3E",
               accent_color: company.accent_color || "#4A3FA8",
+              preferences: company.preferences as Record<string, unknown> | undefined,
             }}
             user={{ email: user.email || "" }}
             integrations={integrations}
             geminiEnabled={geminiEnabled}
             members={members}
             currentUserRole={currentUserRole}
+            notificationPrefs={notificationPrefs}
+            currentMonthRevenue={currentMonthRevenue}
+            tags={tags}
+            contactFields={contactFields}
+            recordFields={recordFields}
+            boards={boards}
+            profileOverrides={profileOverrides}
+            defaultLabels={defaultLabels}
           />
         </div>
       </>

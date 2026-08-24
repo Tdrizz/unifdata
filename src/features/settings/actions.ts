@@ -119,9 +119,6 @@ export async function updateWorkspaceAction(formData: FormData) {
   redirect("/settings?toast=Settings+saved");
 }
 
-export async function signOutAction() {
-  redirect("/sign-in");
-}
 
 export async function inviteMember(email: string, role: "owner" | "member" = "member") {
   const companyId = await getCurrentCompanyId();
