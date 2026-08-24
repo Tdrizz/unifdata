@@ -10,6 +10,17 @@ export const PIPELINE_STAGES: { name: PipelineStageName; color: string }[] = [
   { name: "Paid", color: "#3f7c3f" },
 ];
 
+// Which quick-add tab a stage's "Add" affordance should open to — used by
+// both the desktop per-column links and the mobile FAB so tapping "Add" from
+// a given stage always lands on the tab that actually creates a record there.
+export const STAGE_TO_QUICK_ADD_TYPE: Record<string, "lead" | "job" | "sale"> = {
+  Lead: "lead",
+  Quoted: "lead",
+  Active: "job",
+  Complete: "job",
+  Paid: "sale",
+};
+
 function contactName(contact: RawContact): string | null {
   if (!contact) return null;
   const name = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();

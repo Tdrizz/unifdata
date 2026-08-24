@@ -17,11 +17,16 @@ type Props = {
   profile: IndustryProfile;
   leads: Pick<JobsLeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   jobs: Pick<JobRow, "id" | "service_type">[];
+  // Overrides the `?type=`/`?add=` URL params — used by callers (like the
+  // mobile pipeline FAB) that open this form outside of a real navigation,
+  // where relying on useSearchParams() picking up a just-replaced URL would race.
+  initialType?: QuickAddType;
+  initialStage?: string;
 };
 
-export function PipelineQuickAdd({ profile, leads, jobs }: Props) {
+export function PipelineQuickAdd({ profile, leads, jobs, initialType: initialTypeOverride, initialStage }: Props) {
   const searchParams = useSearchParams();
-  const requestedType = searchParams.get("type");
+  const requestedType = initialTypeOverride ?? searchParams.get("type");
   const initialType: QuickAddType =
     requestedType === "job" || requestedType === "sale" || requestedType === "follow-up" ? requestedType : "lead";
   const [type, setType] = useState<QuickAddType>(initialType);
@@ -39,7 +44,7 @@ export function PipelineQuickAdd({ profile, leads, jobs }: Props) {
           { id: "follow-up", label: profile.labels.followUpSingular },
         ]}
       />
-      {type === "lead" && <LeadCreateForm profile={profile} />}
+      {type === "lead" && <LeadCreateForm profile={profile} initialStage={initialStage} />}
       {type === "job" && <JobCreateForm leads={leads} />}
       {type === "sale" && <SaleCreateForm profile={profile} jobs={jobs} />}
       {type === "follow-up" && <FollowUpCreateForm leads={leads} />}
