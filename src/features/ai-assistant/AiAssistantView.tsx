@@ -44,6 +44,17 @@ export function getTimeOfDay() {
   return h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
 }
 
+export function getStarterQuestions(profile?: IndustryProfile): string[] {
+  const customerPlural = profile?.labels.customerPlural ?? "clients";
+  const jobPlural = profile?.labels.jobPlural ?? "jobs";
+  return [
+    `Which ${customerPlural.toLowerCase()} haven't had a ${jobPlural.toLowerCase().replace(/s$/, "")} in 90+ days?`,
+    `Summarize this month's revenue by ${customerPlural.toLowerCase().replace(/s$/, "")}`,
+    "Draft a payment reminder for overdue invoices",
+    "What's our close rate this quarter?",
+  ];
+}
+
 export function VeraDraftCard({ draft, onApprove, onDismiss, href }: { draft: Draft; onApprove: () => Promise<void>; onDismiss: () => Promise<void>; href?: string }) {
   const [actioning, setActioning] = useState(false);
   const [dismissing, setDismissing] = useState(false);
@@ -114,12 +125,7 @@ type Props = {
 export function AiAssistantView({ initialMessages = [], initialSessionId = null, profile, drafts = [], alerts = [] }: Props) {
   const customerPlural = profile?.labels.customerPlural ?? "clients";
   const jobPlural = profile?.labels.jobPlural ?? "jobs";
-  const starterQuestions = [
-    `Which ${customerPlural.toLowerCase()} haven't had a ${jobPlural.toLowerCase().replace(/s$/, "")} in 90+ days?`,
-    `Summarize this month's revenue by ${customerPlural.toLowerCase().replace(/s$/, "")}`,
-    "Draft a payment reminder for overdue invoices",
-    "What's our close rate this quarter?",
-  ];
+  const starterQuestions = getStarterQuestions(profile);
   const [messages, setMessages] = useState<Message[]>(() => {
     if (initialMessages.length > 0) return initialMessages;
     const total = drafts.length + alerts.length;

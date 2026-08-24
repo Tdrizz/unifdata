@@ -108,6 +108,7 @@ export default async function VeraPage() {
             <MobileAiView
               initialMessages={initialMessages}
               initialSessionId={initialSessionId}
+              profile={profile}
               drafts={drafts}
               alerts={alerts}
             />
