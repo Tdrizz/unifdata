@@ -27,12 +27,12 @@ function PaginationInner({
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <div className="flex items-center justify-center gap-1 py-4">
+    <div className="flex items-center justify-center gap-1 py-4 overflow-x-auto no-scrollbar">
       <button
         type="button"
         disabled={currentPage <= 1}
         onClick={() => goTo(currentPage - 1)}
-        className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
+        className="shrink-0 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
       >
         Previous
       </button>
@@ -44,8 +44,8 @@ function PaginationInner({
           onClick={() => goTo(page)}
           className={
             page === currentPage
-              ? "rounded-[8px] bg-ud-accent px-3 py-2 text-xs font-semibold text-white"
-              : "rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
+              ? "shrink-0 rounded-[8px] bg-ud-accent px-3 py-2 text-xs font-semibold text-white"
+              : "shrink-0 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk"
           }
         >
           {page}
@@ -56,7 +56,7 @@ function PaginationInner({
         type="button"
         disabled={currentPage >= totalPages}
         onClick={() => goTo(currentPage + 1)}
-        className="rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
+        className="shrink-0 rounded-[8px] border border-ud bg-ud-surface px-3 py-2 text-xs font-semibold text-ud-muted hover:bg-ud-surface-sunk disabled:cursor-not-allowed disabled:opacity-40"
       >
         Next
       </button>

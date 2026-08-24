@@ -40,7 +40,15 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <MobileSalesView sales={sales} profile={profile} contacts={contacts} jobs={jobs} />
+      <MobileSalesView
+        sales={sales}
+        count={count}
+        profile={profile}
+        selectedStatus={selectedStatus}
+        selectedSource={selectedSource}
+        contacts={contacts}
+        jobs={jobs}
+      />
       <SalesList
         sales={sales}
         count={count}

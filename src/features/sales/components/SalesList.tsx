@@ -11,6 +11,17 @@ import { SaleCreateForm } from "./SaleCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { Pagination } from "@/components/ui/Pagination";
+import {
+  isPaid,
+  isOverdue,
+  formatSaleDate as formatSaleDateRaw,
+  sourceBadge,
+  formatRelativeTime,
+  getLastNMonths,
+  sumSalesForMonth,
+  computeSalesStats,
+  getSaleContactId,
+} from "../compute";
 
 type Props = {
   sales: SaleRow[];
@@ -26,19 +37,6 @@ type Props = {
 
 type FilterType = "all" | "overdue" | "pending" | "paid";
 
-function isPaid(status: string | null) {
-  return (status || "").toLowerCase() === "paid";
-}
-
-function isOverdue(status: string | null) {
-  return (status || "").toLowerCase().includes("overdue");
-}
-
-function isPending(status: string | null) {
-  const s = (status || "").toLowerCase();
-  return s === "pending" || s === "unpaid" || s === "partial" || (s !== "paid" && !s.includes("overdue"));
-}
-
 function statusBadgeClass(status: string | null) {
   const s = (status || "").toLowerCase();
   if (isPaid(status)) return "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-success-bg text-ud-success";
@@ -48,50 +46,8 @@ function statusBadgeClass(status: string | null) {
 }
 
 function formatSaleDate(dateStr: string | null | undefined) {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatSaleDateRaw(dateStr) ?? "—";
 }
-
-function sourceBadge(sourceSystem: string | null | undefined) {
-  if (!sourceSystem) return null;
-  const labels: Record<string, string> = {
-    quickbooks: "QB",
-    stripe: "Stripe",
-    square: "Square",
-    jobber: "Jobber",
-  };
-  return labels[sourceSystem.toLowerCase()] ?? sourceSystem.toUpperCase().slice(0, 4);
-}
-
-function formatRelativeTime(dateStr: string | null | undefined) {
-  if (!dateStr) return null;
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
-function getLastNMonths(n: number, now: Date) {
-  const months = [];
-  for (let i = n - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({ year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleDateString("en-US", { month: "short" }) });
-  }
-  return months;
-}
-
-function sumSalesForMonth(sales: SaleRow[], year: number, month: number) {
-  return sales
-    .filter((s) => {
-      const d = new Date(s.sale_date || s.created_at);
-      return d.getFullYear() === year && d.getMonth() === month;
-    })
-    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
-}
-
 
 export function SalesList({ sales, count, page: _page, q: _q, contacts = [], jobs = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
@@ -103,34 +59,24 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], job
   const customerSingular = profile?.labels.customerSingular ?? p.labels.customerSingular;
 
   const contactById = new Map(contacts.map((c) => [c.id, c]));
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const revenueMTD = sales
-    .filter((s) => new Date(s.sale_date || s.created_at) >= startOfMonth)
-    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
-
-  const outstanding = sales.filter((s) => !isPaid(s.payment_status));
-  const outstandingValue = outstanding.reduce((sum, s) => sum + Number(s.amount || 0), 0);
-
-  const paidThisMonth = sales.filter((s) => {
-    const d = new Date(s.sale_date || s.created_at);
-    return d >= startOfMonth && isPaid(s.payment_status);
-  });
-  const paidThisMonthValue = paidThisMonth.reduce((sum, s) => sum + Number(s.amount || 0), 0);
-
-  const avgOpenInvoice = outstanding.length > 0 ? outstandingValue / outstanding.length : 0;
-
-  const overdueCount = sales.filter((s) => isOverdue(s.payment_status)).length;
-  const pendingCount = sales.filter((s) => isPending(s.payment_status) && !isPaid(s.payment_status) && !isOverdue(s.payment_status)).length;
-  const paidCount = sales.filter((s) => isPaid(s.payment_status)).length;
-  const openCount = outstanding.length;
+  const {
+    now,
+    revenueMTD,
+    outstanding,
+    outstandingValue,
+    paidThisMonthValue,
+    avgOpenInvoice,
+    overdueCount,
+    pendingCount,
+    paidCount,
+    openCount,
+  } = computeSalesStats(sales);
 
   const filtered = sales.filter((s) => {
     if (selectedSource && (s.source ?? "").toLowerCase() !== selectedSource.toLowerCase()) return false;
     if (filter === "paid") return isPaid(s.payment_status);
     if (filter === "overdue") return isOverdue(s.payment_status);
-    if (filter === "pending") return isPending(s.payment_status) && !isPaid(s.payment_status) && !isOverdue(s.payment_status);
+    if (filter === "pending") return !isPaid(s.payment_status) && !isOverdue(s.payment_status);
     return true;
   });
 
@@ -298,8 +244,7 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], job
               </tr>
             ) : (
               filtered.map((sale) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const saleContactId = (sale as any).contact_id ?? sale.customer_id;
+                const saleContactId = getSaleContactId(sale);
                 const customer = saleContactId ? contactById.get(saleContactId) : null;
                 const isOver = isOverdue(sale.payment_status);
                 return (
