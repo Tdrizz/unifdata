@@ -139,20 +139,12 @@ export function OnboardingForm() {
     return d.toISOString().split("T")[0];
   });
 
-  // Step 5: auto-generate brief then redirect
+  // Step 5: hand off to the workspace — Vera's nightly pipeline and the
+  // live KPI dashboard take over from here, no separate generation step
+  // to wait on.
   useEffect(() => {
     if (step !== 5) return;
-    fetch("/api/ai/business-summary", { method: "POST", credentials: "include" })
-      .then((res) => {
-        router.push(
-          res.ok
-            ? "/workspace"
-            : "/workspace?toast=Your+Operating+Brief+is+still+generating+—+check+back+in+a+minute"
-        );
-      })
-      .catch(() => {
-        router.push("/workspace?toast=Your+Operating+Brief+is+still+generating+—+check+back+in+a+minute");
-      });
+    router.push("/workspace");
   }, [step, router]);
 
   async function analyzeUpload(file: File) {
