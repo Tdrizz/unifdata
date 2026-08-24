@@ -330,7 +330,7 @@ export async function POST(request: Request) {
 
         if (toolCalls && toolCalls.length > 0) {
           // Execute each tool call and collect results
-          const toolResults: { tool_call_id: string; result: string }[] = [];
+          const toolResults: { tool_call_id: string; result: string; success: boolean }[] = [];
           const actionLines: string[] = [];
 
           for (const tc of toolCalls) {
@@ -342,11 +342,17 @@ export async function POST(request: Request) {
               args = {};
             }
             const result = await executeTool(tc.function.name, args, supabase, company.id);
-            toolResults.push({ tool_call_id: tc.id, result: result.message });
-            if (result.success) actionLines.push(`✓ ${result.message}`);
+            toolResults.push({ tool_call_id: tc.id, result: result.message, success: result.success });
+            // Both outcomes are surfaced deterministically here, not left to
+            // the follow-up model call to accurately narrate — a model can
+            // (and, seen live, sometimes does) confidently claim success in
+            // its free-text reply even after the tool itself reported
+            // failure. This line is the actual source of truth.
+            actionLines.push(`${result.success ? "✓" : "✗"} ${result.message}`);
           }
 
           toolActionSummary = actionLines.join("\n") || null;
+          const anyFailed = toolResults.some((tr) => !tr.success);
 
           // Emit tool action bubble before streaming final reply
           if (toolActionSummary) {
@@ -357,40 +363,49 @@ export async function POST(request: Request) {
             );
           }
 
-          // Build second call messages with tool results
-          const followUpMessages: Parameters<typeof aiRouter.chat.completions.create>[0]["messages"] = [
-            ...baseMessages,
-            firstMessage as { role: "assistant"; content: string | null; tool_calls: NonNullable<typeof toolCalls> },
-            ...toolResults.map((tr) => ({
-              role: "tool" as const,
-              tool_call_id: tr.tool_call_id,
-              content: tr.result,
-            })),
-          ];
+          if (anyFailed) {
+            // Skip the follow-up call entirely when anything failed — its
+            // job is conversational polish, not the source of truth on
+            // whether the action succeeded, and it isn't reliable enough to
+            // trust with that distinction. The deterministic toolAction
+            // bubble above already told the user what actually happened.
+            fullText = toolActionSummary ?? "That didn't go through. Please try again.";
+          } else {
+            // Build second call messages with tool results
+            const followUpMessages: Parameters<typeof aiRouter.chat.completions.create>[0]["messages"] = [
+              ...baseMessages,
+              firstMessage as { role: "assistant"; content: string | null; tool_calls: NonNullable<typeof toolCalls> },
+              ...toolResults.map((tr) => ({
+                role: "tool" as const,
+                tool_call_id: tr.tool_call_id,
+                content: tr.result,
+              })),
+            ];
 
-          // Second streaming call for final confirmation reply
-          try {
-            const followUpStream = await aiRouter.chat.completions.create({
-              model: AI_MODELS.chat,
-              temperature: 0.6,
-              stream: true,
-              messages: followUpMessages,
-            });
+            // Second streaming call for final confirmation reply
+            try {
+              const followUpStream = await aiRouter.chat.completions.create({
+                model: AI_MODELS.chat,
+                temperature: 0.6,
+                stream: true,
+                messages: followUpMessages,
+              });
 
-            for await (const chunk of followUpStream) {
-              const delta = chunk.choices[0]?.delta?.content ?? "";
-              if (delta) {
-                fullText += delta;
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+              for await (const chunk of followUpStream) {
+                const delta = chunk.choices[0]?.delta?.content ?? "";
+                if (delta) {
+                  fullText += delta;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+                }
               }
+            } catch (err) {
+              console.error("[chat] follow-up stream failed:", err);
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
+                ),
+              );
             }
-          } catch (err) {
-            console.error("[chat] follow-up stream failed:", err);
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ delta: " — response interrupted. Please try again." })}\n\n`,
-              ),
-            );
           }
         } else {
           // No tool calls — content is in the first response; emit it token-by-token is not possible

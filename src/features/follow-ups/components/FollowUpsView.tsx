@@ -89,11 +89,17 @@ type QueueEntry = {
 export function FollowUpsView({ followUps, opportunities, people, profile, count = 0 }: Props) {
   const [filter, setFilter] = useState<FilterType>("all");
   const [, startTransition] = useTransition();
+  // Optimistic: revalidatePath() re-fetches this route's data on the next
+  // navigation, but doesn't push new props into an already-mounted client
+  // component immediately, so without this the completed item lingered in
+  // the list until a full reload. Locally hidden ids are dropped from the
+  // rendered queue the instant "Done" is clicked, ahead of the server round trip.
+  const [locallyCompletedIds, setLocallyCompletedIds] = useState<Set<string>>(new Set());
 
   const personById = new Map(people.map((p) => [p.id, p]));
 
   const manualEntries: QueueEntry[] = followUps
-    .filter((f) => !isComplete(f.status))
+    .filter((f) => !isComplete(f.status) && !locallyCompletedIds.has(f.id))
     .map((f) => {
       const person = (f.contact_id ?? f.customer_id) ? personById.get(f.contact_id ?? f.customer_id ?? "") : null;
       return {
@@ -203,6 +209,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
                         size="sm"
                         onClick={(e) => {
                           e.preventDefault();
+                          setLocallyCompletedIds((prev) => new Set(prev).add(rawId));
                           startTransition(() => markFollowUpCompleteAction(rawId));
                         }}
                       >

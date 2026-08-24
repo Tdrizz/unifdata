@@ -113,7 +113,7 @@ export async function markFollowUpCompleteAction(id: string) {
 
   const { error } = await supabase
     .from("follow_ups")
-    .update({ status: "Complete" })
+    .update({ status: "Complete", completed_at: new Date().toISOString() })
     .eq("id", id)
     .eq("company_id", company.id);
 

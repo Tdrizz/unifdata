@@ -62,9 +62,14 @@ function getDisplayName(c: CustomerRow): string {
 }
 
 function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
+  // Strip to letters/digits before taking initials — a name that starts with
+  // markup or symbols (e.g. pasted junk data) otherwise renders a garbled
+  // glyph instead of a sensible initial.
+  const clean = name.replace(/[^\p{L}\p{N}\s]/gu, "").trim();
+  if (!clean) return "?";
+  const parts = clean.split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
+  return clean.slice(0, 2).toUpperCase();
 }
 
 const AVATAR_COLORS = [
