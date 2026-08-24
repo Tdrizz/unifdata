@@ -85,7 +85,7 @@ const UpdateSalePaymentStatusSchema = z.object({
 });
 
 const CreateFollowupSchema = z.object({
-  customer_id: z.string().uuid(),
+  customer_id: z.string().uuid().optional(),
   due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   note: z.string().min(1).max(1000),
   type: z.enum(["call", "email", "visit", "other"]).optional().default("other"),
@@ -374,18 +374,19 @@ export async function executeTool(
 
       case "create_followup": {
         const data = CreateFollowupSchema.parse(args);
-        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
+        if (data.customer_id && !(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
           return { success: false, message: "That customer isn't in your workspace." };
         }
         const { error } = await supabase.from("follow_ups").insert({
           company_id: orgId,
-          contact_id: data.customer_id,
+          contact_id: data.customer_id ?? null,
           due_date: data.due_date,
           message: data.note,
           status: "open",
         });
         if (error) return { success: false, message: `Failed to create follow-up: ${error.message}` };
-        return { success: true, message: `Follow-up scheduled for ${data.due_date}.` };
+        const note = data.customer_id ? "" : " It isn't linked to a contact — I couldn't confidently match one.";
+        return { success: true, message: `Follow-up scheduled for ${data.due_date}.${note}` };
       }
 
       case "mark_followup_complete": {

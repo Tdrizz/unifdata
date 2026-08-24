@@ -257,6 +257,44 @@ describe("update_sale_payment_status", () => {
   });
 });
 
+describe("create_followup", () => {
+  it("links to a resolved customer_id", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "create_followup",
+      { customer_id: CUSTOMER_ID, due_date: "2026-09-01", note: "Call back" },
+      supabase,
+      ORG,
+    );
+    expect(result.success).toBe(true);
+    expect(db.follow_ups[1]).toMatchObject({ contact_id: CUSTOMER_ID, message: "Call back" });
+  });
+
+  it("creates an unlinked follow-up instead of failing when no customer_id is given", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "create_followup",
+      { due_date: "2026-09-01", note: "Call back" },
+      supabase,
+      ORG,
+    );
+    expect(result.success).toBe(true);
+    expect(db.follow_ups[1]).toMatchObject({ contact_id: null, message: "Call back" });
+  });
+
+  it("rejects a customer_id from another org", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "create_followup",
+      { customer_id: CUSTOMER_ID, due_date: "2026-09-01", note: "Call back" },
+      supabase,
+      OTHER_ORG,
+    );
+    expect(result.success).toBe(false);
+    expect(db.follow_ups).toHaveLength(1);
+  });
+});
+
 describe("mark_followup_complete", () => {
   it("marks an owned follow-up Complete", async () => {
     const supabase = makeFakeSupabase(db);
