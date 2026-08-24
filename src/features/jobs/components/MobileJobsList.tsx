@@ -12,6 +12,15 @@ import { JobCreateForm } from "./JobCreateForm";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { JobListRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
+import {
+  STAGE_FILTERS,
+  matchesStageFilter,
+  stageFilterFromParam,
+  getWeekDays,
+  isSameDay,
+  getJobContactId,
+  sortJobsByStartDate,
+} from "../compute";
 
 type Props = {
   jobs: JobListRow[];
@@ -22,30 +31,25 @@ type Props = {
   selectedStage: string;
 };
 
-const STAGE_FILTERS = ["All", "Scheduled", "Active", "Complete", "Cancelled"] as const;
-type StageFilter = (typeof STAGE_FILTERS)[number];
-
-function matchesFilter(status: string | null | undefined, filter: StageFilter): boolean {
-  if (filter === "All") return true;
-  const s = String(status || "").toLowerCase();
-  if (filter === "Scheduled") return s.includes("scheduled");
-  if (filter === "Active") return s.includes("active") || s.includes("progress");
-  if (filter === "Complete") return s.includes("complete") || s.includes("done") || s.includes("finished");
-  if (filter === "Cancelled") return s.includes("cancel");
-  return false;
-}
-
-export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props) {
-  const [activeFilter, setActiveFilter] = useState<StageFilter>("All");
+export function MobileJobsList({ jobs, count, contacts, leads, profile, selectedStage }: Props) {
+  const [activeFilter, setActiveFilter] = useState(stageFilterFromParam(selectedStage));
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const contactById = new Map(contacts.map((c) => [c.id, c]));
 
   const totalValue = jobs.reduce((sum, job) => sum + Number(job.job_value || 0), 0);
 
-  const filteredJobs = activeFilter === "All"
-    ? jobs
-    : jobs.filter((job) => matchesFilter(job.status, activeFilter));
+  const filteredJobs = sortJobsByStartDate(
+    activeFilter === "All" ? jobs : jobs.filter((job) => matchesStageFilter(job.status, activeFilter)),
+  );
+
+  const today = new Date();
+  const weekDays = getWeekDays(today);
+  const countsByDay = weekDays.map(({ date }) =>
+    jobs.filter((j) => j.start_date && isSameDay(new Date(j.start_date), date)).length
+  );
+  const todayCount = countsByDay[weekDays.findIndex((d) => isSameDay(d.date, today))] ?? 0;
+  const totalThisWeek = countsByDay.reduce((a, b) => a + b, 0);
 
   const eyebrow = profile.labels.jobPlural;
 
@@ -62,6 +66,34 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
         <p className="mt-[4px] text-[13px] text-ud-muted [font-variant-numeric:tabular-nums]">
           {formatCurrency(totalValue)} total value
         </p>
+        <p className="mt-[2px] text-[12px] text-ud-muted">
+          {totalThisWeek} scheduled this week{todayCount > 0 ? ` · ${todayCount} today` : ""}
+        </p>
+      </div>
+
+      {/* Week strip — same as desktop */}
+      <div className="px-4 pb-[18px] grid grid-cols-7 gap-1.5">
+        {weekDays.map(({ name, num, date }, i) => {
+          const isToday = isSameDay(date, today);
+          const cnt = countsByDay[i];
+          return (
+            <div
+              key={name}
+              className={cn(
+                "bg-ud-surface border rounded-[10px] px-1 py-[8px] text-center",
+                isToday ? "border-ud-accent bg-ud-accent-tint" : "border-ud",
+              )}
+            >
+              <div className={cn("text-[9px] font-bold uppercase tracking-[0.06em]", isToday ? "text-ud-accent" : "text-ud-faint")}>{name}</div>
+              <div className="text-[14px] font-bold text-ud-ink my-[2px]">{num}</div>
+              {cnt > 0 ? (
+                <div className="w-1.5 h-1.5 rounded-full bg-ud-accent mx-auto" />
+              ) : (
+                <div className="text-[10px] text-ud-muted">—</div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Stage filter chips */}
@@ -108,7 +140,8 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
       ) : (
         <div className="px-4 flex flex-col gap-3">
           {filteredJobs.map((job) => {
-            const customer = (job.contact_id ?? job.customer_id) ? contactById.get(job.contact_id ?? job.customer_id ?? "") : null;
+            const jobContactId = getJobContactId(job);
+            const customer = jobContactId ? contactById.get(jobContactId) : null;
 
             return (
               <Link
