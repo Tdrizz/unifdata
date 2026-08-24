@@ -134,8 +134,20 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const [highlightId, setHighlightId] = useState<string | null>(() => searchParams.get("item"));
+  // The initial "scroll to bottom" effect below fires on the very same mount
+  // as the deep-link highlight effect (both depend on state that's already
+  // populated on first render). Racing two smooth-scrolls on mount is
+  // unreliable — mobile Safari in particular tends to let the "scroll to
+  // bottom" one win, which silently defeats the deep link. Skip that first
+  // bottom-scroll when we arrived via a deep link, so the highlight-scroll
+  // is the only one driving the initial view.
+  const skipInitialBottomScroll = useRef(Boolean(searchParams.get("item")));
 
   useEffect(() => {
+    if (skipInitialBottomScroll.current) {
+      skipInitialBottomScroll.current = false;
+      return;
+    }
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
@@ -145,7 +157,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
     if (!highlightId) return;
     const el = document.getElementById(highlightId);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-    const t = setTimeout(() => setHighlightId(null), 2500);
+    const t = setTimeout(() => setHighlightId(null), 4000);
     return () => clearTimeout(t);
   }, [highlightId]);
 
@@ -363,7 +375,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                   id={`draft-${draft.id}`}
                   className={
                     highlightId === `draft-${draft.id}`
-                      ? "rounded-[12px] ring-2 ring-ud-accent transition-shadow duration-300"
+                      ? "rounded-[12px] ring-2 ring-offset-2 ring-ud-accent transition-shadow duration-300"
                       : "rounded-[12px] transition-shadow duration-300"
                   }
                 >
@@ -380,7 +392,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                   id={`alert-${alert.id}`}
                   className={
                     highlightId === `alert-${alert.id}`
-                      ? "rounded-[12px] ring-2 ring-ud-accent transition-shadow duration-300"
+                      ? "rounded-[12px] ring-2 ring-offset-2 ring-ud-accent transition-shadow duration-300"
                       : "rounded-[12px] transition-shadow duration-300"
                   }
                 >
