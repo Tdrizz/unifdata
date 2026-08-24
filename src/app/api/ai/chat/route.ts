@@ -18,6 +18,15 @@ import { semanticSearch } from "@/lib/embeddings/sync";
 
 type Topic = "sales" | "customers" | "jobs" | "leads" | "followups" | "all";
 
+// A model that doesn't populate the API's structured tool_calls field can
+// still write out its own invented tool-call syntax as plain text (observed
+// in production as literal `<tool_call>...<arg_key>...` leaking into the
+// chat). That text describes an action that never actually ran, so it must
+// never reach the user as if it were a normal reply.
+const LEAKED_TOOL_CALL_PATTERN = /<tool_call>|<arg_key>|<arg_value>/i;
+const LEAKED_TOOL_CALL_FALLBACK =
+  "I wasn't able to complete that action. Could you try rephrasing your request?";
+
 function detectTopic(message: string): Topic {
   const m = message.toLowerCase();
   const matches: Topic[] = [];
@@ -380,10 +389,17 @@ export async function POST(request: Request) {
         } else {
           // No tool calls — content is in the first response; emit it token-by-token is not possible
           // after a non-streaming call, so emit the whole content as one chunk then stream nothing extra
-          const content = firstMessage?.content ?? "";
+          const rawContent = firstMessage?.content ?? "";
+          const content = LEAKED_TOOL_CALL_PATTERN.test(rawContent) ? "" : rawContent;
+          if (rawContent && !content) {
+            console.error("[chat] Model leaked a fake tool-call as text instead of calling one:", rawContent);
+          }
           if (content) {
             fullText = content;
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: content })}\n\n`));
+          } else if (rawContent) {
+            fullText = LEAKED_TOOL_CALL_FALLBACK;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: LEAKED_TOOL_CALL_FALLBACK })}\n\n`));
           } else {
             // Fallback: if content is empty, do a fresh streaming call without tools
             try {
