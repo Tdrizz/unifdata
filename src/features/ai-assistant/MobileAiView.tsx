@@ -7,9 +7,10 @@ import { toast } from "sonner";
 import { AiMessage } from "./AiMessage";
 import { Composer } from "./Composer";
 import ReactMarkdown from "react-markdown";
-import { VeraDraftCard, VeraAlertCard, getTimeOfDay } from "@/features/ai-assistant/AiAssistantView";
+import { VeraDraftCard, VeraAlertCard, getTimeOfDay, getStarterQuestions } from "@/features/ai-assistant/AiAssistantView";
 import type { Draft, Alert } from "@/features/ai-assistant/AiAssistantView";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
+import type { IndustryProfile } from "@/lib/industry-profiles";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -17,21 +18,18 @@ type Message = {
   streaming?: boolean;
 };
 
-const STARTER_QUESTIONS = [
-  "Who needs follow-up the most urgently?",
-  "Which opportunities have the highest value?",
-  "What's my unpaid revenue situation?",
-  "Where are my biggest data gaps?",
-];
-
 type Props = {
   initialMessages?: Array<{ role: "user" | "model"; text: string }>;
   initialSessionId?: string | null;
+  profile?: IndustryProfile;
   drafts?: Draft[];
   alerts?: Alert[];
 };
 
-export function MobileAiView({ initialMessages = [], initialSessionId = null, drafts = [], alerts = [] }: Props) {
+export function MobileAiView({ initialMessages = [], initialSessionId = null, profile, drafts = [], alerts = [] }: Props) {
+  const customerPlural = profile?.labels.customerPlural ?? "clients";
+  const jobPlural = profile?.labels.jobPlural ?? "jobs";
+  const starterQuestions = getStarterQuestions(profile);
   const [messages, setMessages] = useState<Message[]>(() => {
     if (initialMessages.length > 0) return initialMessages;
     const total = drafts.length + alerts.length;
@@ -43,7 +41,6 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
   });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
@@ -84,7 +81,6 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
-    setError("");
 
     // Add placeholder streaming message
     setMessages((prev) => [...prev, { role: "model", text: "", streaming: true }]);
@@ -98,8 +94,10 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
 
       if (!response.ok || !response.body) {
         const data = await response.json().catch(() => ({}));
-        setMessages((prev) => prev.slice(0, -1));
-        setError(data.error || "Something went wrong.");
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "model", text: data.error || "Something went wrong." },
+        ]);
         return;
       }
 
@@ -165,8 +163,10 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
         return updated;
       });
     } catch {
-      setMessages((prev) => prev.slice(0, -1));
-      setError("Could not reach the server.");
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "model", text: "Could not reach the server." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -199,10 +199,22 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
     sendMessage(input);
   }
 
+  function handleClear() {
+    setMessages([]);
+    setSessionId(null);
+    if (sessionId) {
+      fetch("/api/ai/session/clear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {});
+    }
+  }
+
   return (
     <div className="relative flex flex-col" style={{ minHeight: "calc(100vh - 60px)" }}>
       {/* Mobile page header */}
-      <div className="px-[18px] pt-[18px] pb-[14px] border-b border-ud-soft">
+      <div className="px-[18px] pt-[18px] pb-[14px] border-b border-ud-soft flex items-center justify-between gap-3">
         <div className="flex items-center gap-[10px]">
           <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-ud-accent-tint">
             <svg
@@ -226,22 +238,37 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
             <p className="text-[11.5px] text-ud-muted">Reading workspace · live</p>
           </div>
         </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="shrink-0 text-[12.5px] font-semibold text-ud-muted hover:text-ud-ink transition-colors px-2.5 py-1.5 rounded-[8px] hover:bg-ud-surface-sunk"
+          >
+            New chat
+          </button>
+        )}
+      </div>
+
+      {/* Suggestions — stays reachable, not just before the first message */}
+      <div className="px-[14px] pt-[14px] flex flex-wrap gap-2 border-b border-ud-soft pb-[14px]">
+        {starterQuestions.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => sendMessage(q)}
+            disabled={loading}
+            className="text-[12.5px] font-medium bg-ud-surface border border-ud rounded-full px-[12px] py-[7px] text-ud-text hover:border-ud-hard hover:bg-ud-surface-soft transition-colors disabled:opacity-40"
+          >
+            {q}
+          </button>
+        ))}
       </div>
 
       {/* Thread */}
       <div className="flex-1 overflow-y-auto px-[14px] py-[14px] flex flex-col gap-[14px]">
         {messages.length === 0 && !loading && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {STARTER_QUESTIONS.map((q) => (
-              <button
-                key={q}
-                type="button"
-                onClick={() => sendMessage(q)}
-                className="text-[12.5px] font-medium bg-ud-surface border border-ud rounded-full px-[12px] py-[7px] text-ud-text hover:border-ud-hard hover:bg-ud-surface-soft transition-colors"
-              >
-                {q}
-              </button>
-            ))}
+          <div className="rounded-[10px] border border-ud bg-ud-surface-soft px-[14px] py-3 text-[13.5px] leading-relaxed text-ud-text">
+            Hello! I can help you analyze your clients, pipeline, revenue, and follow-ups. What would you like to know?
           </div>
         )}
 
@@ -279,12 +306,6 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
               ) : null}
             </AiMessage>
           )
-        )}
-
-        {error && (
-          <div className="rounded-[10px] border border-ud bg-ud-surface-soft px-[14px] py-[11px] text-[13px] text-ud-danger">
-            {error}
-          </div>
         )}
 
         {(draftList.length > 0 || alertList.length > 0) && (
@@ -339,7 +360,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
           onChange={setInput}
           onSubmit={handleSubmit}
           disabled={loading}
-          placeholder="Ask about your workspace…"
+          placeholder={`Ask about your ${customerPlural.toLowerCase()}, ${jobPlural.toLowerCase()}, revenue, or anything else.`}
         />
       </div>
     </div>
