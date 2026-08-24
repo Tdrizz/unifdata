@@ -10,6 +10,7 @@ export const AI_MODELS = {
   revenue: "openrouter/auto",
   dataQuality: "openrouter/auto",
   alertFormatter: "openrouter/auto",
+  operatingBrief: "openrouter/auto",
 } as const;
 
 let _client: OpenAI | null = null;

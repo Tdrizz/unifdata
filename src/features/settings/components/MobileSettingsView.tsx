@@ -203,8 +203,8 @@ export function MobileSettingsView({
         <div className="p-[22px] space-y-3">
           <div className="flex items-center justify-between gap-3 rounded-[10px] border border-ud bg-ud-surface-soft p-[14px]">
             <div>
-              <p className="text-[14px] font-semibold text-ud-ink">Gemini AI</p>
-              <p className="mt-1 text-[13px] text-ud-muted">Generates operating briefs.</p>
+              <p className="text-[14px] font-semibold text-ud-ink">Data matching</p>
+              <p className="mt-1 text-[13px] text-ud-muted">Powers customer-matching embeddings for the Data Keeper.</p>
             </div>
             <StatusBadge tone={geminiEnabled ? "success" : "warning"}>
               {geminiEnabled ? "Enabled" : "Missing key"}

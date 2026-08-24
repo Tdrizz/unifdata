@@ -2,7 +2,7 @@ import { normalizePayload } from "./normalize-payload";
 import { extractMetadata } from "./metadata-extractor";
 import { fetchTopMatchCandidates } from "./pre-filter";
 import { scoreCandidates } from "./score-candidates";
-import { geminiRefinement, deterministicReasoning } from "./gemini-refinement";
+import { aiRefinement, deterministicReasoning } from "./ai-refinement";
 import type {
   InboundPayload,
   DataKeeperDecision,
@@ -11,7 +11,7 @@ import type {
 
 // Conservative launch threshold — raise only after real-world calibration confirms accuracy.
 const THRESHOLD_AUTO_UPDATE = 0.98;
-const THRESHOLD_GEMINI_MIN = 0.35;
+const THRESHOLD_AI_REFINEMENT_MIN = 0.35;
 
 function hasIdentifier(payload: ReturnType<typeof normalizePayload>): boolean {
   return !!(payload.email || payload.phone);
@@ -77,7 +77,7 @@ export async function runConfidenceEngine(
   const scored = scoreCandidates(normalized, candidates, sourceSystem);
   const best = scored[0];
 
-  if (best.score < THRESHOLD_GEMINI_MIN) {
+  if (best.score < THRESHOLD_AI_REFINEMENT_MIN) {
     return {
       action: "AUTO_IGNORE",
       targetId: null,
@@ -88,7 +88,7 @@ export async function runConfidenceEngine(
     };
   }
 
-  // High confidence — auto-update without Gemini (sweep mode always proposes instead)
+  // High confidence — auto-update without AI refinement (sweep mode always proposes instead)
   if (best.score >= THRESHOLD_AUTO_UPDATE) {
     if (options?.sweepMode) {
       return {
@@ -110,8 +110,8 @@ export async function runConfidenceEngine(
     };
   }
 
-  // Gray zone — escalate to Gemini
-  const geminiResult = await geminiRefinement(
+  // Gray zone — escalate to AI refinement
+  const aiResult = await aiRefinement(
     organizationId,
     normalized,
     scored,
@@ -125,16 +125,16 @@ export async function runConfidenceEngine(
     })),
   );
 
-  if (geminiResult) {
+  if (aiResult) {
     const targetId =
-      geminiResult.targetCandidateId ??
-      (geminiResult.action === "AUTO_UPDATE" ? best.candidateId : null);
+      aiResult.targetCandidateId ??
+      (aiResult.action === "AUTO_UPDATE" ? best.candidateId : null);
 
-    // Hard safety: Gemini cannot push below-threshold scores to AUTO_UPDATE.
+    // Hard safety: the AI cannot push below-threshold scores to AUTO_UPDATE.
     // Sweep mode never auto-updates — always proposes for human review.
     const action =
-      !options?.sweepMode && geminiResult.confidence >= THRESHOLD_AUTO_UPDATE
-        ? geminiResult.action
+      !options?.sweepMode && aiResult.confidence >= THRESHOLD_AUTO_UPDATE
+        ? aiResult.action
         : "CREATE_PROPOSAL";
 
     return {
@@ -142,12 +142,12 @@ export async function runConfidenceEngine(
       targetId: action === "CREATE_PROPOSAL" && options?.sweepMode ? targetId : targetId,
       normalizedData: normalized,
       fieldDelta: best.fieldDelta,
-      confidence: geminiResult.confidence,
-      reasoning: options?.sweepMode ? `Sweep: ${geminiResult.reasoning}` : geminiResult.reasoning,
+      confidence: aiResult.confidence,
+      reasoning: options?.sweepMode ? `Sweep: ${aiResult.reasoning}` : aiResult.reasoning,
     };
   }
 
-  // Gemini unavailable — deterministic fallback: always create a proposal for human review.
+  // AI unavailable — deterministic fallback: always create a proposal for human review.
   // targetId is null so the approve flow takes the safe INSERT path, not an unverified UPDATE.
   return {
     action: "CREATE_PROPOSAL",

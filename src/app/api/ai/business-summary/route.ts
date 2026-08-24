@@ -1,6 +1,4 @@
-﻿// cspell:ignore genai
-import { GoogleGenAI } from "@google/genai";
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
@@ -8,8 +6,8 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getTodayString } from "@/lib/date-format";
 import { formatCurrency, compactText } from "@/lib/utils";
 import { isClosedOpportunity, isUnpaid, isOpenFollowUp } from "@/lib/status";
-import { GEMINI_MODEL } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
+import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { buildOperatingBriefSystemPrompt, buildOperatingBriefUserPrompt } from "@/lib/ai/prompts";
 
 function getStartOfMonth() {
@@ -18,19 +16,6 @@ function getStartOfMonth() {
 }
 
 export async function POST() {
-  const apiKey =
-    process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      {
-        error:
-          "Missing Gemini API key. Add GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY.",
-      },
-      { status: 500 },
-    );
-  }
-
   const currentCompany = await getCurrentCompany();
 
   if (!currentCompany) {
@@ -362,17 +347,15 @@ export async function POST() {
   );
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      config: {
-        systemInstruction,
-      },
-      contents: userPrompt,
+    const response = await aiRouter.chat.completions.create({
+      model: AI_MODELS.operatingBrief,
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: userPrompt },
+      ],
     });
 
-    const summary = response.text?.trim() || "No summary generated.";
+    const summary = response.choices[0]?.message?.content?.trim() || "No summary generated.";
 
     const { error: insertError } = await supabase.from("ai_reports").insert({
       company_id: company.id,
@@ -402,7 +385,7 @@ export async function POST() {
       return NextResponse.json(
         {
           error:
-            "Gemini is experiencing high demand right now. Wait a moment and try again.",
+            "The AI model is experiencing high demand right now. Wait a moment and try again.",
         },
         { status: 503 },
       );

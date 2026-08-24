@@ -1,6 +1,6 @@
 /**
- * Confidence engine, threshold enforcement, Gemini fallback, and sweeper tests.
- * External dependencies (Supabase, Gemini, Redis) are fully mocked.
+ * Confidence engine, threshold enforcement, AI refinement fallback, and sweeper tests.
+ * External dependencies (Supabase, AI refinement, Redis) are fully mocked.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -9,8 +9,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/data-keeper/pre-filter", () => ({
   fetchTopMatchCandidates: vi.fn(),
 }));
-vi.mock("@/lib/data-keeper/gemini-refinement", () => ({
-  geminiRefinement: vi.fn(),
+vi.mock("@/lib/data-keeper/ai-refinement", () => ({
+  aiRefinement: vi.fn(),
   deterministicReasoning: vi.fn((_best: unknown, action: string) => `Deterministic fallback: ${action}`),
 }));
 vi.mock("@/lib/supabase/admin", () => ({
@@ -31,12 +31,12 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { fetchTopMatchCandidates } from "@/lib/data-keeper/pre-filter";
-import { geminiRefinement } from "@/lib/data-keeper/gemini-refinement";
+import { aiRefinement } from "@/lib/data-keeper/ai-refinement";
 import { runConfidenceEngine } from "@/lib/data-keeper/confidence-engine";
 import type { MasterCustomerCandidate, InboundPayload } from "@/lib/data-keeper/types";
 
 const mockFetch = vi.mocked(fetchTopMatchCandidates);
-const mockGemini = vi.mocked(geminiRefinement);
+const mockAiRefinement = vi.mocked(aiRefinement);
 
 function makeRawPayload(overrides: Partial<InboundPayload> = {}): InboundPayload {
   return {
@@ -120,24 +120,24 @@ describe("confidence engine — AUTO_UPDATE threshold (0.98)", () => {
     const candidate = makeCandidate(); // exact match on all fields
     mockFetch.mockResolvedValue([candidate]);
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
-    // Score should be >= 0.98, so AUTO_UPDATE without Gemini
+    // Score should be >= 0.98, so AUTO_UPDATE without AI refinement
     expect(result.action).toBe("AUTO_UPDATE");
-    expect(mockGemini).not.toHaveBeenCalled();
+    expect(mockAiRefinement).not.toHaveBeenCalled();
   });
 
-  it("score of ~0.96 (email-only match) escalates to Gemini, not AUTO_UPDATE", async () => {
+  it("score of ~0.96 (email-only match) escalates to AI refinement, not AUTO_UPDATE", async () => {
     // email-only → base 0.85 + name * 0.10. Perfect name: 0.85 + 0.10 = 0.95.
-    // 0.95 < 0.98 → Gemini zone.
+    // 0.95 < 0.98 → AI refinement zone.
     const candidate = makeCandidate({ primary_phone: "9999999999" }); // phone mismatch
     mockFetch.mockResolvedValue([candidate]);
-    mockGemini.mockResolvedValue({
+    mockAiRefinement.mockResolvedValue({
       confidence: 0.96,
       action: "CREATE_PROPOSAL",
       targetCandidateId: null,
-      reasoning: "Gemini says propose",
+      reasoning: "AI refinement says propose",
     });
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
-    expect(mockGemini).toHaveBeenCalled();
+    expect(mockAiRefinement).toHaveBeenCalled();
     expect(result.action).toBe("CREATE_PROPOSAL");
   });
 
@@ -154,7 +154,7 @@ describe("confidence engine — AUTO_UPDATE threshold (0.98)", () => {
   });
 });
 
-// ── 3. Score below THRESHOLD_GEMINI_MIN → AUTO_IGNORE ────────────────────────
+// ── 3. Score below THRESHOLD_AI_REFINEMENT_MIN → AUTO_IGNORE ────────────────────────
 
 describe("confidence engine — AUTO_IGNORE below 0.35", () => {
   it("returns AUTO_IGNORE when best score < 0.35", async () => {
@@ -176,14 +176,14 @@ describe("confidence engine — AUTO_IGNORE below 0.35", () => {
   });
 });
 
-// ── 4. Gemini fallback on failure ─────────────────────────────────────────────
+// ── 4. AI refinement fallback on failure ─────────────────────────────────────────────
 
-describe("confidence engine — Gemini failure fallback", () => {
-  it("falls back to CREATE_PROPOSAL when Gemini returns null (catches internally)", async () => {
-    // gemini-refinement catches its own errors and returns null — confidence engine sees null
+describe("confidence engine — AI refinement failure fallback", () => {
+  it("falls back to CREATE_PROPOSAL when AI refinement returns null (catches internally)", async () => {
+    // ai-refinement catches its own errors and returns null — confidence engine sees null
     const candidate = makeCandidate({ primary_phone: "9999999999" }); // phone mismatch → gray zone
     mockFetch.mockResolvedValue([candidate]);
-    mockGemini.mockResolvedValue(null);
+    mockAiRefinement.mockResolvedValue(null);
 
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
     expect(result.action).toBe("CREATE_PROPOSAL");
@@ -191,20 +191,20 @@ describe("confidence engine — Gemini failure fallback", () => {
     expect(result.targetId).toBeNull();
   });
 
-  it("falls back to CREATE_PROPOSAL when Gemini returns null (rate limited)", async () => {
+  it("falls back to CREATE_PROPOSAL when AI refinement returns null (rate limited)", async () => {
     const candidate = makeCandidate({ primary_phone: "9999999999" });
     mockFetch.mockResolvedValue([candidate]);
-    mockGemini.mockResolvedValue(null);
+    mockAiRefinement.mockResolvedValue(null);
 
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
     expect(result.action).toBe("CREATE_PROPOSAL");
   });
 
-  it("never hangs — resolves even when Gemini returns null (rate-limited or timed out)", async () => {
-    // gemini-refinement.ts catches errors internally and returns null
+  it("never hangs — resolves even when AI refinement returns null (rate-limited or timed out)", async () => {
+    // ai-refinement.ts catches errors internally and returns null
     const candidate = makeCandidate({ primary_phone: "9999999999" });
     mockFetch.mockResolvedValue([candidate]);
-    mockGemini.mockResolvedValue(null);
+    mockAiRefinement.mockResolvedValue(null);
 
     await expect(
       runConfidenceEngine("org-1", makeRawPayload(), "test"),
@@ -212,18 +212,18 @@ describe("confidence engine — Gemini failure fallback", () => {
   });
 });
 
-// ── 5. Gemini hard safety guard ───────────────────────────────────────────────
+// ── 5. AI refinement hard safety guard ───────────────────────────────────────────────
 
-describe("confidence engine — Gemini hard safety guard", () => {
-  it("Gemini cannot push below-0.98-confidence result to AUTO_UPDATE", async () => {
+describe("confidence engine — AI refinement hard safety guard", () => {
+  it("AI refinement cannot push below-0.98-confidence result to AUTO_UPDATE", async () => {
     const candidate = makeCandidate({ primary_phone: "9999999999" });
     mockFetch.mockResolvedValue([candidate]);
-    // Gemini claims AUTO_UPDATE but with confidence only 0.96
-    mockGemini.mockResolvedValue({
+    // AI refinement claims AUTO_UPDATE but with confidence only 0.96
+    mockAiRefinement.mockResolvedValue({
       confidence: 0.96,
       action: "AUTO_UPDATE",
       targetCandidateId: candidate.id,
-      reasoning: "Gemini overconfident",
+      reasoning: "AI refinement overconfident",
     });
 
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
@@ -231,14 +231,14 @@ describe("confidence engine — Gemini hard safety guard", () => {
     expect(result.action).toBe("CREATE_PROPOSAL");
   });
 
-  it("Gemini AUTO_UPDATE at or above 0.98 is allowed through", async () => {
+  it("AI refinement AUTO_UPDATE at or above 0.98 is allowed through", async () => {
     const candidate = makeCandidate({ primary_phone: "9999999999" });
     mockFetch.mockResolvedValue([candidate]);
-    mockGemini.mockResolvedValue({
+    mockAiRefinement.mockResolvedValue({
       confidence: 0.98,
       action: "AUTO_UPDATE",
       targetCandidateId: candidate.id,
-      reasoning: "Gemini confident",
+      reasoning: "AI refinement confident",
     });
 
     const result = await runConfidenceEngine("org-1", makeRawPayload(), "test");
