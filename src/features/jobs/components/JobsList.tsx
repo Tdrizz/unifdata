@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { cn, formatCurrency } from "@/lib/utils";
+import { getWorkTone, getRevenueTone } from "@/lib/status";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { JobListRow, LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
@@ -8,6 +11,16 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { useProfile } from "@/lib/profile-context";
 import { JobCreateForm } from "./JobCreateForm";
 import { PageHeader } from "@/components/ui/PageHeader";
+import {
+  STAGE_FILTERS,
+  matchesStageFilter,
+  stageFilterFromParam,
+  getWeekDays,
+  isSameDay,
+  formatJobDate,
+  getJobContactId,
+  sortJobsByStartDate,
+} from "../compute";
 
 type Props = {
   jobs: JobListRow[];
@@ -18,45 +31,9 @@ type Props = {
   selectedStage: string;
 };
 
-function getWeekDays(today: Date): { name: string; num: number; date: Date }[] {
-  const dow = today.getDay();
-  const mondayOffset = dow === 0 ? -6 : 1 - dow;
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-  const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  return names.map((name, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return { name, num: d.getDate(), date: d };
-  });
-}
-
-function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function formatJobDate(startDate: string | null | undefined, today: Date): { label: string; isToday: boolean } {
-  if (!startDate) return { label: "—", isToday: false };
-  const d = new Date(startDate);
-  if (isSameDay(d, today)) return { label: "Today", isToday: true };
-  return {
-    label: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    isToday: false,
-  };
-}
-
-function statusBadgeTone(status: string | null): "info" | "success" | "neutral" | "warning" {
-  const s = (status || "").toLowerCase();
-  if (s.includes("progress") || s.includes("active")) return "info";
-  if (s.includes("complete") || s.includes("done")) return "success";
-  if (s.includes("cancel")) return "neutral";
-  if (s.includes("quote") || s.includes("pending")) return "warning";
-  return "neutral";
-}
-
-
 export function JobsList({ jobs, count, contacts, leads, profile, selectedStage }: Props) {
   const p = useProfile();
+  const [activeFilter, setActiveFilter] = useState(stageFilterFromParam(selectedStage));
   const jobPlural = profile?.labels.jobPlural ?? p.labels.jobPlural;
   const jobSingular = profile?.labels.jobSingular ?? p.labels.jobSingular;
   const customerSingular = profile?.labels.customerSingular ?? p.labels.customerSingular;
@@ -75,13 +52,7 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
   const todayCount = countsByDay[weekDays.findIndex((d) => isSameDay(d.date, today))] ?? 0;
   const totalThisWeek = countsByDay.reduce((a, b) => a + b, 0);
 
-  const sorted = [...jobs]
-    .filter((j) => !selectedStage || (j.status ?? "").toLowerCase() === selectedStage.toLowerCase())
-    .sort((a, b) => {
-      if (!a.start_date) return 1;
-      if (!b.start_date) return -1;
-      return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
-    });
+  const sorted = sortJobsByStartDate(jobs.filter((j) => matchesStageFilter(j.status, activeFilter)));
 
   return (
     <div className="hidden md:block px-8 pt-7 pb-12">
@@ -127,12 +98,31 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
         })}
       </div>
 
+      {/* Stage filter chips — same filter mobile has, now backed by shared logic */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {STAGE_FILTERS.map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setActiveFilter(f)}
+            className={cn(
+              "rounded-full px-[14px] py-[7px] text-[12.5px] font-semibold transition-colors",
+              activeFilter === f
+                ? "bg-ud-ink text-white"
+                : "bg-ud-surface border border-ud text-ud-muted hover:border-ud-hard",
+            )}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
       {/* Table */}
       <div className="overflow-hidden rounded-[var(--radius-ud-lg)] border border-[rgba(0,0,0,0.06)] shadow-ud">
         <table className="w-full border-collapse bg-ud-surface">
           <thead>
             <tr>
-              {[customerSingular, "Service", "Date & time", "Location", "Assigned to", "Status", ""].map((h) => (
+              {[customerSingular, "Service", "Value", "Paid", "Date & time", "Status", ""].map((h) => (
                 <th key={h} className="px-4 py-[10px] text-left text-[11px] font-bold uppercase tracking-[0.08em] text-ud-faint bg-[rgba(0,0,0,0.015)] border-b border-ud whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -147,16 +137,17 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
               </tr>
             ) : (
               sorted.map((job) => {
-                const customer = (job.contact_id ?? job.customer_id) ? contactById.get(job.contact_id ?? job.customer_id ?? "") : null;
+                const jobContactId = getJobContactId(job);
+                const customer = jobContactId ? contactById.get(jobContactId) : null;
                 const { label: dateLabel, isToday } = formatJobDate(job.start_date, today);
                 return (
                   <tr key={job.id}>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold text-ud-ink">{customer?.name || `No ${customerSingular.toLowerCase()}`}</td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-text">{job.service_type || "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] font-semibold text-ud-ink [font-variant-numeric:tabular-nums]">{job.job_value != null ? formatCurrency(job.job_value) : "—"}</td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]">{job.paid_status ? <StatusBadge tone={getRevenueTone(job.paid_status)}>{job.paid_status}</StatusBadge> : <span className="text-ud-muted">—</span>}</td>
                     <td className={`px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] ${isToday ? "font-semibold text-ud-ink" : "text-ud-muted"}`}>{dateLabel}</td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px] text-ud-muted">—</td>
-                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><StatusBadge tone={statusBadgeTone(job.status)}>{job.status || "Scheduled"}</StatusBadge></td>
+                    <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><StatusBadge tone={getWorkTone(job.status)}>{job.status || "Scheduled"}</StatusBadge></td>
                     <td className="px-4 py-[13px] border-b border-[rgba(0,0,0,0.04)] text-[13px]"><Link href={`/jobs/${job.id}/edit`} className="text-ud-accent no-underline font-medium text-[12px] hover:underline">View →</Link></td>
                   </tr>
                 );
