@@ -94,6 +94,21 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "delete_contact",
+      description:
+        "Permanently deletes a customer/contact record. Use this when the user explicitly asks to remove, delete, or get rid of a contact — for example clearing out test or junk entries. This is immediate and cannot be undone, so only call it for records the user has clearly identified (e.g. by name or ID), never as a guess.",
+      parameters: {
+        type: "object",
+        properties: {
+          customer_id: { type: "string", description: "UUID of the customer/contact record to delete" },
+        },
+        required: ["customer_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "flag_for_review",
       description: "Marks a record with a review flag and reason.",
       parameters: {

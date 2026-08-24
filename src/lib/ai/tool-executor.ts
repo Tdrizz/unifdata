@@ -33,6 +33,10 @@ const LogSaleSchema = z.object({
   payment_status: z.enum(["paid", "unpaid", "partial"]),
 });
 
+const DeleteContactSchema = z.object({
+  customer_id: z.string().uuid(),
+});
+
 const FlagForReviewSchema = z.object({
   record_type: z.enum(["customer", "job", "sale", "lead", "follow_up"]),
   record_id: z.string().uuid(),
@@ -157,6 +161,20 @@ export async function executeTool(
         );
 
         return { success: true, message: parts.join(" ") };
+      }
+
+      case "delete_contact": {
+        const data = DeleteContactSchema.parse(args);
+        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
+          return { success: false, message: "That customer isn't in your workspace." };
+        }
+        const { error } = await supabase
+          .from("master_customers")
+          .delete()
+          .eq("id", data.customer_id)
+          .eq("organization_id", orgId);
+        if (error) return { success: false, message: `Failed to delete contact: ${error.message}` };
+        return { success: true, message: "Contact deleted." };
       }
 
       case "flag_for_review": {

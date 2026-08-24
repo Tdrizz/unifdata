@@ -1,4 +1,5 @@
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
+import { markdownToEmailHtml, stripMarkdown } from "@/lib/email/format";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendWeeklySummary(
@@ -129,7 +130,8 @@ Write a friendly 3-4 sentence summary covering revenue trend, operational activi
       from,
       to: ownerEmail,
       subject: `Your weekly business summary — ${company.name}`,
-      text: emailBody,
+      text: stripMarkdown(emailBody),
+      html: markdownToEmailHtml(emailBody),
     }),
   });
 }

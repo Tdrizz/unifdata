@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 import { isOverdue, isDueToday } from "@/lib/date-format";
@@ -303,15 +304,29 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
           <div className="max-h-[280px] overflow-y-auto px-[22px] py-4 space-y-2.5 border-b border-ud-soft">
             {chatMessages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
-                <span
+                <div
                   className={
                     m.role === "user"
-                      ? "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-accent text-white"
-                      : "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-surface-sunk text-ud-ink"
+                      ? "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-accent text-white text-left"
+                      : "inline-block max-w-[85%] rounded-[10px] px-3 py-2 text-[13px] bg-ud-surface-sunk text-ud-ink text-left"
                   }
                 >
-                  {m.text || (m.streaming ? "…" : "")}
-                </span>
+                  {m.role === "model" && m.text ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="mb-1.5 ml-4 list-disc space-y-0.5">{children}</ul>,
+                        ol: ({ children }) => <ol className="mb-1.5 ml-4 list-decimal space-y-0.5">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                      }}
+                    >
+                      {m.text}
+                    </ReactMarkdown>
+                  ) : (
+                    m.text || (m.streaming ? "…" : "")
+                  )}
+                </div>
               </div>
             ))}
           </div>
