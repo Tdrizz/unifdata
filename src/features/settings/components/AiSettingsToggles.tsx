@@ -5,7 +5,6 @@ import { updatePreferencesAction } from "../actions";
 
 type Props = {
   autopilot: boolean;
-  aiFirstMode: boolean;
 };
 
 function Toggle({
@@ -37,9 +36,8 @@ function Toggle({
   );
 }
 
-export function AiSettingsToggles({ autopilot, aiFirstMode }: Props) {
+export function AiSettingsToggles({ autopilot }: Props) {
   const [autopilotEnabled, setAutopilotEnabled] = useState(autopilot);
-  const [aiFirstEnabled, setAiFirstEnabled] = useState(aiFirstMode);
   const [confirmingAutopilot, setConfirmingAutopilot] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -57,19 +55,10 @@ export function AiSettingsToggles({ autopilot, aiFirstMode }: Props) {
     });
   }
 
-  function handleAiFirstToggle(value: boolean) {
-    setAiFirstEnabled(value);
-    startTransition(() => {
-      updatePreferencesAction("ai_first_mode", value).catch(() => {
-        setAiFirstEnabled(!value);
-      });
-    });
-  }
-
   return (
     <div className="flex flex-col gap-0">
       {/* Autopilot */}
-      <div className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] gap-4">
+      <div className="flex items-center justify-between py-3 gap-4">
         <div className="flex-1">
           <p className="text-[13px] font-medium text-ud-ink">Autopilot mode</p>
           <p className="text-[12px] text-ud-muted mt-[1px]">
@@ -106,17 +95,6 @@ export function AiSettingsToggles({ autopilot, aiFirstMode }: Props) {
             disabled={pending}
           />
         )}
-      </div>
-
-      {/* AI-first mode */}
-      <div className="flex items-center justify-between py-3 gap-4">
-        <div className="flex-1">
-          <p className="text-[13px] font-medium text-ud-ink">AI-first mode</p>
-          <p className="text-[12px] text-ud-muted mt-[1px]">
-            Open the AI assistant instead of Today&apos;s dashboard when you sign in.
-          </p>
-        </div>
-        <Toggle enabled={aiFirstEnabled} onChange={handleAiFirstToggle} disabled={pending} />
       </div>
     </div>
   );
