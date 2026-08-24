@@ -171,7 +171,13 @@ export async function POST(request: Request) {
     customersResult, leadsResult, jobsResult, salesResult, followUpsResult,
     customerCount, leadCount, jobCount, followUpCount,
   ] = await Promise.all([
-    (fetchAll || topic === "customers") ? customersQuery() : Promise.resolve({ data: [] }),
+    // Always fetched, regardless of topic: leads/jobs/sales/follow-ups all
+    // link to a contact, and the model can't resolve a customer_id for any
+    // of them without the customer list in context — narrowing this to only
+    // topic === "customers" left every other topic (e.g. "create a follow-up
+    // for X") with zero customers to match against, so the model had no way
+    // to link the record even when the contact clearly already existed.
+    customersQuery(),
     (fetchAll || topic === "leads")
       ? supabase
           .from("leads")
