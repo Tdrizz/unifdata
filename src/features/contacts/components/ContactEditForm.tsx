@@ -119,9 +119,9 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
           <textarea name="notes" rows={3} defaultValue={contact.metadata?.notes ?? ""} className={`${f} resize-none`} />
         </label>
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
           {confirmDelete ? (
-            <span className="flex items-center gap-2">
+            <span className="flex flex-wrap items-center gap-2">
               <span className="text-[12px] text-ud-danger font-medium">Delete this {customerLabel}?</span>
               <button
                 type="submit"

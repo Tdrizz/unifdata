@@ -194,19 +194,27 @@ export default async function CustomerDetailPage({
 
       {/* Mobile */}
       <div className="block md:hidden px-4 pt-6 pb-10">
-        <div className="mb-4">
-          <h1 className="text-[20px] font-bold text-ud-ink">{displayName}</h1>
-          <StatusDot status={contact.relationship_status} />
-          {phone && (
-            <a href={`tel:${phone}`} className="block text-[13px] text-ud-accent mt-1">
-              {phone}
-            </a>
-          )}
-          {email && (
-            <a href={`mailto:${email}`} className="block text-[13px] text-ud-muted mt-0.5">
-              {email}
-            </a>
-          )}
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-[20px] font-bold text-ud-ink">{displayName}</h1>
+            <StatusDot status={contact.relationship_status} />
+            {phone && (
+              <a href={`tel:${phone}`} className="block text-[13px] text-ud-accent mt-1">
+                {phone}
+              </a>
+            )}
+            {email && (
+              <a href={`mailto:${email}`} className="block text-[13px] text-ud-muted mt-0.5">
+                {email}
+              </a>
+            )}
+          </div>
+          <a
+            href={`/customers/${id}/edit`}
+            className="shrink-0 px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
+          >
+            Edit
+          </a>
         </div>
         <ContactTabs
           activities={activities}

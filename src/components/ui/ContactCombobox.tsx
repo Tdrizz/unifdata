@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { ContactForSelect } from "@/lib/crm/types";
 
@@ -19,6 +20,14 @@ type Props = {
 // instead of dumping every contact into one native <select>, plus an inline
 // "+ Add new contact" so linking someone who doesn't exist yet doesn't mean
 // abandoning whatever form you're in the middle of filling out.
+//
+// The results dropdown is portaled to document.body with fixed positioning
+// instead of being an absolutely-positioned child of the input wrapper.
+// Several of this component's callers (mobile Job/Lead/Follow-up quick-add)
+// render inside BottomSheet, which is a scrollable/overflow-clipped
+// container — an absolute dropdown gets clipped or rendered non-interactive
+// there, so results are visible but not tappable. Fixed-position + portal
+// escapes that clipping regardless of what ancestor the combobox sits in.
 export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder = "Search by name, email, or phone…", className }: Props) {
   const [selectedId, setSelectedId] = useState(defaultValue || "");
   const [selectedLabel, setSelectedLabel] = useState(defaultLabel || "");
@@ -29,7 +38,14 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
   const [newName, setNewName] = useState("");
   const [newContact, setNewContact] = useState("");
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!query) {
@@ -50,11 +66,33 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
   }, [query]);
 
   useEffect(() => {
+    if (!open) return;
+
+    function updatePosition() {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      setCoords({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+
+    updatePosition();
+    // capture:true catches scroll on any ancestor (e.g. BottomSheet's own
+    // scrollable div), not just window — scroll events don't bubble, but a
+    // capturing listener on window still sees them on the way down to target.
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open]);
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setCreating(false);
-      }
+      const target = e.target as Node;
+      if (ref.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpen(false);
+      setCreating(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -103,6 +141,68 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
 
   const inputClass = className ?? DEFAULT_INPUT_CLASS;
 
+  const dropdown =
+    mounted && open && !selectedId && coords
+      ? createPortal(
+          <div
+            ref={dropdownRef}
+            style={{ position: "fixed", top: coords.top, left: coords.left, width: coords.width, zIndex: 200 }}
+            className="max-h-[260px] overflow-y-auto rounded-[10px] border border-ud bg-ud-surface shadow-lg"
+          >
+            {results.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="w-full border-b border-ud-soft px-3 py-2 text-left transition-colors last:border-0 hover:bg-ud-surface-sunk"
+                onClick={() => selectContact(r)}
+              >
+                <p className="text-[13px] font-medium text-ud-ink">{r.name || "Unnamed person"}</p>
+                {(r.email || r.phone) && <p className="text-[11px] text-ud-muted">{r.email ?? r.phone}</p>}
+              </button>
+            ))}
+
+            {!creating ? (
+              <button
+                type="button"
+                className="w-full border-t border-ud-soft px-3 py-2 text-left text-[13px] font-semibold text-ud-accent transition-colors hover:bg-ud-surface-sunk"
+                onClick={() => {
+                  setCreating(true);
+                  setNewName(query);
+                }}
+              >
+                + Add new contact
+              </button>
+            ) : (
+              <div className="space-y-2 border-t border-ud-soft p-3">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Name"
+                  className="w-full rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-2 text-[13px] text-ud-ink outline-none placeholder:text-ud-faint focus:border-ud-accent"
+                />
+                <input
+                  type="text"
+                  value={newContact}
+                  onChange={(e) => setNewContact(e.target.value)}
+                  placeholder="Phone or email (optional)"
+                  className="w-full rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-2 text-[13px] text-ud-ink outline-none placeholder:text-ud-faint focus:border-ud-accent"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  disabled={!newName.trim() || saving}
+                  className="w-full rounded-[8px] bg-ud-accent py-2 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {saving ? "Adding…" : "Add contact"}
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div ref={ref} className="relative">
       <input type="hidden" name={name} value={selectedId} />
@@ -127,59 +227,7 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
         />
       )}
 
-      {open && !selectedId && (
-        <div className="absolute z-20 top-full left-0 right-0 mt-1 max-h-[260px] overflow-y-auto rounded-[10px] border border-ud bg-ud-surface shadow-lg">
-          {results.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              className="w-full border-b border-ud-soft px-3 py-2 text-left transition-colors last:border-0 hover:bg-ud-surface-sunk"
-              onClick={() => selectContact(r)}
-            >
-              <p className="text-[13px] font-medium text-ud-ink">{r.name || "Unnamed person"}</p>
-              {(r.email || r.phone) && <p className="text-[11px] text-ud-muted">{r.email ?? r.phone}</p>}
-            </button>
-          ))}
-
-          {!creating ? (
-            <button
-              type="button"
-              className="w-full border-t border-ud-soft px-3 py-2 text-left text-[13px] font-semibold text-ud-accent transition-colors hover:bg-ud-surface-sunk"
-              onClick={() => {
-                setCreating(true);
-                setNewName(query);
-              }}
-            >
-              + Add new contact
-            </button>
-          ) : (
-            <div className="space-y-2 border-t border-ud-soft p-3">
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Name"
-                className="w-full rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-2 text-[13px] text-ud-ink outline-none placeholder:text-ud-faint focus:border-ud-accent"
-              />
-              <input
-                type="text"
-                value={newContact}
-                onChange={(e) => setNewContact(e.target.value)}
-                placeholder="Phone or email (optional)"
-                className="w-full rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-2 text-[13px] text-ud-ink outline-none placeholder:text-ud-faint focus:border-ud-accent"
-              />
-              <button
-                type="button"
-                onClick={handleCreate}
-                disabled={!newName.trim() || saving}
-                className="w-full rounded-[8px] bg-ud-accent py-2 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {saving ? "Adding…" : "Add contact"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      {dropdown}
     </div>
   );
 }

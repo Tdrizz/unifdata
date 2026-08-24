@@ -331,7 +331,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <VeraDraftCard
                   key={entry.item.id}
                   draft={entry.item}
-                  href={getDraftHref(entry.item) ?? `/vera?item=draft-${entry.item.id}`}
+                  href={getDraftHref(entry.item)}
                   onApprove={() => handleApproveDraft(entry.item.id)}
                   onDismiss={() => handleDismissDraft(entry.item.id)}
                 />
@@ -339,7 +339,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <VeraAlertCard
                   key={entry.item.id}
                   alert={entry.item}
-                  href={getAlertHref(entry.item) ?? `/vera?item=alert-${entry.item.id}`}
+                  href={getAlertHref(entry.item)}
                   onDismiss={() => handleDismissAlert(entry.item.id)}
                 />
               ),
