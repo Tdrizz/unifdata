@@ -38,8 +38,8 @@ type Props = WorkspaceData & {
 type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
 
 // Same dashboard as desktop's WorkspaceView — same KPIs, same actionable
-// Vera panel, same priority queue, same jobs/pipeline sections, same quick
-// actions — just stacked single-column instead of a side-by-side grid.
+// Vera panel, same priority queue, same jobs/pipeline sections — just
+// stacked single-column instead of a side-by-side grid.
 export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
@@ -221,9 +221,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   const followUpDueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
   const jobPlural = profile.labels.jobPlural;
-  const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
-  const customerSingular = profile.labels.customerSingular;
   const followUpPlural = profile.labels.followUpPlural;
   const dayLabel = getDayLabel();
   const greeting = getGreeting();
@@ -548,31 +546,6 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         )}
       </div>
 
-      {/* Quick actions — same destinations as desktop's Quick actions card */}
-      <div className="px-4 pb-6">
-        <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em] px-1 mb-2.5">
-          Quick actions
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
-            { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
-            { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
-            { label: "Ask Vera", href: "/vera" },
-          ].map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-text shadow-ud active:border-ud-hard active:text-ud-ink transition-[border-color,color] duration-[120ms]"
-            >
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" className="text-ud-accent">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              {action.label}
-            </Link>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

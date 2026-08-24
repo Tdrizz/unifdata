@@ -484,30 +484,6 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
               ))
             )}
           </Card>
-
-          {/* Quick actions */}
-          <Card padding={16} radius="md">
-            <p className="text-[13.5px] font-semibold text-ud-ink mb-3">Quick actions</p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
-                { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
-                { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
-                { label: "Ask Vera", href: "/vera" },
-              ].map((action) => (
-                <Link
-                  key={action.label}
-                  href={action.href}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-[12.5px] font-semibold text-ud-text shadow-ud hover:border-ud-hard hover:text-ud-ink transition-[border-color,color] duration-[120ms]"
-                >
-                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" className="text-ud-accent">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  {action.label}
-                </Link>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
     </div>
