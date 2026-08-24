@@ -260,11 +260,22 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
 
   // Most recent sync run per provider (syncRuns arrive ordered newest-first)
   const lastSyncByProvider: Record<string, string> = {};
+  // A connection can stay "active" in the integrations table indefinitely
+  // even after its refresh token expires and every sync since has been
+  // silently failing — the row itself never changes, only the sync runs do.
+  // Surface that failure next to the connection instead of only in the
+  // buried "Recent syncs" list below.
+  const lastFailureByProvider: Record<string, string | null> = {};
   for (const run of syncRuns) {
     const meta = (run.metadata ?? {}) as Record<string, unknown>;
     const provider = typeof meta.provider === "string" ? meta.provider : "";
-    if (provider && run.started_at && !lastSyncByProvider[provider]) {
+    if (!provider) continue;
+    if (run.started_at && !lastSyncByProvider[provider]) {
       lastSyncByProvider[provider] = run.started_at;
+    }
+    if (!(provider in lastFailureByProvider)) {
+      const isError = run.status === "error" || run.status === "failed";
+      lastFailureByProvider[provider] = isError ? (run.error_message ?? "Sync failing") : null;
     }
   }
 
@@ -318,6 +329,7 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
           {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
             const connected = isConnected(integration);
             const lastSync = lastSyncByProvider[provider];
+            const failure = connected ? lastFailureByProvider[provider] : null;
             return (
               <div key={provider} className={queueItem}>
                 <div className="flex-1 min-w-0">
@@ -326,8 +338,16 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
                     <span className={badgePill(connected)}>
                       {connected ? "Connected" : "Not connected"}
                     </span>
+                    {failure && (
+                      <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-danger-bg text-ud-danger">
+                        Sync failing
+                      </span>
+                    )}
                   </div>
                   <p className="text-[12px] text-ud-muted mt-[1px]">{desc}</p>
+                  {failure && (
+                    <p className="text-[11px] text-ud-danger mt-0.5">{failure}</p>
+                  )}
                   {(integration?.provider_account_name || lastSync) && (
                     <p className="text-[11px] text-ud-faint mt-0.5">
                       {integration?.provider_account_name}

@@ -74,7 +74,7 @@ const UpdateJobSchema = z
   });
 
 const LogSaleSchema = z.object({
-  customer_id: z.string().uuid(),
+  customer_id: z.string().uuid().optional(),
   amount: z.number().positive(),
   service_type: z.string().min(1).max(200),
   payment_status: z.enum(SALE_PAYMENT_STATUSES),
@@ -102,6 +102,34 @@ const FlagForReviewSchema = z.object({
   record_id: z.string().uuid(),
   reason: z.string().min(1).max(500),
 });
+
+// Resolves a contact id to a display name for building tool result messages.
+// The message text is the one piece of ground truth the chat route trusts
+// completely (see route.ts's deterministic toolAction bubble) — a free-text
+// model call has been observed live contradicting what a tool actually did
+// (e.g. claiming "not linked to a customer" for a sale that in fact linked
+// one), so the result message itself must state the real linkage rather than
+// leaving that detail for the model to describe.
+async function getContactLabel(supabase: SupabaseClient, orgId: string, contactId: string | null): Promise<string | null> {
+  if (!contactId) return null;
+  const { data } = await supabase
+    .from("master_customers")
+    .select("first_name, last_name")
+    .eq("id", contactId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (!data) return null;
+  return [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
+}
+
+// " for Jamie Rivera" when linked, " (not linked to a contact)" when the
+// caller never even supplied an id, "" for the (should-be-unreachable) case
+// of an id that failed to resolve after already passing ownership checks.
+function contactSuffix(label: string | null, hadId: boolean): string {
+  if (label) return ` for ${label}`;
+  if (!hadId) return " (not linked to a contact)";
+  return "";
+}
 
 export async function executeTool(
   name: string,
@@ -206,7 +234,12 @@ export async function executeTool(
             // non-fatal — the lead itself was created successfully
           }
         }
-        return { success: true, message: `Lead "${data.service_requested}" created.${note}` };
+        const contactLabel = await getContactLabel(supabase, orgId, contactId);
+        const sourceNote = data.source ? ` (source: ${data.source})` : "";
+        return {
+          success: true,
+          message: `Lead "${data.service_requested}" created${contactSuffix(contactLabel, Boolean(data.customer_id))}${sourceNote}.${note}`,
+        };
       }
 
       case "update_lead_status": {
@@ -298,7 +331,11 @@ export async function executeTool(
             // non-fatal — the job itself was created successfully
           }
         }
-        return { success: true, message: `Job "${data.service_type}" created.${note}` };
+        const contactLabel = await getContactLabel(supabase, orgId, contactId);
+        return {
+          success: true,
+          message: `Job "${data.service_type}" created${contactSuffix(contactLabel, Boolean(data.customer_id))}.${note}`,
+        };
       }
 
       case "update_job": {
@@ -346,12 +383,12 @@ export async function executeTool(
 
       case "log_sale": {
         const data = LogSaleSchema.parse(args);
-        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
+        if (data.customer_id && !(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
           return { success: false, message: "That customer isn't in your workspace." };
         }
         const { error } = await supabase.from("sales").insert({
           company_id: orgId,
-          contact_id: data.customer_id,
+          contact_id: data.customer_id ?? null,
           amount: data.amount,
           service_type: data.service_type,
           payment_status: data.payment_status,
@@ -359,7 +396,12 @@ export async function executeTool(
           source: data.source ?? null,
         });
         if (error) return { success: false, message: `Failed to log sale: ${error.message}` };
-        return { success: true, message: `Sale of $${data.amount.toFixed(2)} logged.` };
+        const contactLabel = await getContactLabel(supabase, orgId, data.customer_id ?? null);
+        const sourceNote = data.source ? ` (source: ${data.source})` : "";
+        return {
+          success: true,
+          message: `Sale of $${data.amount.toFixed(2)} logged${contactSuffix(contactLabel, Boolean(data.customer_id))}${sourceNote}.`,
+        };
       }
 
       case "update_sale_payment_status": {
@@ -389,8 +431,11 @@ export async function executeTool(
           status: "open",
         });
         if (error) return { success: false, message: `Failed to create follow-up: ${error.message}` };
-        const note = data.customer_id ? "" : " It isn't linked to a contact — I couldn't confidently match one.";
-        return { success: true, message: `Follow-up scheduled for ${data.due_date}.${note}` };
+        const contactLabel = await getContactLabel(supabase, orgId, data.customer_id ?? null);
+        return {
+          success: true,
+          message: `Follow-up created${contactSuffix(contactLabel, Boolean(data.customer_id))}, due ${data.due_date}.`,
+        };
       }
 
       case "mark_followup_complete": {

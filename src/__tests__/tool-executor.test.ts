@@ -220,6 +220,50 @@ describe("create_job", () => {
   });
 });
 
+describe("log_sale", () => {
+  it("logs a sale linked to a customer and states the linkage in its own result message", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "log_sale",
+      { customer_id: CUSTOMER_ID, amount: 600, service_type: "Roof repair", payment_status: "Paid", source: "Referral" },
+      supabase,
+      ORG,
+    );
+    expect(result.success).toBe(true);
+    expect(db.sales[0]).toMatchObject({ contact_id: CUSTOMER_ID, amount: 600, source: "Referral" });
+    // The reported bug: Vera told the user a sale was "not linked to a
+    // customer" when the database row actually had one. The result message
+    // is what the chat route trusts as ground truth, so it must name the
+    // real contact rather than leave that claim to the model's own words.
+    expect(result.message).toContain("Marcus Webb");
+  });
+
+  it("logs an unlinked sale when no customer_id is given, and says so", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "log_sale",
+      { amount: 600, service_type: "Roof repair", payment_status: "Paid" },
+      supabase,
+      ORG,
+    );
+    expect(result.success).toBe(true);
+    expect(db.sales[0]).toMatchObject({ contact_id: null });
+    expect(result.message).toContain("not linked to a contact");
+  });
+
+  it("rejects a customer_id from another org", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "log_sale",
+      { customer_id: CUSTOMER_ID, amount: 600, service_type: "Roof repair", payment_status: "Paid" },
+      supabase,
+      OTHER_ORG,
+    );
+    expect(result.success).toBe(false);
+    expect(db.sales).toHaveLength(0);
+  });
+});
+
 describe("update_job", () => {
   it("moving an existing job to Completed while already Paid creates a sale", async () => {
     db.jobs.push({ id: JOB_ID, company_id: ORG, status: "Active", paid_status: "Paid", contact_id: CUSTOMER_ID, service_type: "Fence repair", job_value: 800 });

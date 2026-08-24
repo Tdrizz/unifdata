@@ -44,6 +44,7 @@ export async function PATCH(
     .from("automations")
     .update(updates)
     .eq("id", id)
+    .eq("organization_id", company.id)
     .select("id, name, description, is_active, trigger_type, run_count, last_triggered, created_at")
     .single();
 

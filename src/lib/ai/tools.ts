@@ -136,17 +136,18 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "log_sale",
-      description: "Logs a new sale or invoice linked to a customer.",
+      description:
+        "Logs a new sale or invoice, optionally linked to a customer. If the user asks not to link a customer, or you can't confidently resolve which existing customer they mean, leave customer_id unset rather than guessing or reusing a customer_id from earlier in the conversation.",
       parameters: {
         type: "object",
         properties: {
-          customer_id: { type: "string", description: "UUID of the customer record" },
+          customer_id: { type: "string", description: "UUID of the customer record (optional)" },
           amount: { type: "number", description: "Sale amount in dollars" },
           service_type: { type: "string", description: "Type of service or product" },
           payment_status: { type: "string", enum: [...SALE_PAYMENT_STATUSES], description: "Payment status" },
           source: { type: "string", description: "Where this sale came from, e.g. Google, Facebook, referral (optional)" },
         },
-        required: ["customer_id", "amount", "service_type", "payment_status"],
+        required: ["amount", "service_type", "payment_status"],
       },
     },
   },
