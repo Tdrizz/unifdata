@@ -117,6 +117,10 @@ function NewAutomationBuilder({
   const [stageId, setStageId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  // Off by default: an automation whose action is something consequential
+  // (Send SMS, notify owner) shouldn't start running the moment it's saved
+  // with no explicit confirmation that it's ready to go live.
+  const [activateNow, setActivateNow] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -162,6 +166,7 @@ function NewAutomationBuilder({
             (c) => VALUELESS_OPERATORS.has(c.operator) || c.value.trim() !== ""
           ),
           actions: [action],
+          is_active: activateNow,
         }),
       });
       if (!res.ok) {
@@ -438,6 +443,20 @@ function NewAutomationBuilder({
                 style={{ fontFamily: "var(--font)" }}
               />
             </div>
+            <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={activateNow}
+                onChange={(e) => setActivateNow(e.target.checked)}
+                className="accent-ud-accent mt-0.5"
+              />
+              <span className="text-[13px] text-ud-ink">
+                Activate immediately
+                <span className="block text-[11px] text-ud-faint mt-0.5">
+                  Leave unchecked to review it in the list first — it&apos;ll be created paused, with no risk of running until you turn it on.
+                </span>
+              </span>
+            </label>
             {error && <p className="text-[12px] text-ud-danger">{error}</p>}
           </div>
         )}

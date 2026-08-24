@@ -304,8 +304,6 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
             label="Revenue This Month"
             value={formatCurrency(revenueMTD)}
             helper="Month to date"
-            delta={revenueMTD > 0 ? "this month" : undefined}
-            deltaTone={revenueMTD > 0 ? "up" : "flat"}
             className="cursor-pointer active:shadow-ud-raised"
           />
         </Link>

@@ -6,6 +6,8 @@ import { Command } from "cmdk";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { cn } from "@/lib/utils";
 
+type ContactResult = { id: string; name: string; email: string | null; phone: string | null };
+
 function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
   return [
@@ -26,6 +28,8 @@ function buildCommands(businessSector?: string | null) {
 export function CommandPalette({ businessSector }: { businessSector?: string | null }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [query, setQuery] = useState("");
+  const [contactResults, setContactResults] = useState<ContactResult[]>([]);
   const router = useRouter();
   const commands = buildCommands(businessSector);
 
@@ -36,6 +40,34 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
       const t = setTimeout(() => setMounted(false), 150);
       return () => clearTimeout(t);
     }
+  }, [open]);
+
+  // Real record search, not just static nav — a name typed here (e.g. an
+  // existing contact) previously only matched "No results found" despite
+  // the placeholder implying it could find records, not just pages.
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setContactResults([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/contacts/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+        if (res.ok) setContactResults(await res.json());
+      } catch {
+        // best-effort — search results are a nice-to-have, not load-bearing
+      }
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
+
+  useEffect(() => {
+    if (!open) setQuery("");
   }, [open]);
 
   useEffect(() => {
@@ -82,6 +114,8 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
               <path d="M21 21l-4.35-4.35" />
             </svg>
             <Command.Input
+              value={query}
+              onValueChange={setQuery}
               placeholder="Search or jump to..."
               className="flex-1 bg-transparent py-[16px] text-[14px] text-ud-ink placeholder:text-ud-faint outline-none"
             />
@@ -95,6 +129,27 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
             <Command.Empty className="px-[18px] py-[14px] text-[13.5px] text-ud-muted">
               No results found.
             </Command.Empty>
+
+            {contactResults.length > 0 && (
+              <Command.Group
+                heading="Contacts"
+                className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.13em] [&>[cmdk-group-heading]]:text-ud-faint"
+              >
+                {contactResults.map((c) => (
+                  <Command.Item
+                    key={c.id}
+                    value={c.name || c.email || c.phone || c.id}
+                    onSelect={() => handleSelect(`/customers/${c.id}`)}
+                    className="flex cursor-pointer items-center gap-[10px] px-[18px] py-[10px] text-[13.5px] text-ud-ink aria-selected:bg-ud-surface-soft aria-selected:text-ud-accent"
+                  >
+                    <span className="flex-1 truncate">{c.name || "Unnamed"}</span>
+                    {(c.email || c.phone) && (
+                      <span className="shrink-0 text-[12px] text-ud-faint">{c.email ?? c.phone}</span>
+                    )}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
 
             {["Navigate", "Actions"].map((group) => {
               const items = commands.filter((c) => c.group === group);

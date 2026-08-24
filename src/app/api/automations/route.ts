@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     trigger_config?: Record<string, unknown>;
     conditions?: unknown[];
     actions?: unknown[];
+    is_active?: boolean;
   };
   try {
     body = await request.json();
@@ -41,7 +42,9 @@ export async function POST(request: Request) {
       trigger_config: body.trigger_config ?? {},
       conditions: body.conditions ?? [],
       actions: body.actions ?? [],
-      is_active: true,
+      // Defaults to paused — the builder's own "Activate immediately"
+      // checkbox is what opts an automation into running right away.
+      is_active: body.is_active ?? false,
     })
     .select("id, name, description, is_active, trigger_type, run_count, last_triggered, created_at")
     .single();
