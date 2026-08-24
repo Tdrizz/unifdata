@@ -14,7 +14,7 @@ Live at [unifdata.com](https://unifdata.com).
 - Clerk (auth + invite-only waitlist)
 - Supabase (Postgres + Row Level Security)
 - Stripe (embedded checkout)
-- OpenRouter (AI routing — Claude 3.5 Haiku for chat, Claude 3.5 Sonnet for outreach, GPT-4o-mini for revenue/alerts, Gemini Flash for data quality, Hermes-3-70B for orchestration)
+- OpenRouter (`openrouter/auto` for every AI task — chat, outreach, revenue/alerts, data quality, orchestration — so nothing breaks when a specific upstream model id is renamed, deprecated, or briefly unavailable)
 - BullMQ + Upstash Redis (background job queue)
 - Twilio (outbound SMS)
 - Sentry (error monitoring)
@@ -89,7 +89,7 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 - **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → auto-generate Operating Brief. No redirect between steps; stays on the same page.
 - **Operating Brief** — AI-generated daily workspace summary (pipeline health, unpaid revenue, overdue follow-ups, data gaps)
 - **AI Advisor** — Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers). Persistent history across navigation. Rate-limited per tier.
-- **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent (Hermes-3) that reads telemetry signals and dispatches three workers:
+- **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts
   - **Alert formatter** — formats operational signals into inbox cards
@@ -181,10 +181,10 @@ Vercel Cron (6 AM UTC)
        └─ Queue: nightly-coordinator job per Pro org (BullMQ → Upstash)
             └─ runNightlyCoordinator(orgId)
                  ├─ compileTelemetry()           ← reads live Supabase tables
-                 ├─ runManagerAgent()            ← Hermes-3-70B decides which workers to run
-                 ├─ runOutreachWorker()          ← Claude 3.5 Sonnet drafts outreach
-                 ├─ runRevenueWorker()           ← GPT-4o-mini surfaces revenue alerts
-                 └─ runAlertFormatterWorker()    ← GPT-4o-mini formats operational alerts
+                 ├─ runManagerAgent()            ← decides which workers to run
+                 ├─ runOutreachWorker()          ← drafts outreach
+                 ├─ runRevenueWorker()           ← surfaces revenue alerts
+                 └─ runAlertFormatterWorker()    ← formats operational alerts
                       └─ writes to agent_drafts / agent_alerts (with reasoning column)
                            └─ Agent Inbox on /workspace
 ```

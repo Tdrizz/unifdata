@@ -1,7 +1,6 @@
-import { GoogleGenAI } from "@google/genai";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
-import { GEMINI_MODEL } from "@/lib/constants";
+import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { rateLimit } from "@/lib/rate-limit";
 import type { NormalizedPayload, ScoredMatch, DataKeeperAction } from "./types";
 
@@ -18,16 +17,16 @@ Rules:
 - Your reasoning must be specific: reference the actual field values that informed your decision.
 - Return valid JSON only. No markdown, no explanation outside the JSON object.`;
 
-const GeminiResponseSchema = z.object({
+const AiRefinementResponseSchema = z.object({
   confidence: z.number().min(0).max(1),
   action: z.enum(["AUTO_UPDATE", "CREATE_PROPOSAL", "AUTO_IGNORE"]),
   targetCandidateId: z.string().nullable(),
   reasoning: z.string(),
 });
 
-type GeminiResponse = z.infer<typeof GeminiResponseSchema>;
+type AiRefinementResponse = z.infer<typeof AiRefinementResponseSchema>;
 
-export async function geminiRefinement(
+export async function aiRefinement(
   organizationId: string,
   payload: NormalizedPayload,
   topCandidates: ScoredMatch[],
@@ -39,22 +38,10 @@ export async function geminiRefinement(
     primary_email: string | null;
     primary_phone: string | null;
   }>,
-): Promise<GeminiResponse | null> {
-  // Rate limit: max 30 Gemini calls per org per minute
-  const allowed = await rateLimit(`gemini-keeper:${organizationId}`, 30, 60_000);
+): Promise<AiRefinementResponse | null> {
+  // Rate limit: max 30 AI refinement calls per org per minute
+  const allowed = await rateLimit(`data-keeper-refinement:${organizationId}`, 30, 60_000);
   if (!allowed) return null;
-
-  const apiKey =
-    process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) {
-    Sentry.captureMessage(
-      "Data Keeper: GEMINI_API_KEY not configured — every gray-zone match falls back to a generic proposal",
-      { level: "warning", tags: { module: "data-keeper", phase: "gemini-refinement" }, extra: { organizationId } },
-    );
-    return null;
-  }
-
-  const genAI = new GoogleGenAI({ apiKey });
 
   // Build candidate context — merge scored data with actual field values
   const candidateContext = topCandidates.slice(0, 3).map((match) => {
@@ -85,33 +72,33 @@ export async function geminiRefinement(
   });
 
   try {
-    const result = await genAI.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        responseMimeType: "application/json",
-        temperature: 0,
-      },
+    const response = await aiRouter.chat.completions.create({
+      model: AI_MODELS.dataQuality,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: prompt },
+      ],
     });
 
-    const text = result.text ?? "";
+    const text = response.choices[0]?.message?.content ?? "";
     const parsed = JSON.parse(text);
-    return GeminiResponseSchema.parse(parsed);
+    return AiRefinementResponseSchema.parse(parsed);
   } catch (err) {
-    console.error("[data-keeper.gemini-refinement] Gemini call failed, falling back to deterministic reasoning", err);
+    console.error("[data-keeper.ai-refinement] AI call failed, falling back to deterministic reasoning", err);
     Sentry.captureException(err, {
-      tags: { module: "data-keeper", phase: "gemini-refinement" },
-      extra: { organizationId, model: GEMINI_MODEL },
+      tags: { module: "data-keeper", phase: "ai-refinement" },
+      extra: { organizationId },
     });
     return null;
   }
 }
 
-// Deterministic fallback reasoning when Gemini is unavailable.
+// Deterministic fallback reasoning when the AI call fails or is unavailable.
 export function deterministicReasoning(
   match: ScoredMatch,
   action: DataKeeperAction,
 ): string {
-  return `${match.reasoning} Action: ${action} (deterministic fallback — Gemini unavailable).`;
+  return `${match.reasoning} Action: ${action} (deterministic fallback — AI unavailable).`;
 }
