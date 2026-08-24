@@ -201,7 +201,7 @@ export function MobileSalesView({ sales, profile, contacts = [], jobs = [] }: Pr
         </svg>
       </button>
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile.labels.saleSingular ?? "invoice")}>
-        <SaleCreateForm profile={profile} contacts={contacts} jobs={jobs} />
+        <SaleCreateForm profile={profile} jobs={jobs} />
       </BottomSheet>
     </div>
   );

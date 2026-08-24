@@ -6,7 +6,7 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getPipelinePageData } from "@/features/pipeline/queries";
 import { PipelineView } from "@/features/pipeline/components/PipelineView";
 import { MobilePipelineView } from "@/features/pipeline/components/MobilePipelineView";
-import { getCustomersForJobSelect, getLeadsForJobSelect } from "@/features/jobs/queries";
+import { getLeadsForJobSelect } from "@/features/jobs/queries";
 import { getJobsForSaleSelect } from "@/features/sales/queries";
 
 export const dynamic = 'force-dynamic';
@@ -23,9 +23,8 @@ export default async function PipelinePage() {
 
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
-  const [pipelineData, contacts, jobPickerLeads, leadPickerJobs] = await Promise.all([
+  const [pipelineData, jobPickerLeads, leadPickerJobs] = await Promise.all([
     getPipelinePageData(supabase, company.id),
-    getCustomersForJobSelect(supabase, company.id),
     getLeadsForJobSelect(supabase, company.id),
     getJobsForSaleSelect(supabase, company.id),
   ]);
@@ -40,14 +39,12 @@ export default async function PipelinePage() {
         <PipelineView
           {...pipelineData}
           profile={profile}
-          contacts={contacts}
           jobPickerLeads={jobPickerLeads}
           leadPickerJobs={leadPickerJobs}
         />
         <MobilePipelineView
           {...pipelineData}
           profile={profile}
-          contacts={contacts}
           jobPickerLeads={jobPickerLeads}
           leadPickerJobs={leadPickerJobs}
         />

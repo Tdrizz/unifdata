@@ -162,7 +162,7 @@ export function MobileJobsList({ jobs, count, contacts, leads, profile }: Props)
         </svg>
       </button>
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add " + (profile.labels.jobSingular ?? "job")}>
-        <JobCreateForm contacts={contacts} leads={leads} />
+        <JobCreateForm leads={leads} />
       </BottomSheet>
     </div>
   );

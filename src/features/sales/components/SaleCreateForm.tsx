@@ -4,19 +4,18 @@ import { useActionState } from "react";
 import { createSaleAction, type ActionState } from "../actions";
 import { getTodayString } from "@/lib/date-format";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { ContactForSelect } from "@/lib/crm/types";
 import type { JobRow } from "../types";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
   profile: IndustryProfile;
-  contacts?: ContactForSelect[];
   jobs?: Pick<JobRow, "id" | "service_type">[];
 };
 
-export function SaleCreateForm({ profile, contacts = [], jobs = [] }: Props) {
+export function SaleCreateForm({ profile, jobs = [] }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createSaleAction,
     null,
@@ -94,17 +93,10 @@ export function SaleCreateForm({ profile, contacts = [], jobs = [] }: Props) {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {contacts.length > 0 && (
-            <label className="block">
-              <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-              <select name="contact_id" className={f}>
-                <option value="">No person linked</option>
-                {contacts.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name || c.email || "Unnamed person"}</option>
-                ))}
-              </select>
-            </label>
-          )}
+          <label className="block">
+            <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
+            <ContactCombobox name="contact_id" className={f} />
+          </label>
           {jobs.length > 0 && (
             <label className="block">
               <span className="block text-xs font-semibold text-ud-muted">Link to job</span>

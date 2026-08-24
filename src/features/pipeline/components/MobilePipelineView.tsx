@@ -10,13 +10,11 @@ import { PIPELINE_STAGES, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import type { PipelineCard, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { ContactForSelect } from "@/lib/crm/types";
 import type { LeadRow as JobsLeadRow } from "@/features/jobs/types";
 import type { JobRow } from "@/features/sales/types";
 
 type Props = PipelinePageData & {
   profile: IndustryProfile;
-  contacts: ContactForSelect[];
   jobPickerLeads: Pick<JobsLeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   leadPickerJobs: Pick<JobRow, "id" | "service_type">[];
 };
@@ -27,7 +25,7 @@ const SOURCE_TYPE_LABEL: Record<PipelineCard["sourceType"], string> = {
   sale: "Sale",
 };
 
-export function MobilePipelineView({ cards, profile, contacts, jobPickerLeads, leadPickerJobs }: Props) {
+export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
   const grouped = groupCardsByStage(cards);
   const activeCards = cards.filter((c) => c.stage !== "Lost");
   const pipelineValue = activeCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
@@ -119,7 +117,7 @@ export function MobilePipelineView({ cards, profile, contacts, jobPickerLeads, l
         </svg>
       </button>
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={"Add to " + profile.pipelineLabel}>
-        <PipelineQuickAdd profile={profile} contacts={contacts} leads={jobPickerLeads} jobs={leadPickerJobs} />
+        <PipelineQuickAdd profile={profile} leads={jobPickerLeads} jobs={leadPickerJobs} />
       </BottomSheet>
     </div>
   );

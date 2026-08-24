@@ -11,13 +11,11 @@ import { PIPELINE_STAGES, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import type { PipelineCard as PipelineCardType, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { ContactForSelect } from "@/lib/crm/types";
 import type { LeadRow as JobsLeadRow } from "@/features/jobs/types";
 import type { JobRow } from "@/features/sales/types";
 
 type Props = PipelinePageData & {
   profile: IndustryProfile;
-  contacts: ContactForSelect[];
   jobPickerLeads: Pick<JobsLeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   leadPickerJobs: Pick<JobRow, "id" | "service_type">[];
 };
@@ -56,7 +54,7 @@ function PipelineCardRow({ card }: { card: PipelineCardType }) {
   );
 }
 
-export function PipelineView({ cards, profile, contacts, jobPickerLeads, leadPickerJobs }: Props) {
+export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
   const grouped = groupCardsByStage(cards);
   const lostCards = grouped.get("Lost") ?? [];
 
@@ -149,7 +147,7 @@ export function PipelineView({ cards, profile, contacts, jobPickerLeads, leadPic
 
       {/* Quick add */}
       <div id="pipeline-quick-add" style={{ marginTop: "24px" }}>
-        <PipelineQuickAdd profile={profile} contacts={contacts} leads={jobPickerLeads} jobs={leadPickerJobs} />
+        <PipelineQuickAdd profile={profile} leads={jobPickerLeads} jobs={leadPickerJobs} />
       </div>
     </div>
   );
