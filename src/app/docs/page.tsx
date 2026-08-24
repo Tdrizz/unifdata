@@ -12,13 +12,13 @@ const lifecycle = [
   {
     title: "Relationships",
     description:
-      "People, customers, clients, patients, companies, or accounts the business works with.",
-    examples: "Customers · Clients · Patients · Accounts",
+      "People, customers, clients, companies, or accounts the business works with.",
+    examples: "Customers · Clients · Companies · Accounts",
   },
   {
     title: "Opportunities",
     description:
-      "Potential business such as quotes, treatment plans, proposals, policy opportunities, inquiries, or deals.",
+      "Potential business such as quotes, proposals, estimates, inquiries, or deals.",
     examples: "Quotes · Proposals · Inquiries · Deals",
   },
   {
@@ -36,7 +36,7 @@ const lifecycle = [
   {
     title: "Actions",
     description:
-      "Follow-ups, reminders, callbacks, renewal tasks, patient actions, or next steps.",
+      "Follow-ups, reminders, callbacks, renewal tasks, or next steps.",
     examples: "Follow-ups · Reminders · Callbacks · Renewals",
   },
 ];
@@ -454,57 +454,6 @@ export default function DocsPage() {
                 <pre className="mt-2 overflow-x-auto rounded-[14px] border border-white/8 bg-white/4 p-5 text-[13px] leading-[1.7] text-slate-300">{`name,phone,email,address,customer_type,notes\nMike Johnson,808-555-0110,mike@example.com,Kailua-Kona HI,Residential,Interested in monthly service`}</pre>
               </section>
 
-              {/* AI ADVISOR */}
-              <section id="ai" className="scroll-mt-20 py-10">
-                <h2 className="text-[24px] font-semibold">AI Advisor</h2>
-                <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
-                  The AI Advisor generates a plain-English business brief from the live data in the workspace. It reads the current state of customers, leads, jobs, sales, and follow-ups, then produces a structured summary with three sections: an overall snapshot, what needs attention, and recommended next actions.
-                </p>
-
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {[
-                    { title: "Overall summary", body: "A high-level read of where the business stands — revenue this month, active work, open pipeline, and customer count." },
-                    { title: "What needs attention", body: "Flags overdue follow-ups, unpaid revenue, stale leads, and data quality issues that could cost the business money." },
-                    { title: "Recommended next actions", body: "Three specific actions the business owner should take based on the current data — not generic advice." },
-                  ].map((item) => (
-                    <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
-                      <p className="text-[14px] font-semibold">{item.title}</p>
-                      <p className="mt-2 text-[13px] leading-[1.65] text-slate-300">{item.body}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-5 overflow-hidden rounded-[14px] border border-white/10 bg-white/6 p-6">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                    Example output
-                  </p>
-                  <div className="mt-4 space-y-4 text-[13px] leading-[1.7] text-slate-300">
-                    <div>
-                      <p className="font-semibold text-white">Overall summary</p>
-                      <p className="mt-1">Precision Landscape has 42 customers, 6 active jobs, and $3,850 in unpaid work. Monthly revenue is $12,400 with $18,200 in open quotes.</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">What needs attention</p>
-                      <p className="mt-1">4 follow-ups are overdue. 3 customer records are missing contact details, which limits outreach. $3,850 in completed work has not been marked paid.</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white">Recommended next actions</p>
-                      <ul className="mt-1 list-disc pl-5 space-y-1">
-                        <li>Follow up on the 4 overdue reminders before end of day.</li>
-                        <li>Collect payment on the $3,850 in completed unpaid jobs.</li>
-                        <li>Update the 3 incomplete customer records with phone or email.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
-                  <p className="text-[13px] font-semibold text-ud-accent">Get better results with more data</p>
-                  <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
-                    The AI Advisor is most useful after the workspace has real records. Add customers, leads, jobs, sales, and follow-ups first. A workspace with only a few records will produce a thinner summary.
-                  </p>
-                </div>
-              </section>
 
               <section id="contacts" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold">Contacts</h2>
