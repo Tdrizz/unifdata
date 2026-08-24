@@ -174,7 +174,7 @@ export default function DocsPage() {
 
       <div className="border-t border-white/8">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid gap-8 py-8 lg:grid-cols-[240px_1fr]">
+          <div className="grid grid-cols-1 gap-8 py-8 lg:grid-cols-[240px_1fr]">
             {/* Sidebar */}
             <aside className="h-fit rounded-[14px] border border-white/10 bg-white/4 p-4 lg:p-5 lg:sticky lg:top-[72px]">
               <p className="text-[12px] font-semibold text-slate-300">Contents</p>
@@ -202,7 +202,7 @@ export default function DocsPage() {
                   UnifData is built around a single company workspace. Every record — customers, leads, jobs, sales, and follow-ups — belongs to a company. Create a workspace, choose the business sector, and start adding records.
                 </p>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {[
                     { step: "01", title: "Create a workspace", body: "Sign up and complete onboarding. Choose the business sector that matches the company — the workspace will adapt its language and priorities accordingly." },
                     { step: "02", title: "Import or add records", body: "Bring in existing customers via CSV import, or add them manually. Then add leads, jobs, sales, and follow-ups to start building the operating picture." },
@@ -231,7 +231,7 @@ export default function DocsPage() {
                   UnifData is built for businesses that have important information scattered across spreadsheets, QuickBooks, old CRMs, texts, inboxes, and memory. The goal is to give business owners one clear place to see what needs attention, what work is active, what money is unpaid, and what data needs cleanup.
                 </p>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {[
                     { title: "Organize business activity", description: "Customers, leads, jobs, sales, and follow-ups all live in one place and connect to each other." },
                     { title: "Adapt to the business type", description: "Language, labels, and priorities shift based on the company's industry and operating model." },
@@ -256,7 +256,7 @@ export default function DocsPage() {
                   {lifecycle.map((item, index) => (
                     <div
                       key={item.title}
-                      className="grid gap-4 rounded-[14px] border border-white/10 bg-white/4 p-5 md:grid-cols-[56px_1fr_auto] md:items-center"
+                      className="grid grid-cols-1 gap-4 rounded-[14px] border border-white/10 bg-white/4 p-5 md:grid-cols-[56px_1fr_auto] md:items-center"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-[13px] font-semibold text-white">
                         {index + 1}
@@ -278,7 +278,7 @@ export default function DocsPage() {
                   Each page in UnifData covers a specific part of the business operating layer. Pages are accessible from the main navigation after logging in.
                 </p>
 
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
                   {pages.map((page) => (
                     <div key={page.path} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -304,7 +304,7 @@ export default function DocsPage() {
                 <p className="text-[13.5px] leading-[1.7] text-slate-300 mb-6">
                   Vera is the AI assistant built into UnifData. Unlike a generic chatbot, Vera has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
                 </p>
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {[
                     { title: "Overnight briefing", body: "Every morning, Vera surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
                     { title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
@@ -334,7 +334,7 @@ export default function DocsPage() {
                   {sectors.map((item, i) => (
                     <div
                       key={item.sector}
-                      className={`grid gap-3 px-5 py-4 md:grid-cols-[200px_1fr] ${i % 2 === 0 ? "bg-white/3" : "bg-white/5"}`}
+                      className={`grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-[200px_1fr] ${i % 2 === 0 ? "bg-white/3" : "bg-white/5"}`}
                     >
                       <p className="text-[13.5px] font-semibold">{item.sector}</p>
                       <p className="text-[13px] leading-[1.6] text-slate-300">{item.wording}</p>
@@ -351,7 +351,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-white/10 bg-white/6">
-                  <div className="grid divide-y divide-white/8 md:grid-cols-3 md:divide-x md:divide-y-0">
+                  <div className="grid grid-cols-1 divide-y divide-white/8 md:grid-cols-3 md:divide-x md:divide-y-0">
                     {[
                       { step: "01", label: "Opportunity accepted", detail: "Lead or quote is marked won or accepted by the business." },
                       { step: "02", label: "Work created", detail: "A linked job, appointment, or project record is generated automatically." },
@@ -382,7 +382,7 @@ export default function DocsPage() {
                   <Link href="/settings" className="font-semibold text-white hover:underline">Settings</Link>.
                 </p>
 
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
                   {integrations.map((integration) => (
                     <div key={integration.name} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
                       <div className="flex items-center justify-between gap-3">
@@ -397,7 +397,7 @@ export default function DocsPage() {
                 </div>
 
                 <div className="mt-5 overflow-hidden rounded-[14px] border border-white/10 bg-white/6">
-                  <div className="grid divide-y divide-white/8 p-0 md:grid-cols-3 md:divide-x md:divide-y-0">
+                  <div className="grid grid-cols-1 divide-y divide-white/8 p-0 md:grid-cols-3 md:divide-x md:divide-y-0">
                     {[
                       { step: "01", label: "Connect in Settings", detail: "Go to Settings and click Connect next to the integration you want to enable." },
                       { step: "02", label: "Authorize access", detail: "Complete the OAuth flow for the connected service. UnifData only reads the data it needs." },
@@ -430,7 +430,7 @@ export default function DocsPage() {
                   {csvColumns.map((col, i) => (
                     <div
                       key={col.column}
-                      className={`grid gap-2 px-5 py-4 text-[13px] md:grid-cols-[140px_80px_1fr_160px] ${i % 2 === 0 ? "bg-white/3" : "bg-white/5"}`}
+                      className={`grid grid-cols-1 gap-2 px-5 py-4 text-[13px] md:grid-cols-[140px_80px_1fr_160px] ${i % 2 === 0 ? "bg-white/3" : "bg-white/5"}`}
                     >
                       <code className="font-semibold text-white">{col.column}</code>
                       <span>
@@ -460,7 +460,7 @@ export default function DocsPage() {
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The Contacts page is the unified view of every person or business the workspace has a relationship with. Unlike the People records page — which is the editing surface — Contacts is the intelligence surface. It shows relationship status, activity history, linked records, tags, and segment groups in one place.
                 </p>
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {[
                     { title: "Synced from everywhere", body: "Contacts are created and updated from manual entry, CSV imports, the onboarding wizard, the AI assistant, and connected integrations. Every write path keeps the contact record current." },
                     { title: "Full activity timeline", body: "Each contact has an activity tab showing every interaction — jobs completed, sales logged, follow-ups created, and messages sent — in chronological order." },
@@ -479,7 +479,7 @@ export default function DocsPage() {
                 <p className="mt-4 text-[13.5px] leading-[1.7] text-slate-300">
                   The Agent Inbox sits on the workspace dashboard and surfaces AI-generated outreach drafts and operational alerts. Every night, the agent pipeline reads live workspace data and decides what needs attention — stale customers, unpaid revenue, overdue follow-ups — then drafts actions for review.
                 </p>
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {[
                     { title: "Outreach drafts", body: "The agent drafts follow-up emails and SMS messages for customers who haven't been contacted recently or have open unpaid work. Each draft includes the AI's reasoning. Approve to send, dismiss to skip." },
                     { title: "Revenue alerts", body: "Surfaces revenue drops, unpaid invoices older than 30 days, and significant changes in pipeline value. Each alert includes the specific records driving the signal." },
