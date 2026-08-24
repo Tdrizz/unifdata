@@ -42,13 +42,12 @@ const lifecycle = [
 ];
 
 const pages = [
-  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief. Opens with a Vera summary of what needs attention — follow-ups due, unpaid work, stale pipeline. Start here every morning." },
+  { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief and the only place Vera lives. Opens with a Vera summary of what needs attention — follow-ups due, unpaid work, stale pipeline — plus a live chat panel to ask Vera anything or have it act. Start here every morning." },
   { name: "Customers", path: "/customers", tag: "Records", description: "Unified contact records. Every person or business the workspace has a relationship with, enriched with relationship status, activity history, and linked records." },
   { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities. See where business sits across the full lifecycle and identify what needs a follow-up or next action." },
   { name: "Jobs", path: "/jobs", tag: "Operations", description: "All active and scheduled work. Weekly calendar toggle. Filter by status — Scheduled, Active, Complete, Cancelled." },
   { name: "Sales", path: "/sales", tag: "Revenue", description: "All revenue records with payment status. Overdue items surface prominently. The fastest way to see what's been completed but not collected." },
   { name: "Follow-ups", path: "/follow-ups", tag: "Actions", description: "Every reminder and action item. List and calendar view. Overdue items surface on the workspace dashboard automatically." },
-  { name: "Vera", path: "/vera", tag: "AI", description: "Your AI business assistant. Opens with the overnight briefing already loaded — drafts ready to send, alerts worth reviewing. Chat freely any time." },
   { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Vera reads from this to prioritize what needs attention." },
   { name: "Imports", path: "/imports", tag: "Data", description: "CSV and Google Sheets import with smart column mapping and staged review. Also manages connected integrations — Jobber, QuickBooks, HubSpot, Square." },
   { name: "Settings", path: "/settings", tag: "Account", description: "Business profile, team members, industry labels, process boards, billing, and notification preferences." },
@@ -302,14 +301,14 @@ export default function DocsPage() {
               <section id="vera" className="scroll-mt-20 py-10">
                 <h2 className="text-[24px] font-semibold mb-4">Vera</h2>
                 <p className="text-[13.5px] leading-[1.7] text-slate-300 mb-6">
-                  Vera is the AI assistant built into UnifData. Unlike a generic chatbot, Vera has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed.
+                  Vera is the AI assistant built into UnifData. Unlike a generic chatbot, Vera has full read access to your live workspace data — customers, jobs, revenue, follow-ups — and runs an analysis every night while your business is closed. Vera lives in a single panel on the Today dashboard — there&apos;s no separate chat page to navigate to.
                 </p>
                 <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                   {[
                     { title: "Overnight briefing", body: "Every morning, Vera surfaces what needs attention. Stale customers. Unpaid invoices. Overdue follow-ups. Each item includes the specific record driving the signal." },
                     { title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. Each draft shows the reasoning. Approve to send, skip to dismiss — nothing sends without sign-off." },
-                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown as alerts inside the Vera view." },
-                    { title: "Free-form chat", body: "Ask Vera anything, any time. It can query your live data, create follow-ups, update job status, and add customers directly from chat." },
+                    { title: "Revenue alerts", body: "Flags when invoices are past due, jobs are stalling, or pipeline drops significantly. Shown right in the Vera panel on Today." },
+                    { title: "Free-form chat", body: "Ask Vera anything, any time, from the Today dashboard. It can create or update leads, jobs, sales, follow-ups, and contacts directly from chat — not just answer questions." },
                   ].map((item) => (
                     <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
                       <p className="text-[14px] font-semibold mb-2">{item.title}</p>

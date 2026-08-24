@@ -51,7 +51,7 @@ Live at [unifdata.com](https://unifdata.com).
 
 ```
 /onboarding            5-step setup wizard (business → contacts → job → follow-up → workspace)
-/workspace             Dashboard with KPIs, priority queue, and the Agent Inbox
+/workspace             Dashboard with KPIs, priority queue, the Agent Inbox, and the Vera chat panel
 /crm                   Pipeline and relationship overview
 /customers             Customer / relationship records
 /leads                 Opportunities
@@ -60,7 +60,6 @@ Live at [unifdata.com](https://unifdata.com).
 /follow-ups            Actions and reminders
 /imports               CSV and Google Sheets import with staged review
 /imports/sessions/[id] Import session review
-/vera                  Vera AI assistant chat (persistent history, tool calling)
 /data-hub              Record quality, health scoring, and deduplication
 /contacts              Contact records (master_customers — unified view)
 /communications        SMS thread inbox
@@ -86,7 +85,7 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 ## Key Features
 
 - **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → straight into the workspace. No redirect between steps; stays on the same page.
-- **Vera** — The AI assistant. Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers, run an on-demand data cleanup scan), plus a nightly pipeline that surfaces outreach drafts and alerts. Persistent chat history across navigation. Rate-limited (20 requests/day).
+- **Vera** — The AI assistant, embedded in a single panel on the `/workspace` dashboard (no separate chat page). Plain-language chat over live workspace data with tool calling — create or update leads, jobs, sales, follow-ups, and contacts, run an on-demand data cleanup scan — plus a nightly pipeline that surfaces outreach drafts and alerts right in the same panel. Rate-limited (20 requests/day).
 - **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts

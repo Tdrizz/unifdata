@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
+import { VeraDraftCard, VeraAlertCard } from "@/components/vera/VeraCards";
 import { isOverdue, isDueToday } from "@/lib/date-format";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isOpenFollowUp, getWorkTone } from "@/lib/status";
@@ -45,6 +45,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
 
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
+  const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -231,8 +232,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
     ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
   ];
-  const veraPreview = veraItems.slice(0, 3);
-  const veraRemaining = veraItems.length - veraPreview.length;
+  const veraPreview = showAllVera ? veraItems : veraItems.slice(0, 3);
 
   const statusLine =
     priorityQueue.length === 0
@@ -326,10 +326,14 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
               </div>
               <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
             </div>
-            {veraItems.length > 0 && (
-              <Link href="/vera" className="text-[13px] font-semibold text-ud-accent">
-                {veraRemaining > 0 ? `See all ${veraItems.length} →` : "Open Vera →"}
-              </Link>
+            {veraItems.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAllVera((v) => !v)}
+                className="text-[13px] font-semibold text-ud-accent"
+              >
+                {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
+              </button>
             )}
           </div>
 

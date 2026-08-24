@@ -27,8 +27,6 @@ function buildBreadcrumbs(
     "/sales":        ["Workspace", profile.labels.salePlural],
     "/follow-ups":   ["Workspace", profile.labels.followUpPlural],
     "/communications": ["Workspace", "Communications"],
-    "/vera":         ["Home", "Vera"],
-    "/ai-assistant": ["Home", "Vera"],
     "/tools":        ["Tools", "Tools"],
     "/data-hub":     ["Tools", "Data Hub"],
     "/automations":  ["Tools", "Automations"],
