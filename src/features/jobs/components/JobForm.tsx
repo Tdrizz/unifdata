@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { formatCurrency, getDateInputValue } from "@/lib/utils";
@@ -19,7 +20,7 @@ import { updateJobAction, deleteJobAction, type ActionState } from "../actions";
 
 type Props = {
   job: JobListRow;
-  contacts: ContactForSelect[];
+  linkedContact: ContactForSelect | null;
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
   profile: IndustryProfile;
   errorParam?: string;
@@ -99,13 +100,10 @@ function getWorkIssues(work: JobListRow) {
   return issues;
 }
 
-export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
+export function JobForm({ job, linkedContact, leads, profile: _profile }: Props) {
   const boundUpdateAction = updateJobAction.bind(null, job.id);
   const deleteAction = deleteJobAction.bind(null, job.id);
 
-  const linkedCustomer = (job.contact_id || job.customer_id)
-    ? contacts.find((c) => c.id === (job.contact_id ?? job.customer_id))
-    : null;
   const linkedLead = job.lead_id
     ? leads.find((l) => l.id === job.lead_id)
     : null;
@@ -132,14 +130,11 @@ export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
-                <Select name="contact_id" defaultValue={job.contact_id ?? job.customer_id ?? ""}>
-                  <option value="">No linked person yet</option>
-                  {contacts.map((contact) => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.name || contact.email || contact.phone || "Unnamed person"}
-                    </option>
-                  ))}
-                </Select>
+                <ContactCombobox
+                  name="contact_id"
+                  defaultValue={linkedContact?.id}
+                  defaultLabel={linkedContact?.name}
+                />
               </FormField>
 
               <FormField label="Link to opportunity">
@@ -258,10 +253,10 @@ export function JobForm({ job, contacts, leads, profile: _profile }: Props) {
               <div className="grid gap-3 md:grid-cols-2">
                 <SummaryCard
                   label="Linked person"
-                  value={linkedCustomer?.name || "No person linked"}
+                  value={linkedContact?.name || "No person linked"}
                   helper={
-                    linkedCustomer?.email ||
-                    linkedCustomer?.phone ||
+                    linkedContact?.email ||
+                    linkedContact?.phone ||
                     "Connect this work to a person or business."
                   }
                 />

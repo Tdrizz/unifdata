@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getJobById, getCustomersForJobSelect, getLeadsForJobSelect } from "@/features/jobs/queries";
+import { getJobById, getLeadsForJobSelect } from "@/features/jobs/queries";
+import { getContactForSelect } from "@/lib/crm/contacts";
 import { JobForm } from "@/features/jobs/components/JobForm";
 
 export const dynamic = 'force-dynamic';
@@ -27,13 +28,14 @@ export default async function EditWorkPage({
   const { company } = currentCompany;
   const profile = getIndustryProfile(company.business_sector);
 
-  const [job, contacts, leads] = await Promise.all([
+  const [job, leads] = await Promise.all([
     getJobById(supabase, company.id, id),
-    getCustomersForJobSelect(supabase, company.id),
     getLeadsForJobSelect(supabase, company.id),
   ]);
 
   if (!job) redirect("/jobs");
+
+  const linkedContact = await getContactForSelect(supabase, company.id, job.contact_id ?? job.customer_id);
 
   return (
     <AppShell
@@ -52,7 +54,7 @@ export default async function EditWorkPage({
             </Link>
           }
         />
-        <JobForm job={job} contacts={contacts} leads={leads} profile={profile} />
+        <JobForm job={job} linkedContact={linkedContact} leads={leads} profile={profile} />
       </div>
     </AppShell>
   );

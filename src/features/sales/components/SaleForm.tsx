@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate } from "@/lib/date-format";
 import { getDateInputValue, formatCurrency } from "@/lib/utils";
@@ -18,7 +19,7 @@ import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   sale: SaleRow;
-  contacts: ContactForSelect[];
+  linkedContact: ContactForSelect | null;
   jobs?: Pick<JobRow, "id" | "service_type">[];
   errorParam?: string;
 };
@@ -69,9 +70,7 @@ function getRevenueIssues(record: SaleRow) {
   return issues;
 }
 
-export function SaleForm({ sale, contacts, jobs = [] }: Props) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saleContactId = (sale as any).contact_id ?? sale.customer_id ?? "";
+export function SaleForm({ sale, linkedContact, jobs = [] }: Props) {
   const boundUpdateAction = updateSaleAction.bind(null, sale.id);
   const deleteAction = deleteSaleAction.bind(null, sale.id);
   const issues = getRevenueIssues(sale);
@@ -124,16 +123,13 @@ export function SaleForm({ sale, contacts, jobs = [] }: Props) {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {contacts.length > 0 && (
-              <FormField label="Link to person">
-                <Select name="contact_id" defaultValue={saleContactId}>
-                  <option value="">No person linked</option>
-                  {contacts.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </Select>
-              </FormField>
-            )}
+            <FormField label="Link to person">
+              <ContactCombobox
+                name="contact_id"
+                defaultValue={linkedContact?.id}
+                defaultLabel={linkedContact?.name}
+              />
+            </FormField>
             {jobs.length > 0 && (
               <FormField label="Link to job">
                 <Select name="job_id" defaultValue={sale.job_id ?? ""}>
@@ -182,7 +178,7 @@ export function SaleForm({ sale, contacts, jobs = [] }: Props) {
 
             <SummaryCard
               label="Linked person"
-              value={saleContactId ? (contacts.find((c) => c.id === saleContactId)?.name ?? "Unknown") : "No person linked"}
+              value={linkedContact?.name || "No person linked"}
               helper="Linking a person connects this revenue to their profile."
             />
           </div>

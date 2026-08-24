@@ -337,7 +337,7 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], job
 
       {/* Quick add */}
       <div id="sale-quick-add" style={{ marginTop: "20px" }}>
-        <SaleCreateForm profile={profile} contacts={contacts} jobs={jobs} />
+        <SaleCreateForm profile={profile} jobs={jobs} />
       </div>
     </div>
   );

@@ -168,7 +168,7 @@ export function JobsList({ jobs, count, contacts, leads, profile, selectedStage 
 
       {/* Quick add */}
       <div id="job-quick-add" style={{ marginTop: "20px" }}>
-        <JobCreateForm contacts={contacts} leads={leads} />
+        <JobCreateForm leads={leads} />
       </div>
     </div>
   );

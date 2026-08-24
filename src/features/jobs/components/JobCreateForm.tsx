@@ -2,10 +2,10 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import { createJobAction, type ActionState } from "../actions";
-import type { ContactForSelect } from "@/lib/crm/types";
 import type { LeadRow } from "../types";
 import { formatCurrency } from "@/lib/utils";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
@@ -16,11 +16,10 @@ type PricingContext = {
 } | { sufficient: false };
 
 type Props = {
-  contacts: ContactForSelect[];
   leads: Pick<LeadRow, "id" | "service_requested" | "status" | "estimated_value">[];
 };
 
-export function JobCreateForm({ contacts, leads }: Props) {
+export function JobCreateForm({ leads }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     createJobAction,
     null,
@@ -77,14 +76,7 @@ export function JobCreateForm({ contacts, leads }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-            <select name="contact_id" className={f}>
-              <option value="">No linked person yet</option>
-              {contacts.map((contact) => (
-                <option key={contact.id} value={contact.id}>
-                  {contact.name || contact.email || contact.phone || "Unnamed person"}
-                </option>
-              ))}
-            </select>
+            <ContactCombobox name="contact_id" className={f} />
           </label>
 
           <label className="block">
