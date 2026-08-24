@@ -9,6 +9,7 @@ import { Composer } from "./Composer";
 import ReactMarkdown from "react-markdown";
 import { VeraDraftCard, VeraAlertCard, getTimeOfDay } from "@/features/ai-assistant/AiAssistantView";
 import type { Draft, Alert } from "@/features/ai-assistant/AiAssistantView";
+import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 
 type Message = {
   role: "user" | "model" | "action";
@@ -300,6 +301,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
               >
                 <VeraDraftCard
                   draft={draft}
+                  href={getDraftHref(draft) ?? undefined}
                   onApprove={() => handleApproveDraft(draft.id)}
                   onDismiss={() => handleDismissDraft(draft.id)}
                 />
@@ -317,6 +319,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
               >
                 <VeraAlertCard
                   alert={alert}
+                  href={getAlertHref(alert) ?? undefined}
                   onDismiss={() => handleDismissAlert(alert.id)}
                 />
               </div>

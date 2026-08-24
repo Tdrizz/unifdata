@@ -20,6 +20,7 @@ import {
 } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
+import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 
 type QueueItem = {
   id: string;
@@ -64,8 +65,8 @@ function getGreeting() {
   return "Good evening";
 }
 
-type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null };
-type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string };
+type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
+type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
 type Props = WorkspaceData & {
   profile: IndustryProfile;
   companyName: string;
@@ -201,7 +202,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
       label: "Suggested",
       title: d.subject || d.body.slice(0, 60),
       detail: d.action_label || "Review draft",
-      href: `/vera?item=draft-${d.id}`,
+      href: getDraftHref(d) ?? `/vera?item=draft-${d.id}`,
       tone: "neutral" as const,
       priority: 2,
     })),
@@ -213,7 +214,7 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         label: "Alert",
         title: a.title,
         detail: a.body,
-        href: `/vera?item=alert-${a.id}`,
+        href: getAlertHref(a) ?? `/vera?item=alert-${a.id}`,
         tone,
         priority: a.severity === "critical" ? 0 : 2,
       };

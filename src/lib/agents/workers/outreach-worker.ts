@@ -83,6 +83,7 @@ export async function runOutreachWorker(
           body: `${String(payload.customer_name ?? "A contact")} replied but hasn't received a response.`,
           severity: "warning",
           escalation_level: 0,
+          record_id: customerId ?? null,
         });
         return;
       }
@@ -162,6 +163,7 @@ export async function runOutreachWorker(
   await supabase.from("agent_drafts").insert({
     organization_id: company.id,
     draft_type: draft.draft_type,
+    record_id: customerId ?? null,
     subject: draft.subject ?? null,
     body: draft.body,
     recipient_info: recipientInfo,

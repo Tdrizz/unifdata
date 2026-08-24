@@ -32,14 +32,14 @@ export default async function WorkspacePage() {
     getWorkspaceData(supabase, company.id),
     supabase
       .from("agent_drafts")
-      .select("id, draft_type, subject, body, action_label, reasoning")
+      .select("id, draft_type, subject, body, action_label, reasoning, record_id")
       .eq("organization_id", company.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(10),
     supabase
       .from("agent_alerts")
-      .select("id, alert_type, severity, title, body, reasoning")
+      .select("id, alert_type, severity, title, body, reasoning, record_id")
       .eq("organization_id", company.id)
       .eq("status", "unread")
       .order("created_at", { ascending: false })
@@ -53,6 +53,7 @@ export default async function WorkspacePage() {
     body: string;
     action_label?: string | null;
     reasoning?: string | null;
+    record_id?: string | null;
   }>;
 
   const alerts = (alertsResult.data ?? []) as unknown as Array<{
@@ -62,6 +63,7 @@ export default async function WorkspacePage() {
     title: string;
     body: string;
     reasoning?: string | null;
+    record_id?: string | null;
   }>;
 
   const agentInboxCount = drafts.length + alerts.length;
