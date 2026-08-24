@@ -1,6 +1,6 @@
 # UnifData
 
-UnifData is an industry-aware CRM and autonomous business operating system for local service businesses. It adapts its language and structure to match your business type — field service, dental, insurance, professional services, retail, and more. Everything lives in one workspace: pipeline, customers, jobs, sales, follow-ups, imports, integrations, an AI Advisor, and a nightly agent pipeline that surfaces outreach drafts and revenue alerts automatically.
+UnifData is an industry-aware CRM and autonomous business operating system for local service businesses. It adapts its language and structure to match your business type — field service, construction, insurance, professional services, retail, and more. Everything lives in one workspace: pipeline, customers, jobs, sales, follow-ups, imports, integrations, Vera (the AI assistant), and a nightly agent pipeline that surfaces outreach drafts and revenue alerts automatically.
 
 Live at [unifdata.com](https://unifdata.com).
 
@@ -50,8 +50,8 @@ Live at [unifdata.com](https://unifdata.com).
 ### App (requires auth + active subscription)
 
 ```
-/onboarding            5-step setup wizard (business → contacts → job → follow-up → Operating Brief)
-/workspace             Dashboard with Agent Inbox, Operating Brief, and KPIs
+/onboarding            5-step setup wizard (business → contacts → job → follow-up → workspace)
+/workspace             Dashboard with KPIs, priority queue, and the Agent Inbox
 /crm                   Pipeline and relationship overview
 /customers             Customer / relationship records
 /leads                 Opportunities
@@ -60,7 +60,7 @@ Live at [unifdata.com](https://unifdata.com).
 /follow-ups            Actions and reminders
 /imports               CSV and Google Sheets import with staged review
 /imports/sessions/[id] Import session review
-/ai-assistant          AI Advisor chat (persistent history, tool calling)
+/vera                  Vera AI assistant chat (persistent history, tool calling)
 /data-hub              Record quality, health scoring, and deduplication
 /contacts              Contact records (master_customers — unified view)
 /communications        SMS thread inbox
@@ -76,7 +76,6 @@ GET /api/cron/automation      Nightly agent pipeline (6:00 AM UTC daily)
 GET /api/cron/sync            Integration sync (3:00 AM UTC daily)
 GET /api/cron/weekly-summary  Weekly email summary (8:00 AM UTC Mondays)
 POST /api/ai/chat             Streaming AI chat with tool calling
-POST /api/ai/business-summary Generate Operating Brief
 POST /api/v1/agent-drafts/[id]/approve   Approve + send outreach draft
 POST /api/v1/agent-drafts/[id]/dismiss   Dismiss draft
 POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
@@ -86,9 +85,8 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 
 ## Key Features
 
-- **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → auto-generate Operating Brief. No redirect between steps; stays on the same page.
-- **Operating Brief** — AI-generated daily workspace summary (pipeline health, unpaid revenue, overdue follow-ups, data gaps)
-- **AI Advisor** — Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers). Persistent history across navigation. Rate-limited per tier.
+- **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → straight into the workspace. No redirect between steps; stays on the same page.
+- **Vera** — The AI assistant. Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers), plus a nightly pipeline that surfaces outreach drafts and alerts. Persistent chat history across navigation. Rate-limited per tier.
 - **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts
@@ -110,13 +108,11 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 
 | Feature | Standard | Pro |
 |---------|----------|-----|
-| AI Advisor chat | 5 req/day | 20 req/day |
+| Vera chat | 5 req/day | 20 req/day |
 | Agent Inbox | Upgrade prompt | Full access |
 | Nightly agent pipeline | — | ✓ |
 | Autopilot mode | — | ✓ |
 | ROI counter | — | ✓ |
-
-AI features are blocked entirely for companies with `business_sector = "medical"` (no BAA in place). A 403 is returned with an explanation.
 
 ---
 
