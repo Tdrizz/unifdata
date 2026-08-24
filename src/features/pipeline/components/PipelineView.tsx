@@ -48,12 +48,15 @@ function PipelineCardRow({ card }: { card: PipelineCardType }) {
 
 export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
   const grouped = groupCardsByStage(cards);
-  const lostCards = grouped.get("Lost") ?? [];
 
   const activeCards = cards.filter((c) => c.stage !== "Lost");
   const pipelineValue = activeCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
   const activeWorkCount = (grouped.get("Active")?.length ?? 0) + (grouped.get("Complete")?.length ?? 0);
-  const paidCards = grouped.get("Paid") ?? [];
+  // Every sale card lands in the "Paid" stage regardless of its own payment
+  // status (see mapRecordsToCards), so filter sale cards down to ones whose
+  // payment_status is actually "Paid" before treating them as real revenue.
+  // Job cards only reach "Paid" via isCompletedPaidJob, which already means paid.
+  const paidCards = (grouped.get("Paid") ?? []).filter((c) => c.sourceType !== "sale" || c.statusLabel === "Paid");
   const paidValue = paidCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
 
   return (
@@ -107,19 +110,23 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
         })}
       </div>
 
-      {/* Recently closed */}
+      {/* Revenue */}
       <SectionCard
-        title="Recently closed"
-        description="Lost opportunities and cancelled work out of the active pipeline."
+        title="Revenue"
+        description="Total revenue actually collected — sales and jobs marked paid."
       >
-        {lostCards.length === 0 ? (
+        <div className="px-5 py-6 border-b border-[rgba(23,22,20,0.04)]">
+          <p className="text-[32px] font-bold tracking-[-0.02em] leading-none text-ud-ink udv2-num">{formatCurrency(paidValue)}</p>
+          <p className="mt-2 text-[13px] text-ud-muted">{paidCards.length} paid record{paidCards.length === 1 ? "" : "s"}</p>
+        </div>
+        {paidCards.length === 0 ? (
           <EmptyState
-            title="Nothing closed out yet"
-            description="Lost or cancelled records appear here once statuses are updated."
+            title="No revenue collected yet"
+            description="Paid sales and completed, paid-in-full jobs appear here."
           />
         ) : (
           <div>
-            {lostCards.slice(0, 8).map((card) => (
+            {paidCards.slice(0, 8).map((card) => (
               <Link
                 key={card.id}
                 href={card.editHref}
@@ -130,7 +137,7 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
                   <p className="mt-1 text-sm text-ud-faint">{card.contactName || "No contact linked"}</p>
                 </div>
                 <p className="text-sm font-semibold text-ud-muted">{formatCurrency(card.value)}</p>
-                <StatusBadge tone="neutral">{card.statusLabel}</StatusBadge>
+                <StatusBadge tone="success">{card.statusLabel}</StatusBadge>
               </Link>
             ))}
           </div>

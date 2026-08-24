@@ -3,7 +3,7 @@
 import { useEffect, useId, useState, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { markNotificationsRead } from "@/lib/notifications";
+import { markNotificationsRead, deleteNotifications } from "@/lib/notifications";
 
 // Notifications carry no per-record link — route by type to the page that's
 // actually about it, instead of the click doing nothing. Every `type` value
@@ -73,6 +73,27 @@ export function NotificationBell({ companyId, initialNotifications }: Notificati
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await deleteNotifications([id], companyId);
+    } catch {
+      // Best-effort — local state already dropped it
+    }
+  };
+
+  const handleClearAll = async () => {
+    const ids = notifications.map((n) => n.id);
+    setNotifications([]);
+    try {
+      await deleteNotifications(ids, companyId);
+    } catch {
+      // Best-effort — local state already dropped it
+    }
+  };
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -89,7 +110,17 @@ export function NotificationBell({ companyId, initialNotifications }: Notificati
       </button>
       {open && (
         <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 50, width: "300px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "var(--shadow)" }}>
-          <div style={{ borderBottom: "1px solid var(--border)", padding: "10px 16px", fontSize: "13px", fontWeight: 600, color: "var(--ink)" }}>Notifications</div>
+          <div style={{ borderBottom: "1px solid var(--border)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)" }}>Notifications</span>
+            {notifications.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                Clear all
+              </button>
+            )}
+          </div>
           <div style={{ maxHeight: "360px", overflowY: "auto" }}>
             {notifications.length === 0 ? (
               <p style={{ padding: "24px 16px", textAlign: "center", fontSize: "13px", color: "var(--faint)" }}>No notifications</p>
@@ -103,14 +134,27 @@ export function NotificationBell({ companyId, initialNotifications }: Notificati
                     <p style={{ marginTop: "4px", fontSize: "11px", color: "var(--faint)", margin: "4px 0 0" }}>{new Date(n.created_at).toLocaleDateString()}</p>
                   </>
                 );
-                const rowStyle = { borderBottom: "1px solid var(--border)", padding: "12px 16px", background: !n.read ? "var(--accent-light)" : undefined };
-                return href ? (
-                  <Link key={n.id} href={href} onClick={() => setOpen(false)} style={{ ...rowStyle, display: "block", textDecoration: "none" }}>
-                    {content}
-                  </Link>
-                ) : (
-                  <div key={n.id} style={rowStyle}>
-                    {content}
+                const rowStyle = { borderBottom: "1px solid var(--border)", background: !n.read ? "var(--accent-light)" : undefined };
+                const deleteButton = (
+                  <button
+                    onClick={(e) => handleDelete(e, n.id)}
+                    aria-label="Delete notification"
+                    title="Delete notification"
+                    style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--faint)", padding: "12px 14px 0 4px", fontSize: "15px", lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                );
+                return (
+                  <div key={n.id} style={{ ...rowStyle, display: "flex", alignItems: "flex-start" }}>
+                    {href ? (
+                      <Link href={href} onClick={() => setOpen(false)} style={{ flex: 1, minWidth: 0, display: "block", padding: "12px 0 12px 16px", textDecoration: "none" }}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div style={{ flex: 1, minWidth: 0, padding: "12px 0 12px 16px" }}>{content}</div>
+                    )}
+                    {deleteButton}
                   </div>
                 );
               })
