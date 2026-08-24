@@ -156,7 +156,7 @@ export default function HomePage() {
                     <p className="text-[13px] text-slate-700 leading-relaxed">{industry.brief}</p>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 mb-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                     {industry.stats.map((stat) => (
                       <div key={stat.label} className={`rounded-[10px] border p-3 ${stat.urgent ? "border-red-200/60 bg-red-50/60" : "border-black/[0.06] bg-white"}`}>
                         <p className="text-[10px] font-medium text-slate-500 mb-1 leading-tight">{stat.label}</p>
@@ -289,7 +289,7 @@ export default function HomePage() {
             <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="block w-full rounded-[12px] bg-[#4A3FA8] px-5 py-3.5 text-center text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.4)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
               Book a free demo
             </a>
-            <p className="mt-3 text-center text-[12px] text-slate-500">30-minute call. We configure your workspace with your real data.</p>
+            <p className="mt-3 text-center text-[12px] text-slate-500">30-minute call. We set up your workspace with your real data.</p>
           </div>
         </div>
       </section>
