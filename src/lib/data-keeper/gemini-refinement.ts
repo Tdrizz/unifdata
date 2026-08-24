@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { GEMINI_MODEL } from "@/lib/constants";
 import { rateLimit } from "@/lib/rate-limit";
@@ -45,7 +46,13 @@ export async function geminiRefinement(
 
   const apiKey =
     process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    Sentry.captureMessage(
+      "Data Keeper: GEMINI_API_KEY not configured — every gray-zone match falls back to a generic proposal",
+      { level: "warning", tags: { module: "data-keeper", phase: "gemini-refinement" }, extra: { organizationId } },
+    );
+    return null;
+  }
 
   const genAI = new GoogleGenAI({ apiKey });
 
@@ -91,7 +98,12 @@ export async function geminiRefinement(
     const text = result.text ?? "";
     const parsed = JSON.parse(text);
     return GeminiResponseSchema.parse(parsed);
-  } catch {
+  } catch (err) {
+    console.error("[data-keeper.gemini-refinement] Gemini call failed, falling back to deterministic reasoning", err);
+    Sentry.captureException(err, {
+      tags: { module: "data-keeper", phase: "gemini-refinement" },
+      extra: { organizationId, model: GEMINI_MODEL },
+    });
     return null;
   }
 }
