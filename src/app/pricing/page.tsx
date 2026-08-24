@@ -58,16 +58,16 @@ export default function PricingPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="mx-auto max-w-lg rounded-[24px] border border-white/12 bg-white/[0.05] p-10 shadow-[0_32px_80px_rgba(0,0,0,0.4)]">
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div className="text-center">
+        <div className="mx-auto max-w-lg rounded-[24px] border border-white/12 bg-white/[0.05] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.4)]">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-8">
+            <div className="text-center min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">Setup</p>
-              <p className="text-[60px] font-semibold leading-none tabular-nums">$300</p>
+              <p className="text-[38px] sm:text-[60px] font-semibold leading-none tabular-nums">$300</p>
               <p className="text-[13px] text-slate-400 mt-2">one time</p>
             </div>
-            <div className="text-center border-l border-white/[0.08] pl-6">
+            <div className="text-center min-w-0 border-l border-white/[0.08] pl-3 sm:pl-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">Monthly</p>
-              <p className="text-[60px] font-semibold leading-none tabular-nums">$100</p>
+              <p className="text-[38px] sm:text-[60px] font-semibold leading-none tabular-nums">$100</p>
               <p className="text-[13px] text-slate-400 mt-2">per month</p>
             </div>
           </div>

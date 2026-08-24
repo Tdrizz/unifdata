@@ -214,7 +214,6 @@ export function SettingsView({
           </div>
           <AiSettingsToggles
             autopilot={company.preferences?.autopilot === true}
-            aiFirstMode={company.preferences?.ai_first_mode === true}
           />
         </div>
 

@@ -6,7 +6,6 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
-import { isAiAllowed } from "@/lib/feature-gates";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +20,6 @@ export default async function WorkspacePage() {
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
-
-  // AI-first mode: redirect to assistant on sign-in (only if AI is allowed for this sector)
-  const prefs = (company.preferences ?? {}) as Record<string, unknown>;
-  if (prefs.ai_first_mode === true && isAiAllowed(company)) redirect("/ai-assistant");
 
   const profile = getIndustryProfile(company.business_sector);
 
