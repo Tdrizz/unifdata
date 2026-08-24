@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { verifyOwned } from "@/lib/security/ownership";
+import { runSweeperBatch } from "@/lib/data-keeper/sweeper";
+import { runDataQualityWorker } from "@/lib/agents/workers/data-quality-worker";
+import { createChatTrace } from "@/lib/observability/tracing";
 
 // Per-tool Zod schemas — validates before any DB write
 
@@ -102,6 +105,58 @@ export async function executeTool(
         });
         if (error) return { success: false, message: `Failed to log sale: ${error.message}` };
         return { success: true, message: `Sale of $${data.amount.toFixed(2)} logged.` };
+      }
+
+      case "scan_workspace": {
+        const sweepResult = await runSweeperBatch(orgId);
+
+        const { data: companyRow } = await supabase
+          .from("companies")
+          .select("id, preferences")
+          .eq("id", orgId)
+          .single();
+        const company = {
+          id: orgId,
+          preferences: (companyRow?.preferences as Record<string, unknown> | null) ?? {},
+        };
+
+        const { data: pendingBefore } = await supabase
+          .from("data_reconciliation_proposals")
+          .select("id")
+          .eq("organization_id", orgId)
+          .eq("status", "pending");
+        const pendingIds = (pendingBefore ?? []).map((r) => r.id as string);
+
+        const ctx = createChatTrace(orgId, `scan-${Date.now()}`);
+        await runDataQualityWorker(company, supabase, ctx);
+
+        let autoApplied = 0;
+        let stillPending = pendingIds.length;
+        if (pendingIds.length > 0) {
+          const { data: after } = await supabase
+            .from("data_reconciliation_proposals")
+            .select("id, status")
+            .in("id", pendingIds);
+          autoApplied = (after ?? []).filter((r) => r.status === "auto_applied").length;
+          stillPending = (after ?? []).filter((r) => r.status === "pending").length;
+        }
+
+        const parts: string[] = [];
+        parts.push(
+          sweepResult.proposed > 0
+            ? `Checked ${sweepResult.processed} records and found ${sweepResult.proposed} potential duplicate${sweepResult.proposed === 1 ? "" : "s"}.`
+            : `Checked ${sweepResult.processed} records — no new duplicates found.`,
+        );
+        if (autoApplied > 0) {
+          parts.push(`Automatically fixed ${autoApplied} of them.`);
+        }
+        parts.push(
+          stillPending > 0
+            ? `${stillPending} still need${stillPending === 1 ? "s" : ""} your review in Data Hub.`
+            : `Nothing left needing review.`,
+        );
+
+        return { success: true, message: parts.join(" ") };
       }
 
       case "flag_for_review": {

@@ -483,8 +483,8 @@ export default function DocsPage() {
                   {[
                     { title: "Outreach drafts", body: "The agent drafts follow-up emails and SMS messages for customers who haven't been contacted recently or have open unpaid work. Each draft includes the AI's reasoning. Approve to send, dismiss to skip." },
                     { title: "Revenue alerts", body: "Surfaces revenue drops, unpaid invoices older than 30 days, and significant changes in pipeline value. Each alert includes the specific records driving the signal." },
-                    { title: "Co-Pilot mode", body: "Default mode. Drafts queue for your approval before anything is sent. Full control over every outreach action." },
-                    { title: "Autopilot mode", body: "Outreach emails and SMS fire automatically without approval. Enable in Settings once the agent pipeline is calibrated to the business." },
+                    { title: "Auto-fix data issues", body: "On by default. Vera merges obvious duplicate contacts and clears junk records on its own, nightly and on demand — nothing customer-facing, nothing sent externally. Anything ambiguous is left in Data Hub for review." },
+                    { title: "Auto-send outreach", body: "Off by default. Outreach emails and SMS fire automatically without approval once enabled in Settings. Until then, drafts queue in the Agent Inbox for you to approve or dismiss." },
                   ].map((item) => (
                     <div key={item.title} className="rounded-[14px] border border-white/10 bg-white/4 p-5">
                       <p className="text-[14px] font-semibold">{item.title}</p>
@@ -495,7 +495,7 @@ export default function DocsPage() {
                 <div className="mt-4 rounded-[12px] border border-ud-accent/30 bg-[#4A3FA8]/10 px-5 py-4">
                   <p className="text-[13px] font-semibold text-ud-accent">Included for everyone</p>
                   <p className="mt-1 text-[13px] leading-[1.65] text-slate-300">
-                    The Agent Inbox, nightly pipeline, autopilot mode, and ROI counter are part of every account. One price, no tiers, no add-ons behind a paywall.
+                    The Agent Inbox, nightly pipeline, both autopilot settings, and ROI counter are part of every account. One price, no tiers, no add-ons behind a paywall.
                   </p>
                 </div>
               </section>

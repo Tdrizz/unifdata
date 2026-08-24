@@ -66,7 +66,7 @@ Live at [unifdata.com](https://unifdata.com).
 /communications        SMS thread inbox
 /automations           Automation rule builder (early access)
 /process               Custom process board (drag-and-drop kanban)
-/settings              Workspace and integration settings (autopilot toggle)
+/settings              Workspace and integration settings (autopilot toggles)
 ```
 
 ### Internal / Cron
@@ -86,13 +86,13 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 ## Key Features
 
 - **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → straight into the workspace. No redirect between steps; stays on the same page.
-- **Vera** — The AI assistant. Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers), plus a nightly pipeline that surfaces outreach drafts and alerts. Persistent chat history across navigation. Rate-limited per tier.
+- **Vera** — The AI assistant. Plain-language chat over live workspace data with tool calling (create follow-ups, update job status, add customers, run an on-demand data cleanup scan), plus a nightly pipeline that surfaces outreach drafts and alerts. Persistent chat history across navigation. Rate-limited (20 requests/day).
 - **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts
   - **Alert formatter** — formats operational signals into inbox cards
-- **Agent Inbox** — Pending drafts and alerts displayed on the workspace dashboard. Each item includes AI reasoning ("No contact in 47 days and $1,200 unpaid invoice"). Pro tier only.
-- **Co-Pilot / Autopilot modes** — Co-Pilot: outreach drafts queue for your approval before sending. Autopilot: emails and SMS fire automatically via Mailgun/Twilio.
+- **Agent Inbox** — Pending drafts and alerts displayed on the workspace dashboard. Each item includes AI reasoning ("No contact in 47 days and $1,200 unpaid invoice").
+- **Two autopilot settings, split by risk** — *Auto-fix data issues* (on by default): Vera merges obvious duplicate contacts and clears junk records on its own, nothing customer-facing. *Auto-send outreach* (off by default, opt-in): outreach emails/SMS fire automatically via Mailgun/Twilio instead of queuing in the Agent Inbox for approval.
 - **ROI Counter** — Tracks recovered revenue from approved outreach actions.
 - **Pipeline / CRM** — Opportunity tracking with lifecycle sync (accepted → job created → revenue tracked)
 - **Imports** — CSV and Google Sheets import with staged review (validate → resolve duplicates → commit)
@@ -101,18 +101,6 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 - **Contacts** — Unified contact view built on master_customers. Synced from all write paths (manual entry, onboarding wizard, CSV import, AI assistant, integrations). Includes activity timeline, notes, linked jobs/sales/follow-ups, and tag/segment filtering.
 - **Communications** — SMS thread inbox. Inbound messages routed via Twilio webhook to matched contacts. Outbound replies sent via Twilio.
 - **Process Board** — Custom drag-and-drop kanban board for tracking any business process. Configurable stages, record values, and contact linking. Boards are created and managed in Settings.
-
----
-
-## Tier Gates
-
-| Feature | Standard | Pro |
-|---------|----------|-----|
-| Vera chat | 5 req/day | 20 req/day |
-| Agent Inbox | Upgrade prompt | Full access |
-| Nightly agent pipeline | — | ✓ |
-| Autopilot mode | — | ✓ |
-| ROI counter | — | ✓ |
 
 ---
 

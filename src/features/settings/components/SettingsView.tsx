@@ -9,6 +9,7 @@ import { InviteMemberForm } from "./InviteMemberForm";
 import { NotificationToggles } from "./NotificationToggles";
 import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { isDataFixAutopilot, isOutreachAutopilot } from "@/lib/feature-gates";
 import { AiSettingsToggles } from "./AiSettingsToggles";
 import { MonthlyGoalForm } from "./MonthlyGoalForm";
 import { TagsSettings, type TagItem } from "./TagsSettings";
@@ -213,7 +214,8 @@ export function SettingsView({
             <p className="text-[12px] text-ud-muted">Control how the AI operates across your workspace.</p>
           </div>
           <AiSettingsToggles
-            autopilot={company.preferences?.autopilot === true}
+            autopilotDataFixes={isDataFixAutopilot(company)}
+            autopilotOutreach={isOutreachAutopilot(company)}
           />
         </div>
 

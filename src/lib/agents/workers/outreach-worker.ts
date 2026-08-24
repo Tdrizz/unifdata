@@ -2,7 +2,7 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
-import { isAutopilot } from "@/lib/feature-gates";
+import { isOutreachAutopilot } from "@/lib/feature-gates";
 import { buildOutreachPrompt, buildOutreachUserMessage } from "@/lib/ai/prompts";
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
@@ -126,7 +126,7 @@ export async function runOutreachWorker(
     customer_name: payload.customer_name ?? "",
   };
 
-  if (isAutopilot(company)) {
+  if (isOutreachAutopilot(company)) {
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
     const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;

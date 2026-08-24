@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
-import { isAutopilot } from "@/lib/feature-gates";
+import { isDataFixAutopilot } from "@/lib/feature-gates";
 import { buildDataQualityPrompt, buildDataQualityUserMessage } from "@/lib/ai/prompts";
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
@@ -67,7 +67,7 @@ export async function runDataQualityWorker(
   const autoApprove = decisions.filter((d) => d.action === "AUTO_APPROVE").map((d) => d.proposal_id);
   const autoIgnore = decisions.filter((d) => d.action === "AUTO_IGNORE").map((d) => d.proposal_id);
 
-  if (isAutopilot(company)) {
+  if (isDataFixAutopilot(company)) {
     if (autoApprove.length > 0) {
       await supabase
         .from("data_reconciliation_proposals")
