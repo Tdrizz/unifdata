@@ -301,7 +301,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
               >
                 <VeraDraftCard
                   draft={draft}
-                  href={getDraftHref(draft) ?? undefined}
+                  href={getDraftHref(draft)}
                   onApprove={() => handleApproveDraft(draft.id)}
                   onDismiss={() => handleDismissDraft(draft.id)}
                 />
@@ -319,7 +319,7 @@ export function MobileAiView({ initialMessages = [], initialSessionId = null, dr
               >
                 <VeraAlertCard
                   alert={alert}
-                  href={getAlertHref(alert) ?? undefined}
+                  href={getAlertHref(alert)}
                   onDismiss={() => handleDismissAlert(alert.id)}
                 />
               </div>

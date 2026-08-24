@@ -384,7 +384,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                 >
                   <VeraDraftCard
                     draft={draft}
-                    href={getDraftHref(draft) ?? undefined}
+                    href={getDraftHref(draft)}
                     onApprove={() => handleApproveDraft(draft.id)}
                     onDismiss={() => handleDismissDraft(draft.id)}
                   />
@@ -402,7 +402,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                 >
                   <VeraAlertCard
                     alert={alert}
-                    href={getAlertHref(alert) ?? undefined}
+                    href={getAlertHref(alert)}
                     onDismiss={() => handleDismissAlert(alert.id)}
                   />
                 </div>
