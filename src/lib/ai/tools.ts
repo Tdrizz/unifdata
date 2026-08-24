@@ -82,6 +82,18 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "scan_workspace",
+      description:
+        "Scans the workspace for duplicate contacts and other data quality issues right now, instead of waiting for the nightly run. Automatically merges obvious duplicates and clears junk records if auto-fix is enabled in Settings; anything ambiguous is left for manual review in Data Hub. Use this when the user asks to clean up, dedupe, or check their data.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "flag_for_review",
       description: "Marks a record with a review flag and reason.",
       parameters: {

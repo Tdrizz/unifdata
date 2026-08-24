@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { updatePreferencesAction } from "../actions";
 
 type Props = {
-  autopilot: boolean;
+  autopilotDataFixes: boolean;
+  autopilotOutreach: boolean;
 };
 
 function Toggle({
@@ -36,51 +37,76 @@ function Toggle({
   );
 }
 
-export function AiSettingsToggles({ autopilot }: Props) {
-  const [autopilotEnabled, setAutopilotEnabled] = useState(autopilot);
-  const [confirmingAutopilot, setConfirmingAutopilot] = useState(false);
+export function AiSettingsToggles({ autopilotDataFixes, autopilotOutreach }: Props) {
+  const [dataFixesEnabled, setDataFixesEnabled] = useState(autopilotDataFixes);
+  const [outreachEnabled, setOutreachEnabled] = useState(autopilotOutreach);
+  const [confirmingOutreach, setConfirmingOutreach] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleAutopilotToggle(value: boolean) {
-    if (value && !confirmingAutopilot) {
-      setConfirmingAutopilot(true);
+  function handleDataFixesToggle(value: boolean) {
+    setDataFixesEnabled(value);
+    startTransition(() => {
+      updatePreferencesAction("autopilot_data_fixes", value).catch(() => {
+        setDataFixesEnabled(!value);
+      });
+    });
+  }
+
+  function handleOutreachToggle(value: boolean) {
+    if (value && !confirmingOutreach) {
+      setConfirmingOutreach(true);
       return;
     }
-    setConfirmingAutopilot(false);
-    setAutopilotEnabled(value);
+    setConfirmingOutreach(false);
+    setOutreachEnabled(value);
     startTransition(() => {
-      updatePreferencesAction("autopilot", value).catch(() => {
-        setAutopilotEnabled(!value);
+      updatePreferencesAction("autopilot_outreach", value).catch(() => {
+        setOutreachEnabled(!value);
       });
     });
   }
 
   return (
     <div className="flex flex-col gap-0">
-      {/* Autopilot */}
+      {/* Data-fix autopilot */}
+      <div className="flex items-center justify-between py-3 border-b border-[rgba(0,0,0,0.04)] gap-4">
+        <div className="flex-1">
+          <p className="text-[13px] font-medium text-ud-ink">Auto-fix data issues</p>
+          <p className="text-[12px] text-ud-muted mt-[1px]">
+            Vera merges obvious duplicates and clears junk records on its own. Only touches your own data — nothing sent to customers. On by default.
+          </p>
+        </div>
+        <Toggle
+          enabled={dataFixesEnabled}
+          onChange={handleDataFixesToggle}
+          disabled={pending}
+        />
+      </div>
+
+      {/* Outreach autopilot */}
       <div className="flex items-center justify-between py-3 gap-4">
         <div className="flex-1">
-          <p className="text-[13px] font-medium text-ud-ink">Autopilot mode</p>
+          <p className="text-[13px] font-medium text-ud-ink">Auto-send outreach</p>
           <p className="text-[12px] text-ud-muted mt-[1px]">
-            Routine outreach and data fixes execute automatically without approval.
+            Follow-up emails and texts to customers send automatically instead of waiting for your approval.
           </p>
-          {confirmingAutopilot && (
+          {confirmingOutreach && (
             <div className="mt-2 p-3 rounded-[8px] border border-[rgba(234,179,8,0.3)] bg-[rgba(234,179,8,0.06)] text-[12px] text-ud-ink">
-              <p className="font-semibold mb-2">Enable autopilot?</p>
-              <p className="text-ud-muted mb-3">Routine outreach reminders and data reconciliation will execute automatically without your approval. Destructive actions always require manual review.</p>
+              <p className="font-semibold mb-2">Enable auto-send?</p>
+              <p className="text-ud-muted mb-3">Outreach emails and texts will go out to your customers automatically, with no approval step. You can turn this off any time.</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   className="inline-flex items-center px-3 py-1.5 rounded-[7px] bg-ud-accent text-white text-[12px] font-semibold hover:opacity-90 transition-opacity"
-                  onClick={() => handleAutopilotToggle(true)}
+                  onClick={() => handleOutreachToggle(true)}
                   disabled={pending}
                 >
-                  Enable autopilot
+                  Enable auto-send
                 </button>
                 <button
                   type="button"
                   className="inline-flex items-center px-3 py-1.5 rounded-[7px] border border-ud text-ud-muted text-[12px] font-semibold hover:text-ud-ink transition-colors"
-                  onClick={() => setConfirmingAutopilot(false)}
+                  onClick={() => setConfirmingOutreach(false)}
                 >
                   Cancel
                 </button>
@@ -88,10 +114,10 @@ export function AiSettingsToggles({ autopilot }: Props) {
             </div>
           )}
         </div>
-        {!confirmingAutopilot && (
+        {!confirmingOutreach && (
           <Toggle
-            enabled={autopilotEnabled}
-            onChange={handleAutopilotToggle}
+            enabled={outreachEnabled}
+            onChange={handleOutreachToggle}
             disabled={pending}
           />
         )}

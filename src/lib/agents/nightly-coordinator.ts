@@ -8,6 +8,7 @@ import { runDataQualityWorker } from "./workers/data-quality-worker";
 import { runAlertFormatterWorker } from "./workers/alert-formatter-worker";
 import { runChurnSignalAgent } from "./customer-health-agent";
 import { createNightlyTrace, startSpan, endSpan, flushLangfuse } from "@/lib/observability/tracing";
+import { isOutreachAutopilot } from "@/lib/feature-gates";
 
 export async function runNightlyCoordinator(orgId: string): Promise<void> {
   const supabase = createAdminClient();
@@ -118,8 +119,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
     agent_name: "nightly-coordinator",
     signals_checked: 6,
     events_fired: eventsFireable,
-    autopilot:
-      (company.preferences as Record<string, unknown> | null)?.autopilot === true,
+    autopilot: isOutreachAutopilot(company as { preferences?: Record<string, unknown> }),
     error: runError ?? null,
     assessment,
   });
