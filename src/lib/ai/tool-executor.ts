@@ -45,6 +45,7 @@ const CreateLeadSchema = z.object({
   service_requested: z.string().min(1).max(200),
   estimated_value: z.number().min(0).optional(),
   status: z.enum(LEAD_STATUSES).optional(),
+  source: z.string().max(100).optional(),
 });
 
 const UpdateLeadStatusSchema = z.object({
@@ -77,6 +78,7 @@ const LogSaleSchema = z.object({
   amount: z.number().positive(),
   service_type: z.string().min(1).max(200),
   payment_status: z.enum(SALE_PAYMENT_STATUSES),
+  source: z.string().max(100).optional(),
 });
 
 const UpdateSalePaymentStatusSchema = z.object({
@@ -180,6 +182,7 @@ export async function executeTool(
             service_requested: data.service_requested,
             estimated_value: data.estimated_value ?? null,
             status,
+            source: data.source ?? null,
           })
           .select("id")
           .single();
@@ -353,6 +356,7 @@ export async function executeTool(
           service_type: data.service_type,
           payment_status: data.payment_status,
           sale_date: new Date().toISOString().slice(0, 10),
+          source: data.source ?? null,
         });
         if (error) return { success: false, message: `Failed to log sale: ${error.message}` };
         return { success: true, message: `Sale of $${data.amount.toFixed(2)} logged.` };
@@ -396,7 +400,7 @@ export async function executeTool(
         }
         const { error } = await supabase
           .from("follow_ups")
-          .update({ status: "Complete" })
+          .update({ status: "Complete", completed_at: new Date().toISOString() })
           .eq("id", data.followup_id)
           .eq("company_id", orgId);
         if (error) return { success: false, message: `Failed to update follow-up: ${error.message}` };
