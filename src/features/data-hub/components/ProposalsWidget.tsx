@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { ProposalRow, FieldDelta } from "@/lib/data-keeper/types";
 
 type Props = {
@@ -18,11 +19,11 @@ function FieldDiffRow({ field, from, to }: { field: string; from: unknown; to: u
   const toStr = to === null || to === undefined || to === "" ? "(empty)" : String(to);
 
   return (
-    <div className="queue-meta" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-      <span style={{ fontWeight: 500, minWidth: "90px" }}>{label}:</span>
-      <span style={{ opacity: 0.55, textDecoration: "line-through" }}>{fromStr}</span>
-      <span style={{ opacity: 0.4 }}>→</span>
-      <span style={{ fontWeight: 500 }}>{toStr}</span>
+    <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-relaxed">
+      <span className="font-medium text-ud-muted min-w-[80px]">{label}:</span>
+      <span className="text-ud-faint line-through">{fromStr}</span>
+      <span className="text-ud-faint">→</span>
+      <span className="font-medium text-ud-ink">{toStr}</span>
     </div>
   );
 }
@@ -35,83 +36,74 @@ function ProposalRow({
   onRemove: (id: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [actError, setActError] = useState<string | null>(null);
   const updates = (proposal.proposed_changes?.updates ?? {}) as FieldDelta;
   const hasDiff = Object.keys(updates).length > 0;
 
   async function act(action: "approve" | "reject") {
     setBusy(true);
-    setActError(null);
     try {
       const res = await fetch(`/api/v1/proposals/${proposal.id}/${action}`, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { error?: string };
-        setActError(body.error ?? "Action failed. Please try again.");
+        toast.error(body.error ?? "Action failed. Try again.");
         setBusy(false);
         return;
       }
+      toast.success(action === "approve" ? "Suggestion applied" : "Suggestion dismissed");
       onRemove(proposal.id);
     } catch {
-      setActError("Network error. Please try again.");
+      toast.error("Network error. Try again.");
       setBusy(false);
     }
   }
 
   return (
-    <div className="queue-item">
-      <div className="queue-dot queue-dot-warning" />
-      <div className="queue-body" style={{ flex: 1 }}>
-        <div className="queue-action" style={{ marginBottom: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className="px-4 py-[14px] border-b border-ud-soft last:border-0">
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <span className="text-[12.5px] font-semibold text-ud-ink">
           {Math.round(proposal.confidence_score * 100)}% confidence match
-          {proposal.target_table === "master_customers" && proposal.target_record_id && (
-            <Link
-              href={`/customers/${proposal.target_record_id}`}
-              style={{ fontSize: "12px", fontWeight: 500, textDecoration: "underline" }}
-            >
-              View contact
-            </Link>
-          )}
-        </div>
-
-        {hasDiff && (
-          <div style={{ marginBottom: "6px" }}>
-            {Object.entries(updates)
-              .filter(([f]) => !f.startsWith("metadata."))
-              .slice(0, 4)
-              .map(([field, change]) => (
-                <FieldDiffRow
-                  key={field}
-                  field={field}
-                  from={change.from}
-                  to={change.to}
-                />
-              ))}
-          </div>
-        )}
-
-        <div className="queue-meta" style={{ fontStyle: "italic" }}>
-          {proposal.raw_reasoning.length > 160
-            ? proposal.raw_reasoning.slice(0, 157) + "…"
-            : proposal.raw_reasoning}
-        </div>
-        {actError && (
-          <div style={{ marginTop: "6px", fontSize: "12px", color: "#dc2626" }}>{actError}</div>
+        </span>
+        {proposal.target_table === "master_customers" && proposal.target_record_id && (
+          <Link
+            href={`/customers/${proposal.target_record_id}`}
+            className="text-[12px] font-medium text-ud-accent hover:underline"
+          >
+            View contact
+          </Link>
         )}
       </div>
 
-      <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+      {hasDiff && (
+        <div className="space-y-1 mb-2.5">
+          {Object.entries(updates)
+            .filter(([f]) => !f.startsWith("metadata."))
+            .slice(0, 4)
+            .map(([field, change]) => (
+              <FieldDiffRow key={field} field={field} from={change.from} to={change.to} />
+            ))}
+        </div>
+      )}
+
+      <p className="text-[12px] text-ud-muted italic leading-relaxed mb-3">
+        {proposal.raw_reasoning.length > 160
+          ? proposal.raw_reasoning.slice(0, 157) + "…"
+          : proposal.raw_reasoning}
+      </p>
+
+      <div className="flex gap-2">
         <button
-          className="btn btn-ghost btn-sm"
+          type="button"
           onClick={() => act("approve")}
           disabled={busy}
+          className="rounded-[8px] bg-ud-accent px-3 py-[7px] text-[12px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          Apply
+          {busy ? "Applying…" : "Apply"}
         </button>
         <button
-          className="btn btn-ghost btn-sm"
+          type="button"
           onClick={() => act("reject")}
           disabled={busy}
-          style={{ opacity: 0.6 }}
+          className="rounded-[8px] border border-ud px-3 py-[7px] text-[12px] font-semibold text-ud-muted transition-colors hover:border-ud-hard hover:text-ud-ink disabled:opacity-40"
         >
           Dismiss
         </button>
@@ -130,29 +122,15 @@ export function ProposalsWidget({ initialProposals }: Props) {
   if (proposals.length === 0) return null;
 
   return (
-    <div className="card" style={{ marginBottom: "20px" }}>
-      <div className="card-header">
-        <div>
-          <div className="card-title">
-            Suggestions pending review
-            <span
-              style={{
-                marginLeft: "8px",
-                background: "var(--color-warning, #f59e0b)",
-                color: "#fff",
-                borderRadius: "10px",
-                padding: "1px 7px",
-                fontSize: "11px",
-                fontWeight: 600,
-              }}
-            >
-              {proposals.length}
-            </span>
-          </div>
-          <div className="card-desc">
-            Review and apply or dismiss each suggestion below.
-          </div>
+    <div className="mx-4 md:mx-0 mb-5 bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
+      <div className="px-4 py-[14px] border-b border-ud-soft">
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-semibold text-ud-ink">Suggestions pending review</p>
+          <span className="shrink-0 rounded-full bg-ud-warning px-2 py-[1px] text-[11px] font-semibold text-white">
+            {proposals.length}
+          </span>
         </div>
+        <p className="text-[12px] text-ud-muted mt-0.5">Review and apply or dismiss each suggestion below.</p>
       </div>
       <div>
         {proposals.map((p) => (
