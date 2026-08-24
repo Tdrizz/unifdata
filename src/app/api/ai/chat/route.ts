@@ -255,6 +255,7 @@ export async function POST(request: Request) {
     }),
     ...(sales.length > 0 && {
       [profile.labels.salePlural]: sales.slice(0, 50).map((s) => ({
+        id: s.id,
         service: compactText(s.service_type, "Revenue record"),
         amount: Number(s.amount || 0),
         paymentStatus: compactText(s.payment_status),
@@ -263,6 +264,7 @@ export async function POST(request: Request) {
     }),
     ...(followUps.length > 0 && {
       [profile.labels.followUpPlural]: followUps.slice(0, 50).map((f) => ({
+        id: f.id,
         message: compactText(f.message, "Follow up"),
         linkedTo: anonymizeName(customerById.get(f.contact_id ?? "")?.name),
         status: compactText(f.status, "Open"),
