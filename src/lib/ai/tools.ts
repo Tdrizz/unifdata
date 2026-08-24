@@ -167,11 +167,12 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "create_followup",
-      description: "Creates a follow-up task linked to a customer with a due date and note.",
+      description:
+        "Creates a follow-up task, optionally linked to a customer, with a due date and note. If you can't confidently resolve which existing customer the user means, leave customer_id unset rather than guessing or creating a new contact — ask the user to clarify separately.",
       parameters: {
         type: "object",
         properties: {
-          customer_id: { type: "string", description: "UUID of the customer record" },
+          customer_id: { type: "string", description: "UUID of the customer record (optional)" },
           due_date: { type: "string", description: "ISO 8601 date string (YYYY-MM-DD)" },
           note: { type: "string", description: "Follow-up note or message" },
           type: {
@@ -180,7 +181,7 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
             description: "Type of follow-up",
           },
         },
-        required: ["customer_id", "due_date", "note"],
+        required: ["due_date", "note"],
       },
     },
   },
