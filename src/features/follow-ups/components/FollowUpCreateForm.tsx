@@ -1,19 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ContactForSelect } from "@/lib/crm/types";
 import type { LeadRow } from "../types";
 import { createFollowUpAction, type ActionState } from "../actions";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
 type Props = {
-  people: ContactForSelect[];
   leads?: Pick<LeadRow, "id" | "service_requested" | "status">[];
 };
 
-export function FollowUpCreateForm({ people, leads = [] }: Props) {
+export function FollowUpCreateForm({ leads = [] }: Props) {
   const [state, formAction] = useActionState<ActionState, FormData>(createFollowUpAction, null);
 
   return (
@@ -31,14 +30,7 @@ export function FollowUpCreateForm({ people, leads = [] }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
             <span className="block text-xs font-semibold text-ud-muted">Link to person or business</span>
-            <select name="contact_id" className={f}>
-              <option value="">No linked person yet</option>
-              {people.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.name || person.email || person.phone || "Unnamed person"}
-                </option>
-              ))}
-            </select>
+            <ContactCombobox name="contact_id" className={f} />
           </label>
           {leads.length > 0 && (
             <label className="block">

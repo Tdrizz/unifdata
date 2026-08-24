@@ -74,22 +74,3 @@ export async function getLeadsForFollowUpSelect(
 
   return (data ?? []) as Pick<LeadRow, "id" | "service_requested" | "status">[];
 }
-
-export async function getCustomersForSelect(
-  supabase: SupabaseClient,
-  companyId: string,
-): Promise<ContactForSelect[]> {
-  const { data } = await supabase
-    .from("master_customers")
-    .select("id, first_name, last_name, primary_email, primary_phone")
-    .eq("organization_id", companyId)
-    .order("first_name", { ascending: true })
-    .limit(500);
-
-  return ((data ?? []) as Array<{ id: string; first_name: string; last_name: string | null; primary_email: string | null; primary_phone: string | null }>).map((r) => ({
-    id: r.id,
-    name: [r.first_name, r.last_name].filter(Boolean).join(" "),
-    email: r.primary_email,
-    phone: r.primary_phone,
-  }));
-}
