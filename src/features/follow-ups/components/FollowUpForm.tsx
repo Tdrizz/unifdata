@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Select } from "@/components/ui/Input";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { formatDateOnly, formatTimestampDate, parseDateOnly, getTodayDateOnly } from "@/lib/date-format";
 import { getActionTone } from "@/lib/status";
@@ -19,7 +20,7 @@ import type { ContactForSelect } from "@/lib/crm/types";
 
 type Props = {
   followUp: FollowUpRow;
-  people: ContactForSelect[];
+  linkedContact: ContactForSelect | null;
   leads?: Pick<LeadRow, "id" | "service_requested" | "status">[];
   profile: IndustryProfile;
   errorParam?: string;
@@ -98,13 +99,9 @@ function getActionIssues(action: FollowUpRow) {
   return issues;
 }
 
-export function FollowUpForm({ followUp, people, leads = [], profile: _profile }: Props) {
+export function FollowUpForm({ followUp, linkedContact, leads = [], profile: _profile }: Props) {
   const boundUpdateAction = updateFollowUpAction.bind(null, followUp.id);
   const deleteAction = deleteFollowUpAction.bind(null, followUp.id);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const followUpContactId = (followUp as any).contact_id ?? followUp.customer_id;
-  const linkedPerson = followUpContactId ? people.find((p) => p.id === followUpContactId) : null;
   const issues = getActionIssues(followUp);
 
   const [state, formAction] = useActionState<ActionState, FormData>(
@@ -128,14 +125,11 @@ export function FollowUpForm({ followUp, people, leads = [], profile: _profile }
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
-                <Select name="contact_id" defaultValue={followUpContactId || ""}>
-                  <option value="">No linked person yet</option>
-                  {people.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.name || person.email || person.phone || "Unnamed person"}
-                    </option>
-                  ))}
-                </Select>
+                <ContactCombobox
+                  name="contact_id"
+                  defaultValue={linkedContact?.id}
+                  defaultLabel={linkedContact?.name}
+                />
               </FormField>
               {leads.length > 0 && (
                 <FormField label="Link to opportunity">
@@ -227,10 +221,10 @@ export function FollowUpForm({ followUp, people, leads = [], profile: _profile }
 
               <SummaryCard
                 label="Linked person"
-                value={linkedPerson?.name || "No person linked"}
+                value={linkedContact?.name || "No person linked"}
                 helper={
-                  linkedPerson?.email ||
-                  linkedPerson?.phone ||
+                  linkedContact?.email ||
+                  linkedContact?.phone ||
                   "Connect this follow-up to a person or business."
                 }
               />

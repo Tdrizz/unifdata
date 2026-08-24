@@ -226,7 +226,7 @@ export function FollowUpsView({ followUps, opportunities, people, profile, count
 
       {/* Quick add */}
       <div id="followup-quick-add" style={{ marginTop: "20px" }}>
-        <FollowUpCreateForm people={people} leads={opportunities} />
+        <FollowUpCreateForm leads={opportunities} />
       </div>
     </div>
   );
