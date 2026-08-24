@@ -18,6 +18,7 @@ type Draft = {
   action_label?: string | null;
   reasoning?: string | null;
   escalation_level?: number | null;
+  record_id?: string | null;
 };
 
 type Alert = {
@@ -28,6 +29,7 @@ type Alert = {
   body: string;
   reasoning?: string | null;
   escalation_level?: number | null;
+  record_id?: string | null;
 };
 
 export default async function VeraPage() {
@@ -57,14 +59,14 @@ export default async function VeraPage() {
   const [draftsResult, alertsResult] = await Promise.all([
     supabase
       .from("agent_drafts")
-      .select("id, draft_type, subject, body, action_label, reasoning, escalation_level")
+      .select("id, draft_type, subject, body, action_label, reasoning, escalation_level, record_id")
       .eq("organization_id", company.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(10),
     supabase
       .from("agent_alerts")
-      .select("id, alert_type, severity, title, body, reasoning, escalation_level")
+      .select("id, alert_type, severity, title, body, reasoning, escalation_level, record_id")
       .eq("organization_id", company.id)
       .eq("status", "unread")
       .order("created_at", { ascending: false })

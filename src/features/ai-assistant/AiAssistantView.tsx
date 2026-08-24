@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/Button";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 
 export type Draft = {
   id: string;
@@ -18,6 +19,7 @@ export type Draft = {
   action_label?: string | null;
   reasoning?: string | null;
   escalation_level?: number | null;
+  record_id?: string | null;
 };
 
 export type Alert = {
@@ -28,6 +30,7 @@ export type Alert = {
   body: string;
   reasoning?: string | null;
   escalation_level?: number | null;
+  record_id?: string | null;
 };
 
 type Message = {
@@ -381,6 +384,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                 >
                   <VeraDraftCard
                     draft={draft}
+                    href={getDraftHref(draft) ?? undefined}
                     onApprove={() => handleApproveDraft(draft.id)}
                     onDismiss={() => handleDismissDraft(draft.id)}
                   />
@@ -398,6 +402,7 @@ export function AiAssistantView({ initialMessages = [], initialSessionId = null,
                 >
                   <VeraAlertCard
                     alert={alert}
+                    href={getAlertHref(alert) ?? undefined}
                     onDismiss={() => handleDismissAlert(alert.id)}
                   />
                 </div>

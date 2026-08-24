@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
+import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 import {
   formatDateOnly,
   parseDateOnly,
@@ -68,8 +69,8 @@ function getGreeting() {
   return "Good evening";
 }
 
-type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null };
-type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string };
+type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
+type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
 type Props = WorkspaceData & {
   profile: IndustryProfile;
   companyName: string;
@@ -330,7 +331,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <VeraDraftCard
                   key={entry.item.id}
                   draft={entry.item}
-                  href={`/vera?item=draft-${entry.item.id}`}
+                  href={getDraftHref(entry.item) ?? `/vera?item=draft-${entry.item.id}`}
                   onApprove={() => handleApproveDraft(entry.item.id)}
                   onDismiss={() => handleDismissDraft(entry.item.id)}
                 />
@@ -338,7 +339,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 <VeraAlertCard
                   key={entry.item.id}
                   alert={entry.item}
-                  href={`/vera?item=alert-${entry.item.id}`}
+                  href={getAlertHref(entry.item) ?? `/vera?item=alert-${entry.item.id}`}
                   onDismiss={() => handleDismissAlert(entry.item.id)}
                 />
               ),
