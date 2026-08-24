@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
+import { ColorPickers } from "@/components/settings/ColorPickers";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
@@ -16,6 +18,7 @@ import { TagsSettings, type TagItem } from "./TagsSettings";
 import { CustomFieldsSettings, type CustomFieldDef } from "./CustomFieldsSettings";
 import { ProcessBoardsSettings, type Board } from "./ProcessBoardsSettings";
 import { LabelsSettings } from "./LabelsSettings";
+import { getStatusTone, getStatusLabel } from "../status-helpers";
 
 interface Company {
   id: string;
@@ -23,6 +26,8 @@ interface Company {
   business_sector: string;
   tier?: string;
   preferences?: Record<string, unknown>;
+  brand_color: string;
+  accent_color: string;
 }
 
 interface User {
@@ -64,8 +69,8 @@ const btnInk = "inline-flex items-center gap-1.5 whitespace-nowrap font-semibold
 export function SettingsView({
   company,
   user,
-  integrations: _integrations,
-  geminiEnabled: _geminiEnabled,
+  integrations,
+  geminiEnabled,
   members,
   currentUserRole,
   notificationPrefs,
@@ -77,6 +82,10 @@ export function SettingsView({
   profileOverrides,
   defaultLabels,
 }: SettingsViewProps) {
+  const googleIntegration = integrations.find((integration) =>
+    String(integration.provider || "").toLowerCase().includes("google"),
+  );
+
   return (
     <div className="px-8 pt-7 pb-12">
       <PageHeader
@@ -113,6 +122,16 @@ export function SettingsView({
                 </select>
               </div>
             </div>
+
+            <div className="rounded-[10px] border border-ud bg-ud-surface-soft p-4 mb-4">
+              <p className="text-[13px] font-semibold text-ud-ink mb-1">Appearance</p>
+              <p className="text-[12px] text-ud-muted mb-3">Pick the colors used for workspace branding and accents.</p>
+              <ColorPickers
+                defaultBrandColor={company.brand_color}
+                defaultAccentColor={company.accent_color}
+              />
+            </div>
+
             <div style={{ display: "flex", gap: "8px" }}>
               <Button type="reset" variant="secondary" size="md">Cancel</Button>
               <button type="submit" className={btnInk}>Save changes</button>
@@ -155,6 +174,32 @@ export function SettingsView({
             <p className="text-[12px] text-ud-muted">Control what triggers an in-app notification.</p>
           </div>
           <NotificationToggles initialPrefs={notificationPrefs} />
+        </div>
+
+        {/* Launch tools */}
+        <div className="py-[26px] border-b border-ud">
+          <div className="mb-[18px]">
+            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Launch tools</p>
+            <p className="text-[12px] text-ud-muted">Status for the tools UnifData uses.</p>
+          </div>
+          <div className="flex items-center justify-between gap-3 py-3 border-b border-[rgba(0,0,0,0.04)]">
+            <div>
+              <p className="text-[13px] font-medium text-ud-ink">Data matching</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">Powers customer-matching embeddings for the Data Keeper.</p>
+            </div>
+            <StatusBadge tone={geminiEnabled ? "success" : "warning"}>
+              {geminiEnabled ? "Enabled" : "Missing key"}
+            </StatusBadge>
+          </div>
+          <div className="flex items-center justify-between gap-3 py-3">
+            <div>
+              <p className="text-[13px] font-medium text-ud-ink">Google Sheets</p>
+              <p className="text-[12px] text-ud-muted mt-[1px]">Used for spreadsheet imports.</p>
+            </div>
+            <StatusBadge tone={googleIntegration ? getStatusTone(googleIntegration.status) : "neutral"}>
+              {googleIntegration ? getStatusLabel(googleIntegration.status) : "Not connected"}
+            </StatusBadge>
+          </div>
         </div>
 
         {/* Integrations moved to /imports */}

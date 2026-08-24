@@ -4,9 +4,20 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { businessSectorOptions as businessSectorGroups } from "@/lib/industry-profiles";
 import { ColorPickers } from "@/components/settings/ColorPickers";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
-import { updateWorkspaceAction, signOutAction, removeMember } from "../actions";
+import { LogoutButton } from "@/components/LogoutButton";
+import { updateWorkspaceAction, removeMember } from "../actions";
 import type { SettingsIntegration } from "../types";
 import { InviteMemberForm } from "./InviteMemberForm";
+import { NotificationToggles } from "./NotificationToggles";
+import { DeleteWorkspaceModal } from "./DeleteWorkspaceModal";
+import { isDataFixAutopilot, isOutreachAutopilot } from "@/lib/feature-gates";
+import { AiSettingsToggles } from "./AiSettingsToggles";
+import { MonthlyGoalForm } from "./MonthlyGoalForm";
+import { TagsSettings, type TagItem } from "./TagsSettings";
+import { CustomFieldsSettings, type CustomFieldDef } from "./CustomFieldsSettings";
+import { ProcessBoardsSettings, type Board } from "./ProcessBoardsSettings";
+import { LabelsSettings } from "./LabelsSettings";
+import { getStatusTone, getStatusLabel } from "../status-helpers";
 
 interface Company {
   id: string;
@@ -14,6 +25,7 @@ interface Company {
   business_sector: string;
   brand_color: string;
   accent_color: string;
+  preferences?: Record<string, unknown>;
 }
 
 interface User {
@@ -27,44 +39,27 @@ interface MobileSettingsViewProps {
   geminiEnabled: boolean;
   members: Array<{ user_id: string; role: string; profiles: { full_name: string | null } | null }>;
   currentUserRole: string | null;
-}
-
-function titleCase(value: string | null) {
-  const text = String(value || "")
-    .replace(/_/g, " ")
-    .trim();
-
-  if (!text) {
-    return "";
-  }
-
-  return text.replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function getStatusTone(status: string | null) {
-  const normalized = String(status || "").toLowerCase();
-
-  if (normalized.includes("active") || normalized.includes("connected")) {
-    return "success" as const;
-  }
-
-  if (
-    normalized.includes("failed") ||
-    normalized.includes("error") ||
-    normalized.includes("expired")
-  ) {
-    return "danger" as const;
-  }
-
-  if (normalized.includes("pending")) {
-    return "warning" as const;
-  }
-
-  return "neutral" as const;
-}
-
-function getStatusLabel(status: string | null) {
-  return titleCase(status) || "Not connected";
+  notificationPrefs: Record<string, boolean>;
+  currentMonthRevenue?: number;
+  tags: TagItem[];
+  contactFields: CustomFieldDef[];
+  recordFields: CustomFieldDef[];
+  boards: Board[];
+  profileOverrides: Record<string, string>;
+  defaultLabels: {
+    customerSingular: string;
+    customerPlural: string;
+    jobSingular: string;
+    jobPlural: string;
+    pipelineLabel: string;
+    recordLabel: string;
+    recordPlural: string;
+    completedLabel: string;
+    cancelledLabel: string;
+    valueLabel: string;
+    activeStatusLabel: string;
+    inactiveStatusLabel: string;
+  };
 }
 
 export function MobileSettingsView({
@@ -74,6 +69,14 @@ export function MobileSettingsView({
   geminiEnabled,
   members,
   currentUserRole,
+  notificationPrefs,
+  currentMonthRevenue,
+  tags,
+  contactFields,
+  recordFields,
+  boards,
+  profileOverrides,
+  defaultLabels,
 }: MobileSettingsViewProps) {
   const googleIntegration = integrations.find((integration) =>
     String(integration.provider || "")
@@ -172,14 +175,18 @@ export function MobileSettingsView({
             <p className="mt-1 text-[14px] font-semibold text-ud-ink">{company.name}</p>
           </div>
 
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="w-full rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft"
-            >
-              Sign out
-            </button>
-          </form>
+          <LogoutButton className="w-full rounded-[10px] border border-ud bg-ud-surface px-[16px] py-[9px] text-[13.5px] font-semibold text-ud-ink hover:bg-ud-surface-soft" />
+        </div>
+      </div>
+
+      {/* Notifications card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Notifications</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Control what triggers an in-app notification.</p>
+        </div>
+        <div className="p-[22px]">
+          <NotificationToggles initialPrefs={notificationPrefs} />
         </div>
       </div>
 
@@ -275,6 +282,112 @@ export function MobileSettingsView({
             ))}
           </div>
           {currentUserRole === "owner" && <InviteMemberForm />}
+        </div>
+      </div>
+
+      {/* Plan card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Plan</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Your current subscription and features.</p>
+        </div>
+        <div className="p-[22px]">
+          <div className="flex items-center justify-between rounded-[10px] border border-[rgba(74,63,168,0.18)] bg-[rgba(74,63,168,0.04)] px-4 py-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[13px] font-semibold text-ud-ink">UnifData</p>
+                <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-accent text-white">Active</span>
+              </div>
+              <p className="mt-1 text-[12.5px] text-ud-muted">$100/mo · Everything included — Vera, CRM, integrations, and imports</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI settings card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">AI settings</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Control how the AI operates across your workspace.</p>
+        </div>
+        <div className="p-[22px]">
+          <AiSettingsToggles
+            autopilotDataFixes={isDataFixAutopilot(company)}
+            autopilotOutreach={isOutreachAutopilot(company)}
+          />
+        </div>
+      </div>
+
+      {/* Revenue goal card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Revenue goal</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Set a monthly target so the AI can track your progress and flag shortfalls early.</p>
+        </div>
+        <div className="p-[22px]">
+          <MonthlyGoalForm
+            currentGoal={company.preferences?.monthly_revenue_goal as number | undefined}
+            currentMonthRevenue={currentMonthRevenue}
+          />
+        </div>
+      </div>
+
+      {/* Tags card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Tags</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Organize contacts with color-coded labels.</p>
+        </div>
+        <div className="p-[22px]">
+          <TagsSettings orgId={company.id} initialTags={tags} />
+        </div>
+      </div>
+
+      {/* Custom fields card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Custom fields</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Add extra data fields to contacts and process records.</p>
+        </div>
+        <div className="p-[22px]">
+          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} recordFields={recordFields} />
+        </div>
+      </div>
+
+      {/* Process boards card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Process boards</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Define the stages records move through in your workflow.</p>
+        </div>
+        <div className="p-[22px]">
+          <ProcessBoardsSettings orgId={company.id} boards={boards} />
+        </div>
+      </div>
+
+      {/* Labels card */}
+      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-ud">
+          <p className="text-[14.5px] font-semibold text-ud-ink">Labels</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Customize terminology used across your workspace.</p>
+        </div>
+        <div className="p-[22px]">
+          <LabelsSettings orgId={company.id} profileOverrides={profileOverrides} defaultLabels={defaultLabels} />
+        </div>
+      </div>
+
+      {/* Danger zone card */}
+      <div className="rounded-[14px] border border-[#fecaca] bg-[#fff8f8] shadow-ud overflow-hidden">
+        <div className="px-[22px] py-[18px] border-b border-[#fecaca]">
+          <p className="text-[14.5px] font-semibold text-[#dc2626]">Danger zone</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Irreversible actions. Proceed with care.</p>
+        </div>
+        <div className="p-[22px] flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[13.5px] font-semibold text-[#dc2626]">Delete workspace</p>
+            <p className="mt-0.5 text-[12.5px] text-ud-muted">Permanently deletes all data. Cannot be undone.</p>
+          </div>
+          <DeleteWorkspaceModal companyName={company.name} />
         </div>
       </div>
     </div>
