@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
 import { Input, Textarea, Select } from "@/components/ui/Input";
+import { ContactCombobox } from "@/components/ui/ContactCombobox";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { formatDateOnly } from "@/lib/date-format";
@@ -15,12 +16,13 @@ import { formatCurrency } from "@/lib/utils";
 import { getOpportunityTone } from "@/lib/status";
 import { OPPORTUNITY_STATUSES } from "@/lib/constants";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import type { LeadRow, CustomerRow } from "../types";
+import type { LeadRow } from "../types";
+import type { ContactForSelect } from "@/lib/crm/types";
 import { updateLeadAction, deleteLeadAction, type ActionState } from "../actions";
 
 type Props = {
   lead: LeadRow;
-  customers: Pick<CustomerRow, "id" | "name" | "email" | "phone">[];
+  linkedContact: ContactForSelect | null;
   profile: IndustryProfile;
   errorParam?: string;
 };
@@ -49,12 +51,8 @@ function getOpportunityIssues(lead: LeadRow) {
   return issues;
 }
 
-export function LeadForm({ lead, customers, profile }: Props) {
+export function LeadForm({ lead, linkedContact, profile }: Props) {
   const issues = getOpportunityIssues(lead);
-  const linkId = lead.contact_id ?? lead.customer_id;
-  const linkedCustomer = linkId
-    ? customers.find((c) => c.id === linkId)
-    : null;
 
   const boundUpdateAction = updateLeadAction.bind(null, lead.id);
   const deleteAction = deleteLeadAction.bind(null, lead.id);
@@ -99,17 +97,11 @@ export function LeadForm({ lead, customers, profile }: Props) {
 
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Link to person or business">
-                <Select name="customer_id" defaultValue={(lead.contact_id ?? lead.customer_id) || ""}>
-                  <option value="">No linked person yet</option>
-                  {customers.map((customer) => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name ||
-                        customer.email ||
-                        customer.phone ||
-                        "Unnamed person"}
-                    </option>
-                  ))}
-                </Select>
+                <ContactCombobox
+                  name="customer_id"
+                  defaultValue={linkedContact?.id}
+                  defaultLabel={linkedContact?.name}
+                />
               </FormField>
 
               <FormField label="Status">
@@ -196,10 +188,10 @@ export function LeadForm({ lead, customers, profile }: Props) {
             <div className="space-y-4 p-5">
               <SummaryCard
                 label="Linked to"
-                value={linkedCustomer?.name || "No person linked"}
+                value={linkedContact?.name || "No person linked"}
                 helper={
-                  linkedCustomer?.email ||
-                  linkedCustomer?.phone ||
+                  linkedContact?.email ||
+                  linkedContact?.phone ||
                   "Connect this opportunity to a person or business."
                 }
               />
