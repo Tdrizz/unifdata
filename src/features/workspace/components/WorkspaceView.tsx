@@ -478,7 +478,7 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
                 { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
                 { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
                 { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
-                { label: "Ask AI", href: "/ai-assistant" },
+                { label: "Ask Vera", href: "/vera" },
               ].map((action) => (
                 <Link
                   key={action.label}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
 import { isOverdue, isDueToday } from "@/lib/date-format";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isOpenFollowUp, getWorkTone } from "@/lib/status";
@@ -35,14 +36,14 @@ type Props = WorkspaceData & {
 
 type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
 
-// The whole point of this screen: one clear answer to "what do I need to do
-// today," not a dashboard of everything at once. Every item — manual
-// follow-ups, opportunities due for follow-up, unpaid work, and anything the
-// AI assistant surfaced — lands in ONE ranked list instead of separate,
-// competing sections.
+// Same dashboard as desktop's WorkspaceView — same KPIs, same actionable
+// Vera panel, same priority queue, same jobs/pipeline sections, same quick
+// actions — just stacked single-column instead of a side-by-side grid.
 export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
+  const [draftList, setDraftList] = useState<Draft[]>(drafts);
+  const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -113,6 +114,19 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     }
   }
 
+  async function handleApproveDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+    if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+  async function handleDismissDraft(id: string) {
+    const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
+    if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
+  }
+  async function handleDismissAlert(id: string) {
+    const res = await fetch(`/api/v1/agent-alerts/${id}/dismiss`, { method: "POST" });
+    if (res.ok) setAlertList((prev) => prev.filter((a) => a.id !== id));
+  }
+
   const { openLeads, activeWork, unpaidRevenue, openPipelineValue, unpaidRevenueValue, revenueMTD } =
     computeWorkspaceStats({ leads, jobs, sales });
 
@@ -152,38 +166,35 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     priority: 1,
   }));
 
-  // AI-suggested items fold into the same list instead of their own banner —
-  // one place to look, not a second mechanism competing for attention.
-  const aiItems: QueueItem[] = [
-    ...drafts.map((d) => ({
-      id: `draft-${d.id}`,
-      label: "Suggested",
-      title: d.subject || d.body.slice(0, 60),
-      detail: d.action_label || "Review draft",
-      href: getDraftHref(d),
-      tone: "neutral" as const,
-      priority: 2,
-    })),
-    ...alerts.map((a) => {
-      const tone: "success" | "warning" | "danger" | "neutral" =
-        a.severity === "critical" ? "danger" : a.severity === "warning" ? "warning" : "neutral";
-      return {
-        id: `alert-${a.id}`,
-        label: "Alert",
-        title: a.title,
-        detail: a.body,
-        href: getAlertHref(a),
-        tone,
-        priority: a.severity === "critical" ? 0 : 2,
-      };
-    }),
-  ];
+  // Vera's own suggestions (drafts/alerts) get their own actionable panel
+  // below, with real approve/dismiss buttons — same as desktop. A data
+  // cleanup summary stands in for them here, matching desktop's queue.
+  const dataIssueCount =
+    customers.filter((c) => !c.phone || !c.email).length +
+    customers.filter((c) => !c.address).length +
+    openLeads.filter((l) => !l.contact_id && !l.customer_id).length +
+    openLeads.filter((l) => !l.source).length +
+    openLeads.filter((l) => l.estimated_value === null || l.estimated_value === undefined).length +
+    jobs.filter((w) => w.job_value === null || w.job_value === undefined).length;
+
+  const cleanupItems: QueueItem[] =
+    dataIssueCount > 0
+      ? [{
+          id: "data-cleanup-summary",
+          label: "Data cleanup",
+          title: `${dataIssueCount} data issues to fix`,
+          detail: "Missing contact info, values, or links.",
+          href: "/data-hub",
+          tone: "neutral" as const,
+          priority: 5,
+        }]
+      : [];
 
   const priorityQueue = [
     ...manualFollowUpItems,
     ...opportunityFollowUpItems,
     ...paymentAttentionItems,
-    ...aiItems,
+    ...cleanupItems,
   ].sort((a, b) => {
     if (a.priority !== b.priority) return a.priority - b.priority;
     return getSortDate(a.due_date, "") - getSortDate(b.due_date, "");
@@ -209,11 +220,20 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   const followUpDueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
 
   const jobPlural = profile.labels.jobPlural;
+  const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
+  const customerSingular = profile.labels.customerSingular;
   const followUpPlural = profile.labels.followUpPlural;
   const dayLabel = getDayLabel();
   const greeting = getGreeting();
-  const visitsToShow = activeWork.slice(0, 3);
+  const visitsToShow = activeWork.slice(0, 5);
+
+  const veraItems = [
+    ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
+    ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
+  ];
+  const veraPreview = veraItems.slice(0, 3);
+  const veraRemaining = veraItems.length - veraPreview.length;
 
   const statusLine =
     priorityQueue.length === 0
@@ -292,9 +312,55 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         </Link>
       </div>
 
-      {/* Ask Vera — live chat box, always available */}
+      {/* Vera panel — same actionable card as desktop: draft/alert cards
+          with real approve/dismiss buttons, not just a link out, plus the
+          live chat box. */}
       <div className="px-4 pb-6">
         <Card padding={0} radius="md" className="overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-ud-soft">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+                  <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
+                </svg>
+              </div>
+              <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
+            </div>
+            {veraItems.length > 0 && (
+              <Link href="/vera" className="text-[13px] font-semibold text-ud-accent">
+                {veraRemaining > 0 ? `See all ${veraItems.length} →` : "Open Vera →"}
+              </Link>
+            )}
+          </div>
+
+          {veraItems.length > 0 ? (
+            <div className="p-3.5 space-y-3 border-b border-ud-soft">
+              {veraPreview.map((entry) =>
+                entry.kind === "draft" ? (
+                  <VeraDraftCard
+                    key={entry.item.id}
+                    draft={entry.item}
+                    href={getDraftHref(entry.item)}
+                    onApprove={() => handleApproveDraft(entry.item.id)}
+                    onDismiss={() => handleDismissDraft(entry.item.id)}
+                  />
+                ) : (
+                  <VeraAlertCard
+                    key={entry.item.id}
+                    alert={entry.item}
+                    href={getAlertHref(entry.item)}
+                    onDismiss={() => handleDismissAlert(entry.item.id)}
+                  />
+                ),
+              )}
+            </div>
+          ) : (
+            <div className="px-4 py-3.5 border-b border-ud-soft">
+              <p className="text-[13px] text-ud-muted">Vera reviewed your business overnight. Everything looks good.</p>
+            </div>
+          )}
+
           {chatMessages.length > 0 && (
             <div className="max-h-[240px] overflow-y-auto px-4 py-3 space-y-2.5 border-b border-ud-soft">
               {chatMessages.map((m, i) => (
@@ -337,13 +403,13 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         </Card>
       </div>
 
-      {/* Needs attention — the one list */}
+      {/* Priority queue — same card as desktop, same source items */}
       <div className="px-4 pb-6">
         {visibleQueue.length > 0 ? (
           <>
             <div className="flex items-center justify-between px-1 mb-2.5">
               <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em]">
-                Needs your attention
+                Priority queue
               </p>
               {followUpSourcedCount > 0 && (
                 <Link href="/follow-ups" className="text-[13px] font-semibold text-ud-accent">
@@ -429,6 +495,69 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
           </Card>
         </div>
       )}
+
+      {/* Pipeline snapshot — same open leads desktop shows in its right column */}
+      <div className="px-4 pb-6">
+        <div className="flex items-center justify-between px-1 mb-2.5">
+          <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em]">
+            Pipeline snapshot
+          </p>
+          <Link href="/crm" className="text-[13px] font-semibold text-ud-accent">
+            See all
+          </Link>
+        </div>
+        {openLeads.length === 0 ? (
+          <div className="rounded-[14px] border border-ud-soft bg-ud-surface-soft px-5 py-7 text-center">
+            <p className="text-[13px] text-ud-muted">No open {leadPlural.toLowerCase()}.</p>
+          </div>
+        ) : (
+          <Card padding={0} radius="md" className="overflow-hidden">
+            {openLeads.slice(0, 4).map((lead) => (
+              <Link
+                key={lead.id}
+                href={`/leads/${lead.id}/edit`}
+                className="flex items-center gap-3 px-4 py-[16px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-ud-ink truncate">
+                    {lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
+                  </p>
+                  <p className="text-[13px] text-ud-muted truncate mt-0.5">
+                    {lead.status || "Lead"} · {formatCurrency(lead.estimated_value)}
+                  </p>
+                </div>
+                <Pill tone="neutral" className="shrink-0">{lead.status || "Lead"}</Pill>
+              </Link>
+            ))}
+          </Card>
+        )}
+      </div>
+
+      {/* Quick actions — same destinations as desktop's Quick actions card */}
+      <div className="px-4 pb-6">
+        <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em] px-1 mb-2.5">
+          Quick actions
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: `New ${customerSingular.toLowerCase()}`, href: "/customers" },
+            { label: `Log a ${jobSingular.toLowerCase()}`, href: "/jobs#job-quick-add" },
+            { label: `Add ${followUpPlural.toLowerCase()}`, href: "/follow-ups#followup-quick-add" },
+            { label: "Ask Vera", href: "/vera" },
+          ].map((action) => (
+            <Link
+              key={action.label}
+              href={action.href}
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-[9px] bg-ud-surface border border-ud text-[13px] font-semibold text-ud-text shadow-ud active:border-ud-hard active:text-ud-ink transition-[border-color,color] duration-[120ms]"
+            >
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" className="text-ud-accent">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              {action.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
