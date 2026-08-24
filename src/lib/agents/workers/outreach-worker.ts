@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { isOutreachAutopilot } from "@/lib/feature-gates";
+import { markdownToEmailHtml, stripMarkdown } from "@/lib/email/format";
 import { buildOutreachPrompt, buildOutreachUserMessage } from "@/lib/ai/prompts";
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
@@ -142,7 +143,8 @@ export async function runOutreachWorker(
           from,
           to,
           subject: draft.subject ?? "Checking in",
-          text: draft.body,
+          text: stripMarkdown(draft.body),
+          html: markdownToEmailHtml(draft.body),
         }),
       });
       if (!res.ok) return;
