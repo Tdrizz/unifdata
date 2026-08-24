@@ -4,23 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Pill } from "@/components/ui/Pill";
 import { Card } from "@/components/ui/Card";
-import {
-  formatDateOnly,
-  parseDateOnly,
-  isOverdue,
-  isDueToday,
-} from "@/lib/date-format";
+import { KpiCard } from "@/components/ui/KpiCard";
+import { isOverdue, isDueToday } from "@/lib/date-format";
 import { formatCurrency, cn } from "@/lib/utils";
-import {
-  isClosedOpportunity,
-  isUnpaid,
-  isOpenFollowUp,
-  isRecentActiveWork,
-  getWorkTone,
-} from "@/lib/status";
+import { isOpenFollowUp, getWorkTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
+import { getDayLabel, getGreeting, getSortDate, getFollowUpLabel, getFollowUpTone, computeWorkspaceStats } from "../compute";
 
 type QueueItem = {
   id: string;
@@ -32,38 +23,6 @@ type QueueItem = {
   due_date?: string | null;
   priority: number;
 };
-
-function getSortDate(date: string | null | undefined, fallback: string) {
-  const parsed = parseDateOnly(date || null);
-  if (parsed) return parsed.getTime();
-  return new Date(fallback).getTime();
-}
-
-function getFollowUpLabel(date: string | null) {
-  if (!date) return "No due date";
-  if (isOverdue(date)) return `Overdue ${formatDateOnly(date)}`;
-  if (isDueToday(date)) return "Due today";
-  return `Due ${formatDateOnly(date)}`;
-}
-
-function getFollowUpTone(date: string | null) {
-  if (!date) return "neutral" as const;
-  if (isOverdue(date)) return "danger" as const;
-  if (isDueToday(date)) return "warning" as const;
-  return "neutral" as const;
-}
-
-function getDayLabel() {
-  const now = new Date();
-  return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
 type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
@@ -154,9 +113,8 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
     }
   }
 
-  const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const activeWork = jobs.filter((work) => isRecentActiveWork(work.status, work.start_date));
-  const unpaidRevenue = sales.filter((record) => isUnpaid(record.payment_status));
+  const { openLeads, activeWork, unpaidRevenue, openPipelineValue, unpaidRevenueValue, revenueMTD } =
+    computeWorkspaceStats({ leads, jobs, sales });
 
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
@@ -239,12 +197,24 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
   // actually there when you tap through.
   const followUpSourcedCount = manualFollowUpItems.length + opportunityFollowUpItems.length;
 
+  // Same shape as desktop's KPI tile so the "Follow-ups Due" number means the
+  // same thing on both platforms — follow-up-specific, not the mixed queue.
+  const followUpSchedule = [...manualFollowUpItems, ...opportunityFollowUpItems]
+    .sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return getSortDate(a.due_date, "") - getSortDate(b.due_date, "");
+    })
+    .slice(0, 5);
+  const followUpOverdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
+  const followUpDueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
+
   const jobPlural = profile.labels.jobPlural;
+  const leadPlural = profile.labels.leadPlural;
+  const followUpPlural = profile.labels.followUpPlural;
   const dayLabel = getDayLabel();
   const greeting = getGreeting();
   const visitsToShow = activeWork.slice(0, 3);
 
-  // One plain-language sentence instead of a grid of stat tiles.
   const statusLine =
     priorityQueue.length === 0
       ? "Nothing needs your attention right now."
@@ -263,6 +233,63 @@ export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, 
         <p className={cn("text-[15px]", overdueCount > 0 ? "text-ud-danger font-medium" : "text-ud-muted")}>
           {statusLine}
         </p>
+      </div>
+
+      {/* Business at a glance — the same KpiCard component and same numbers
+          as desktop, just arranged for a narrow screen, so this reads as
+          the same dashboard instead of a stripped-down mobile version. */}
+      <div className="px-4 pb-6 grid grid-cols-2 gap-3">
+        <Link href="/jobs" className="block">
+          <KpiCard
+            compact
+            label={`Active ${jobPlural}`}
+            value={activeWork.length}
+            helper={activeWork.length > 0 ? `${activeWork.length} in progress` : "None scheduled"}
+            className="cursor-pointer active:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/crm" className="block">
+          <KpiCard
+            compact
+            label="Open Pipeline"
+            value={formatCurrency(openPipelineValue)}
+            helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
+            className="cursor-pointer active:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/sales" className="block">
+          <KpiCard
+            compact
+            label="Unpaid Revenue"
+            value={formatCurrency(unpaidRevenueValue)}
+            helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
+            delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
+            deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
+            className="cursor-pointer active:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/follow-ups" className="block">
+          <KpiCard
+            compact
+            label={`${followUpPlural} Due`}
+            value={followUpSchedule.length}
+            helper={`${followUpOverdueCount} overdue · ${followUpDueTodayCount} due today`}
+            delta={followUpOverdueCount > 0 ? `${followUpOverdueCount} overdue` : undefined}
+            deltaTone={followUpOverdueCount > 0 ? "down" : "flat"}
+            className="cursor-pointer active:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/sales" className="col-span-2 block">
+          <KpiCard
+            compact
+            label="Revenue This Month"
+            value={formatCurrency(revenueMTD)}
+            helper="Month to date"
+            delta={revenueMTD > 0 ? "this month" : undefined}
+            deltaTone={revenueMTD > 0 ? "up" : "flat"}
+            className="cursor-pointer active:shadow-ud-raised"
+          />
+        </Link>
       </div>
 
       {/* Ask Vera — live chat box, always available */}

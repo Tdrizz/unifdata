@@ -4,22 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { VeraDraftCard, VeraAlertCard } from "@/features/ai-assistant/AiAssistantView";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
-import {
-  formatDateOnly,
-  parseDateOnly,
-  isOverdue,
-  isDueToday,
-} from "@/lib/date-format";
+import { isOverdue, isDueToday } from "@/lib/date-format";
 import { formatCurrency } from "@/lib/utils";
-import {
-  isClosedOpportunity,
-  isUnpaid,
-  isOpenFollowUp,
-  isRecentActiveWork,
-  getWorkTone,
-} from "@/lib/status";
+import { isOpenFollowUp, getWorkTone } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
+import { getDayLabel, getGreeting, getSortDate, getFollowUpLabel, getFollowUpTone, computeWorkspaceStats } from "../compute";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
@@ -36,38 +26,6 @@ type QueueItem = {
   due_date?: string | null;
   priority: number;
 };
-
-function getSortDate(date: string | null | undefined, fallback: string) {
-  const parsed = parseDateOnly(date || null);
-  if (parsed) return parsed.getTime();
-  return new Date(fallback).getTime();
-}
-
-function getFollowUpLabel(date: string | null) {
-  if (!date) return "No due date";
-  if (isOverdue(date)) return `Overdue ${formatDateOnly(date)}`;
-  if (isDueToday(date)) return "Due today";
-  return `Due ${formatDateOnly(date)}`;
-}
-
-function getFollowUpTone(date: string | null) {
-  if (!date) return "neutral" as const;
-  if (isOverdue(date)) return "danger" as const;
-  if (isDueToday(date)) return "warning" as const;
-  return "neutral" as const;
-}
-
-function getDayLabel() {
-  const now = new Date();
-  return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-}
-
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
 type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
@@ -168,18 +126,8 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
 
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
-  const openLeads = leads.filter((lead) => !isClosedOpportunity(lead.status));
-  const activeWork = jobs.filter((work) => isRecentActiveWork(work.status, work.start_date));
-  const unpaidRevenue = sales.filter((record) => isUnpaid(record.payment_status));
-
-  const openPipelineValue = openLeads.reduce((sum, lead) => sum + Number(lead.estimated_value || 0), 0);
-  const unpaidRevenueValue = unpaidRevenue.reduce((sum, record) => sum + Number(record.amount || 0), 0);
-
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const revenueMTD = sales
-    .filter((s) => new Date(s.sale_date || s.created_at) >= startOfMonth)
-    .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+  const { openLeads, activeWork, unpaidRevenue, openPipelineValue, unpaidRevenueValue, revenueMTD } =
+    computeWorkspaceStats({ leads, jobs, sales });
 
   const manualFollowUpItems: QueueItem[] = followUps
     .filter((action) => isOpenFollowUp(action.status))
@@ -393,39 +341,54 @@ export function WorkspaceView({ customers, leads, jobs, sales, followUps, profil
         </form>
       </Card>
 
-      {/* KPI row */}
+      {/* KPI row — every tile routes to the page that actually has the data */}
       <div className="grid grid-cols-5 gap-3 mb-6">
-        <KpiCard
-          label={`Active ${jobPlural}`}
-          value={activeWork.length}
-          helper={activeWork.length > 0 ? `${activeWork.length} in progress` : "None scheduled"}
-        />
-        <KpiCard
-          label="Open Pipeline"
-          value={formatCurrency(openPipelineValue)}
-          helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
-        />
-        <KpiCard
-          label="Unpaid Revenue"
-          value={formatCurrency(unpaidRevenueValue)}
-          helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
-          delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
-          deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
-        />
-        <KpiCard
-          label={`${followUpPlural} Due`}
-          value={followUpSchedule.length}
-          helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
-          delta={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
-          deltaTone={overdueCount > 0 ? "down" : "flat"}
-        />
-        <KpiCard
-          label="Revenue This Month"
-          value={formatCurrency(revenueMTD)}
-          helper="Month to date"
-          delta={revenueMTD > 0 ? "this month" : undefined}
-          deltaTone={revenueMTD > 0 ? "up" : "flat"}
-        />
+        <Link href="/jobs" className="block">
+          <KpiCard
+            label={`Active ${jobPlural}`}
+            value={activeWork.length}
+            helper={activeWork.length > 0 ? `${activeWork.length} in progress` : "None scheduled"}
+            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/crm" className="block">
+          <KpiCard
+            label="Open Pipeline"
+            value={formatCurrency(openPipelineValue)}
+            helper={`${openLeads.length} active ${leadPlural.toLowerCase()}`}
+            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/sales" className="block">
+          <KpiCard
+            label="Unpaid Revenue"
+            value={formatCurrency(unpaidRevenueValue)}
+            helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
+            delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
+            deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
+            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/follow-ups" className="block">
+          <KpiCard
+            label={`${followUpPlural} Due`}
+            value={followUpSchedule.length}
+            helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
+            delta={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
+            deltaTone={overdueCount > 0 ? "down" : "flat"}
+            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
+          />
+        </Link>
+        <Link href="/sales" className="block">
+          <KpiCard
+            label="Revenue This Month"
+            value={formatCurrency(revenueMTD)}
+            helper="Month to date"
+            delta={revenueMTD > 0 ? "this month" : undefined}
+            deltaTone={revenueMTD > 0 ? "up" : "flat"}
+            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
+          />
+        </Link>
       </div>
 
       {/* Two-column grid */}
