@@ -126,8 +126,8 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
     const { data: existing, error: lookupError } = await supabase
       .from("profiles")
       .select("id")
-      .eq("email", email)
-      .single();
+      .ilike("email", email)
+      .maybeSingle();
 
     if (lookupError || !existing) throw new Error(insertError.message);
 
