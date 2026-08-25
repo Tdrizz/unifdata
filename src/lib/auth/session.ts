@@ -18,6 +18,10 @@ function isSubscribed(metadata: Record<string, unknown> | null | undefined) {
   return metadata?.subscribed === true;
 }
 
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
 // Pilot users bypass the paywall via a comma-separated email allowlist.
 // Remove PILOT_EMAILS from the environment to end the pilot program.
 function isPilotUser(email: string): boolean {
@@ -126,7 +130,7 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
     const { data: existing, error: lookupError } = await supabase
       .from("profiles")
       .select("id")
-      .ilike("email", email)
+      .ilike("email", escapeLikePattern(email))
       .maybeSingle();
 
     if (lookupError || !existing) throw new Error(insertError.message);

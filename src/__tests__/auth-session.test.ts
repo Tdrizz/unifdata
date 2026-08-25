@@ -17,37 +17,35 @@ type QueryResult = { data: unknown; error: { code?: string; message: string } | 
 let profileLookupResult: QueryResult;
 let insertResult: QueryResult;
 let conflictLookupResult: QueryResult;
+let emailLookupPattern: string | null;
 const updateCalls: Array<{ values: Record<string, unknown>; id: string | null }> = [];
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from: (table: string) => {
-      let operation: "select" | "insert" | "update" | null = null;
       let writeOperation: "insert" | "update" | null = null;
       let matchedId: string | null = null;
       let updateValues: Record<string, unknown> | null = null;
-      let usedIlike = false;
+      let lookupKind: "clerk" | "email" | null = null;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const builder: any = {
-        select: () => {
-          operation = "select";
-          return builder;
-        },
+        select: () => builder,
         insert: (values: Record<string, unknown>) => {
-          operation = "insert";
           writeOperation = "insert";
           updateValues = values;
           return builder;
         },
         update: (values: Record<string, unknown>) => {
-          operation = "update";
           writeOperation = "update";
           updateValues = values;
           return builder;
         },
         eq: (column: string, value: string) => {
-          if (operation === "update" && column === "id") {
+          if (column === "clerk_user_id") {
+            lookupKind = "clerk";
+          }
+          if (writeOperation === "update" && column === "id") {
             matchedId = value;
             if (updateValues) {
               updateCalls.push({ values: updateValues, id: matchedId });
@@ -55,16 +53,17 @@ vi.mock("@/lib/supabase/admin", () => ({
           }
           return builder;
         },
-        ilike: () => {
-          usedIlike = true;
+        ilike: (_column: string, pattern: string) => {
+          lookupKind = "email";
+          emailLookupPattern = pattern;
           return builder;
         },
         maybeSingle: async () => {
-          if (table !== "profiles" || operation !== "select") {
+          if (table !== "profiles") {
             return { data: null, error: null };
           }
 
-          return usedIlike ? conflictLookupResult : profileLookupResult;
+          return lookupKind === "email" ? conflictLookupResult : profileLookupResult;
         },
         single: async () => {
           if (table === "profiles" && writeOperation === "insert") {
@@ -90,6 +89,7 @@ beforeEach(() => {
     error: { code: "23505", message: "duplicate key value violates unique constraint" },
   };
   conflictLookupResult = { data: { id: "p-existing" }, error: null };
+  emailLookupPattern = null;
   updateCalls.length = 0;
 
   authMock.mockResolvedValue({ userId: "clerk_123" });
@@ -118,5 +118,20 @@ describe("getCurrentAppUser", () => {
         id: "p-existing",
       },
     ]);
+    expect(emailLookupPattern).toBe("User@Example.com");
+  });
+
+  it("escapes wildcard characters before the case-insensitive email lookup", async () => {
+    currentUserMock.mockResolvedValue({
+      primaryEmailAddress: { emailAddress: "user_%@example.com" },
+      fullName: "Example User",
+      username: null,
+      publicMetadata: {},
+      privateMetadata: {},
+    });
+
+    await getCurrentAppUser();
+
+    expect(emailLookupPattern).toBe("user\\_\\%@example.com");
   });
 });
