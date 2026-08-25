@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { sanitizeSearchTerm } from "@/lib/search";
 import { AppShell } from "@/components/AppShell";
-import { RealtimeRefresh } from "@/components/RealtimeRefresh";
+import { RealtimeRefreshServer } from "@/components/RealtimeRefreshServer";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { ContactsTableClient } from "@/features/contacts/components/ContactsTableClient";
 import ContactsSidebar from "@/features/contacts/components/ContactsSidebar";
@@ -157,7 +157,7 @@ export default async function CustomersPage({
       businessSector={company.business_sector}
     >
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <RealtimeRefresh orgId={company.id} tables={[{ table: "master_customers", column: "organization_id" }]} />
+        <RealtimeRefreshServer orgId={company.id} tables={[{ table: "master_customers", column: "organization_id" }]} />
         <ContactsSidebar
           totalCount={allContacts.length}
           statusCounts={statusCounts}
