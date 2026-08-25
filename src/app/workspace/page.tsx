@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
@@ -76,6 +77,18 @@ export default async function WorkspacePage() {
       agentInboxCount={agentInboxCount}
     >
       <>
+        <RealtimeRefresh
+          orgId={company.id}
+          tables={[
+            { table: "leads" },
+            { table: "jobs" },
+            { table: "sales" },
+            { table: "follow_ups" },
+            { table: "master_customers", column: "organization_id" },
+            { table: "agent_drafts", column: "organization_id" },
+            { table: "agent_alerts", column: "organization_id" },
+          ]}
+        />
         <WorkspaceView
           {...data}
           profile={profile}

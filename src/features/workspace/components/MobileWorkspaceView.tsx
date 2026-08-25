@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Pill } from "@/components/ui/Pill";
@@ -49,6 +49,11 @@ export function MobileWorkspaceView({
 
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
+  // See WorkspaceView.tsx: re-syncs these from the server whenever a fresh
+  // fetch hands down a new drafts/alerts array (e.g. via RealtimeRefresh),
+  // since they've otherwise diverged from props for optimistic dismissal.
+  useEffect(() => setDraftList(drafts), [drafts]);
+  useEffect(() => setAlertList(alerts), [alerts]);
   const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
   // Hydrated from the persisted session server-side — see WorkspaceView.tsx

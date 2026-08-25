@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { VeraDraftCard, VeraAlertCard } from "@/components/vera/VeraCards";
@@ -46,6 +46,13 @@ export function WorkspaceView({
 }: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
+  // draftList/alertList start from props but then diverge for optimistic
+  // dismiss actions, so a fresh server fetch (e.g. from RealtimeRefresh
+  // picking up a background agent run) wouldn't otherwise reach them —
+  // this re-syncs whenever the server actually hands down a new drafts/
+  // alerts array, which is exactly when there's something new to show.
+  useEffect(() => setDraftList(drafts), [drafts]);
+  useEffect(() => setAlertList(alerts), [alerts]);
   const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
   // Hydrated from the persisted session server-side so the conversation

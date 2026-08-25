@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
@@ -36,6 +37,15 @@ export default async function PipelinePage() {
       businessSector={company.business_sector}
     >
       <>
+        <RealtimeRefresh
+          orgId={company.id}
+          tables={[
+            { table: "leads" },
+            { table: "jobs" },
+            { table: "sales" },
+            { table: "follow_ups" },
+          ]}
+        />
         <PipelineView
           {...pipelineData}
           profile={profile}
