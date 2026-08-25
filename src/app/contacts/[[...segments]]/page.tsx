@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function LegacyContactsPage() {
+export default async function LegacyContactsPage() {
   redirect("/customers");
 }
