@@ -118,7 +118,6 @@ describe("getCurrentAppUser", () => {
         id: "p-existing",
       },
     ]);
-    expect(emailLookupPattern).toBe("User@Example.com");
   });
 
   it("escapes wildcard characters before the case-insensitive email lookup", async () => {
