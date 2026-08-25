@@ -23,6 +23,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from: (table: string) => {
       let operation: "select" | "insert" | "update" | null = null;
+      let writeOperation: "insert" | "update" | null = null;
       let matchedId: string | null = null;
       let updateValues: Record<string, unknown> | null = null;
       let usedIlike = false;
@@ -35,11 +36,13 @@ vi.mock("@/lib/supabase/admin", () => ({
         },
         insert: (values: Record<string, unknown>) => {
           operation = "insert";
+          writeOperation = "insert";
           updateValues = values;
           return builder;
         },
         update: (values: Record<string, unknown>) => {
           operation = "update";
+          writeOperation = "update";
           updateValues = values;
           return builder;
         },
@@ -64,7 +67,7 @@ vi.mock("@/lib/supabase/admin", () => ({
           return usedIlike ? conflictLookupResult : profileLookupResult;
         },
         single: async () => {
-          if (table === "profiles" && operation === "insert") {
+          if (table === "profiles" && writeOperation === "insert") {
             return insertResult;
           }
 
