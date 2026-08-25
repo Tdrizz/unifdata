@@ -28,28 +28,34 @@ type QueueItem = {
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
 type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
+type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
 type Props = WorkspaceData & {
   profile: IndustryProfile;
   companyName: string;
   drafts?: Draft[];
   alerts?: Alert[];
+  initialChatSessionId?: string | null;
+  initialChatMessages?: ChatMessage[];
 };
-
-type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
 
 // Same dashboard as desktop's WorkspaceView — same KPIs, same actionable
 // Vera panel, same priority queue, same jobs/pipeline sections — just
 // stacked single-column instead of a side-by-side grid.
-export function MobileWorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
+export function MobileWorkspaceView({
+  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [],
+  initialChatSessionId = null, initialChatMessages = [],
+}: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
 
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // Hydrated from the persisted session server-side — see WorkspaceView.tsx
+  // for why (conversation used to reset every time this panel remounted).
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [chatLoading, setChatLoading] = useState(false);
-  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(initialChatSessionId);
 
   async function sendChatMessage(text: string) {
     if (!text.trim() || chatLoading) return;

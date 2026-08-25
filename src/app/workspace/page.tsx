@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getWorkspaceData } from "@/features/workspace/queries";
+import { getOrCreateSession } from "@/features/ai-assistant/queries";
 import { WorkspaceView } from "@/features/workspace/components/WorkspaceView";
 import { MobileWorkspaceView } from "@/features/workspace/components/MobileWorkspaceView";
 
@@ -23,7 +24,7 @@ export default async function WorkspacePage() {
 
   const profile = getIndustryProfile(company.business_sector);
 
-  const [data, draftsResult, alertsResult] = await Promise.all([
+  const [data, draftsResult, alertsResult, chatSession] = await Promise.all([
     getWorkspaceData(supabase, company.id),
     supabase
       .from("agent_drafts")
@@ -39,6 +40,10 @@ export default async function WorkspacePage() {
       .eq("status", "unread")
       .order("created_at", { ascending: false })
       .limit(10),
+    // Best-effort: the Vera panel just starts with an empty conversation if
+    // this fails, rather than the whole dashboard failing to load over a
+    // chat-history nicety.
+    getOrCreateSession(supabase, company.id).catch(() => ({ id: null, messages: [] })),
   ]);
 
   const drafts = (draftsResult.data ?? []) as unknown as Array<{
@@ -77,6 +82,8 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
+          initialChatSessionId={chatSession.id}
+          initialChatMessages={chatSession.messages}
         />
         <MobileWorkspaceView
           {...data}
@@ -84,6 +91,8 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
+          initialChatSessionId={chatSession.id}
+          initialChatMessages={chatSession.messages}
         />
       </>
     </AppShell>

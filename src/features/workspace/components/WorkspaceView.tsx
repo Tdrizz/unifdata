@@ -30,23 +30,30 @@ type QueueItem = {
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
 type Alert = { id: string; alert_type: string; severity: "info" | "warning" | "critical"; title: string; body: string; record_id?: string | null };
+type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
 type Props = WorkspaceData & {
   profile: IndustryProfile;
   companyName: string;
   drafts?: Draft[];
   alerts?: Alert[];
+  initialChatSessionId?: string | null;
+  initialChatMessages?: ChatMessage[];
 };
 
-type ChatMessage = { role: "user" | "model"; text: string; streaming?: boolean };
-
-export function WorkspaceView({ customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [] }: Props) {
+export function WorkspaceView({
+  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [],
+  initialChatSessionId = null, initialChatMessages = [],
+}: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
   const [alertList, setAlertList] = useState<Alert[]>(alerts);
   const [showAllVera, setShowAllVera] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // Hydrated from the persisted session server-side so the conversation
+  // survives navigating away and back — this panel used to start empty on
+  // every mount even though the backend already kept the full history.
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [chatLoading, setChatLoading] = useState(false);
-  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(initialChatSessionId);
 
   async function sendChatMessage(text: string) {
     if (!text.trim() || chatLoading) return;
