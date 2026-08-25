@@ -85,7 +85,7 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 ## Key Features
 
 - **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → straight into the workspace. No redirect between steps; stays on the same page.
-- **Vera** — The AI assistant, embedded in a single panel on the `/workspace` dashboard (no separate chat page). Plain-language chat over live workspace data with tool calling — create or update leads, jobs, sales, follow-ups, and contacts, run an on-demand data cleanup scan — plus a nightly pipeline that surfaces outreach drafts and alerts right in the same panel. Rate-limited (20 requests/day).
+- **Vera** — The AI assistant, embedded in a single panel on the `/workspace` dashboard (no separate chat page). Plain-language chat over live workspace data with tool calling — create or update leads, jobs, sales, follow-ups, and contacts, run an on-demand data cleanup scan — plus a nightly pipeline that surfaces outreach drafts and alerts right in the same panel. The conversation persists server-side and rehydrates on every page load, so navigating away and back doesn't lose it. Rate-limited (20 requests/day).
 - **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts
