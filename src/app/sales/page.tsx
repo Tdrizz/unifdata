@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { RealtimeRefreshServer } from "@/components/RealtimeRefreshServer";
+import { RealtimeRefresh } from "@/components/RealtimeRefresh";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
@@ -41,7 +41,7 @@ export default async function RevenuePage({
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <RealtimeRefreshServer orgId={company.id} tables={[{ table: "sales" }]} />
+      <RealtimeRefresh orgId={company.id} tables={[{ table: "sales" }]} />
       <MobileSalesView
         sales={sales}
         count={count}
