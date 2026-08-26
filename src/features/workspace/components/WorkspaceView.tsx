@@ -127,6 +127,21 @@ export function WorkspaceView({
     }
   }
 
+  async function handleClearChat() {
+    setChatMessages([]);
+    if (chatSessionId) {
+      try {
+        await fetch("/api/ai/session/clear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: chatSessionId }),
+        });
+      } catch {
+        // Best-effort — the local conversation is already cleared either way.
+      }
+    }
+  }
+
   async function handleApproveDraft(id: string) {
     const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
     if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
@@ -280,15 +295,27 @@ export function WorkspaceView({
             </div>
             <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
           </div>
-          {veraItems.length > 3 && (
-            <button
-              type="button"
-              onClick={() => setShowAllVera((v) => !v)}
-              className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]"
-            >
-              {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {chatMessages.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearChat}
+                title="Clear conversation"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-muted border border-transparent hover:bg-ud-surface-sunk hover:text-ud-danger px-2.5 py-1.5 text-xs rounded-[8px]"
+              >
+                Clear chat
+              </button>
+            )}
+            {veraItems.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAllVera((v) => !v)}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]"
+              >
+                {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
+              </button>
+            )}
+          </div>
         </div>
 
         {veraItems.length > 0 ? (

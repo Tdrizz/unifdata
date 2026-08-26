@@ -127,6 +127,21 @@ export function MobileWorkspaceView({
     }
   }
 
+  async function handleClearChat() {
+    setChatMessages([]);
+    if (chatSessionId) {
+      try {
+        await fetch("/api/ai/session/clear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: chatSessionId }),
+        });
+      } catch {
+        // Best-effort — the local conversation is already cleared either way.
+      }
+    }
+  }
+
   async function handleApproveDraft(id: string) {
     const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
     if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
@@ -335,15 +350,26 @@ export function MobileWorkspaceView({
               </div>
               <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
             </div>
-            {veraItems.length > 3 && (
-              <button
-                type="button"
-                onClick={() => setShowAllVera((v) => !v)}
-                className="text-[13px] font-semibold text-ud-accent"
-              >
-                {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {chatMessages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  className="text-[13px] font-semibold text-ud-muted"
+                >
+                  Clear chat
+                </button>
+              )}
+              {veraItems.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllVera((v) => !v)}
+                  className="text-[13px] font-semibold text-ud-accent"
+                >
+                  {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
+                </button>
+              )}
+            </div>
           </div>
 
           {veraItems.length > 0 ? (
