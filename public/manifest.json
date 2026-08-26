@@ -43,6 +43,12 @@
       "short_name": "Workspace",
       "url": "/workspace",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contacts",
+      "short_name": "Contacts",
+      "url": "/contacts",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
