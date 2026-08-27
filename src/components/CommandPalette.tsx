@@ -13,7 +13,7 @@ function buildCommands(businessSector?: string | null) {
   return [
     { id: "workspace",  label: "Go to Home",                             href: "/workspace",  group: "Navigate" },
     { id: "customers",  label: `Go to ${profile.labels.customerPlural}`, href: "/customers",  group: "Navigate" },
-    { id: "crm",        label: "Go to Pipeline",                         href: "/crm",        group: "Navigate" },
+    { id: "crm",        label: `Go to ${profile.pipelineLabel}`,         href: "/crm",        group: "Navigate" },
     { id: "communications", label: "Go to Communications",               href: "/communications", group: "Navigate" },
     { id: "tools",      label: "Go to Tools",                            href: "/tools",      group: "Navigate" },
     { id: "data-hub",   label: "Go to Data Hub",                         href: "/data-hub",   group: "Navigate" },

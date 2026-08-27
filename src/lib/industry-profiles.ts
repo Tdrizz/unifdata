@@ -43,7 +43,6 @@ export type IndustryProfile = {
   inactiveStatusLabel: string;
   closedStatusLabel: string;
   sourceOptions: string[];
-  defaultBoardName: string;
   defaultStages: Array<{
     name: string;
     stageType: "active" | "completed" | "cancelled" | "on_hold";
@@ -101,7 +100,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Social Media", "Cold Outreach", "Event", "Other"],
-    defaultBoardName: "Pipeline",
     defaultStages: [
       { name: "New", stageType: "active", position: 0, color: "#6366f1" },
       { name: "In Progress", stageType: "active", position: 1, color: "#3b82f6" },
@@ -158,7 +156,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Lead Service", "Repeat Customer", "Other"],
-    defaultBoardName: "Project Board",
     defaultStages: [
       { name: "Lead", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Estimate Sent", stageType: "active", position: 1, color: "#3b82f6" },
@@ -216,7 +213,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "On Hold",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Bid Board", "Repeat Customer", "Architect / Designer", "Other"],
-    defaultBoardName: "Project Board",
     defaultStages: [
       { name: "Bid", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Awarded", stageType: "active", position: 1, color: "#3b82f6" },
@@ -275,7 +271,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Repeat Customer", "Lead Service", "Builder / GC", "Other"],
-    defaultBoardName: "Job Board",
     defaultStages: [
       { name: "Quote", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -333,7 +328,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Repeat Customer", "Lead Service", "Property Manager", "Other"],
-    defaultBoardName: "Job Board",
     defaultStages: [
       { name: "Quote", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -391,7 +385,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Repeat Customer", "Lead Service", "Builder / GC", "Maintenance Agreement"],
-    defaultBoardName: "Job Board",
     defaultStages: [
       { name: "Quote", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -449,7 +442,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Door-to-Door", "Storm Lead", "Website", "Repeat Customer", "Insurance Adjuster"],
-    defaultBoardName: "Project Board",
     defaultStages: [
       { name: "Lead", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Estimate Sent", stageType: "active", position: 1, color: "#3b82f6" },
@@ -508,7 +500,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Repeat Customer", "Lead Service", "Other"],
-    defaultBoardName: "Service Board",
     defaultStages: [
       { name: "Quote", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -566,7 +557,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Repeat Client", "HOA / Property Manager", "Other"],
-    defaultBoardName: "Contract Board",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -624,7 +614,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Repeat Client", "Property Manager", "Other"],
-    defaultBoardName: "Service Board",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -682,7 +671,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Repeat Client", "Property Manager", "Other"],
-    defaultBoardName: "Service Board",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Initial Treatment", stageType: "active", position: 1, color: "#3b82f6" },
@@ -740,7 +728,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Door-to-Door", "Repeat Client", "Builder / GC", "Other"],
-    defaultBoardName: "Project Board",
     defaultStages: [
       { name: "Estimate", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Scheduled", stageType: "active", position: 1, color: "#3b82f6" },
@@ -798,7 +785,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Conference / Event", "LinkedIn", "Repeat Client", "Other"],
-    defaultBoardName: "Pipeline",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Negotiation", stageType: "active", position: 1, color: "#3b82f6" },
@@ -856,7 +842,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Bar Referral", "Repeat Client", "Legal Aid", "Other"],
-    defaultBoardName: "Case Board",
     defaultStages: [
       { name: "Intake", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Investigation", stageType: "active", position: 1, color: "#3b82f6" },
@@ -915,7 +900,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Networking", "Repeat Client", "Partner Referral", "Other"],
-    defaultBoardName: "Engagement Board",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Document Collection", stageType: "active", position: 1, color: "#3b82f6" },
@@ -974,7 +958,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Conference / Event", "LinkedIn", "Repeat Client", "Other"],
-    defaultBoardName: "Pipeline",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Negotiation", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1032,7 +1015,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Conference / Event", "LinkedIn", "Repeat Client", "Other"],
-    defaultBoardName: "Pipeline",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Kickoff", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1090,7 +1072,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "MSP Marketplace", "Repeat Client", "LinkedIn", "Other"],
-    defaultBoardName: "Project Board",
     defaultStages: [
       { name: "Proposal", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Kickoff", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1149,7 +1130,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Seminar / Event", "LinkedIn", "CPA Referral", "Attorney Referral", "Other"],
-    defaultBoardName: "Pipeline",
     defaultStages: [
       { name: "Prospect", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Discovery", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1208,7 +1188,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Lapsed",
     closedStatusLabel: "Cancelled",
     sourceOptions: ["Referral", "Website", "Social Media", "Walk-in", "Free Trial", "Other"],
-    defaultBoardName: "Member Journey",
     defaultStages: [
       { name: "Prospect", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Trial", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1267,7 +1246,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Instagram", "Wedding Platform", "Repeat Client", "Other"],
-    defaultBoardName: "Booking Board",
     defaultStages: [
       { name: "Inquiry", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Proposal Sent", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1326,7 +1304,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Lapsed",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Instagram", "Walk-in", "Repeat Client", "Other"],
-    defaultBoardName: "Booking Board",
     defaultStages: [
       { name: "Inquiry", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Booked", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1383,7 +1360,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Walk-in", "Repeat Customer", "Fleet Account", "Other"],
-    defaultBoardName: "Service Board",
     defaultStages: [
       { name: "Check-In", stageType: "active", position: 0, color: "#6366f1" },
       { name: "Estimate Sent", stageType: "active", position: 1, color: "#3b82f6" },
@@ -1442,7 +1418,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Website", "Cold Call", "Social Media", "Agent Network", "Walk-in"],
-    defaultBoardName: "Policy Pipeline",
     defaultStages: [
       { name: "Prospect", stageType: "active", position: 1, color: "#6B7280" },
       { name: "Quoting", stageType: "active", position: 2, color: "#3B82F6" },
@@ -1500,7 +1475,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Past Client",
     sourceOptions: ["Referral", "Zillow", "Realtor.com", "Open House", "Social Media", "Cold Call", "Repeat Client"],
-    defaultBoardName: "Transaction Pipeline",
     defaultStages: [
       { name: "New Lead", stageType: "active", position: 1, color: "#6B7280" },
       { name: "Qualifying", stageType: "active", position: 2, color: "#3B82F6" },
@@ -1559,7 +1533,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Instagram", "Referral", "Walk-in", "Website", "TikTok", "Google"],
-    defaultBoardName: "Booking Board",
     defaultStages: [
       { name: "Inquiry", stageType: "active", position: 1, color: "#6B7280" },
       { name: "Consultation", stageType: "active", position: 2, color: "#3B82F6" },
@@ -1618,7 +1591,6 @@ export const industryProfiles: Record<BusinessSector, IndustryProfile> = {
     inactiveStatusLabel: "Inactive",
     closedStatusLabel: "Closed",
     sourceOptions: ["Referral", "Instagram", "Google", "Website", "Repeat Customer", "Walk-in"],
-    defaultBoardName: "Service Board",
     defaultStages: [
       { name: "Quote Requested", stageType: "active", position: 1, color: "#6B7280" },
       { name: "Quoted", stageType: "active", position: 2, color: "#3B82F6" },

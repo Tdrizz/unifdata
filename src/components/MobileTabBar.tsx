@@ -86,7 +86,7 @@ export function MobileTabBar({
     },
     {
       href: "/crm",
-      label: "Pipeline",
+      label: profile.pipelineLabel,
       Icon: SvgBriefcase,
       match: (p: string) =>
         p === "/crm" ||
