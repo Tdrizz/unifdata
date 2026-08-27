@@ -185,12 +185,36 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
   if (!currentCompany) return;
   const { company } = currentCompany;
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("leads")
     .update({ status })
     .in("id", ids)
-    .eq("company_id", company.id);
+    .eq("company_id", company.id)
+    .select("id, contact_id, service_requested, estimated_value");
 
   if (error) throw new Error(error.message);
+
+  // Single-record forms (createLeadAction/updateLeadAction) call
+  // syncAcceptedOpportunity on Won so a Job gets created -- this bulk path
+  // updated the status directly and skipped that, so bulk-marking Won
+  // silently never created a Job. Each conversion is independent and
+  // non-fatal so one bad lead can't abort the rest of the batch.
+  if (isAcceptedOpportunityStatus(status)) {
+    for (const lead of updated ?? []) {
+      try {
+        await syncAcceptedOpportunity({
+          supabase,
+          companyId: company.id,
+          opportunityId: lead.id,
+          contactId: lead.contact_id,
+          opportunityName: lead.service_requested ?? "Opportunity",
+          amount: lead.estimated_value,
+        });
+      } catch (err) {
+        console.error("[lifecycle] syncAcceptedOpportunity failed", err);
+      }
+    }
+  }
+
   revalidatePath("/crm");
 }
