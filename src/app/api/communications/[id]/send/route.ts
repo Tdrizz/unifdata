@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
 import { sendSms } from "@/lib/messaging/sms";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(
   request: Request,
@@ -16,6 +17,10 @@ export async function POST(
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return NextResponse.json({ error: "No company" }, { status: 403 });
+
+  if (!await rateLimit(`messages:${user.id}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
+  }
 
   const { company } = currentCompany;
 

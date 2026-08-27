@@ -71,34 +71,41 @@ export async function POST(
     const from = `${currentCompany.company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
     const toEmail = recipientEmail ?? args.email ?? null;
 
-    if (apiKey && domain && toEmail) {
-      const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-        },
-        body: new URLSearchParams({ from, to: toEmail, subject, text: body }),
-      });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => "");
-        return NextResponse.json({ error: `Email delivery failed: ${res.status} ${errBody}` }, { status: 502 });
-      }
-      sendSucceeded = true;
+    if (!apiKey || !domain) {
+      return NextResponse.json({ error: "Email is not configured." }, { status: 503 });
     }
+    if (!toEmail) {
+      return NextResponse.json({ error: "No email address on file for this contact." }, { status: 422 });
+    }
+
+    const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
+      },
+      body: new URLSearchParams({ from, to: toEmail, subject, text: body }),
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      return NextResponse.json({ error: `Email delivery failed: ${res.status} ${errBody}` }, { status: 502 });
+    }
+    sendSucceeded = true;
   } else if (draft.approve_action === "send_sms") {
     const rawPhone = recipientPhone ?? args.phone ?? null;
     const toPhone = rawPhone
       ? (rawPhone.startsWith("+") ? rawPhone : `+1${rawPhone.replace(/\D/g, "")}`)
       : null;
 
-    if (toPhone) {
-      try {
-        await sendSms(toPhone, body, currentCompany.company.name);
-        sendSucceeded = true;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "SMS delivery failed";
-        return NextResponse.json({ error: message }, { status: 502 });
-      }
+    if (!toPhone) {
+      return NextResponse.json({ error: "No phone number on file for this contact." }, { status: 422 });
+    }
+
+    try {
+      await sendSms(toPhone, body, currentCompany.company.name);
+      sendSucceeded = true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "SMS delivery failed";
+      return NextResponse.json({ error: message }, { status: 502 });
     }
   }
 

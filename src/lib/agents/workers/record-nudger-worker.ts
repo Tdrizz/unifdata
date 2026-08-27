@@ -134,11 +134,21 @@ export async function runRecordNudgerWorker(
     });
 
     if (parsed && parsed.length > 0) {
+      // Keyed by the same signal type(s) recordSignalFired writes below --
+      // keying this by the LLM-authored alert.alert_type instead meant the
+      // lookup almost never found the memory row, so escalation stuck at 0.
+      // A single generated alert can mix both overdue/stale content, so use
+      // the higher of the two firing signals' escalation levels.
+      const [overdueEscalation, staleEscalation] = await Promise.all([
+        shouldFireOverdue ? getEscalationLevel(orgId, "overdue_followups") : Promise.resolve(0 as const),
+        shouldFireStale ? getEscalationLevel(orgId, "stale_jobs") : Promise.resolve(0 as const),
+      ]);
+      const escalationLevel = Math.max(overdueEscalation, staleEscalation) as 0 | 1 | 2;
+
       const alertInserts = (
         await Promise.all(
           parsed.map(async (alert) => {
             if (await hasRecentAlert(orgId, alert.alert_type, null)) return null;
-            const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
             return {
               organization_id: orgId,
               alert_type: alert.alert_type,
