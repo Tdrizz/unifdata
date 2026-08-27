@@ -50,13 +50,13 @@ import { requireSubscription } from "@/lib/auth/session";
 
 const PROFILE = { data: { id: "p1", clerk_user_id: "u1", email: "m@x.com", full_name: "M" }, error: null };
 
-function setUser(publicMetadata: Record<string, unknown> = {}) {
-  authMock.mockResolvedValue({ userId: "u1" });
+function setUser({ subscribed = false }: { subscribed?: boolean } = {}) {
+  authMock.mockResolvedValue({ userId: "u1", has: () => subscribed });
   currentUserMock.mockResolvedValue({
     primaryEmailAddress: { emailAddress: "m@x.com" },
     fullName: "M",
     username: null,
-    publicMetadata,
+    publicMetadata: {},
     privateMetadata: {},
   });
 }
