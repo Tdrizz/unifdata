@@ -130,7 +130,6 @@ export async function GET(request: Request) {
 
   // Check for overdue follow-ups and insert notifications
   const nowStr = new Date().toISOString();
-  const oneDayAgoStr = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const { data: overdueFollowUps } = await supabase
     .from("follow_ups")
@@ -141,11 +140,14 @@ export async function GET(request: Request) {
 
   const followUpsList = overdueFollowUps ?? [];
   if (followUpsList.length > 0) {
+    // No recency window here on purpose -- notifications are soft-deleted
+    // (see deleteNotifications in lib/notifications.ts), so a cleared row
+    // must still count as "already notified" no matter how long ago it
+    // fired, or the same overdue follow-up would eventually re-notify.
     const { data: recentNotifications } = await supabase
       .from("notifications")
       .select("body")
-      .eq("type", "follow_up_overdue")
-      .gte("created_at", oneDayAgoStr);
+      .eq("type", "follow_up_overdue");
 
     const notifiedIds = new Set(
       (recentNotifications ?? []).flatMap((n) => {

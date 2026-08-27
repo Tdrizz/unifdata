@@ -1878,6 +1878,7 @@ export type Database = {
       notifications: {
         Row: {
           body: string | null
+          cleared_at: string | null
           company_id: string
           created_at: string
           id: string
@@ -1887,6 +1888,7 @@ export type Database = {
         }
         Insert: {
           body?: string | null
+          cleared_at?: string | null
           company_id: string
           created_at?: string
           id?: string
@@ -1896,6 +1898,7 @@ export type Database = {
         }
         Update: {
           body?: string | null
+          cleared_at?: string | null
           company_id?: string
           created_at?: string
           id?: string
