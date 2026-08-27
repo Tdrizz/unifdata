@@ -57,10 +57,10 @@ export async function createFollowUpAction(
     }
   }
 
-  revalidatePath("/follow-ups");
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/follow-ups?toast=Follow-up+created");
+  redirect("/crm?toast=Follow-up+created");
 }
 
 export async function updateFollowUpAction(
@@ -97,12 +97,12 @@ export async function updateFollowUpAction(
     .eq("company_id", company.id);
 
   if (error) return { error: error.message };
-  revalidatePath("/follow-ups");
+  revalidatePath("/crm");
   revalidatePath(`/follow-ups/${id}`);
   revalidatePath(`/follow-ups/${id}/edit`);
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/follow-ups?toast=Follow-up+updated");
+  redirect("/crm?toast=Follow-up+updated");
 }
 
 export async function markFollowUpCompleteAction(id: string) {
@@ -118,7 +118,7 @@ export async function markFollowUpCompleteAction(id: string) {
     .eq("company_id", company.id);
 
   if (error) return;
-  revalidatePath("/follow-ups");
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
 }
@@ -136,8 +136,8 @@ export async function deleteFollowUpAction(id: string) {
     .eq("company_id", company.id);
 
   if (error) redirect(`/follow-ups/${id}/edit?error=${encodeURIComponent(error.message)}`);
-  revalidatePath("/follow-ups");
+  revalidatePath("/crm");
   revalidatePath("/workspace");
   revalidatePath("/customers");
-  redirect("/follow-ups?toast=Follow-up+deleted");
+  redirect("/crm?toast=Follow-up+deleted");
 }

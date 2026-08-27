@@ -10,7 +10,7 @@ import { markNotificationsRead, deleteNotifications } from "@/lib/notifications"
 // any insert site in the app actually uses (cron overdue-follow-up sweep,
 // Stripe webhook, automation actions, integration sync) is covered here.
 const NOTIFICATION_TYPE_ROUTES: Record<string, string> = {
-  follow_up_overdue: "/follow-ups",
+  follow_up_overdue: "/crm",
   billing: "/settings",
   automation: "/automations",
   sync_complete: "/imports",

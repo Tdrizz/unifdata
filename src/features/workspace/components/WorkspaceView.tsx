@@ -316,7 +316,6 @@ export function WorkspaceView({
         className="mb-6"
         actions={
           <>
-            <Link href="/jobs" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View calendar</Link>
             <Link href="/crm#pipeline-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -467,7 +466,7 @@ export function WorkspaceView({
           useful detail); Revenue This Month dropped (a lagging metric, not
           actionable day-to-day, and duplicated the Sales page anyway). */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <Link href="/jobs" className="block">
+        <Link href="/crm" className="block">
           <KpiCard
             label={`Active ${jobPlural}`}
             value={activeWork.length}
@@ -501,7 +500,7 @@ export function WorkspaceView({
         <Card padding={0} radius="md" className="overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
             <p className="text-[13.5px] font-semibold text-ud-ink">Priority queue</p>
-            <Link href="/follow-ups" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View all</Link>
+            <Link href="/crm" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View all</Link>
           </div>
           {priorityQueue.length === 0 ? (
             <p className="px-5 py-5 text-sm text-ud-muted text-center">Nothing needs attention right now.</p>

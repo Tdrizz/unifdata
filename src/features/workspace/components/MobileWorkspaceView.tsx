@@ -312,7 +312,7 @@ export function MobileWorkspaceView({
           Priority Queue below; Revenue This Month dropped as a lagging,
           non-actionable metric). */}
       <div className="px-4 pb-6 grid grid-cols-3 gap-2.5">
-        <Link href="/jobs" className="block">
+        <Link href="/crm" className="block">
           <KpiCard
             compact
             label={`Active ${jobPlural}`}
@@ -487,7 +487,7 @@ export function MobileWorkspaceView({
                 Priority queue
               </p>
               {followUpSourcedCount > 0 && (
-                <Link href="/follow-ups" className="text-[13px] font-semibold text-ud-accent">
+                <Link href="/crm" className="text-[13px] font-semibold text-ud-accent">
                   See all {followUpSourcedCount} follow-ups
                 </Link>
               )}

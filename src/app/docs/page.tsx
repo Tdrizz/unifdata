@@ -44,10 +44,8 @@ const lifecycle = [
 const pages = [
   { name: "Today", path: "/workspace", tag: "Dashboard", description: "Your daily operating brief and the only place Vera lives. Opens with a Vera summary of what needs attention — follow-ups due, unpaid work, stale pipeline — plus a live chat panel to ask Vera anything or have it act. Start here every morning." },
   { name: "Customers", path: "/customers", tag: "Records", description: "Unified contact records. Every person or business the workspace has a relationship with, enriched with relationship status, activity history, and linked records." },
-  { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities. See where business sits across the full lifecycle and identify what needs a follow-up or next action." },
-  { name: "Jobs", path: "/jobs", tag: "Operations", description: "All active and scheduled work. Weekly calendar toggle. Filter by status — Scheduled, Active, Complete, Cancelled." },
+  { name: "Pipeline", path: "/crm", tag: "Overview", description: "Kanban-style view of all opportunities and active work, from lead through paid. Follow-ups/reminders live here too, as due-date badges on their linked lead or job card — there's no separate follow-ups page." },
   { name: "Sales", path: "/sales", tag: "Revenue", description: "All revenue records with payment status. Overdue items surface prominently. The fastest way to see what's been completed but not collected." },
-  { name: "Follow-ups", path: "/follow-ups", tag: "Actions", description: "Every reminder and action item. List and calendar view. Overdue items surface on the workspace dashboard automatically." },
   { name: "Data Hub", path: "/data-hub", tag: "Intelligence", description: "Data quality scoring for all records. Flags missing fields, finds duplicates, shows health percentage. Vera reads from this to prioritize what needs attention." },
   { name: "Imports", path: "/imports", tag: "Data", description: "CSV and Google Sheets import with smart column mapping and staged review. Also manages connected integrations — Jobber, QuickBooks, HubSpot, Square." },
   { name: "Settings", path: "/settings", tag: "Account", description: "Business profile, team members, industry labels, process boards, billing, and notification preferences." },

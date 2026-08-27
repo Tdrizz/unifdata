@@ -75,7 +75,6 @@ export async function createLeadAction(
   }
 
   revalidatePath("/crm");
-  revalidatePath("/jobs");
   revalidatePath("/workspace");
   revalidatePath("/customers");
   // Won on creation -> a Job now exists; land there, not back on the board,
@@ -150,7 +149,6 @@ export async function updateLeadAction(
 
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
-  revalidatePath("/jobs");
   revalidatePath("/workspace");
   revalidatePath("/customers");
   // Marking Won just superseded this lead with a Job (see Pipeline's dedup

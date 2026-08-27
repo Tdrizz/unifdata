@@ -115,13 +115,11 @@ export function ImportSummary({
             href={
               recordType === "relationships"
                 ? "/customers"
-                : recordType === "opportunities"
+                : recordType === "opportunities" || recordType === "work" || recordType === "follow-ups"
                   ? "/crm"
-                  : recordType === "work"
-                    ? "/jobs"
-                    : recordType === "revenue"
-                      ? "/sales"
-                      : "/follow-ups"
+                  : recordType === "revenue"
+                    ? "/sales"
+                    : "/crm"
             }
             className="rounded-[10px] bg-ud-ink px-4 py-2.5 text-[13px] font-semibold text-white hover:opacity-90"
           >
