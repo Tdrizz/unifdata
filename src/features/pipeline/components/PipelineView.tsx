@@ -7,8 +7,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, groupCardsByStage } from "../stages";
+import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
+import { PipelineCardActions } from "./PipelineCardActions";
+import { formatDateOnly } from "@/lib/date-format";
 import type { PipelineCard as PipelineCardType, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow as JobsLeadRow } from "@/features/jobs/types";
@@ -28,8 +30,8 @@ const SOURCE_TYPE_LABEL: Record<PipelineCardType["sourceType"], string> = {
 
 function PipelineCardRow({ card }: { card: PipelineCardType }) {
   return (
-    <Link href={card.editHref} style={{ textDecoration: "none" }}>
-      <div className="bg-ud-surface border border-ud rounded-[13px] p-[14px_15px] mb-2 shadow-ud cursor-pointer transition-[box-shadow,transform] duration-[220ms] hover:-translate-y-0.5 hover:shadow-ud-raised">
+    <div className="bg-ud-surface border border-ud rounded-[13px] p-[14px_15px] mb-2 shadow-ud transition-[box-shadow,transform] duration-[220ms] hover:-translate-y-0.5 hover:shadow-ud-raised">
+      <Link href={card.editHref} className="block cursor-pointer" style={{ textDecoration: "none" }}>
         <div className="flex items-center justify-between gap-2 mb-[3px]">
           <p className="text-[13px] font-semibold text-ud-ink leading-[1.3] truncate">{card.title}</p>
           <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.06em] text-ud-faint">
@@ -41,8 +43,14 @@ function PipelineCardRow({ card }: { card: PipelineCardType }) {
           <StatusBadge tone="neutral">{formatCurrency(card.value)}</StatusBadge>
           <span className="text-ud-faint text-[11px]">{card.statusLabel}</span>
         </div>
-      </div>
-    </Link>
+        {card.openFollowUp && (
+          <p className="mt-2 text-[11px] font-semibold text-ud-danger">
+            Follow-up due {formatDateOnly(card.openFollowUp.dueDate)}
+          </p>
+        )}
+      </Link>
+      <PipelineCardActions card={card} />
+    </div>
   );
 }
 
@@ -81,11 +89,12 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
           const stageCards = grouped.get(stage.name) ?? [];
           const totalValue = stageCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
           const quickAddType = STAGE_TO_QUICK_ADD_TYPE[stage.name];
+          const displayLabel = getStageDisplayLabel(stage.name, profile);
           return (
             <div key={stage.name} className="bg-ud-surface-sunk rounded-[12px] p-3 min-h-[200px] border border-ud-soft">
               <div className="flex items-center justify-between mb-3 gap-2">
                 <div>
-                  <span className="text-[11px] font-bold text-ud-muted uppercase tracking-[0.10em]">{stage.name}</span>
+                  <span className="text-[11px] font-bold text-ud-muted uppercase tracking-[0.10em]">{displayLabel}</span>
                   <span className="text-[11px] text-ud-faint ml-[5px]">{formatCurrency(totalValue)}</span>
                 </div>
                 <span className="text-[10px] font-bold bg-ud-surface-sunk text-ud-faint rounded-full px-2 py-[2px]">{stageCards.length}</span>
@@ -103,7 +112,7 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Add {stage.name.toLowerCase()}
+                Add {displayLabel.toLowerCase()}
               </Link>
             </div>
           );

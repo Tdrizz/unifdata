@@ -13,6 +13,7 @@ export type PipelineCard = {
   dateLabel: string | null;
   editHref: string;
   chain: { leadId: string | null; jobId: string | null; saleId: string | null };
+  openFollowUp: { id: string; dueDate: string } | null;
 };
 
 export type RawContact = { id: string; first_name: string | null; last_name: string | null } | null;
@@ -48,6 +49,14 @@ export type RawSale = {
   payment_status: string | null;
   sale_date: string | null;
   contact?: RawContact;
+};
+
+export type RawFollowUp = {
+  id: string;
+  lead_id: string | null;
+  contact_id: string | null;
+  due_date: string;
+  status: string | null;
 };
 
 export type PipelinePageData = {

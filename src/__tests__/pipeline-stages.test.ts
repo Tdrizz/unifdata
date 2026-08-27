@@ -6,8 +6,9 @@
  * chain-length fixture rather than just the happy path.
  */
 import { describe, it, expect } from "vitest";
-import { mapRecordsToCards, groupCardsByStage } from "@/features/pipeline/stages";
-import type { RawJob, RawLead, RawSale } from "@/features/pipeline/types";
+import { mapRecordsToCards, groupCardsByStage, getStageDisplayLabel } from "@/features/pipeline/stages";
+import { industryProfiles } from "@/lib/industry-profiles";
+import type { RawFollowUp, RawJob, RawLead, RawSale } from "@/features/pipeline/types";
 
 function lead(overrides: Partial<RawLead> = {}): RawLead {
   return {
@@ -120,5 +121,92 @@ describe("groupCardsByStage", () => {
     expect(grouped.get("Lead")).toHaveLength(1);
     expect(grouped.get("Paid")).toHaveLength(0);
     expect(grouped.has("Lost")).toBe(true);
+  });
+});
+
+describe("leadPipelineStage (via mapRecordsToCards)", () => {
+  // Regression test: the old fuzzy keyword matcher (mapToStage) silently fell
+  // through to "Lead" for these two exact statuses, since neither contains
+  // "quoted"/"proposal"/etc -- meaning the Quoted column's own quick-add
+  // default status never actually landed a new card in that column.
+  it("maps 'Estimate Sent' to the Quoted stage", () => {
+    const cards = mapRecordsToCards([lead({ status: "Estimate Sent" })], [], []);
+    expect(cards[0].stage).toBe("Quoted");
+  });
+
+  it("maps 'Follow Up' to the Quoted stage", () => {
+    const cards = mapRecordsToCards([lead({ status: "Follow Up" })], [], []);
+    expect(cards[0].stage).toBe("Quoted");
+  });
+
+  it("maps 'Contacted' to the Lead stage", () => {
+    const cards = mapRecordsToCards([lead({ status: "Contacted" })], [], []);
+    expect(cards[0].stage).toBe("Lead");
+  });
+
+  it("falls back to Lead for an unrecognized legacy status", () => {
+    const cards = mapRecordsToCards([lead({ status: "Some CSV garbage" })], [], []);
+    expect(cards[0].stage).toBe("Lead");
+  });
+});
+
+describe("openFollowUp badge", () => {
+  function followUp(overrides: Partial<RawFollowUp> = {}): RawFollowUp {
+    return {
+      id: "fu-1",
+      lead_id: "lead-1",
+      contact_id: "contact-1",
+      due_date: "2026-01-01",
+      status: "Open",
+      ...overrides,
+    };
+  }
+
+  it("attaches an open follow-up matched by lead_id", () => {
+    const cards = mapRecordsToCards([lead()], [], [], [followUp()]);
+    expect(cards[0].openFollowUp).toEqual({ id: "fu-1", dueDate: "2026-01-01" });
+  });
+
+  it("falls back to matching by contact_id for a job card (no direct job link)", () => {
+    const cards = mapRecordsToCards(
+      [],
+      [job({ lead_id: null })],
+      [],
+      [followUp({ lead_id: null, contact_id: "contact-1" })],
+    );
+    expect(cards[0].openFollowUp).toEqual({ id: "fu-1", dueDate: "2026-01-01" });
+  });
+
+  it("excludes a completed follow-up", () => {
+    const cards = mapRecordsToCards([lead()], [], [], [followUp({ status: "Complete" })]);
+    expect(cards[0].openFollowUp).toBeNull();
+  });
+
+  it("picks the earliest due date when more than one is open", () => {
+    const cards = mapRecordsToCards(
+      [lead()],
+      [],
+      [],
+      [followUp({ id: "fu-later", due_date: "2026-03-01" }), followUp({ id: "fu-earlier", due_date: "2026-01-15" })],
+    );
+    expect(cards[0].openFollowUp?.id).toBe("fu-earlier");
+  });
+
+  it("is null when there's no open follow-up at all", () => {
+    const cards = mapRecordsToCards([lead()], [], []);
+    expect(cards[0].openFollowUp).toBeNull();
+  });
+});
+
+describe("getStageDisplayLabel", () => {
+  it("renders the Quoted column using the industry profile's lead word", () => {
+    expect(getStageDisplayLabel("Quoted", industryProfiles.construction)).toBe("Estimate");
+    expect(getStageDisplayLabel("Quoted", industryProfiles.general)).toBe("Opportunity");
+  });
+
+  it("leaves the other stage names static across profiles", () => {
+    expect(getStageDisplayLabel("Lead", industryProfiles.construction)).toBe("Lead");
+    expect(getStageDisplayLabel("Active", industryProfiles.general)).toBe("Active");
+    expect(getStageDisplayLabel("Paid", industryProfiles.construction)).toBe("Paid");
   });
 });

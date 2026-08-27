@@ -8,8 +8,10 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { Pill } from "@/components/ui/Pill";
 import { formatCurrency } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, groupCardsByStage } from "../stages";
+import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCardsByStage } from "../stages";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
+import { PipelineCardActions } from "./PipelineCardActions";
+import { formatDateOnly } from "@/lib/date-format";
 import type { PipelineCard, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow as JobsLeadRow } from "@/features/jobs/types";
@@ -78,7 +80,7 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
                 isActive ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud text-ud-muted",
               ].join(" ")}
             >
-              {stage.name} {count}
+              {getStageDisplayLabel(stage.name, profile)} {count}
             </button>
           );
         })}
@@ -92,31 +94,35 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
       ) : (
         <div className="px-4 flex flex-col gap-3">
           {activeStageCards.map((card) => (
-            <Link
-              key={card.id}
-              href={card.editHref}
-              className="bg-ud-surface rounded-[10px] border border-ud p-4 block active:bg-ud-surface-sunk"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-[14px] text-ud-ink leading-snug">{card.title}</p>
-                {card.value != null && (
-                  <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
-                    {formatCurrency(card.value)}
+            <div key={card.id} className="bg-ud-surface rounded-[10px] border border-ud p-4 active:bg-ud-surface-sunk">
+              <Link href={card.editHref} className="block">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-[14px] text-ud-ink leading-snug">{card.title}</p>
+                  {card.value != null && (
+                    <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
+                      {formatCurrency(card.value)}
+                    </p>
+                  )}
+                </div>
+                <div className="mt-[8px] flex flex-wrap items-center gap-[6px]">
+                  <Pill tone="neutral">{SOURCE_TYPE_LABEL[card.sourceType]}</Pill>
+                  <span className="text-[11px] text-ud-muted">{card.statusLabel}</span>
+                </div>
+                <p className="mt-[8px]">
+                  {card.contactName ? (
+                    <span className="text-[12px] text-ud-muted">{card.contactName}</span>
+                  ) : (
+                    <span className="text-[12px] text-ud-faint italic">No contact linked</span>
+                  )}
+                </p>
+                {card.openFollowUp && (
+                  <p className="mt-2 text-[11px] font-semibold text-ud-danger">
+                    Follow-up due {formatDateOnly(card.openFollowUp.dueDate)}
                   </p>
                 )}
-              </div>
-              <div className="mt-[8px] flex flex-wrap items-center gap-[6px]">
-                <Pill tone="neutral">{SOURCE_TYPE_LABEL[card.sourceType]}</Pill>
-                <span className="text-[11px] text-ud-muted">{card.statusLabel}</span>
-              </div>
-              <p className="mt-[8px]">
-                {card.contactName ? (
-                  <span className="text-[12px] text-ud-muted">{card.contactName}</span>
-                ) : (
-                  <span className="text-[12px] text-ud-faint italic">No contact linked</span>
-                )}
-              </p>
-            </Link>
+              </Link>
+              <PipelineCardActions card={card} />
+            </div>
           ))}
         </div>
       )}
