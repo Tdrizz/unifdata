@@ -132,7 +132,9 @@ export async function runOutreachWorker(
   if (isOutreachAutopilot(company)) {
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
-    const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
+    // Shared sending domain across every company -- the display name is what
+    // actually tells the recipient which business emailed them.
+    const from = `${company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
     const to = (payload as { email?: string }).email;
 
     if (draft.draft_type === "outreach_email" && apiKey && domain && to) {
