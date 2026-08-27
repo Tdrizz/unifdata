@@ -110,3 +110,32 @@ export async function getEscalationLevel(
 export function hoursSince(isoTimestamp: string): number {
   return (Date.now() - new Date(isoTimestamp).getTime()) / 3_600_000;
 }
+
+// Every agent worker that inserts into agent_alerts used to do so with no
+// existence check -- a dismissed alert just got replaced by an identical one
+// on the next run (or after whatever time-based cooldown that worker had
+// elapsed). This checks for ANY alert of the same type+record within the
+// lookback window regardless of status, so a dismissed alert stays dismissed
+// instead of reappearing.
+export async function hasRecentAlert(
+  orgId: string,
+  alertType: string,
+  recordId: string | null,
+  lookbackDays = 7,
+): Promise<boolean> {
+  const supabase = db();
+  const cutoff = new Date(Date.now() - lookbackDays * 86_400_000).toISOString();
+
+  let query = supabase
+    .from("agent_alerts")
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("alert_type", alertType)
+    .gte("created_at", cutoff)
+    .limit(1);
+
+  query = recordId ? query.eq("record_id", recordId) : query.is("record_id", null);
+
+  const { data } = await query.maybeSingle();
+  return !!data;
+}

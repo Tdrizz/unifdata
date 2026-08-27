@@ -8,7 +8,7 @@ import { buildOutreachPrompt, buildOutreachUserMessage } from "@/lib/ai/prompts"
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { getMemory, recordSignalFired, getEscalationLevel, hoursSince } from "@/lib/agents/memory";
+import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
@@ -77,15 +77,17 @@ export async function runOutreachWorker(
         .limit(1)
         .maybeSingle();
       if (latestMsg?.direction === "inbound" && new Date(latestMsg.sent_at) > new Date(sevenDaysAgo)) {
-        await supabase.from("agent_alerts").insert({
-          organization_id: company.id,
-          alert_type: "unanswered_reply",
-          title: "Unanswered reply",
-          body: `${String(payload.customer_name ?? "A contact")} replied but hasn't received a response.`,
-          severity: "warning",
-          escalation_level: 0,
-          record_id: customerId ?? null,
-        });
+        if (!(await hasRecentAlert(company.id, "unanswered_reply", customerId ?? null))) {
+          await supabase.from("agent_alerts").insert({
+            organization_id: company.id,
+            alert_type: "unanswered_reply",
+            title: "Unanswered reply",
+            body: `${String(payload.customer_name ?? "A contact")} replied but hasn't received a response.`,
+            severity: "warning",
+            escalation_level: 0,
+            record_id: customerId ?? null,
+          });
+        }
         return;
       }
     }

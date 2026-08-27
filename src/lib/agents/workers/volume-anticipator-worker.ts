@@ -4,6 +4,7 @@ import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
 import { buildVocabularyBlock } from "@/lib/ai/prompts/shared";
+import { hasRecentAlert } from "@/lib/agents/memory";
 
 const ForecastAlertSchema = z.object({
   title: z.string().max(100),
@@ -107,6 +108,7 @@ Respond ONLY with valid JSON:
     });
 
     if (!parsed.success) return;
+    if (await hasRecentAlert(orgId, "volume_forecast", null)) return;
 
     await supabase.from("agent_alerts").insert({
       organization_id: orgId,

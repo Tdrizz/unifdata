@@ -6,6 +6,7 @@ import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { TelemetrySnapshot } from "../telemetry";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { hasRecentAlert } from "@/lib/agents/memory";
 
 const RevenueAlertSchema = z.object({
   alerts: z
@@ -72,8 +73,16 @@ export async function runRevenueWorker(
 
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 
+  const freshAlerts = [];
+  for (const alert of parsed.data.alerts) {
+    if (!(await hasRecentAlert(orgId, "revenue", alert.record_id ?? null))) {
+      freshAlerts.push(alert);
+    }
+  }
+  if (freshAlerts.length === 0) return;
+
   await supabase.from("agent_alerts").insert(
-    parsed.data.alerts.map((alert) => ({
+    freshAlerts.map((alert) => ({
       organization_id: orgId,
       alert_type: "revenue",
       severity: alert.severity,

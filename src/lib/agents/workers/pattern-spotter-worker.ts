@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { flushLangfuse } from "@/lib/observability/tracing";
+import { hasRecentAlert } from "@/lib/agents/memory";
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -74,6 +75,7 @@ export async function runPatternSpotterWorker(
   }
 
   if (patterns.length === 0) return;
+  if (await hasRecentAlert(orgId, "service_cooccurrence", null)) return;
 
   // Pick the pattern with the most follow-on candidates (tie-break: frequency)
   patterns.sort((x, y) =>
