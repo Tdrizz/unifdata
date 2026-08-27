@@ -44,7 +44,7 @@ export function AppNav({
     { href: "/customers", label: profile.labels.customerPlural, icon: <IconUsers />, match: (p) => p === "/customers" || p.startsWith("/customers/") || p === "/contacts" || p.startsWith("/contacts/") },
     {
       href: "/crm",
-      label: "Pipeline",
+      label: profile.pipelineLabel,
       icon: <IconBriefcase />,
       match: (p) =>
         p === "/crm" ||

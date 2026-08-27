@@ -23,6 +23,7 @@ function isOverdueDate(date: string | null) {
 
 export function DataHubView({ customers, opportunities, workRecords, revenueRecords, followUps, profile, proposals }: Props) {
   const { customerSingular, customerPlural, leadSingular, leadPlural, jobSingular, jobPlural, salePlural, followUpPlural } = profile.labels;
+  const { pipelineLabel } = profile;
 
   const missingEmail = customers.filter((c) => !c.email);
   const missingPhone = customers.filter((c) => !c.phone);
@@ -123,7 +124,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
           <p className="text-[12px] text-ud-faint mt-0.5">Contact gaps</p>
         </div>
         <div className={`bg-ud-surface border rounded-[12px] p-[14px_16px] ${pipelineIssues > 0 ? "border-ud-warning/20 bg-ud-warning-bg/30" : "border-ud"}`}>
-          <p className="text-[12px] font-medium text-ud-muted">Pipeline</p>
+          <p className="text-[12px] font-medium text-ud-muted">{pipelineLabel}</p>
           <p className={`text-[22px] font-semibold tracking-[-0.02em] mt-0.5 ${pipelineIssues > 0 ? "text-ud-warning" : "text-ud-ink"}`}>{pipelineIssues}</p>
           <p className="text-[12px] text-ud-faint mt-0.5">{leadSingular} data gaps</p>
         </div>
@@ -190,7 +191,7 @@ export function DataHubView({ customers, opportunities, workRecords, revenueReco
         </div>
         {/* Pipeline */}
         <div className={`bg-ud-surface border rounded-[16px] p-5 shadow-ud ${pipelineIssues > 0 ? "bg-ud-warning-bg border-ud-warning/15" : "border-[rgba(0,0,0,0.06)]"}`}>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">Pipeline</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.10em] text-ud-faint">{pipelineLabel}</div>
           <div className={`text-[30px] font-bold tracking-[-0.03em] mt-1.5 leading-none ${pipelineIssues > 0 ? "text-ud-warning" : "text-ud-ink"}`}>{pipelineIssues}</div>
           <div className="text-[12px] text-ud-muted mt-1.5">{leadSingular} data gaps</div>
         </div>
