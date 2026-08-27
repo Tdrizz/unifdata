@@ -19,30 +19,33 @@ export async function setLeadStatusAction(leadId: string, status: string): Promi
   if (!currentCompany) throw new Error("Not signed in.");
   const { company } = currentCompany;
 
-  const { data: lead, error: fetchError } = await supabase
-    .from("leads")
-    .select("contact_id, service_requested, estimated_value")
-    .eq("id", leadId)
-    .eq("company_id", company.id)
-    .single();
-  if (fetchError || !lead) throw new Error(fetchError?.message ?? "Opportunity not found.");
-
-  const { error } = await supabase
+  const { data: lead, error } = await supabase
     .from("leads")
     .update({ status })
     .eq("id", leadId)
-    .eq("company_id", company.id);
-  if (error) throw new Error(error.message);
+    .eq("company_id", company.id)
+    .select("contact_id, service_requested, estimated_value")
+    .single();
+  if (error || !lead) throw new Error(error?.message ?? "Opportunity not found.");
 
+  // Non-fatal, matching every other caller of syncAcceptedOpportunity
+  // (createLeadAction/updateLeadAction/bulkUpdateLeadsStatus) -- the status
+  // change above already committed, so a transient failure here shouldn't
+  // surface as if nothing happened; it should still revalidate and let the
+  // card show its new (already-saved) status.
   if (isAcceptedOpportunityStatus(status)) {
-    await syncAcceptedOpportunity({
-      supabase,
-      companyId: company.id,
-      opportunityId: leadId,
-      contactId: lead.contact_id,
-      opportunityName: lead.service_requested ?? "Opportunity",
-      amount: lead.estimated_value,
-    });
+    try {
+      await syncAcceptedOpportunity({
+        supabase,
+        companyId: company.id,
+        opportunityId: leadId,
+        contactId: lead.contact_id,
+        opportunityName: lead.service_requested ?? "Opportunity",
+        amount: lead.estimated_value,
+      });
+    } catch (err) {
+      console.error("[pipeline.setLeadStatusAction] syncAcceptedOpportunity failed", err);
+    }
   }
 
   revalidatePath("/crm");
@@ -58,33 +61,37 @@ export async function setJobStatusAction(
   if (!currentCompany) throw new Error("Not signed in.");
   const { company } = currentCompany;
 
-  const { data: job, error: fetchError } = await supabase
+  // paid_status is only included in the update when the caller explicitly
+  // passes one -- otherwise it's left untouched, and the RETURNING select
+  // below reports its current value for the isCompletedPaidJob check.
+  const updates: { status: string; paid_status?: string } = { status };
+  if (paidStatus !== undefined) updates.paid_status = paidStatus;
+
+  const { data: job, error } = await supabase
     .from("jobs")
-    .select("contact_id, service_type, job_value, paid_status")
+    .update(updates)
     .eq("id", jobId)
     .eq("company_id", company.id)
+    .select("contact_id, service_type, job_value, paid_status")
     .single();
-  if (fetchError || !job) throw new Error(fetchError?.message ?? "Job not found.");
+  if (error || !job) throw new Error(error?.message ?? "Job not found.");
 
-  const nextPaidStatus = paidStatus ?? job.paid_status;
-
-  const { error } = await supabase
-    .from("jobs")
-    .update({ status, paid_status: nextPaidStatus })
-    .eq("id", jobId)
-    .eq("company_id", company.id);
-  if (error) throw new Error(error.message);
-
-  if (isCompletedPaidJob(status, nextPaidStatus)) {
-    await syncSaleForJob({
-      supabase,
-      companyId: company.id,
-      jobId,
-      contactId: job.contact_id,
-      serviceType: job.service_type ?? "Job",
-      amount: job.job_value,
-      source: null,
-    });
+  // Non-fatal, matching every other caller of syncSaleForJob
+  // (createJobAction/updateJobAction) -- see setLeadStatusAction above.
+  if (isCompletedPaidJob(status, job.paid_status)) {
+    try {
+      await syncSaleForJob({
+        supabase,
+        companyId: company.id,
+        jobId,
+        contactId: job.contact_id,
+        serviceType: job.service_type ?? "Job",
+        amount: job.job_value,
+        source: null,
+      });
+    } catch (err) {
+      console.error("[pipeline.setJobStatusAction] syncSaleForJob failed", err);
+    }
   }
 
   revalidatePath("/crm");
