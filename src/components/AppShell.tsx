@@ -41,6 +41,7 @@ export async function AppShell({
           .from("notifications")
           .select("id, type, title, body, read, created_at")
           .eq("company_id", companyId)
+          .is("cleared_at", null)
           .order("created_at", { ascending: false })
           .limit(10)
       : Promise.resolve({ data: [] }),
