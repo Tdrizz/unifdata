@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getMemory, recordSignalFired, getEscalationLevel, hoursSince } from "@/lib/agents/memory";
+import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
 import {
   buildRecordNudgerPrompt,
   buildRecordNudgerUserMessage,
@@ -134,21 +134,26 @@ export async function runRecordNudgerWorker(
     });
 
     if (parsed && parsed.length > 0) {
-      const alertInserts = await Promise.all(
-        parsed.map(async (alert) => {
-          const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
-          return {
-            organization_id: orgId,
-            alert_type: alert.alert_type,
-            severity: alert.severity,
-            title: alert.title,
-            body: alert.body,
-            reasoning: alert.reasoning ?? null,
-            escalation_level: escalationLevel,
-          };
-        }),
-      );
-      await supabase.from("agent_alerts").insert(alertInserts);
+      const alertInserts = (
+        await Promise.all(
+          parsed.map(async (alert) => {
+            if (await hasRecentAlert(orgId, alert.alert_type, null)) return null;
+            const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
+            return {
+              organization_id: orgId,
+              alert_type: alert.alert_type,
+              severity: alert.severity,
+              title: alert.title,
+              body: alert.body,
+              reasoning: alert.reasoning ?? null,
+              escalation_level: escalationLevel,
+            };
+          }),
+        )
+      ).filter((a) => a !== null);
+      if (alertInserts.length > 0) {
+        await supabase.from("agent_alerts").insert(alertInserts);
+      }
     }
 
     await Promise.all([

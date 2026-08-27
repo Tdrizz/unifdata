@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { masterToLegacyShape, MASTER_LEGACY_SELECT, type MasterCustomerRow } from "@/lib/crm/legacy-shape";
+import { hasRecentAlert } from "@/lib/agents/memory";
 
 const DISENGAGEMENT_DAYS = 60;
 const MIN_BOOKINGS_BEFORE_CHECK = 2;
@@ -97,6 +98,8 @@ export async function runChurnSignalAgent(
   }));
 
   await supabase.from("agent_events").insert(eventRows);
+
+  if (await hasRecentAlert(orgId, "churn_risk", null)) return;
 
   // Write a single summary alert visible in the Agent Inbox
   const topCustomers = signals

@@ -5,7 +5,7 @@ import { buildAlertFormatterPrompt, buildAlertFormatterUserMessage } from "@/lib
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { getEscalationLevel, recordSignalFired } from "@/lib/agents/memory";
+import { getEscalationLevel, recordSignalFired, hasRecentAlert } from "@/lib/agents/memory";
 
 const AgentAlertSchema = z.object({
   alerts: z
@@ -83,22 +83,27 @@ export async function runAlertFormatterWorker(
 
   const primarySignalType = signals[0]?.type ?? "alert";
 
-  const alertInserts = await Promise.all(
-    parsed.data.alerts.map(async (alert) => {
-      const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
-      return {
-        organization_id: orgId,
-        alert_type: alert.alert_type,
-        severity: alert.severity,
-        title: alert.title,
-        body: alert.body,
-        record_id: alert.record_id ?? null,
-        reasoning: alert.reasoning ?? null,
-        escalation_level: escalationLevel,
-      };
-    }),
-  );
+  const alertInserts = (
+    await Promise.all(
+      parsed.data.alerts.map(async (alert) => {
+        if (await hasRecentAlert(orgId, alert.alert_type, alert.record_id ?? null)) return null;
+        const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
+        return {
+          organization_id: orgId,
+          alert_type: alert.alert_type,
+          severity: alert.severity,
+          title: alert.title,
+          body: alert.body,
+          record_id: alert.record_id ?? null,
+          reasoning: alert.reasoning ?? null,
+          escalation_level: escalationLevel,
+        };
+      }),
+    )
+  ).filter((a) => a !== null);
 
-  await supabase.from("agent_alerts").insert(alertInserts);
+  if (alertInserts.length > 0) {
+    await supabase.from("agent_alerts").insert(alertInserts);
+  }
   await recordSignalFired(orgId, primarySignalType);
 }
