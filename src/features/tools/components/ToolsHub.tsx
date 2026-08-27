@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 
 function IconDatabase() { return <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>; }
-function IconZap() { return <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>; }
 function IconLayers() { return <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>; }
 function IconUpload() { return <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>; }
 
@@ -25,12 +24,6 @@ export function ToolsHub({ profile, pendingProposals = 0 }: { profile: IndustryP
       badge: pendingProposals > 0 ? pendingProposals : undefined,
     },
     {
-      href: "/automations",
-      title: "Automations",
-      description: "Rules that fire on their own as records change.",
-      icon: <IconZap />,
-    },
-    {
       href: "/process",
       title: profile.recordPlural,
       description: `Configurable ${profile.recordPlural.toLowerCase()} board for tracking custom workflows.`,
@@ -49,7 +42,7 @@ export function ToolsHub({ profile, pendingProposals = 0 }: { profile: IndustryP
       <PageHeader
         eyebrow="Tools"
         title="Tools"
-        description="Everything else that runs behind the scenes — data quality, automations, imports, and custom boards."
+        description="Everything else that runs behind the scenes — data quality, imports, and custom boards."
         className="mb-6"
       />
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">

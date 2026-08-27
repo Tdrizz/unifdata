@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
-import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export async function PATCH(
   request: Request,
@@ -62,21 +61,6 @@ export async function PATCH(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Fire record_completed automations the first time a record reaches completed
-  if (body.status === "completed" && existing.status !== "completed" && existing.contact_id) {
-    try {
-      await triggerAutomations(
-        company.id,
-        "record_completed",
-        { record_name: existing.name },
-        existing.contact_id,
-        supabase,
-      );
-    } catch (err) {
-      console.error("[process.patch] automation trigger failed", err);
-    }
-  }
 
   // Log stage change activity
   if (body.stageId && body.stageId !== existing.stage_id) {

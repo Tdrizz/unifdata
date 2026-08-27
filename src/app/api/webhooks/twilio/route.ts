@@ -5,7 +5,6 @@ import { setOrgScope } from "@/lib/supabase/org-scope";
 import { validateTwilioSignature, toE164, stripE164Plus } from "@/lib/webhook-validation";
 import { normalizePhone } from "@/lib/crm/phone";
 import { logActivity } from "@/lib/crm/activity";
-import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export const runtime = "nodejs";
 
@@ -184,13 +183,6 @@ export async function POST(request: Request) {
       } catch {
         // Non-fatal
       }
-    }
-
-    // Fire message_received automations for the matched contact
-    try {
-      await triggerAutomations(orgId, "message_received", { body }, customer!.id, supabase);
-    } catch (err) {
-      console.error("[twilio.webhook] automation trigger failed", err);
     }
   }
 

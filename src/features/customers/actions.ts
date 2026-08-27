@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
 import { logActivity } from "@/lib/crm/activity";
-import { triggerAutomations } from "@/lib/automations/evaluator";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -65,12 +64,6 @@ export async function createCustomerAction(
       });
     } catch {
       // Non-fatal
-    }
-    try {
-      await triggerAutomations(company.id, "contact_created", {}, inserted.id, supabase);
-    } catch (err) {
-      // Automation failures must never block the create
-      console.error("[customers.create] automation trigger failed", err);
     }
   }
 

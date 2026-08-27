@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
-import { triggerAutomations } from "@/lib/automations/evaluator";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,12 +64,6 @@ export async function POST(request: Request) {
   } catch {
     // Non-fatal
   }
-  try {
-    await triggerAutomations(company.id, "contact_created", {}, inserted.id, supabase);
-  } catch (err) {
-    console.error("[contacts.quick-create] automation trigger failed", err);
-  }
-
   return NextResponse.json({
     id: inserted.id,
     name: [inserted.first_name, inserted.last_name].filter(Boolean).join(" "),

@@ -29,7 +29,6 @@ function buildBreadcrumbs(
     "/communications": ["Workspace", "Communications"],
     "/tools":        ["Tools", "Tools"],
     "/data-hub":     ["Tools", "Data Hub"],
-    "/automations":  ["Tools", "Automations"],
     "/process":      ["Tools", profile.recordPlural],
     "/imports":      ["Tools", "Imports"],
     "/settings":     ["Account", "Settings"],
