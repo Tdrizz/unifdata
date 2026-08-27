@@ -465,8 +465,8 @@ export function WorkspaceView({
           dropped (the Priority Queue below already covers this, in more
           useful detail); Revenue This Month dropped (a lagging metric, not
           actionable day-to-day, and duplicated the Sales page anyway). */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <Link href="/crm" className="block">
+      <div className="grid grid-cols-3 gap-3 mb-6 items-stretch">
+        <Link href="/crm" className="block h-full">
           <KpiCard
             label={`Active ${jobPlural}`}
             value={activeWork.length}
@@ -474,7 +474,7 @@ export function WorkspaceView({
             className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
           />
         </Link>
-        <Link href="/crm" className="block">
+        <Link href="/crm" className="block h-full">
           <KpiCard
             label="Open Pipeline"
             value={formatCurrency(openPipelineValue)}
@@ -482,7 +482,7 @@ export function WorkspaceView({
             className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
           />
         </Link>
-        <Link href="/sales" className="block">
+        <Link href="/sales" className="block h-full">
           <KpiCard
             label="Unpaid Revenue"
             value={formatCurrency(unpaidRevenueValue)}

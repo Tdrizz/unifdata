@@ -69,7 +69,7 @@ export function PipelineCardActions({ card }: { card: PipelineCard }) {
             e.stopPropagation();
             button.onClick();
           }}
-          className="rounded-[7px] border border-ud bg-ud-surface px-2 py-1 text-[11px] font-semibold text-ud-muted transition-colors duration-[120ms] hover:bg-ud-surface-sunk hover:text-ud-ink disabled:opacity-50"
+          className="rounded-[7px] border border-ud bg-ud-surface px-2 py-1 text-[11px] font-semibold text-ud-muted transition-colors duration-[120ms] hover:bg-ud-surface-sunk hover:text-ud-ink active:bg-ud-surface-sunk disabled:opacity-50 disabled:pointer-events-none"
         >
           {button.label}
         </button>

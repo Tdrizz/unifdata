@@ -64,7 +64,7 @@ export function JobCreateForm({ leads }: Props) {
   return (
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-4 border-b border-ud-soft">
-        <p className="text-sm font-semibold text-ud-ink">Add work</p>
+        <p className="text-sm font-semibold text-ud-ink">Add job</p>
       </div>
       <form action={formAction} className="space-y-4 p-5">
         {state?.error && (
@@ -178,7 +178,7 @@ export function JobCreateForm({ leads }: Props) {
         </div>
 
         <div className="flex justify-end pt-1">
-          <SubmitButton>Create work</SubmitButton>
+          <SubmitButton>Create job</SubmitButton>
         </div>
       </form>
     </div>
