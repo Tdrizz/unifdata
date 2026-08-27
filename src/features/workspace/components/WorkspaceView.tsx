@@ -59,6 +59,10 @@ export function WorkspaceView({
   // survives navigating away and back — this panel used to start empty on
   // every mount even though the backend already kept the full history.
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
+  // Collapsed by default so business data is what you see first, not a big
+  // chat panel — but starts open if there's already an active conversation,
+  // rather than hiding it behind a click right after you were just using it.
+  const [veraExpanded, setVeraExpanded] = useState(initialChatMessages.length > 0);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatSessionId, setChatSessionId] = useState<string | null>(initialChatSessionId);
 
@@ -241,7 +245,6 @@ export function WorkspaceView({
   const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
   const customerSingular = profile.labels.customerSingular;
-  const followUpPlural = profile.labels.followUpPlural;
 
   const overdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
   const dueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
@@ -251,6 +254,10 @@ export function WorkspaceView({
     ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
   ];
   const veraPreview = showAllVera ? veraItems : veraItems.slice(0, 3);
+  const veraSummaryLine =
+    veraItems.length > 0
+      ? `${veraItems.length} thing${veraItems.length === 1 ? "" : "s"} to look at`
+      : "Reviewed your business overnight — nothing urgent.";
 
   const statusLine = (() => {
     const parts: string[] = [];
@@ -261,6 +268,43 @@ export function WorkspaceView({
     if (parts.length === 0 && revenueMTD > 0) parts.push(`${formatCurrency(revenueMTD)} this month`);
     return parts.length > 0 ? parts.join(" · ") : "Nothing urgent today";
   })();
+
+  // One unified pipeline list instead of two disconnected ones (leads-only,
+  // jobs-only) that used to link out to two different pages — an
+  // opportunity used to visually vanish from one list and reappear in the
+  // other as it moved forward, which read as two separate systems instead
+  // of one flow. openLeads/activeWork are already mutually exclusive (a
+  // lead is excluded the moment it's Won, which is also the moment it gets
+  // a job), so merging them can't double-count. Sold work is deliberately
+  // left off — the "Unpaid Revenue" KPI and Priority Queue already cover
+  // that side; this list is about what's still moving forward.
+  const pipelineRows = [
+    ...openLeads.map((lead) => ({
+      id: `lead-${lead.id}`,
+      title: lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`,
+      subtitle: formatCurrency(Number(lead.estimated_value || 0)),
+      href: `/leads/${lead.id}/edit`,
+      status: lead.status || "Lead",
+      tone: "neutral" as const,
+      sortDate: lead.created_at,
+    })),
+    ...activeWork.map((job) => {
+      const customer =
+        (job.contact_id ? customerById.get(job.contact_id) : null) ??
+        (job.customer_id ? customerById.get(job.customer_id) : null);
+      return {
+        id: `job-${job.id}`,
+        title: job.service_type || `Untitled ${jobSingular.toLowerCase()}`,
+        subtitle: customer?.name || `No ${customerSingular.toLowerCase()}`,
+        href: `/jobs/${job.id}/edit`,
+        status: job.status || "Active",
+        tone: getWorkTone(job.status),
+        sortDate: job.created_at,
+      };
+    }),
+  ]
+    .sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime())
+    .slice(0, 6);
 
   return (
     <div className="hidden md:block px-8 pt-7 pb-12">
@@ -273,7 +317,7 @@ export function WorkspaceView({
         actions={
           <>
             <Link href="/jobs" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View calendar</Link>
-            <Link href="/customers" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
+            <Link href="/crm#pipeline-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
               <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -283,20 +327,28 @@ export function WorkspaceView({
         }
       />
 
-      {/* Vera panel — always has a live chat box, not just a link out */}
+      {/* Vera panel — collapsed to a one-line summary by default so business
+          data is what you see first; expands to the full cards + live chat. */}
       <Card padding={0} radius="md" className="overflow-hidden mb-6">
-        <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
-          <div className="flex items-center gap-2.5">
+        <div className={`flex items-center justify-between gap-3 px-[22px] py-4 ${veraExpanded ? "border-b border-ud-soft" : ""}`}>
+          <button
+            type="button"
+            onClick={() => setVeraExpanded((v) => !v)}
+            className="flex items-center gap-2.5 min-w-0 text-left"
+          >
             <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
                 <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
                 <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
               </svg>
             </div>
-            <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {chatMessages.length > 0 && (
+            <div className="min-w-0">
+              <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
+              {!veraExpanded && <p className="text-[12px] text-ud-muted truncate max-w-[320px]">{veraSummaryLine}</p>}
+            </div>
+          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {veraExpanded && chatMessages.length > 0 && (
               <button
                 type="button"
                 onClick={handleClearChat}
@@ -306,7 +358,7 @@ export function WorkspaceView({
                 Clear chat
               </button>
             )}
-            {veraItems.length > 3 && (
+            {veraExpanded && veraItems.length > 3 && (
               <button
                 type="button"
                 onClick={() => setShowAllVera((v) => !v)}
@@ -315,10 +367,17 @@ export function WorkspaceView({
                 {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setVeraExpanded((v) => !v)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface-sunk text-ud-ink border border-ud px-2.5 py-1.5 text-xs rounded-[8px]"
+            >
+              {veraExpanded ? "Collapse" : chatMessages.length > 0 ? "Continue chat" : "Chat"}
+            </button>
           </div>
         </div>
 
-        {veraItems.length > 0 ? (
+        {veraExpanded && (veraItems.length > 0 ? (
           <div className="p-4 space-y-3 border-b border-ud-soft">
             {veraPreview.map((entry) =>
               entry.kind === "draft" ? (
@@ -343,9 +402,9 @@ export function WorkspaceView({
           <div className="px-[22px] py-4 border-b border-ud-soft">
             <p className="text-[13px] text-ud-muted">Vera reviewed your business overnight. Everything looks good.</p>
           </div>
-        )}
+        ))}
 
-        {chatMessages.length > 0 && (
+        {veraExpanded && chatMessages.length > 0 && (
           <div className="max-h-[280px] overflow-y-auto px-[22px] py-4 space-y-2.5 border-b border-ud-soft">
             {chatMessages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
@@ -377,32 +436,37 @@ export function WorkspaceView({
           </div>
         )}
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendChatMessage(chatInput);
-          }}
-          className="flex items-center gap-2 px-[18px] py-3"
-        >
-          <input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Ask Vera anything about your business…"
-            disabled={chatLoading}
-            className="flex-1 bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={chatLoading || !chatInput.trim()}
-            className="rounded-[8px] bg-ud-accent text-white text-[12.5px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+        {veraExpanded && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendChatMessage(chatInput);
+            }}
+            className="flex items-center gap-2 px-[18px] py-3"
           >
-            {chatLoading ? "…" : "Ask"}
-          </button>
-        </form>
+            <input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask Vera anything about your business…"
+              disabled={chatLoading}
+              className="flex-1 bg-transparent text-[13.5px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={chatLoading || !chatInput.trim()}
+              className="rounded-[8px] bg-ud-accent text-white text-[12.5px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+            >
+              {chatLoading ? "…" : "Ask"}
+            </button>
+          </form>
+        )}
       </Card>
 
-      {/* KPI row — every tile routes to the page that actually has the data */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      {/* KPI row — trimmed to the 3 non-overlapping numbers. Follow-ups Due
+          dropped (the Priority Queue below already covers this, in more
+          useful detail); Revenue This Month dropped (a lagging metric, not
+          actionable day-to-day, and duplicated the Sales page anyway). */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <Link href="/jobs" className="block">
           <KpiCard
             label={`Active ${jobPlural}`}
@@ -426,24 +490,6 @@ export function WorkspaceView({
             helper={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} outstanding` : "All clear"}
             delta={unpaidRevenue.length > 0 ? `${unpaidRevenue.length} out` : undefined}
             deltaTone={unpaidRevenue.length > 0 ? "down" : "flat"}
-            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
-          />
-        </Link>
-        <Link href="/follow-ups" className="block">
-          <KpiCard
-            label={`${followUpPlural} Due`}
-            value={followUpSchedule.length}
-            helper={`${overdueCount} overdue · ${dueTodayCount} due today`}
-            delta={overdueCount > 0 ? `${overdueCount} overdue` : undefined}
-            deltaTone={overdueCount > 0 ? "down" : "flat"}
-            className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
-          />
-        </Link>
-        <Link href="/sales" className="block">
-          <KpiCard
-            label="Revenue This Month"
-            value={formatCurrency(revenueMTD)}
-            helper="Month to date"
             className="cursor-pointer transition-shadow duration-[120ms] hover:shadow-ud-raised"
           />
         </Link>
@@ -476,51 +522,23 @@ export function WorkspaceView({
 
         {/* Right column */}
         <div className="flex flex-col gap-4">
-          {/* Jobs today */}
+          {/* Your pipeline — one merged list spanning lead through active
+              work, instead of two separate cards linking to two pages. */}
           <Card padding={0} radius="md" className="overflow-hidden">
             <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
-              <p className="text-[13.5px] font-semibold text-ud-ink">{jobPlural} today</p>
-              <Link href="/jobs" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">Calendar</Link>
-            </div>
-            {activeWork.length === 0 ? (
-              <p className="px-5 py-5 text-sm text-ud-muted">No active {jobPlural.toLowerCase()} right now.</p>
-            ) : (
-              activeWork.slice(0, 5).map((job, idx) => {
-                const customer =
-                  (job.contact_id ? customerById.get(job.contact_id) : null) ??
-                  (job.customer_id ? customerById.get(job.customer_id) : null);
-                const tone = getWorkTone(job.status);
-                return (
-                  <Link key={job.id} href={`/jobs/${job.id}/edit`}>
-                    <ListRow
-                      leading={<Pill tone={tone}>{job.status || "Active"}</Pill>}
-                      title={job.service_type || `Untitled ${jobSingular.toLowerCase()}`}
-                      subtitle={customer?.name || `No ${customerSingular.toLowerCase()}`}
-                      isLast={idx === Math.min(activeWork.length, 5) - 1}
-                      onClick={() => {}}
-                    />
-                  </Link>
-                );
-              })
-            )}
-          </Card>
-
-          {/* Pipeline snapshot */}
-          <Card padding={0} radius="md" className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 px-[22px] py-4 border-b border-ud-soft">
-              <p className="text-[13.5px] font-semibold text-ud-ink">Pipeline snapshot</p>
+              <p className="text-[13.5px] font-semibold text-ud-ink">Your pipeline</p>
               <Link href="/crm" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-transparent text-ud-text border border-transparent hover:bg-ud-surface-sunk px-2.5 py-1.5 text-xs rounded-[8px]">View all</Link>
             </div>
-            {openLeads.length === 0 ? (
-              <p className="px-5 py-5 text-sm text-ud-muted">No open {leadPlural.toLowerCase()}.</p>
+            {pipelineRows.length === 0 ? (
+              <p className="px-5 py-5 text-sm text-ud-muted">No {leadPlural.toLowerCase()} or active {jobPlural.toLowerCase()} right now.</p>
             ) : (
-              openLeads.slice(0, 4).map((lead, idx) => (
-                <Link key={lead.id} href={`/leads/${lead.id}/edit`}>
+              pipelineRows.map((row, idx) => (
+                <Link key={row.id} href={row.href}>
                   <ListRow
-                    trailing={<Pill tone="neutral">{lead.status || "Lead"}</Pill>}
-                    title={lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
-                    subtitle={`${lead.status || "Lead"} · ${formatCurrency(lead.estimated_value)}`}
-                    isLast={idx === Math.min(openLeads.length, 4) - 1}
+                    leading={<Pill tone={row.tone}>{row.status}</Pill>}
+                    title={row.title}
+                    subtitle={row.subtitle}
+                    isLast={idx === pipelineRows.length - 1}
                     onClick={() => {}}
                   />
                 </Link>
