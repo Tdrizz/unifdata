@@ -9,6 +9,8 @@ import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
+import { sendSms } from "@/lib/messaging/sms";
+import { toE164 } from "@/lib/webhook-validation";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
@@ -62,17 +64,21 @@ export async function runOutreachWorker(
         ).join("\n")}`;
     }
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    const { data: thread } = await (supabase as any)
+    // A contact can have more than one thread (SMS + email) -- fetch all of
+    // them rather than .maybeSingle(), which errors/returns null the moment
+    // a second channel exists, silently disabling this guard for those
+    // contacts.
+    const { data: threads } = await (supabase as any)
       .from("communications")
       .select("id")
       .eq("organization_id", company.id)
-      .eq("contact_id", customerId)
-      .maybeSingle();
-    if (thread) {
+      .eq("contact_id", customerId);
+    if (threads?.length) {
+      const threadIds = threads.map((t: { id: string }) => t.id);
       const { data: latestMsg } = await (supabase as any)
         .from("communication_messages")
         .select("direction, sent_at")
-        .eq("communication_id", thread.id)
+        .in("communication_id", threadIds)
         .order("sent_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -130,40 +136,71 @@ export async function runOutreachWorker(
   };
 
   if (isOutreachAutopilot(company)) {
-    const apiKey = process.env.MAILGUN_API_KEY;
-    const domain = process.env.MAILGUN_DOMAIN;
-    // Shared sending domain across every company -- the display name is what
-    // actually tells the recipient which business emailed them.
-    const from = `${company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
-    const to = (payload as { email?: string }).email;
-
-    if (draft.draft_type === "outreach_email" && apiKey && domain && to) {
-      const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-        },
-        body: new URLSearchParams({
-          from,
-          to,
-          subject: draft.subject ?? "Checking in",
-          text: stripMarkdown(draft.body),
-          html: markdownToEmailHtml(draft.body),
-        }),
-      });
-      if (!res.ok) return;
-    }
-
-    await supabase.from("agent_logs").insert({
-      organization_id: company.id,
-      agent_name: "outreach-worker",
-      events_fired: 1,
-      autopilot: true,
-    });
+    // payload.email/phone aren't populated by any caller -- the recipient
+    // address has to come from the contact record itself, same as the
+    // manual-approval route does.
+    let recipientEmail: string | null = (payload as { email?: string }).email ?? null;
+    let recipientPhone: string | null = null;
     if (customerId) {
-      await recordSignalFired(company.id, "outreach", customerId);
+      const { data: contact } = await (supabase as any)
+        .from("master_customers")
+        .select("primary_email, primary_phone")
+        .eq("id", customerId)
+        .eq("organization_id", company.id)
+        .maybeSingle();
+      recipientEmail = recipientEmail ?? contact?.primary_email ?? null;
+      recipientPhone = contact?.primary_phone ?? null;
     }
-    return;
+
+    let sendSucceeded = false;
+
+    if (draft.draft_type === "outreach_email") {
+      const apiKey = process.env.MAILGUN_API_KEY;
+      const domain = process.env.MAILGUN_DOMAIN;
+      // Shared sending domain across every company -- the display name is
+      // what actually tells the recipient which business emailed them.
+      const from = `${company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
+
+      if (apiKey && domain && recipientEmail) {
+        const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
+          },
+          body: new URLSearchParams({
+            from,
+            to: recipientEmail,
+            subject: draft.subject ?? "Checking in",
+            text: stripMarkdown(draft.body),
+            html: markdownToEmailHtml(draft.body),
+          }),
+        });
+        sendSucceeded = res.ok;
+      }
+    } else if (draft.draft_type === "outreach_sms" && recipientPhone) {
+      try {
+        await sendSms(toE164(recipientPhone), stripMarkdown(draft.body), company.name);
+        sendSucceeded = true;
+      } catch (err) {
+        console.error("[outreach-worker] autopilot SMS send failed", err);
+      }
+    }
+
+    if (sendSucceeded) {
+      await supabase.from("agent_logs").insert({
+        organization_id: company.id,
+        agent_name: "outreach-worker",
+        events_fired: 1,
+        autopilot: true,
+      });
+      if (customerId) {
+        await recordSignalFired(company.id, "outreach", customerId);
+      }
+      return;
+    }
+    // Autopilot couldn't actually deliver it (missing config, no recipient
+    // on file, or the send failed) -- fall through to the manual-approval
+    // draft below instead of silently dropping the signal.
   }
 
   await supabase.from("agent_drafts").insert({

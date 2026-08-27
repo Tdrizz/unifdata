@@ -82,12 +82,15 @@ export async function runAlertFormatterWorker(
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 
   const primarySignalType = signals[0]?.type ?? "alert";
+  // Keyed by the same signal type recordSignalFired writes below -- keying
+  // this by the LLM-authored alert.alert_type instead (as before) meant
+  // the lookup almost never found the memory row, so escalation stuck at 0.
+  const escalationLevel = await getEscalationLevel(orgId, primarySignalType);
 
   const alertInserts = (
     await Promise.all(
       parsed.data.alerts.map(async (alert) => {
         if (await hasRecentAlert(orgId, alert.alert_type, alert.record_id ?? null)) return null;
-        const escalationLevel = await getEscalationLevel(orgId, alert.alert_type);
         return {
           organization_id: orgId,
           alert_type: alert.alert_type,
