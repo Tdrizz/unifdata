@@ -7,16 +7,15 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { ContactCombobox } from "@/components/ui/ContactCombobox";
 
-// The Kanban board's stage names (Lead/Quoted/In progress/Won/Lost) and this
-// form's status options are two different vocabularies — clicking "Add" in
-// the Quoted column should default here to a status that actually lands the
-// new record back in that column, not silently default to "New" regardless.
+// Pipeline's stage names and this form's status options are two different
+// vocabularies — clicking "Add" in the Quoted (Estimate) column should
+// default here to a status that actually lands the new record back in that
+// column, not silently default to "New" regardless. Only Lead and Quoted
+// ever reach this form (STAGE_TO_QUICK_ADD_TYPE routes every other column's
+// "Add" to the job/sale forms instead), so those are the only keys needed.
 const STAGE_TO_DEFAULT_STATUS: Record<string, string> = {
   Lead: "New",
   Quoted: "Estimate Sent",
-  "In progress": "Follow Up",
-  Won: "Won",
-  Lost: "Lost",
 };
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
@@ -42,7 +41,7 @@ export function LeadCreateForm({ profile, initialStage }: Props) {
     <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
       <div className="px-5 py-4 border-b border-ud-soft">
         <p className="text-sm font-semibold text-ud-ink">
-          Add {profile.labels.leadSingular.toLowerCase()}
+          Add lead
         </p>
       </div>
       <form action={formAction} className="space-y-4 p-5">
@@ -75,7 +74,7 @@ export function LeadCreateForm({ profile, initialStage }: Props) {
           <div>
             <label className="block">
               <span className="block text-xs font-semibold text-ud-muted">
-                {profile.labels.leadSingular} name <span className="text-ud-accent">*</span>
+                Lead name <span className="text-ud-accent">*</span>
               </span>
               <input
                 name="service_requested"
@@ -134,7 +133,7 @@ export function LeadCreateForm({ profile, initialStage }: Props) {
         </label>
 
         <div className="flex justify-end pt-1">
-          <SubmitButton>Create {profile.labels.leadSingular.toLowerCase()}</SubmitButton>
+          <SubmitButton>Create lead</SubmitButton>
         </div>
       </form>
     </div>

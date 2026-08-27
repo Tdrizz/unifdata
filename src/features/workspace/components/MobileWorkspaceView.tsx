@@ -311,8 +311,8 @@ export function MobileWorkspaceView({
           same as desktop (Follow-ups Due dropped as redundant with the
           Priority Queue below; Revenue This Month dropped as a lagging,
           non-actionable metric). */}
-      <div className="px-4 pb-6 grid grid-cols-3 gap-2.5">
-        <Link href="/crm" className="block">
+      <div className="px-4 pb-6 grid grid-cols-3 gap-2.5 items-stretch">
+        <Link href="/crm" className="block h-full">
           <KpiCard
             compact
             label={`Active ${jobPlural}`}
@@ -321,7 +321,7 @@ export function MobileWorkspaceView({
             className="cursor-pointer active:shadow-ud-raised"
           />
         </Link>
-        <Link href="/crm" className="block">
+        <Link href="/crm" className="block h-full">
           <KpiCard
             compact
             label="Open Pipeline"
@@ -330,7 +330,7 @@ export function MobileWorkspaceView({
             className="cursor-pointer active:shadow-ud-raised"
           />
         </Link>
-        <Link href="/sales" className="block">
+        <Link href="/sales" className="block h-full">
           <KpiCard
             compact
             label="Unpaid Revenue"

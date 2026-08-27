@@ -33,15 +33,22 @@ export function PipelineQuickAdd({ profile, leads, jobs, initialType: initialTyp
 
   return (
     <div className="space-y-4">
+      {/* Plain, fixed labels -- not the industry-profile record names
+          (profile.labels.leadSingular etc). The board above uses the same
+          words for its own stage columns (Lead, Estimate, Active, Complete,
+          Paid), and for a profile like construction that renames a "lead"
+          to "Estimate", a tab titled "Estimate" that actually creates a
+          Lead landing in the *Lead* column read as if it created something
+          else. Selecting what to create should say what it creates. */}
       <Tabs
         variant="segment"
         value={type}
         onChange={(id) => setType(id as QuickAddType)}
         options={[
-          { id: "lead", label: profile.labels.leadSingular },
-          { id: "job", label: profile.labels.jobSingular },
-          { id: "sale", label: profile.labels.saleSingular },
-          { id: "follow-up", label: profile.labels.followUpSingular },
+          { id: "lead", label: "Lead" },
+          { id: "job", label: "Job" },
+          { id: "sale", label: "Sale" },
+          { id: "follow-up", label: "Follow-up" },
         ]}
       />
       {type === "lead" && <LeadCreateForm profile={profile} initialStage={initialStage} />}
