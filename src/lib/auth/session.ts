@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Users). has({ plan: PLAN_SLUG }) is what actually gates access now --
 // Clerk Billing replaced the old custom Stripe Elements checkout + the
 // publicMetadata.subscribed flag it used to set.
-export const PLAN_SLUG = "unifdata_monthly";
+export const PLAN_SLUG = "unifdata_monthly_plan";
 
 export type AppUser = {
   clerkUserId: string;
