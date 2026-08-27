@@ -4,6 +4,12 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// The slug of the Plan created in the Clerk Dashboard (Billing → Plans for
+// Users). has({ plan: PLAN_SLUG }) is what actually gates access now --
+// Clerk Billing replaced the old custom Stripe Elements checkout + the
+// publicMetadata.subscribed flag it used to set.
+export const PLAN_SLUG = "unifdata_monthly";
+
 export type AppUser = {
   clerkUserId: string;
   profileId: string;
@@ -13,10 +19,6 @@ export type AppUser = {
   invitationCompanyId: string | null;
   invitationRole: "owner" | "admin" | "member" | null;
 };
-
-function isSubscribed(metadata: Record<string, unknown> | null | undefined) {
-  return metadata?.subscribed === true;
-}
 
 // Pilot users bypass the paywall via a comma-separated email allowlist.
 // Remove PILOT_EMAILS from the environment to end the pilot program.
@@ -51,7 +53,7 @@ function getInvitationRole(
 }
 
 export async function getCurrentAppUser(): Promise<AppUser | null> {
-  const { userId } = await auth();
+  const { userId, has } = await auth();
 
   if (!userId) {
     return null;
@@ -77,10 +79,7 @@ export async function getCurrentAppUser(): Promise<AppUser | null> {
     throw new Error(profileError.message);
   }
 
-  const subscribed =
-    isSubscribed(user.publicMetadata) ||
-    isSubscribed(user.privateMetadata) ||
-    isPilotUser(email);
+  const subscribed = has({ plan: PLAN_SLUG }) || isPilotUser(email);
   const invitationCompanyId = getStringMetadata(
     user.publicMetadata,
     user.privateMetadata,
