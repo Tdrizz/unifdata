@@ -59,6 +59,9 @@ export function MobileWorkspaceView({
   // Hydrated from the persisted session server-side — see WorkspaceView.tsx
   // for why (conversation used to reset every time this panel remounted).
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
+  // Collapsed by default — see WorkspaceView.tsx for why. Starts open if
+  // there's already an active conversation.
+  const [veraExpanded, setVeraExpanded] = useState(initialChatMessages.length > 0);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatSessionId, setChatSessionId] = useState<string | null>(initialChatSessionId);
 
@@ -155,7 +158,7 @@ export function MobileWorkspaceView({
     if (res.ok) setAlertList((prev) => prev.filter((a) => a.id !== id));
   }
 
-  const { openLeads, activeWork, unpaidRevenue, openPipelineValue, unpaidRevenueValue, revenueMTD } =
+  const { openLeads, activeWork, unpaidRevenue, openPipelineValue, unpaidRevenueValue } =
     computeWorkspaceStats({ leads, jobs, sales });
 
   const manualFollowUpItems: QueueItem[] = followUps
@@ -236,29 +239,53 @@ export function MobileWorkspaceView({
   // actually there when you tap through.
   const followUpSourcedCount = manualFollowUpItems.length + opportunityFollowUpItems.length;
 
-  // Same shape as desktop's KPI tile so the "Follow-ups Due" number means the
-  // same thing on both platforms — follow-up-specific, not the mixed queue.
-  const followUpSchedule = [...manualFollowUpItems, ...opportunityFollowUpItems]
-    .sort((a, b) => {
-      if (a.priority !== b.priority) return a.priority - b.priority;
-      return getSortDate(a.due_date, "") - getSortDate(b.due_date, "");
-    })
-    .slice(0, 5);
-  const followUpOverdueCount = followUpSchedule.filter((i) => i.priority === 0).length;
-  const followUpDueTodayCount = followUpSchedule.filter((i) => i.priority === 1).length;
-
   const jobPlural = profile.labels.jobPlural;
+  const jobSingular = profile.labels.jobSingular;
   const leadPlural = profile.labels.leadPlural;
-  const followUpPlural = profile.labels.followUpPlural;
+  const customerSingular = profile.labels.customerSingular;
   const dayLabel = getDayLabel();
   const greeting = getGreeting();
-  const visitsToShow = activeWork.slice(0, 5);
 
   const veraItems = [
     ...draftList.map((d) => ({ kind: "draft" as const, item: d })),
     ...alertList.map((a) => ({ kind: "alert" as const, item: a })),
   ];
   const veraPreview = showAllVera ? veraItems : veraItems.slice(0, 3);
+  const veraSummaryLine =
+    veraItems.length > 0
+      ? `${veraItems.length} thing${veraItems.length === 1 ? "" : "s"} to look at`
+      : "Reviewed your business overnight — nothing urgent.";
+
+  // One unified pipeline list instead of two disconnected ones — see
+  // WorkspaceView.tsx for the full reasoning (this is the same merge).
+  const pipelineRows = [
+    ...openLeads.map((lead) => ({
+      id: `lead-${lead.id}`,
+      title: lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`,
+      subtitle: formatCurrency(Number(lead.estimated_value || 0)),
+      href: `/leads/${lead.id}/edit`,
+      status: lead.status || "Lead",
+      pillTone: "neutral" as const,
+      sortDate: lead.created_at,
+    })),
+    ...activeWork.map((job) => {
+      const customer =
+        (job.contact_id ? customerById.get(job.contact_id) : null) ??
+        (job.customer_id ? customerById.get(job.customer_id) : null);
+      const tone = getWorkTone(job.status);
+      return {
+        id: `job-${job.id}`,
+        title: job.service_type || `Untitled ${jobSingular.toLowerCase()}`,
+        subtitle: customer?.name || `No ${customerSingular.toLowerCase()}`,
+        href: `/jobs/${job.id}/edit`,
+        status: job.status || "Active",
+        pillTone: (tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral") as "neutral" | "success" | "warning" | "danger",
+        sortDate: job.created_at,
+      };
+    }),
+  ]
+    .sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime())
+    .slice(0, 6);
 
   const statusLine =
     priorityQueue.length === 0
@@ -280,10 +307,11 @@ export function MobileWorkspaceView({
         </p>
       </div>
 
-      {/* Business at a glance — the same KpiCard component and same numbers
-          as desktop, just arranged for a narrow screen, so this reads as
-          the same dashboard instead of a stripped-down mobile version. */}
-      <div className="px-4 pb-6 grid grid-cols-2 gap-3">
+      {/* Business at a glance — trimmed to the 3 non-overlapping numbers,
+          same as desktop (Follow-ups Due dropped as redundant with the
+          Priority Queue below; Revenue This Month dropped as a lagging,
+          non-actionable metric). */}
+      <div className="px-4 pb-6 grid grid-cols-3 gap-2.5">
         <Link href="/jobs" className="block">
           <KpiCard
             compact
@@ -313,45 +341,31 @@ export function MobileWorkspaceView({
             className="cursor-pointer active:shadow-ud-raised"
           />
         </Link>
-        <Link href="/follow-ups" className="block">
-          <KpiCard
-            compact
-            label={`${followUpPlural} Due`}
-            value={followUpSchedule.length}
-            helper={`${followUpOverdueCount} overdue · ${followUpDueTodayCount} due today`}
-            delta={followUpOverdueCount > 0 ? `${followUpOverdueCount} overdue` : undefined}
-            deltaTone={followUpOverdueCount > 0 ? "down" : "flat"}
-            className="cursor-pointer active:shadow-ud-raised"
-          />
-        </Link>
-        <Link href="/sales" className="col-span-2 block">
-          <KpiCard
-            compact
-            label="Revenue This Month"
-            value={formatCurrency(revenueMTD)}
-            helper="Month to date"
-            className="cursor-pointer active:shadow-ud-raised"
-          />
-        </Link>
       </div>
 
-      {/* Vera panel — same actionable card as desktop: draft/alert cards
-          with real approve/dismiss buttons, not just a link out, plus the
-          live chat box. */}
+      {/* Vera panel — collapsed to a one-line summary by default, same as
+          desktop, so business data is what you see first. */}
       <div className="px-4 pb-6">
         <Card padding={0} radius="md" className="overflow-hidden">
-          <div className="flex items-center justify-between gap-3 px-4 py-3.5 border-b border-ud-soft">
-            <div className="flex items-center gap-2.5">
+          <div className={cn("flex items-center justify-between gap-3 px-4 py-3.5", veraExpanded && "border-b border-ud-soft")}>
+            <button
+              type="button"
+              onClick={() => setVeraExpanded((v) => !v)}
+              className="flex items-center gap-2.5 min-w-0 text-left"
+            >
               <div className="w-6 h-6 rounded-full bg-ud-accent/10 flex items-center justify-center shrink-0">
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="text-ud-accent">
                   <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
                   <path d="M19 13l.75 2.25L22 16l-2.25.75L19 19l-.75-2.25L16 16l2.25-.75L19 13z"/>
                 </svg>
               </div>
-              <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {chatMessages.length > 0 && (
+              <div className="min-w-0">
+                <p className="text-[13.5px] font-semibold text-ud-ink">Vera</p>
+                {!veraExpanded && <p className="text-[12px] text-ud-muted truncate max-w-[180px]">{veraSummaryLine}</p>}
+              </div>
+            </button>
+            <div className="flex items-center gap-3 shrink-0">
+              {veraExpanded && chatMessages.length > 0 && (
                 <button
                   type="button"
                   onClick={handleClearChat}
@@ -360,7 +374,7 @@ export function MobileWorkspaceView({
                   Clear chat
                 </button>
               )}
-              {veraItems.length > 3 && (
+              {veraExpanded && veraItems.length > 3 && (
                 <button
                   type="button"
                   onClick={() => setShowAllVera((v) => !v)}
@@ -369,10 +383,17 @@ export function MobileWorkspaceView({
                   {showAllVera ? "Show less" : `See all ${veraItems.length} →`}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setVeraExpanded((v) => !v)}
+                className="text-[13px] font-semibold text-ud-accent"
+              >
+                {veraExpanded ? "Collapse" : chatMessages.length > 0 ? "Continue" : "Chat"}
+              </button>
             </div>
           </div>
 
-          {veraItems.length > 0 ? (
+          {veraExpanded && (veraItems.length > 0 ? (
             <div className="p-3.5 space-y-3 border-b border-ud-soft">
               {veraPreview.map((entry) =>
                 entry.kind === "draft" ? (
@@ -397,9 +418,9 @@ export function MobileWorkspaceView({
             <div className="px-4 py-3.5 border-b border-ud-soft">
               <p className="text-[13px] text-ud-muted">Vera reviewed your business overnight. Everything looks good.</p>
             </div>
-          )}
+          ))}
 
-          {chatMessages.length > 0 && (
+          {veraExpanded && chatMessages.length > 0 && (
             <div className="max-h-[240px] overflow-y-auto px-4 py-3 space-y-2.5 border-b border-ud-soft">
               {chatMessages.map((m, i) => (
                 <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
@@ -430,28 +451,30 @@ export function MobileWorkspaceView({
               ))}
             </div>
           )}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendChatMessage(chatInput);
-            }}
-            className="flex items-center gap-2 px-4 py-3"
-          >
-            <input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask Vera anything…"
-              disabled={chatLoading}
-              className="flex-1 bg-transparent text-[15px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={chatLoading || !chatInput.trim()}
-              className="rounded-[8px] bg-ud-accent text-white text-[13px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+          {veraExpanded && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendChatMessage(chatInput);
+              }}
+              className="flex items-center gap-2 px-4 py-3"
             >
-              {chatLoading ? "…" : "Ask"}
-            </button>
-          </form>
+              <input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask Vera anything…"
+                disabled={chatLoading}
+                className="flex-1 bg-transparent text-[15px] text-ud-ink placeholder:text-ud-faint outline-none disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatInput.trim()}
+                className="rounded-[8px] bg-ud-accent text-white text-[13px] font-semibold px-3 py-[7px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+              >
+                {chatLoading ? "…" : "Ask"}
+              </button>
+            </form>
+          )}
         </Card>
       </div>
 
@@ -500,85 +523,35 @@ export function MobileWorkspaceView({
         )}
       </div>
 
-      {/* Today's jobs — only shown when there's something to show */}
-      {visitsToShow.length > 0 && (
-        <div className="px-4 pb-6">
-          <div className="flex items-center justify-between px-1 mb-2.5">
-            <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em]">
-              Today&apos;s {jobPlural.toLowerCase()}
-            </p>
-            <Link href="/jobs" className="text-[13px] font-semibold text-ud-accent">
-              See all
-            </Link>
-          </div>
-          <Card padding={0} radius="md" className="overflow-hidden">
-            {visitsToShow.map((job) => {
-              const customer =
-                (job.contact_id ? customerById.get(job.contact_id) : null) ??
-                (job.customer_id ? customerById.get(job.customer_id) : null);
-              const tone = getWorkTone(job.status);
-              const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
-                tone === "success" ? "success" : tone === "warning" ? "warning" : tone === "danger" ? "danger" : "neutral";
-              return (
-                <Link
-                  key={job.id}
-                  href={`/jobs/${job.id}/edit`}
-                  className="flex items-center gap-3 px-4 py-[16px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-medium text-ud-ink truncate">
-                      {job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Pill tone={pillTone}>{job.status || "Active"}</Pill>
-                      <p className="text-[13px] text-ud-muted truncate">
-                        {customer?.name || `No ${profile.labels.customerSingular.toLowerCase()} linked`}
-                      </p>
-                    </div>
-                  </div>
-                  {job.job_value != null && (
-                    <span className="udv2-num text-[14px] font-semibold text-ud-ink shrink-0">
-                      {formatCurrency(job.job_value)}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </Card>
-        </div>
-      )}
-
-      {/* Pipeline snapshot — same open leads desktop shows in its right column */}
+      {/* Your pipeline — one merged list spanning lead through active work,
+          instead of two separate cards linking to two pages. See
+          WorkspaceView.tsx for the full reasoning. */}
       <div className="px-4 pb-6">
         <div className="flex items-center justify-between px-1 mb-2.5">
           <p className="text-[13px] font-semibold text-ud-muted uppercase tracking-[0.06em]">
-            Pipeline snapshot
+            Your pipeline
           </p>
           <Link href="/crm" className="text-[13px] font-semibold text-ud-accent">
             See all
           </Link>
         </div>
-        {openLeads.length === 0 ? (
+        {pipelineRows.length === 0 ? (
           <div className="rounded-[14px] border border-ud-soft bg-ud-surface-soft px-5 py-7 text-center">
-            <p className="text-[13px] text-ud-muted">No open {leadPlural.toLowerCase()}.</p>
+            <p className="text-[13px] text-ud-muted">No {leadPlural.toLowerCase()} or active {jobPlural.toLowerCase()} right now.</p>
           </div>
         ) : (
           <Card padding={0} radius="md" className="overflow-hidden">
-            {openLeads.slice(0, 4).map((lead) => (
+            {pipelineRows.map((row) => (
               <Link
-                key={lead.id}
-                href={`/leads/${lead.id}/edit`}
+                key={row.id}
+                href={row.href}
                 className="flex items-center gap-3 px-4 py-[16px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-medium text-ud-ink truncate">
-                    {lead.service_requested || `Untitled ${profile.labels.leadSingular.toLowerCase()}`}
-                  </p>
-                  <p className="text-[13px] text-ud-muted truncate mt-0.5">
-                    {lead.status || "Lead"} · {formatCurrency(lead.estimated_value)}
-                  </p>
+                  <p className="text-[15px] font-medium text-ud-ink truncate">{row.title}</p>
+                  <p className="text-[13px] text-ud-muted truncate mt-0.5">{row.subtitle}</p>
                 </div>
-                <Pill tone="neutral" className="shrink-0">{lead.status || "Lead"}</Pill>
+                <Pill tone={row.pillTone} className="shrink-0">{row.status}</Pill>
               </Link>
             ))}
           </Card>
