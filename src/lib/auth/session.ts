@@ -194,7 +194,7 @@ export async function requireSubscription() {
 
     // Invited member: access must track the COMPANY's live subscription, not
     // just the paying owner's flag. Otherwise a member keeps access forever
-    // after the owner cancels. The Stripe webhook maintains subscription_active.
+    // after the owner cancels. The Clerk billing webhook maintains subscription_active.
     const { data: company } = await supabase
       .from("companies")
       .select("subscription_active")

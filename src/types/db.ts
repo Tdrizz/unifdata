@@ -2265,6 +2265,33 @@ export type Database = {
         }
         Relationships: []
       }
+      clerk_events: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       sync_connections: {
         Row: {
           company_id: string
