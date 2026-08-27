@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { recordDraftOutcome } from "@/lib/agents/memory";
+import { sendSms } from "@/lib/messaging/sms";
 
 type DraftRow = {
   approve_action: string | null;
@@ -65,7 +66,9 @@ export async function POST(
   if (draft.approve_action === "send_email") {
     const apiKey = process.env.MAILGUN_API_KEY;
     const domain = process.env.MAILGUN_DOMAIN;
-    const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
+    // Shared sending domain across every company -- the display name is
+    // what actually tells the recipient which business emailed them.
+    const from = `${currentCompany.company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
     const toEmail = recipientEmail ?? args.email ?? null;
 
     if (apiKey && domain && toEmail) {
@@ -83,28 +86,19 @@ export async function POST(
       sendSucceeded = true;
     }
   } else if (draft.approve_action === "send_sms") {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const from = process.env.TWILIO_PHONE_NUMBER;
     const rawPhone = recipientPhone ?? args.phone ?? null;
     const toPhone = rawPhone
       ? (rawPhone.startsWith("+") ? rawPhone : `+1${rawPhone.replace(/\D/g, "")}`)
       : null;
 
-    if (accountSid && authToken && from && toPhone) {
-      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ To: toPhone, From: from, Body: body }),
-      });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => "");
-        return NextResponse.json({ error: `SMS delivery failed: ${res.status} ${errBody}` }, { status: 502 });
+    if (toPhone) {
+      try {
+        await sendSms(toPhone, body, currentCompany.company.name);
+        sendSucceeded = true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "SMS delivery failed";
+        return NextResponse.json({ error: message }, { status: 502 });
       }
-      sendSucceeded = true;
     }
   }
 

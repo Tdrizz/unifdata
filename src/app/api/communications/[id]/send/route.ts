@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { logActivity } from "@/lib/crm/activity";
+import { sendSms } from "@/lib/messaging/sms";
 
 export async function POST(
   request: Request,
@@ -50,29 +51,15 @@ export async function POST(
     return NextResponse.json({ error: "Thread has no phone number" }, { status: 422 });
   }
 
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
     return NextResponse.json({ error: "SMS is not configured. Add Twilio credentials in settings." }, { status: 503 });
   }
 
-  const twilioRes = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ To: thread.contact_phone, From: fromNumber, Body: messageBody }),
-    },
-  );
-
-  if (!twilioRes.ok) {
-    const twilioData = await twilioRes.json().catch(() => ({})) as { message?: string };
-    return NextResponse.json({ error: twilioData.message ?? "SMS send failed" }, { status: 502 });
+  try {
+    await sendSms(thread.contact_phone, messageBody, company.name);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "SMS send failed";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 
   // Insert outbound message

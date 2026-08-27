@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentCompanyId } from "@/lib/current-company";
+import { getCurrentCompany } from "@/lib/current-company";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { sendSms } from "@/lib/messaging/sms";
@@ -17,10 +17,13 @@ type SendMessageBody = {
   subject?: string;
 };
 
-async function sendEmail(to: string, subject: string, body: string): Promise<string> {
+async function sendEmail(to: string, subject: string, body: string, companyName: string): Promise<string> {
   const apiKey = process.env.MAILGUN_API_KEY;
   const domain = process.env.MAILGUN_DOMAIN;
-  const fromEmail = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
+  const fromAddress = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
+  // Shared sending domain across every company -- the display name is what
+  // actually tells the recipient which business emailed them.
+  const from = `${companyName} <${fromAddress}>`;
 
   if (!apiKey || !domain) {
     throw new Error("Missing Mailgun environment variables.");
@@ -32,7 +35,7 @@ async function sendEmail(to: string, subject: string, body: string): Promise<str
       Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
     },
     body: new URLSearchParams({
-      from: fromEmail,
+      from,
       to,
       subject: subject || "(no subject)",
       text: body,
@@ -55,10 +58,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const companyId = await getCurrentCompanyId();
-  if (!companyId) {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) {
     return NextResponse.json({ error: "No company context." }, { status: 401 });
   }
+  const { company } = currentCompany;
+  const companyId = company.id;
 
   if (!await rateLimit(`messages:${user.id}`, 10, 60_000)) {
     return NextResponse.json({ error: "Too many messages. Try again in a minute." }, { status: 429 });
@@ -106,12 +111,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Customer has no phone number." }, { status: 422 });
       }
       const to = toE164(customer.primary_phone as string);
-      providerMessageId = await sendSms(to, messageBody);
+      providerMessageId = await sendSms(to, messageBody, company.name);
     } else {
       if (!customer.primary_email) {
         return NextResponse.json({ error: "Customer has no email address." }, { status: 422 });
       }
-      providerMessageId = await sendEmail(customer.primary_email as string, subject, messageBody);
+      providerMessageId = await sendEmail(customer.primary_email as string, subject, messageBody, company.name);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Send failed.";
