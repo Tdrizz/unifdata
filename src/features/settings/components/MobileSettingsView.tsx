@@ -15,7 +15,6 @@ import { AiSettingsToggles } from "./AiSettingsToggles";
 import { MonthlyGoalForm } from "./MonthlyGoalForm";
 import { TagsSettings, type TagItem } from "./TagsSettings";
 import { CustomFieldsSettings, type CustomFieldDef } from "./CustomFieldsSettings";
-import { ProcessBoardsSettings, type Board } from "./ProcessBoardsSettings";
 import { LabelsSettings } from "./LabelsSettings";
 import { getStatusTone, getStatusLabel } from "../status-helpers";
 
@@ -43,8 +42,6 @@ interface MobileSettingsViewProps {
   currentMonthRevenue?: number;
   tags: TagItem[];
   contactFields: CustomFieldDef[];
-  recordFields: CustomFieldDef[];
-  boards: Board[];
   profileOverrides: Record<string, string>;
   defaultLabels: {
     customerSingular: string;
@@ -73,8 +70,6 @@ export function MobileSettingsView({
   currentMonthRevenue,
   tags,
   contactFields,
-  recordFields,
-  boards,
   profileOverrides,
   defaultLabels,
 }: MobileSettingsViewProps) {
@@ -347,21 +342,10 @@ export function MobileSettingsView({
       <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
         <div className="px-[22px] py-[18px] border-b border-ud">
           <p className="text-[14.5px] font-semibold text-ud-ink">Custom fields</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">Add extra data fields to contacts and process records.</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Add extra data fields to contacts.</p>
         </div>
         <div className="p-[22px]">
-          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} recordFields={recordFields} />
-        </div>
-      </div>
-
-      {/* Process boards card */}
-      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
-        <div className="px-[22px] py-[18px] border-b border-ud">
-          <p className="text-[14.5px] font-semibold text-ud-ink">Process boards</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">Define the stages records move through in your workflow.</p>
-        </div>
-        <div className="p-[22px]">
-          <ProcessBoardsSettings orgId={company.id} boards={boards} />
+          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} />
         </div>
       </div>
 

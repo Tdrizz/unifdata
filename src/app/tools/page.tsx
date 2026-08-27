@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getPendingProposalsCount } from "@/features/data-hub/queries";
 import { ToolsHub } from "@/features/tools/components/ToolsHub";
 
@@ -17,7 +16,6 @@ export default async function ToolsPage() {
   if (!currentCompany) redirect("/onboarding");
 
   const { company } = currentCompany;
-  const profile = getIndustryProfile(company.business_sector);
   const pendingProposals = await getPendingProposalsCount(supabase, company.id);
 
   return (
@@ -26,7 +24,7 @@ export default async function ToolsPage() {
       userEmail={user.email || ""}
       businessSector={company.business_sector}
     >
-      <ToolsHub profile={profile} pendingProposals={pendingProposals} />
+      <ToolsHub pendingProposals={pendingProposals} />
     </AppShell>
   );
 }

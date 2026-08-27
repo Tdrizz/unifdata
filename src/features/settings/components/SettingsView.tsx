@@ -16,7 +16,6 @@ import { AiSettingsToggles } from "./AiSettingsToggles";
 import { MonthlyGoalForm } from "./MonthlyGoalForm";
 import { TagsSettings, type TagItem } from "./TagsSettings";
 import { CustomFieldsSettings, type CustomFieldDef } from "./CustomFieldsSettings";
-import { ProcessBoardsSettings, type Board } from "./ProcessBoardsSettings";
 import { LabelsSettings } from "./LabelsSettings";
 import { getStatusTone, getStatusLabel } from "../status-helpers";
 
@@ -45,8 +44,6 @@ interface SettingsViewProps {
   currentMonthRevenue?: number;
   tags: TagItem[];
   contactFields: CustomFieldDef[];
-  recordFields: CustomFieldDef[];
-  boards: Board[];
   profileOverrides: Record<string, string>;
   defaultLabels: {
     customerSingular: string;
@@ -77,8 +74,6 @@ export function SettingsView({
   currentMonthRevenue,
   tags,
   contactFields,
-  recordFields,
-  boards,
   profileOverrides,
   defaultLabels,
 }: SettingsViewProps) {
@@ -289,18 +284,9 @@ export function SettingsView({
         <div className="py-[26px] border-b border-ud">
           <div className="mb-[18px]">
             <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Custom fields</p>
-            <p className="text-[12px] text-ud-muted">Add extra data fields to contacts and process records.</p>
+            <p className="text-[12px] text-ud-muted">Add extra data fields to contacts.</p>
           </div>
-          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} recordFields={recordFields} />
-        </div>
-
-        {/* Process boards */}
-        <div className="py-[26px] border-b border-ud">
-          <div className="mb-[18px]">
-            <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Process boards</p>
-            <p className="text-[12px] text-ud-muted">Define the stages records move through in your workflow.</p>
-          </div>
-          <ProcessBoardsSettings orgId={company.id} boards={boards} />
+          <CustomFieldsSettings orgId={company.id} contactFields={contactFields} />
         </div>
 
         {/* Labels */}
