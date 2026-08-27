@@ -29,14 +29,14 @@ const REVIEW_RECORD_TYPE_ROUTES: Record<string, (id: string) => string> = {
 // Aggregate alert types with no single record_id — routed to the list page
 // where the underlying records actually live.
 const AGGREGATE_ALERT_ROUTES: Record<string, string> = {
-  stale_jobs: "/jobs",
-  stale_job: "/jobs",
-  "overdue_follow-ups": "/follow-ups",
-  overdue_follow_ups: "/follow-ups",
-  overdue_followups: "/follow-ups",
-  stale_followups: "/follow-ups",
-  new_customers_no_followup: "/follow-ups",
-  new_customer_no_followup: "/follow-ups",
+  stale_jobs: "/crm",
+  stale_job: "/crm",
+  "overdue_follow-ups": "/crm",
+  overdue_follow_ups: "/crm",
+  overdue_followups: "/crm",
+  stale_followups: "/crm",
+  new_customers_no_followup: "/crm",
+  new_customer_no_followup: "/crm",
   churn_risk: "/customers",
 };
 

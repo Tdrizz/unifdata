@@ -36,14 +36,6 @@ function SvgBriefcase({ active }: { active: boolean }) {
     </svg>
   );
 }
-function SvgBell({ active }: { active: boolean }) {
-  return (
-    <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
 function SvgMessage({ active }: { active: boolean }) {
   return (
     <svg width={21} height={21} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.1 : 1.65} strokeLinecap="round" strokeLinejoin="round">
@@ -75,9 +67,10 @@ export function MobileTabBar({
   const profile = getIndustryProfile(businessSector);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // Merging Leads/Jobs/Sales into one Pipeline tab (and folding Vera into the
-  // Home dashboard) freed up two tab slots, so Follow-ups and Communications
-  // -- previously buried in "More" -- are now primary tabs too.
+  // Merging Leads/Jobs/Sales into one Pipeline tab (with follow-ups folded
+  // in as per-card actions) and folding Vera into the Home dashboard freed
+  // up a tab slot, so Communications -- previously buried in "More" -- is
+  // now a primary tab too.
   const tabs = [
     {
       href: "/workspace",
@@ -98,14 +91,9 @@ export function MobileTabBar({
       match: (p: string) =>
         p === "/crm" ||
         p === "/leads" || p.startsWith("/leads/") ||
-        p === "/jobs" || p.startsWith("/jobs/") ||
-        p === "/sales" || p.startsWith("/sales/"),
-    },
-    {
-      href: "/follow-ups",
-      label: profile.labels.followUpPlural ?? "Follow-ups",
-      Icon: SvgBell,
-      match: (p: string) => p === "/follow-ups" || p.startsWith("/follow-ups/"),
+        p.startsWith("/jobs/") ||
+        p === "/sales" || p.startsWith("/sales/") ||
+        p.startsWith("/follow-ups/"),
     },
     {
       href: "/communications",
@@ -115,15 +103,15 @@ export function MobileTabBar({
     },
   ];
 
-  // Everything else -- Vera lives on Home now, and Data Hub/Automations/
-  // Process/Imports are all reachable through the single Tools entry.
+  // Everything else -- Vera lives on Home now, and Data Hub/Imports are
+  // reachable through the single Tools entry.
   const moreItems = [
     { href: "/tools", label: "Tools", Icon: IconTools },
     { href: "/settings", label: "Settings", Icon: IconSettings },
   ];
 
   const isMoreActive = [
-    "/tools", "/data-hub", "/automations", "/process", "/imports", "/settings",
+    "/tools", "/data-hub", "/imports", "/settings",
   ].some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   return (

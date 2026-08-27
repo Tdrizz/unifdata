@@ -104,7 +104,7 @@ export async function POST(
     revalidatePath("/workspace");
     revalidatePath("/customers");
     revalidatePath("/imports");
-    revalidatePath("/jobs");
+    revalidatePath("/crm");
     revalidatePath("/sales");
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {

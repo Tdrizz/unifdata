@@ -215,7 +215,7 @@ export function JobForm({ job, linkedContact, leads, profile: _profile }: Props)
 
             <div className="flex flex-col-reverse gap-3 md:flex-row md:items-center md:justify-end">
               <Link
-                href="/jobs"
+                href="/crm"
                 className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk"
               >
                 Cancel

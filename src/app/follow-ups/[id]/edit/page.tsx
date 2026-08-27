@@ -32,7 +32,7 @@ export default async function EditFollowUpPage({
     getLeadsForFollowUpSelect(supabase, company.id),
   ]);
 
-  if (!followUp) redirect("/follow-ups");
+  if (!followUp) redirect("/crm");
 
   const linkedContact = await getContactForSelect(supabase, company.id, followUp.contact_id ?? followUp.customer_id);
 

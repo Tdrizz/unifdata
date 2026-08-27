@@ -33,7 +33,7 @@ export default async function EditWorkPage({
     getLeadsForJobSelect(supabase, company.id),
   ]);
 
-  if (!job) redirect("/jobs");
+  if (!job) redirect("/crm");
 
   const linkedContact = await getContactForSelect(supabase, company.id, job.contact_id ?? job.customer_id);
 
@@ -49,8 +49,8 @@ export default async function EditWorkPage({
           title={job.service_type || `Untitled ${profile.labels.jobSingular.toLowerCase()}`}
           description={`Update the linked ${profile.labels.customerSingular.toLowerCase()}, ${profile.labels.leadSingular.toLowerCase()}, stage, payment status, dates, and value.`}
           actions={
-            <Link href="/jobs" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
-              Back to {profile.labels.jobPlural}
+            <Link href="/crm" className="rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-sm font-semibold text-ud-muted hover:bg-ud-surface-sunk">
+              Back to Pipeline
             </Link>
           }
         />
