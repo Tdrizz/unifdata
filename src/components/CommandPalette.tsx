@@ -16,7 +16,6 @@ function buildCommands(businessSector?: string | null) {
     { id: "crm",        label: "Go to Pipeline",                         href: "/crm",        group: "Navigate" },
     { id: "communications", label: "Go to Communications",               href: "/communications", group: "Navigate" },
     { id: "tools",      label: "Go to Tools",                            href: "/tools",      group: "Navigate" },
-    { id: "process",    label: `Go to ${profile.recordPlural}`,          href: "/process",    group: "Navigate" },
     { id: "data-hub",   label: "Go to Data Hub",                         href: "/data-hub",   group: "Navigate" },
     { id: "imports",    label: "Go to Imports",                          href: "/imports",    group: "Navigate" },
     { id: "settings",   label: "Go to Settings",                         href: "/settings",   group: "Navigate" },

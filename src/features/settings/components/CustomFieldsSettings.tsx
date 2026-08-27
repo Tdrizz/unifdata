@@ -23,7 +23,6 @@ export type CustomFieldDef = {
 type Props = {
   orgId: string;
   contactFields: CustomFieldDef[];
-  recordFields: CustomFieldDef[];
 };
 
 const FIELD_TYPES = ["text", "number", "date", "select", "multiselect", "checkbox", "url"];
@@ -275,45 +274,15 @@ function FieldList({
   );
 }
 
-export function CustomFieldsSettings({ orgId, contactFields, recordFields }: Props) {
-  const [activeTab, setActiveTab] = useState<"contacts" | "records">("contacts");
+export function CustomFieldsSettings({ orgId, contactFields }: Props) {
   const [contactFieldsState, setContactFieldsState] = useState<CustomFieldDef[]>(contactFields);
-  const [recordFieldsState, setRecordFieldsState] = useState<CustomFieldDef[]>(recordFields);
 
   return (
-    <div>
-      <div className="flex gap-0 border-b border-ud mb-4">
-        {(["contacts", "records"] as const).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`text-[13px] font-semibold pb-2.5 px-1 mr-5 border-b-2 transition-[color,border-color] duration-[120ms] ${
-              activeTab === tab
-                ? "border-ud-accent text-ud-ink"
-                : "border-transparent text-ud-muted hover:text-ud-ink"
-            }`}
-          >
-            {tab === "contacts" ? "Contacts" : "Process Records"}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "contacts" ? (
-        <FieldList
-          orgId={orgId}
-          entityType="contact"
-          fields={contactFieldsState}
-          setFields={setContactFieldsState}
-        />
-      ) : (
-        <FieldList
-          orgId={orgId}
-          entityType="process_record"
-          fields={recordFieldsState}
-          setFields={setRecordFieldsState}
-        />
-      )}
-    </div>
+    <FieldList
+      orgId={orgId}
+      entityType="contact"
+      fields={contactFieldsState}
+      setFields={setContactFieldsState}
+    />
   );
 }

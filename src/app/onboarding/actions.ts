@@ -48,35 +48,6 @@ export async function createCompanyStepAction(
 
   const profile = getIndustryProfile(businessSector);
 
-  const { data: board } = await (supabase as any)
-    .from("process_boards")
-    .insert({
-      organization_id: company.id,
-      name: profile.defaultBoardName ?? "Process Board",
-      is_default: true,
-    })
-    .select("id")
-    .single();
-
-  if (board) {
-    const defaultStages = profile.defaultStages ?? [
-      { name: "New", stageType: "active", position: 1, color: "#6B7280" },
-      { name: "In Progress", stageType: "active", position: 2, color: "#3B82F6" },
-      { name: "Completed", stageType: "completed", position: 4, color: "#22C55E" },
-      { name: "Cancelled", stageType: "cancelled", position: 5, color: "#EF4444" },
-    ];
-    await (supabase as any).from("board_stages").insert(
-      defaultStages.map((s: any) => ({
-        board_id: board.id,
-        organization_id: company.id,
-        name: s.name,
-        position: s.position,
-        color: s.color,
-        stage_type: s.stageType,
-      }))
-    );
-  }
-
   const defaultTags: string[] = profile.defaultTags ?? [];
   if (defaultTags.length > 0) {
     await (supabase as any).from("tags").insert(

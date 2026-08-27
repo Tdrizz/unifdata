@@ -41,9 +41,6 @@ export default async function SettingsPage() {
     currentMonthSalesResult,
     tagsResult,
     contactFieldsResult,
-    recordFieldsResult,
-    boardsResult,
-    boardStagesResult,
     companyOverridesResult,
   ] = await Promise.all([
     getSettingsIntegrations(supabase, company.id),
@@ -52,9 +49,6 @@ export default async function SettingsPage() {
     supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
     (supabase as any).from("tags").select("id, name, color").eq("organization_id", company.id).order("name"),
     (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "contact").order("position"),
-    (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "process_record").order("position"),
-    (supabase as any).from("process_boards").select("id, name, is_default").eq("organization_id", company.id).order("created_at"),
-    (supabase as any).from("board_stages").select("id, board_id, name, position, color, stage_type").order("position"),
     supabase.from("companies").select("profile_overrides").eq("id", company.id).single(),
   ]);
 
@@ -70,16 +64,6 @@ export default async function SettingsPage() {
     id: string; label: string; field_key: string; field_type: string;
     options: string[] | null; required: boolean; position: number; entity_type: string;
   }>;
-  const recordFields = (recordFieldsResult?.data ?? []) as typeof contactFields;
-
-  const rawBoards = (boardsResult?.data ?? []) as Array<{ id: string; name: string; is_default: boolean }>;
-  const rawStages = (boardStagesResult?.data ?? []) as Array<{
-    id: string; board_id: string; name: string; position: number; color: string; stage_type: string;
-  }>;
-  const boards = rawBoards.map((b) => ({
-    ...b,
-    stages: rawStages.filter((s) => s.board_id === b.id),
-  }));
 
   const profileOverrides = ((companyOverridesResult?.data as any)?.profile_overrides as Record<string, string>) ?? {};
 
@@ -130,8 +114,6 @@ export default async function SettingsPage() {
             currentMonthRevenue={currentMonthRevenue}
             tags={tags}
             contactFields={contactFields}
-            recordFields={recordFields}
-            boards={boards}
             profileOverrides={profileOverrides}
             defaultLabels={defaultLabels}
           />
@@ -155,8 +137,6 @@ export default async function SettingsPage() {
             currentMonthRevenue={currentMonthRevenue}
             tags={tags}
             contactFields={contactFields}
-            recordFields={recordFields}
-            boards={boards}
             profileOverrides={profileOverrides}
             defaultLabels={defaultLabels}
           />
