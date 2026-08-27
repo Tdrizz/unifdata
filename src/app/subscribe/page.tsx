@@ -1,13 +1,17 @@
 import { redirect } from "next/navigation";
 import { PricingTable } from "@clerk/nextjs";
-import { requireAppUser } from "@/lib/auth/session";
+import { hasLiveSubscription, requireAppUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function SubscribePage() {
   const user = await requireAppUser();
 
-  if (user.subscribed) {
+  // user.subscribed reflects has({ plan }), which can lag right after a
+  // checkout that just completed (see hasLiveSubscription's comment in
+  // session.ts) -- without this fallback, reloading this page right after
+  // paying just showed the pricing table again instead of moving on.
+  if (user.subscribed || (await hasLiveSubscription(user.clerkUserId))) {
     redirect("/onboarding");
   }
 

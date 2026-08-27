@@ -8,17 +8,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { authMock, currentUserMock, redirectMock } = vi.hoisted(() => ({
+const { authMock, currentUserMock, redirectMock, getUserBillingSubscriptionMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
   currentUserMock: vi.fn(),
   redirectMock: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
   }),
+  getUserBillingSubscriptionMock: vi.fn(),
 }));
 
 vi.mock("@clerk/nextjs/server", () => ({
   auth: authMock,
   currentUser: currentUserMock,
+  clerkClient: async () => ({
+    billing: { getUserBillingSubscription: getUserBillingSubscriptionMock },
+  }),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -65,6 +69,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   process.env.PILOT_EMAILS = "";
   tables = { profiles: PROFILE };
+  getUserBillingSubscriptionMock.mockResolvedValue({ subscriptionItems: [] });
 });
 
 describe("requireSubscription", () => {
@@ -101,5 +106,16 @@ describe("requireSubscription", () => {
     tables.company_members = { data: { company_id: "c1", role: "member" }, error: null };
     tables.companies = { data: { subscription_active: false }, error: null };
     await expect(requireSubscription()).rejects.toThrow("REDIRECT:/subscribe");
+  });
+
+  it("grants an owner whose session claims are stale but whose live billing subscription is active", async () => {
+    setUser({ subscribed: false });
+    tables.company_members = { data: { company_id: "c1", role: "owner" }, error: null };
+    getUserBillingSubscriptionMock.mockResolvedValue({
+      subscriptionItems: [{ status: "active", plan: { slug: "unifdata_monthly_plan" } }],
+    });
+    const user = await requireSubscription();
+    expect(user.profileId).toBe("p1");
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });
