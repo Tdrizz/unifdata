@@ -1,6 +1,6 @@
 import "server-only";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -9,6 +9,27 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Clerk Billing replaced the old custom Stripe Elements checkout + the
 // publicMetadata.subscribed flag it used to set.
 export const PLAN_SLUG = "unifdata_monthly_plan";
+
+// has({ plan }) reads the `plans` claim baked into the current session JWT,
+// which can lag a few seconds behind a checkout that just completed --
+// Clerk mints a fresh token on its own schedule, not the instant billing
+// changes. That's what left a paying user bounced back to /subscribe right
+// after checkout even though Clerk's own UI already showed them as Active.
+// This does one authoritative, live check against Clerk's Billing API
+// (bypasses session-claims staleness entirely) -- only called on the path
+// where we're about to deny access, so subscribed users on the fast path
+// (has() already true) never pay for the extra round trip.
+export async function hasLiveSubscription(clerkUserId: string): Promise<boolean> {
+  try {
+    const client = await clerkClient();
+    const subscription = await client.billing.getUserBillingSubscription(clerkUserId);
+    return subscription.subscriptionItems.some(
+      (item) => item.plan?.slug === PLAN_SLUG && (item.status === "active" || item.status === "past_due"),
+    );
+  } catch {
+    return false;
+  }
+}
 
 export type AppUser = {
   clerkUserId: string;
@@ -189,6 +210,9 @@ export async function requireSubscription() {
       .maybeSingle();
 
     if (!membership || membership.role === "owner") {
+      if (await hasLiveSubscription(user.clerkUserId)) {
+        return user;
+      }
       redirect("/subscribe");
     }
 
