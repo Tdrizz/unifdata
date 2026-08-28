@@ -88,6 +88,7 @@ export async function POST(request: Request) {
         subject: subject || "(no subject)",
         text: messageBody,
         companyName: company.name,
+        fromLocalPart: company.email_slug,
       });
     }
   } catch (err) {

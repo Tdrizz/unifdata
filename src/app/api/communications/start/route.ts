@@ -102,6 +102,7 @@ export async function POST(request: Request) {
         subject: body.subject?.trim() || `Message from ${company.name}`,
         text: messageBody,
         companyName: company.name,
+        fromLocalPart: company.email_slug,
       });
     }
   } catch (err) {

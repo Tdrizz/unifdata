@@ -21,6 +21,7 @@ export async function getCurrentCompany() {
         status,
         tier,
         preferences,
+        email_slug,
         created_at
     )
     `,

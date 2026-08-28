@@ -604,6 +604,7 @@ export type Database = {
           brand_color: string
           business_sector: string
           created_at: string
+          email_slug: string | null
           id: string
           industry: string | null
           name: string
@@ -621,6 +622,7 @@ export type Database = {
           brand_color?: string
           business_sector?: string
           created_at?: string
+          email_slug?: string | null
           id?: string
           industry?: string | null
           name: string
@@ -638,6 +640,7 @@ export type Database = {
           brand_color?: string
           business_sector?: string
           created_at?: string
+          email_slug?: string | null
           id?: string
           industry?: string | null
           name?: string

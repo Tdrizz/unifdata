@@ -77,7 +77,7 @@ export async function POST(
       return NextResponse.json({ error: "This contact doesn't have an email address on file." }, { status: 422 });
     }
     try {
-      await sendEmail({ to: toEmail, subject: `Message from ${company.name}`, text: messageBody, companyName: company.name });
+      await sendEmail({ to: toEmail, subject: `Message from ${company.name}`, text: messageBody, companyName: company.name, fromLocalPart: company.email_slug });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Email send failed";
       return NextResponse.json({ error: message }, { status: 502 });

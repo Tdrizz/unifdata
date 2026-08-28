@@ -72,7 +72,7 @@ export async function POST(
     }
 
     try {
-      await sendEmail({ to: toEmail, subject, text: body, companyName: currentCompany.company.name });
+      await sendEmail({ to: toEmail, subject, text: body, companyName: currentCompany.company.name, fromLocalPart: currentCompany.company.email_slug });
       sendSucceeded = true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Email delivery failed";
