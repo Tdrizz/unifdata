@@ -168,7 +168,7 @@ export default async function CustomerDetailPage({
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {phone && (
+              {(phone || email) && (
                 <a
                   href={`/communications?contact=${id}`}
                   className="px-3 py-1.5 bg-ud-accent text-white text-[12px] font-semibold rounded-[8px] hover:opacity-90 transition-opacity"
@@ -242,7 +242,7 @@ export default async function CustomerDetailPage({
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {phone && (
+            {(phone || email) && (
               <a
                 href={`/communications?contact=${id}`}
                 className="px-3 py-1.5 bg-ud-accent text-white text-[12px] font-semibold rounded-[8px] hover:opacity-90 transition-opacity"

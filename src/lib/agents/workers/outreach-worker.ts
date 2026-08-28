@@ -10,6 +10,7 @@ import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
 import { sendSms } from "@/lib/messaging/sms";
+import { sendEmail } from "@/lib/messaging/email";
 import { toE164 } from "@/lib/webhook-validation";
 import { isUnpaid, isCompleteWork } from "@/lib/status";
 import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
@@ -231,28 +232,18 @@ export async function runOutreachWorker(
 
     let sendSucceeded = false;
 
-    if (draft.draft_type === "outreach_email") {
-      const apiKey = process.env.MAILGUN_API_KEY;
-      const domain = process.env.MAILGUN_DOMAIN;
-      // Shared sending domain across every company -- the display name is
-      // what actually tells the recipient which business emailed them.
-      const from = `${company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
-
-      if (apiKey && domain && recipientEmail) {
-        const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-          },
-          body: new URLSearchParams({
-            from,
-            to: recipientEmail,
-            subject: draft.subject ?? "Checking in",
-            text: stripMarkdown(draft.body),
-            html: markdownToEmailHtml(draft.body),
-          }),
+    if (draft.draft_type === "outreach_email" && recipientEmail) {
+      try {
+        await sendEmail({
+          to: recipientEmail,
+          subject: draft.subject ?? "Checking in",
+          text: stripMarkdown(draft.body),
+          html: markdownToEmailHtml(draft.body),
+          companyName: company.name,
         });
-        sendSucceeded = res.ok;
+        sendSucceeded = true;
+      } catch (err) {
+        console.error("[outreach-worker] autopilot email send failed", err);
       }
     } else if (draft.draft_type === "outreach_sms" && recipientPhone) {
       try {

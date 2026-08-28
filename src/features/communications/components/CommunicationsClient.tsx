@@ -28,9 +28,13 @@ type Message = {
 // A contact chosen to message who doesn't have a thread yet -- no
 // communications row exists until the first message actually sends, same as
 // most messaging apps (picking someone doesn't create an empty conversation).
-type PendingContact = { id: string; name: string; phone: string | null };
+type PendingContact = { id: string; name: string; phone: string | null; email: string | null };
 
 type ContactSearchResult = { id: string; name: string; email: string | null; phone: string | null };
+
+function normalizeChannel(channel: string): "sms" | "email" {
+  return channel === "email" ? "email" : "sms";
+}
 
 function getContactDisplayName(thread: Thread): string {
   const c = thread.contact;
@@ -98,6 +102,16 @@ export function CommunicationsClient({
     initialSelectedThreadId ?? initialThreads[0]?.id ?? null
   );
   const [pendingContact, setPendingContact] = useState<PendingContact | null>(initialPendingContact);
+  // Which channel a not-yet-started conversation will send on. Defaults to
+  // SMS when the contact has a phone on file, email otherwise; a toggle lets
+  // the user switch when the contact has both.
+  const [pendingChannel, setPendingChannel] = useState<"sms" | "email">(
+    initialPendingContact && !initialPendingContact.phone && initialPendingContact.email ? "email" : "sms"
+  );
+  // Only used when starting a new email conversation -- replies have nowhere
+  // to store a subject (no column on communication_messages), so this is
+  // never shown once a thread already exists.
+  const [emailSubject, setEmailSubject] = useState("");
   // Mobile has no room for both panes at once, so it shows one at a time --
   // the thread list, or the selected conversation, with a back button
   // between them. Desktop ignores this entirely and always shows both (see
@@ -177,6 +191,7 @@ export function CommunicationsClient({
   async function handleSend() {
     if (!compose.trim() || (!selectedId && !pendingContact)) return;
     const body = compose.trim();
+    const subject = emailSubject.trim();
     setCompose("");
     setSendError(null);
 
@@ -193,7 +208,16 @@ export function CommunicationsClient({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(startingNew ? { contact_id: pendingContact.id, body } : { body }),
+            body: JSON.stringify(
+              startingNew
+                ? {
+                    contact_id: pendingContact.id,
+                    body,
+                    channel: pendingChannel,
+                    ...(pendingChannel === "email" && subject ? { subject } : {}),
+                  }
+                : { body }
+            ),
           },
         );
 
@@ -210,6 +234,7 @@ export function CommunicationsClient({
           setMessages([newMessage]);
           setSelectedId(newThread.id);
           setPendingContact(null);
+          setEmailSubject("");
           return;
         }
 
@@ -249,28 +274,44 @@ export function CommunicationsClient({
     return () => clearTimeout(timer);
   }, [searchQuery, showSearch]);
 
-  function handlePickContact(contact: ContactSearchResult) {
+  // A contact can now have two threads (SMS + email), so "already have a
+  // thread with them" has to also match on channel -- otherwise picking a
+  // contact who's only ever texted in, then choosing Email, would silently
+  // reopen the SMS thread instead of starting the email one.
+  function selectContact(contact: PendingContact, channel: "sms" | "email") {
     setShowSearch(false);
     setSearchQuery("");
     setSearchResults([]);
+    setEmailSubject("");
+    setPendingChannel(channel);
 
-    // Already have a thread with them -- open it rather than risk a second
-    // one (the unique index on communications would reject that anyway).
-    const existing = threads.find((t) => t.contact_id === contact.id);
+    const existing = threads.find((t) => t.contact_id === contact.id && normalizeChannel(t.channel) === channel);
     if (existing) {
       setSelectedId(existing.id);
       setPendingContact(null);
     } else {
       setSelectedId(null);
-      setPendingContact({ id: contact.id, name: contact.name || "Unnamed", phone: contact.phone });
+      setPendingContact(contact);
     }
     setMessages([]);
     setMobileView("thread");
   }
 
+  function handlePickContact(contact: ContactSearchResult) {
+    const channel: "sms" | "email" = contact.phone ? "sms" : "email";
+    selectContact({ id: contact.id, name: contact.name || "Unnamed", phone: contact.phone, email: contact.email }, channel);
+  }
+
   const messageGroups = groupMessages(messages);
   const activeName = pendingContact ? pendingContact.name : selectedThread ? getContactDisplayName(selectedThread) : null;
-  const activeSubtitle = pendingContact ? pendingContact.phone : selectedThread ? (selectedThread.contact_phone ?? selectedThread.channel) : null;
+  const activeSubtitle = pendingContact
+    ? (pendingChannel === "email" ? pendingContact.email : pendingContact.phone)
+    : selectedThread
+    ? (selectedThread.contact_phone ?? selectedThread.channel)
+    : null;
+  const activeSubtitleFallback = pendingContact && pendingChannel === "email"
+    ? "No email address on file"
+    : "No phone number on file";
 
   return (
     <>
@@ -405,14 +446,36 @@ export function CommunicationsClient({
                   <path d="m15 18-6-6 6-6" />
                 </svg>
               </button>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="font-semibold text-[15px] text-ud-ink truncate">
                   {activeName}
                 </div>
                 <div className="text-[12px] text-ud-faint">
-                  {activeSubtitle ?? "No phone number on file"}
+                  {activeSubtitle ?? activeSubtitleFallback}
                 </div>
               </div>
+              {pendingContact && pendingContact.phone && pendingContact.email && (
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => selectContact(pendingContact, "sms")}
+                    className={`px-2 py-1 rounded-[6px] text-[11px] font-semibold transition-colors ${
+                      pendingChannel === "sms" ? "bg-ud-accent text-white" : "bg-ud-surface-sunk text-ud-muted hover:text-ud-ink"
+                    }`}
+                  >
+                    Text
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectContact(pendingContact, "email")}
+                    className={`px-2 py-1 rounded-[6px] text-[11px] font-semibold transition-colors ${
+                      pendingChannel === "email" ? "bg-ud-accent text-white" : "bg-ud-surface-sunk text-ud-muted hover:text-ud-ink"
+                    }`}
+                  >
+                    Email
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Messages */}
@@ -455,24 +518,11 @@ export function CommunicationsClient({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Compose — the send API only knows how to hand a reply to
-                Twilio (SMS), so an email thread (see the mailgun webhook,
-                which is the only thing that creates channel: "email" threads)
-                gets a plain explanation instead of a composer that would
-                just fail with a 422 every time someone hit Send. */}
-            {selectedThread && selectedThread.channel !== "sms" ? (
-              <div className="px-4 md:px-6 py-4 border-t border-ud">
-                <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
-                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
-                  </svg>
-                  <p className="text-[13px] text-ud-muted leading-[1.5]">
-                    This conversation came in by email, and replying from here isn&apos;t available yet.
-                    To respond, reach out to this customer by phone or send them a new email directly.
-                  </p>
-                </div>
-              </div>
-            ) : pendingContact && !pendingContact.phone ? (
+            {/* Compose. Blocked only when the contact doesn't have the info
+                a chosen channel needs (no phone for SMS, no email address for
+                email) -- both channels can otherwise send: the reply route
+                and the start route both branch on channel server-side. */}
+            {pendingContact && pendingChannel === "sms" && !pendingContact.phone ? (
               <div className="px-4 md:px-6 py-4 border-t border-ud">
                 <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
                   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
@@ -483,10 +533,30 @@ export function CommunicationsClient({
                   </p>
                 </div>
               </div>
+            ) : pendingContact && pendingChannel === "email" && !pendingContact.email ? (
+              <div className="px-4 md:px-6 py-4 border-t border-ud">
+                <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+                  </svg>
+                  <p className="text-[13px] text-ud-muted leading-[1.5]">
+                    {pendingContact.name} doesn&apos;t have an email address on file, so an email can&apos;t be started here yet.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="px-4 md:px-6 py-4 border-t border-ud">
                 {sendError && (
                   <p className="text-[12px] text-ud-danger mb-2">{sendError}</p>
+                )}
+                {pendingContact && pendingChannel === "email" && (
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="Subject (optional)"
+                    className="w-full mb-2 px-3 py-2 bg-ud-surface border border-ud rounded-[10px] text-[13px] text-ud-ink placeholder:text-ud-faint outline-none focus:border-ud-accent"
+                  />
                 )}
                 <div className="flex gap-2 items-end">
                   <textarea

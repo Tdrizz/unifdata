@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { recordDraftOutcome } from "@/lib/agents/memory";
 import { sendSms } from "@/lib/messaging/sms";
+import { sendEmail } from "@/lib/messaging/email";
 
 type DraftRow = {
   approve_action: string | null;
@@ -64,32 +65,19 @@ export async function POST(
   let sendSucceeded = false;
 
   if (draft.approve_action === "send_email") {
-    const apiKey = process.env.MAILGUN_API_KEY;
-    const domain = process.env.MAILGUN_DOMAIN;
-    // Shared sending domain across every company -- the display name is
-    // what actually tells the recipient which business emailed them.
-    const from = `${currentCompany.company.name} <${process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`}>`;
     const toEmail = recipientEmail ?? args.email ?? null;
 
-    if (!apiKey || !domain) {
-      return NextResponse.json({ error: "Email is not configured." }, { status: 503 });
-    }
     if (!toEmail) {
       return NextResponse.json({ error: "No email address on file for this contact." }, { status: 422 });
     }
 
-    const res = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-      },
-      body: new URLSearchParams({ from, to: toEmail, subject, text: body }),
-    });
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => "");
-      return NextResponse.json({ error: `Email delivery failed: ${res.status} ${errBody}` }, { status: 502 });
+    try {
+      await sendEmail({ to: toEmail, subject, text: body, companyName: currentCompany.company.name });
+      sendSucceeded = true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Email delivery failed";
+      return NextResponse.json({ error: message }, { status: 502 });
     }
-    sendSucceeded = true;
   } else if (draft.approve_action === "send_sms") {
     const rawPhone = recipientPhone ?? args.phone ?? null;
     const toPhone = rawPhone

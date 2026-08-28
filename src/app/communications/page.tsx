@@ -42,30 +42,35 @@ export default async function CommunicationsPage({
     0
   );
 
-  // If ?contact=<id> matched an existing SMS thread, open straight into it.
-  // Otherwise, if the id is a real contact in this org, resolve just enough
-  // to let the client show a "start the conversation" composer -- no thread
-  // exists yet, so nothing is created until the first message actually sends.
+  // If ?contact=<id> matched an existing thread on their preferred channel
+  // (SMS if they have a phone on file, email otherwise), open straight into
+  // it. Otherwise, resolve just enough to let the client show a "start the
+  // conversation" composer -- no thread exists yet, so nothing is created
+  // until the first message actually sends.
   let initialSelectedThreadId: string | null = null;
-  let initialPendingContact: { id: string; name: string; phone: string | null } | null = null;
+  let initialPendingContact: { id: string; name: string; phone: string | null; email: string | null } | null = null;
   if (contactParam) {
-    const existingThread = (threads ?? []).find(
-      (t: { contact_id: string | null; channel: string }) => t.contact_id === contactParam && t.channel === "sms",
-    );
-    if (existingThread) {
-      initialSelectedThreadId = existingThread.id;
-    } else {
-      const { data: contact } = await (supabase as any)
-        .from("master_customers")
-        .select("id, first_name, last_name, primary_phone")
-        .eq("id", contactParam)
-        .eq("organization_id", company.id)
-        .maybeSingle();
-      if (contact) {
+    const { data: contact } = await (supabase as any)
+      .from("master_customers")
+      .select("id, first_name, last_name, primary_phone, primary_email")
+      .eq("id", contactParam)
+      .eq("organization_id", company.id)
+      .maybeSingle();
+
+    if (contact) {
+      const preferredChannel = contact.primary_phone ? "sms" : "email";
+      const existingThread = (threads ?? []).find(
+        (t: { contact_id: string | null; channel: string }) =>
+          t.contact_id === contactParam && t.channel === preferredChannel,
+      );
+      if (existingThread) {
+        initialSelectedThreadId = existingThread.id;
+      } else {
         initialPendingContact = {
           id: contact.id,
           name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "Unnamed",
           phone: contact.primary_phone ?? null,
+          email: contact.primary_email ?? null,
         };
       }
     }
