@@ -6,6 +6,8 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { QuickFilterChips } from "./QuickFilterChips";
+import { SavedViewsBar } from "./SavedViewsBar";
 
 type CustomerRow = {
   id: string;
@@ -25,6 +27,9 @@ type Props = {
   profile?: IndustryProfile;
   activityMap?: Record<string, string>;
   tagsMap?: Record<string, TagInfo[]>;
+  statusCounts?: Record<string, number>;
+  activeStatus?: string;
+  currentFilters?: Record<string, string | undefined>;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -91,6 +96,9 @@ export function ContactsTableClient({
   profile,
   activityMap = {},
   tagsMap = {},
+  statusCounts = {},
+  activeStatus,
+  currentFilters = {},
 }: Props) {
   const custPlural = profile?.labels.customerPlural ?? "Contacts";
   const [search, setSearch] = useState("");
@@ -119,6 +127,12 @@ export function ContactsTableClient({
         >
           + Add
         </button>
+      </div>
+      <div className="mb-2">
+        <QuickFilterChips pathname="/customers" statusCounts={statusCounts} activeStatus={activeStatus} />
+      </div>
+      <div className="mb-3">
+        <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
       </div>
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
@@ -173,6 +187,14 @@ export function ContactsTableClient({
         >
           + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
         </a>
+      </div>
+
+      {/* Quick filters */}
+      <div className="mb-2">
+        <QuickFilterChips pathname="/customers" statusCounts={statusCounts} activeStatus={activeStatus} />
+      </div>
+      <div className="mb-4">
+        <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
       </div>
 
       {/* Search */}
