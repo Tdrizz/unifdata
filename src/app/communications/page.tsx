@@ -7,7 +7,14 @@ import { CommunicationsClient } from "@/features/communications/components/Commu
 
 export const dynamic = "force-dynamic";
 
-export default async function CommunicationsPage() {
+export default async function CommunicationsPage({
+  searchParams,
+}: {
+  // Customer detail pages link here as /communications?contact=<id> to start
+  // or resume a conversation with a specific contact — see below.
+  searchParams: Promise<{ contact?: string }>;
+}) {
+  const { contact: contactParam } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
@@ -35,6 +42,35 @@ export default async function CommunicationsPage() {
     0
   );
 
+  // If ?contact=<id> matched an existing SMS thread, open straight into it.
+  // Otherwise, if the id is a real contact in this org, resolve just enough
+  // to let the client show a "start the conversation" composer -- no thread
+  // exists yet, so nothing is created until the first message actually sends.
+  let initialSelectedThreadId: string | null = null;
+  let initialPendingContact: { id: string; name: string; phone: string | null } | null = null;
+  if (contactParam) {
+    const existingThread = (threads ?? []).find(
+      (t: { contact_id: string | null; channel: string }) => t.contact_id === contactParam && t.channel === "sms",
+    );
+    if (existingThread) {
+      initialSelectedThreadId = existingThread.id;
+    } else {
+      const { data: contact } = await (supabase as any)
+        .from("master_customers")
+        .select("id, first_name, last_name, primary_phone")
+        .eq("id", contactParam)
+        .eq("organization_id", company.id)
+        .maybeSingle();
+      if (contact) {
+        initialPendingContact = {
+          id: contact.id,
+          name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "Unnamed",
+          phone: contact.primary_phone ?? null,
+        };
+      }
+    }
+  }
+
   return (
     <AppShell
       companyName={company.name}
@@ -48,7 +84,12 @@ export default async function CommunicationsPage() {
           bar heights differ from desktop's, so a fixed 100vh-60px overflowed
           or left a gap depending on platform. */}
       <div className="h-full">
-        <CommunicationsClient threads={threads ?? []} orgId={company.id} />
+        <CommunicationsClient
+          threads={threads ?? []}
+          orgId={company.id}
+          initialSelectedThreadId={initialSelectedThreadId}
+          initialPendingContact={initialPendingContact}
+        />
       </div>
     </AppShell>
   );

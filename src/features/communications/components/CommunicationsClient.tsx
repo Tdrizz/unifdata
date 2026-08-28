@@ -25,6 +25,13 @@ type Message = {
   sent_at: string;
 };
 
+// A contact chosen to message who doesn't have a thread yet -- no
+// communications row exists until the first message actually sends, same as
+// most messaging apps (picking someone doesn't create an empty conversation).
+type PendingContact = { id: string; name: string; phone: string | null };
+
+type ContactSearchResult = { id: string; name: string; email: string | null; phone: string | null };
+
 function getContactDisplayName(thread: Thread): string {
   const c = thread.contact;
   if (!c) return thread.contact_phone ?? "Unknown";
@@ -71,25 +78,42 @@ function groupMessages(messages: Message[]): { date: string; items: Message[] }[
 export function CommunicationsClient({
   threads: initialThreads,
   orgId: _orgId,
+  initialPendingContact = null,
+  initialSelectedThreadId = null,
 }: {
   threads: Thread[];
   orgId: string;
+  // Set when the page was opened as /communications?contact=<id> for a
+  // contact with no existing thread — see page.tsx, which resolves the id
+  // server-side and either finds an existing thread (selects it directly via
+  // initialSelectedThreadId below) or falls back to this.
+  initialPendingContact?: PendingContact | null;
+  // Set when /communications?contact=<id> matched a contact who already has
+  // a thread — opens straight into it instead of defaulting to the most
+  // recent conversation.
+  initialSelectedThreadId?: string | null;
 }) {
   const [threads, setThreads] = useState<Thread[]>(initialThreads);
   const [selectedId, setSelectedId] = useState<string | null>(
-    initialThreads[0]?.id ?? null
+    initialSelectedThreadId ?? initialThreads[0]?.id ?? null
   );
+  const [pendingContact, setPendingContact] = useState<PendingContact | null>(initialPendingContact);
   // Mobile has no room for both panes at once, so it shows one at a time --
   // the thread list, or the selected conversation, with a back button
   // between them. Desktop ignores this entirely and always shows both (see
   // the md:flex overrides below); this previously gated the whole page
   // behind a static "use desktop" notice even for plain SMS replies, which
   // contradicted Communications being one of only four primary mobile tabs.
-  const [mobileView, setMobileView] = useState<"list" | "thread">("list");
+  const [mobileView, setMobileView] = useState<"list" | "thread">(
+    initialPendingContact || initialSelectedThreadId ? "thread" : "list"
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [compose, setCompose] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const [isSending, startSending] = useTransition();
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -151,23 +175,41 @@ export function CommunicationsClient({
   }, [selectedId, supabase]);
 
   async function handleSend() {
-    if (!compose.trim() || !selectedId) return;
+    if (!compose.trim() || (!selectedId && !pendingContact)) return;
     const body = compose.trim();
     setCompose("");
     setSendError(null);
 
+    // Two different endpoints depending on whether a thread already exists:
+    // replying into one (api/communications/[id]/send) vs. starting the
+    // first message with a contact who has none yet (api/communications/start,
+    // which also creates the thread row).
+    const startingNew = !selectedId && pendingContact;
+
     startSending(async () => {
       try {
-        const res = await fetch(`/api/communications/${selectedId}/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body }),
-        });
+        const res = await fetch(
+          startingNew ? "/api/communications/start" : `/api/communications/${selectedId}/send`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(startingNew ? { contact_id: pendingContact.id, body } : { body }),
+          },
+        );
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({})) as { error?: string };
           setSendError(errData.error ?? "Failed to send message.");
           setCompose(body);
+          return;
+        }
+
+        if (startingNew) {
+          const { thread: newThread, message: newMessage } = await res.json();
+          setThreads((prev) => [newThread, ...prev]);
+          setMessages([newMessage]);
+          setSelectedId(newThread.id);
+          setPendingContact(null);
           return;
         }
 
@@ -187,7 +229,48 @@ export function CommunicationsClient({
     });
   }
 
+  // Debounced contact search for "New message" -- same API and timing
+  // CommandPalette/ContactCombobox already use elsewhere in the app.
+  useEffect(() => {
+    if (!showSearch) return;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/contacts/search?q=${encodeURIComponent(q)}`);
+        if (res.ok) setSearchResults((await res.json()) as ContactSearchResult[]);
+      } catch {
+        // Best-effort
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery, showSearch]);
+
+  function handlePickContact(contact: ContactSearchResult) {
+    setShowSearch(false);
+    setSearchQuery("");
+    setSearchResults([]);
+
+    // Already have a thread with them -- open it rather than risk a second
+    // one (the unique index on communications would reject that anyway).
+    const existing = threads.find((t) => t.contact_id === contact.id);
+    if (existing) {
+      setSelectedId(existing.id);
+      setPendingContact(null);
+    } else {
+      setSelectedId(null);
+      setPendingContact({ id: contact.id, name: contact.name || "Unnamed", phone: contact.phone });
+    }
+    setMessages([]);
+    setMobileView("thread");
+  }
+
   const messageGroups = groupMessages(messages);
+  const activeName = pendingContact ? pendingContact.name : selectedThread ? getContactDisplayName(selectedThread) : null;
+  const activeSubtitle = pendingContact ? pendingContact.phone : selectedThread ? (selectedThread.contact_phone ?? selectedThread.channel) : null;
 
   return (
     <>
@@ -195,10 +278,56 @@ export function CommunicationsClient({
       {/* Thread list — full width on mobile until a thread is picked, a
           fixed side column on desktop where both panes always show. */}
       <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 border-r border-ud flex-col`}>
-        <div className="px-4 py-4 border-b border-ud">
-          <h1 className="text-[16px] font-bold text-ud-ink">Communications</h1>
-          <p className="text-[12px] text-ud-faint mt-0.5">Text and email conversations</p>
+        <div className="px-4 py-4 border-b border-ud flex items-start justify-between gap-2">
+          <div>
+            <h1 className="text-[16px] font-bold text-ud-ink">Communications</h1>
+            <p className="text-[12px] text-ud-faint mt-0.5">Text and email conversations</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSearch((v) => !v)}
+            aria-label="New message"
+            className={`shrink-0 w-7 h-7 rounded-[8px] flex items-center justify-center transition-colors ${
+              showSearch ? "bg-ud-accent text-white" : "bg-ud-surface-sunk text-ud-muted hover:text-ud-ink"
+            }`}
+          >
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
         </div>
+        {showSearch && (
+          <div className="px-4 py-3 border-b border-ud bg-ud-surface-sunk/50">
+            <input
+              autoFocus
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search contacts by name or phone…"
+              className="w-full px-3 py-2 bg-ud-surface border border-ud rounded-[8px] text-[13px] text-ud-ink placeholder:text-ud-faint outline-none focus:border-ud-accent"
+            />
+            {searchResults.length > 0 && (
+              <div className="mt-2 rounded-[8px] border border-ud overflow-hidden bg-ud-surface">
+                {searchResults.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handlePickContact(c)}
+                    className="w-full text-left px-3 py-2 border-b border-ud-soft last:border-0 hover:bg-ud-surface-sunk transition-colors"
+                  >
+                    <div className="text-[13px] font-medium text-ud-ink">{c.name || "Unnamed"}</div>
+                    {(c.phone || c.email) && (
+                      <div className="text-[11px] text-ud-faint">{c.phone ?? c.email}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchQuery.trim() && searchResults.length === 0 && (
+              <p className="mt-2 text-[12px] text-ud-faint px-1">No contacts found.</p>
+            )}
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto">
           {threads.length === 0 && (
             <div className="py-10 text-center text-[13px] text-ud-muted px-4">
@@ -214,6 +343,7 @@ export function CommunicationsClient({
                 key={thread.id}
                 onClick={() => {
                   setSelectedId(thread.id);
+                  setPendingContact(null);
                   setMobileView("thread");
                 }}
                 className={`w-full text-left px-4 py-3 border-b border-ud/50 transition-colors ${
@@ -254,7 +384,7 @@ export function CommunicationsClient({
       {/* Message thread — hidden on mobile until a thread is picked, since
           there's no room to show it alongside the list. */}
       <div className={`${mobileView === "thread" ? "flex" : "hidden"} md:flex flex-1 flex-col`}>
-        {!selectedThread ? (
+        {!selectedThread && !pendingContact ? (
           <div className="flex-1 flex items-center justify-center text-[13px] text-ud-muted">
             Select a conversation
           </div>
@@ -264,7 +394,10 @@ export function CommunicationsClient({
             <div className="px-4 md:px-6 py-4 border-b border-ud flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setMobileView("list")}
+                onClick={() => {
+                  setMobileView("list");
+                  setPendingContact(null);
+                }}
                 aria-label="Back to conversations"
                 className="md:hidden shrink-0 -ml-1 p-1 text-ud-muted hover:text-ud-ink"
               >
@@ -274,16 +407,21 @@ export function CommunicationsClient({
               </button>
               <div className="min-w-0">
                 <div className="font-semibold text-[15px] text-ud-ink truncate">
-                  {getContactDisplayName(selectedThread)}
+                  {activeName}
                 </div>
                 <div className="text-[12px] text-ud-faint">
-                  {selectedThread.contact_phone ?? selectedThread.channel}
+                  {activeSubtitle ?? "No phone number on file"}
                 </div>
               </div>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4">
+              {pendingContact && messageGroups.length === 0 && (
+                <div className="flex-1 flex items-center justify-center py-10 text-[13px] text-ud-muted">
+                  Send a message to start the conversation.
+                </div>
+              )}
               {messageGroups.map((group) => (
                 <div key={group.date}>
                   <div className="text-center text-[11px] text-ud-faint my-3">
@@ -322,7 +460,7 @@ export function CommunicationsClient({
                 which is the only thing that creates channel: "email" threads)
                 gets a plain explanation instead of a composer that would
                 just fail with a 422 every time someone hit Send. */}
-            {selectedThread.channel !== "sms" ? (
+            {selectedThread && selectedThread.channel !== "sms" ? (
               <div className="px-4 md:px-6 py-4 border-t border-ud">
                 <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
                   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
@@ -331,6 +469,17 @@ export function CommunicationsClient({
                   <p className="text-[13px] text-ud-muted leading-[1.5]">
                     This conversation came in by email, and replying from here isn&apos;t available yet.
                     To respond, reach out to this customer by phone or send them a new email directly.
+                  </p>
+                </div>
+              </div>
+            ) : pendingContact && !pendingContact.phone ? (
+              <div className="px-4 md:px-6 py-4 border-t border-ud">
+                <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/>
+                  </svg>
+                  <p className="text-[13px] text-ud-muted leading-[1.5]">
+                    {pendingContact.name} doesn&apos;t have a phone number on file, so a text can&apos;t be started here yet.
                   </p>
                 </div>
               </div>

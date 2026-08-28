@@ -167,12 +167,22 @@ export default async function CustomerDetailPage({
                 Contact since {formatDate(contact.created_at)}
               </div>
             </div>
-            <a
-              href={`/customers/${id}/edit`}
-              className="px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
-            >
-              Edit
-            </a>
+            <div className="flex items-center gap-2 shrink-0">
+              {phone && (
+                <a
+                  href={`/communications?contact=${id}`}
+                  className="px-3 py-1.5 bg-ud-accent text-white text-[12px] font-semibold rounded-[8px] hover:opacity-90 transition-opacity"
+                >
+                  Message
+                </a>
+              )}
+              <a
+                href={`/customers/${id}/edit`}
+                className="px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
+              >
+                Edit
+              </a>
+            </div>
           </div>
         </div>
 
@@ -231,12 +241,22 @@ export default async function CustomerDetailPage({
               </a>
             )}
           </div>
-          <a
-            href={`/customers/${id}/edit`}
-            className="shrink-0 px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
-          >
-            Edit
-          </a>
+          <div className="flex items-center gap-2 shrink-0">
+            {phone && (
+              <a
+                href={`/communications?contact=${id}`}
+                className="px-3 py-1.5 bg-ud-accent text-white text-[12px] font-semibold rounded-[8px] hover:opacity-90 transition-opacity"
+              >
+                Message
+              </a>
+            )}
+            <a
+              href={`/customers/${id}/edit`}
+              className="px-3 py-1.5 bg-ud-surface border border-ud text-[12px] font-medium text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              Edit
+            </a>
+          </div>
         </div>
         <ContactTabs
           activities={activities}
