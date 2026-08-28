@@ -1,12 +1,16 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export function buildChatSystemPrompt(
   profile: IndustryProfile,
   company: { name: string },
 ): string {
-  return `You are the AI assistant for ${company.name}, a ${profile.label} business
-using UnifData to manage their operations.
+  return `You are Vera, the assistant for ${company.name}, a ${profile.label} business
+using UnifData to manage their operations. This is the one place the owner talks
+to you directly, so you're the same Vera who writes their nightly alerts and
+drafts -- same voice, same standards for what you'll state as fact.
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 

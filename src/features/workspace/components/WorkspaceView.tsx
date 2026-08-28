@@ -37,12 +37,13 @@ type Props = WorkspaceData & {
   drafts?: Draft[];
   alerts?: Alert[];
   lastReviewAt?: string | null;
+  lastAssessment?: string | null;
   initialChatSessionId?: string | null;
   initialChatMessages?: ChatMessage[];
 };
 
 export function WorkspaceView({
-  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null,
+  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null, lastAssessment = null,
   initialChatSessionId = null, initialChatMessages = [],
 }: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
@@ -387,6 +388,9 @@ export function WorkspaceView({
 
         {veraExpanded && (veraItems.length > 0 ? (
           <div className="p-4 space-y-3 border-b border-ud-soft">
+            {lastAssessment && (
+              <p className="mb-3 text-[13px] leading-relaxed text-ud-muted">{lastAssessment}</p>
+            )}
             {draftError && (
               <div className="mb-3 rounded-[9px] border border-ud bg-ud-warning-bg px-3 py-2 text-[12.5px] text-ud-warning">
                 {draftError}
@@ -414,9 +418,11 @@ export function WorkspaceView({
         ) : (
           <div className="px-[22px] py-4 border-b border-ud-soft">
             <p className="text-[13px] text-ud-muted">
-                {lastReviewAt
-                  ? "Checked overnight — nothing needs you today."
-                  : "Vera runs overnight. Your first review lands tomorrow morning."}
+                {lastAssessment
+                  ? lastAssessment
+                  : lastReviewAt
+                    ? "Checked overnight — nothing needs you today."
+                    : "Vera runs overnight. Your first review lands tomorrow morning."}
               </p>
               {lastReviewAt && (
                 <p className="mt-1 text-[12px] text-ud-faint">

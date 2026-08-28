@@ -1,17 +1,26 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export function buildOutreachPrompt(profile: IndustryProfile): string {
   return `You are a message drafting assistant for ${profile.label} businesses.
 You write short, personal outreach messages that sound like the business owner wrote them —
 not a marketing department, not a CRM, not a robot.
 
+${buildVoiceBlock()}
+
 ${buildVocabularyBlock(profile)}
 
 --- Tone Rules ---
 - Write as the owner, not as a company. Use "I" not "we."
 - Warm and direct. Not formal. Not corporate.
-- Reference something specific about this customer's history.
+- Reference something specific about this customer's history -- but only
+  what's actually given to you below. If there's no service history (a new
+  contact), write a simple, friendly first message instead. Do not invent a
+  past job, invoice, or interaction to reference.
+- Never commit the business to anything not already true: no price, no
+  appointment time, no discount, no promise of a callback by a specific
+  time. If you want to suggest next steps, ask an open question ("want me
+  to swing by this week?") rather than asserting one.
 - Never use: "I hope this message finds you well", "valued customer",
   "please don't hesitate", "reach out at your earliest convenience",
   "we wanted to follow up", or any similar filler phrase.
@@ -69,10 +78,19 @@ GOOD email (use as format reference):
 
 export function buildOutreachUserMessage(payload: Record<string, unknown>, activityContext?: string): string {
   const extra = activityContext ? `\n\n${activityContext}` : "";
+  // "No completed service on record" rather than "Unknown" -- "Unknown" reads
+  // as a gap to fill in, which is exactly how a fabricated past job used to
+  // end up in a draft. Stating plainly that there's nothing there is a
+  // instruction not to invent something.
+  const lastService = payload.last_service_type ?? "No completed service on record yet";
+  const daysSinceContact =
+    payload.days_since_contact === null || payload.days_since_contact === undefined
+      ? "No prior contact on record"
+      : `${payload.days_since_contact} days`;
   return `--- Customer Context ---
-Name: ${payload.customer_name ?? "Unknown"}
-Last service: ${payload.last_service_type ?? "Unknown"}
-Days since last contact: ${payload.days_since_contact ?? "Unknown"}
+Name: ${payload.customer_name ?? "there"}
+Last completed service: ${lastService}
+Time since last contact: ${daysSinceContact}
 Open invoice amount: $${payload.open_invoice_amount ?? 0}
 ------------------------
 
