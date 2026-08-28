@@ -78,6 +78,48 @@ export async function updateContactAction(
 
   if (error) return { error: error.message };
 
+  // Custom field values ride along in the same submit as the rest of the
+  // contact -- re-fetch the org's definitions here rather than trusting
+  // field ids posted from the client, so a tampered form can't write a
+  // value against another org's custom_field_definitions row.
+  const { data: customFieldDefs } = await supabase
+    .from("custom_field_definitions")
+    .select("id, field_type")
+    .eq("organization_id", company.id)
+    .eq("entity_type", "contact");
+
+  if (customFieldDefs && customFieldDefs.length > 0) {
+    const rows = customFieldDefs.map((def) => {
+      const name = `custom_${def.id}`;
+      let value: string | null;
+      if (def.field_type === "checkbox") {
+        value = formData.has(name) ? "true" : "false";
+      } else if (def.field_type === "multiselect") {
+        const selected = formData.getAll(name).map(String).filter(Boolean);
+        value = selected.length > 0 ? selected.join(", ") : null;
+      } else {
+        value = getFormString(formData, name) || null;
+      }
+      return {
+        organization_id: company.id,
+        entity_type: "contact",
+        entity_id: id,
+        field_id: def.id,
+        value,
+        updated_at: new Date().toISOString(),
+      };
+    });
+
+    // Unique index on (entity_id, field_id) — see database/029_segmentation.sql —
+    // makes this a plain upsert instead of a select-then-insert-or-update.
+    const { error: customFieldError } = await supabase
+      .from("custom_field_values")
+      .upsert(rows, { onConflict: "entity_id,field_id" });
+    // Non-fatal: the contact's own fields already saved above; don't block
+    // that on a custom-fields problem.
+    if (customFieldError) console.error("[updateContactAction] custom fields", customFieldError);
+  }
+
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
   revalidatePath(`/customers/${id}/edit`);

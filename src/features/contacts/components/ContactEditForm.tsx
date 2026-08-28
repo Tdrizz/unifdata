@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { updateContactAction, deleteContactAction, type ActionState } from "../actions";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { ContactCustomFieldsEdit, type CustomFieldDef } from "./ContactCustomFields";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
@@ -31,9 +32,11 @@ type Props = {
   contact: Contact;
   profile: IndustryProfile;
   errorParam?: string;
+  customFields?: CustomFieldDef[];
+  customFieldValues?: Record<string, string | null>;
 };
 
-export function ContactEditForm({ contact, profile, errorParam }: Props) {
+export function ContactEditForm({ contact, profile, errorParam, customFields = [], customFieldValues = {} }: Props) {
   const updateAction = updateContactAction.bind(null, contact.id);
   const [state, formAction] = useActionState<ActionState, FormData>(updateAction, null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -118,6 +121,8 @@ export function ContactEditForm({ contact, profile, errorParam }: Props) {
           <span className="block text-xs font-semibold text-ud-muted">Notes</span>
           <textarea name="notes" rows={3} defaultValue={contact.metadata?.notes ?? ""} className={`${f} resize-none`} />
         </label>
+
+        <ContactCustomFieldsEdit fields={customFields} values={customFieldValues} />
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
           {confirmDelete ? (

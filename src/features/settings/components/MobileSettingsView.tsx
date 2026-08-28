@@ -342,7 +342,7 @@ export function MobileSettingsView({
       <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
         <div className="px-[22px] py-[18px] border-b border-ud">
           <p className="text-[14.5px] font-semibold text-ud-ink">Custom fields</p>
-          <p className="mt-0.5 text-[13px] text-ud-muted">Add extra data fields to contacts.</p>
+          <p className="mt-0.5 text-[13px] text-ud-muted">Add extra data fields to contacts — set their values from a contact&apos;s edit page.</p>
         </div>
         <div className="p-[22px]">
           <CustomFieldsSettings orgId={company.id} contactFields={contactFields} />

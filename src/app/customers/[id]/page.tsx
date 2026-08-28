@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { AppShell } from "@/components/AppShell";
 import { ContactTabs } from "@/features/contacts/components/ContactTabs";
 import { StatusDot } from "@/features/contacts/components/StatusDot";
+import { ContactCustomFieldsDisplay } from "@/features/contacts/components/ContactCustomFields";
 
 export const dynamic = "force-dynamic";
 
@@ -54,8 +55,8 @@ export default async function CustomerDetailPage({
     notFound();
   }
 
-  // Fetch activity, notes, and linked records in parallel
-  const [activityResult, notesResult, jobsResult, salesResult, followUpsResult] = await Promise.all([
+  // Fetch activity, notes, linked records, and custom fields in parallel
+  const [activityResult, notesResult, jobsResult, salesResult, followUpsResult, customFieldDefsResult, customFieldValuesResult] = await Promise.all([
     (supabase as any)
       .from("contact_activity")
       .select("id, event_type, event_label, event_detail, source, created_at")
@@ -91,11 +92,31 @@ export default async function CustomerDetailPage({
       .eq("contact_id", id)
       .order("created_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("custom_field_definitions")
+      .select("id, label, field_key, field_type, options, required, position")
+      .eq("organization_id", company.id)
+      .eq("entity_type", "contact")
+      .order("position", { ascending: true }),
+    supabase
+      .from("custom_field_values")
+      .select("field_id, value")
+      .eq("organization_id", company.id)
+      .eq("entity_type", "contact")
+      .eq("entity_id", id),
   ]);
 
   const activities = activityResult.data ?? [];
   const notes = notesResult.data ?? [];
   const jobs = jobsResult.data ?? [];
+  const customFields = (customFieldDefsResult.data ?? []).map((f) => ({
+    ...f,
+    options: f.options as string[] | null,
+  }));
+  const customFieldValues: Record<string, string | null> = {};
+  for (const v of customFieldValuesResult.data ?? []) {
+    customFieldValues[v.field_id] = v.value;
+  }
   const sales = salesResult.data ?? [];
   const followUps = followUpsResult.data ?? [];
 
@@ -174,6 +195,7 @@ export default async function CustomerDetailPage({
                 <DetailRow label="Source detail" value={contact.source_detail} />
               )}
               <DetailRow label="Status" value={contact.relationship_status ?? "active"} />
+              <ContactCustomFieldsDisplay fields={customFields} values={customFieldValues} />
             </div>
           </div>
 
