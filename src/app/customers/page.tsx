@@ -176,6 +176,7 @@ export default async function CustomersPage({
             tagsMap={tagsMap}
             statusCounts={statusCounts}
             activeStatus={params.status}
+            currentFilters={{ q: params.q, status: params.status, tag: params.tag, source: params.source }}
           />
         </div>
       </div>
