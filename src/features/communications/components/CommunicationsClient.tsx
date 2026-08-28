@@ -128,6 +128,9 @@ export function CommunicationsClient({
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
+  const [confirmDeleteThread, setConfirmDeleteThread] = useState(false);
+  const [isDeletingThread, setIsDeletingThread] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
@@ -200,6 +203,33 @@ export function CommunicationsClient({
       .update({ unread_count: 0 })
       .eq("id", selectedId);
   }, [selectedId, supabase]);
+
+  // Switching threads shouldn't carry over an in-progress delete confirmation
+  useEffect(() => {
+    setConfirmDeleteThread(false);
+    setDeleteError(null);
+  }, [selectedId]);
+
+  async function handleDeleteThread() {
+    if (!selectedId) return;
+    setIsDeletingThread(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/communications/${selectedId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({})) as { error?: string };
+        setDeleteError(errData.error ?? "Failed to delete conversation.");
+        return;
+      }
+      setThreads((prev) => prev.filter((t) => t.id !== selectedId));
+      setSelectedId(null);
+      setMobileView("list");
+    } catch {
+      setDeleteError("Network error. Please try again.");
+    } finally {
+      setIsDeletingThread(false);
+    }
+  }
 
   async function handleSend() {
     if (!compose.trim() || (!selectedId && !pendingContact)) return;
@@ -489,7 +519,45 @@ export function CommunicationsClient({
                   </button>
                 </div>
               )}
+              {selectedThread && (
+                <div className="shrink-0">
+                  {confirmDeleteThread ? (
+                    <span className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleDeleteThread}
+                        disabled={isDeletingThread}
+                        className="px-2.5 py-1 rounded-[6px] bg-red-600 text-white text-[11px] font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      >
+                        {isDeletingThread ? "Deleting…" : "Delete"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteThread(false)}
+                        disabled={isDeletingThread}
+                        className="px-2.5 py-1 rounded-[6px] border border-ud text-[11px] text-ud-muted hover:text-ud-ink transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteThread(true)}
+                      aria-label="Delete conversation"
+                      className="p-1.5 text-ud-faint hover:text-ud-danger transition-colors"
+                    >
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
+            {deleteError && (
+              <p className="px-4 md:px-6 pt-2 text-[12px] text-ud-danger">{deleteError}</p>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4">

@@ -33,6 +33,7 @@ export default async function CommunicationsPage({
       contact:master_customers(id, first_name, last_name)
     `)
     .eq("organization_id", company.id)
+    .is("archived_at", null)
     .order("last_message_at", { ascending: false })
     .limit(50);
 

@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
   const { data: existingThread } = await (supabase as any)
     .from("communications")
-    .select("id, unread_count")
+    .select("id, unread_count, archived_at")
     .eq("organization_id", orgId)
     .eq("contact_id", contactId)
     .eq("channel", "email")
@@ -98,6 +98,11 @@ export async function POST(request: Request) {
   if (existingThread) {
     threadId = existingThread.id;
     currentUnread = existingThread.unread_count ?? 0;
+    // A reply into a thread the business deleted should bring it back into
+    // the inbox, not stay hidden.
+    if (existingThread.archived_at) {
+      await (supabase as any).from("communications").update({ archived_at: null }).eq("id", threadId);
+    }
   } else {
     const { data: newThread, error: threadError } = await (supabase as any)
       .from("communications")
