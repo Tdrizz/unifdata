@@ -42,7 +42,12 @@ export default async function CommunicationsPage() {
       businessSector={company.business_sector}
       agentInboxCount={totalUnread}
     >
-      <div className="h-[calc(100vh-60px)]">
+      {/* h-full, not a hardcoded viewport calc -- the shell's own scroll
+          container (.content on desktop, <main> on mobile) is already a
+          flex-1 child with a real computed height, and mobile's header/tab
+          bar heights differ from desktop's, so a fixed 100vh-60px overflowed
+          or left a gap depending on platform. */}
+      <div className="h-full">
         <CommunicationsClient threads={threads ?? []} orgId={company.id} />
       </div>
     </AppShell>

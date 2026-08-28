@@ -4,20 +4,6 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-function MobileDesktopNotice({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="md:hidden flex flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="w-12 h-12 rounded-[14px] bg-ud-surface border border-ud flex items-center justify-center mb-4">
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-muted">
-          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-      </div>
-      <p className="text-[15px] font-semibold text-ud-ink mb-1">{title}</p>
-      <p className="text-[13px] text-ud-muted max-w-[240px]">{description}</p>
-    </div>
-  );
-}
-
 type Thread = {
   id: string;
   contact_id: string | null;
@@ -93,6 +79,13 @@ export function CommunicationsClient({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialThreads[0]?.id ?? null
   );
+  // Mobile has no room for both panes at once, so it shows one at a time --
+  // the thread list, or the selected conversation, with a back button
+  // between them. Desktop ignores this entirely and always shows both (see
+  // the md:flex overrides below); this previously gated the whole page
+  // behind a static "use desktop" notice even for plain SMS replies, which
+  // contradicted Communications being one of only four primary mobile tabs.
+  const [mobileView, setMobileView] = useState<"list" | "thread">("list");
   const [messages, setMessages] = useState<Message[]>([]);
   const [compose, setCompose] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
@@ -198,10 +191,10 @@ export function CommunicationsClient({
 
   return (
     <>
-    <MobileDesktopNotice title="Communications" description="SMS conversations are best managed on desktop." />
-    <div className="hidden md:flex h-full">
-      {/* Thread list */}
-      <div className="w-72 shrink-0 border-r border-ud flex flex-col">
+    <div className="flex h-full">
+      {/* Thread list — full width on mobile until a thread is picked, a
+          fixed side column on desktop where both panes always show. */}
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-72 shrink-0 border-r border-ud flex-col`}>
         <div className="px-4 py-4 border-b border-ud">
           <h1 className="text-[16px] font-bold text-ud-ink">Communications</h1>
           <p className="text-[12px] text-ud-faint mt-0.5">Text and email conversations</p>
@@ -219,7 +212,10 @@ export function CommunicationsClient({
             return (
               <button
                 key={thread.id}
-                onClick={() => setSelectedId(thread.id)}
+                onClick={() => {
+                  setSelectedId(thread.id);
+                  setMobileView("thread");
+                }}
                 className={`w-full text-left px-4 py-3 border-b border-ud/50 transition-colors ${
                   isSelected ? "bg-ud-accent/10" : "hover:bg-ud-surface-sunk"
                 }`}
@@ -255,8 +251,9 @@ export function CommunicationsClient({
         </div>
       </div>
 
-      {/* Message thread */}
-      <div className="flex-1 flex flex-col">
+      {/* Message thread — hidden on mobile until a thread is picked, since
+          there's no room to show it alongside the list. */}
+      <div className={`${mobileView === "thread" ? "flex" : "hidden"} md:flex flex-1 flex-col`}>
         {!selectedThread ? (
           <div className="flex-1 flex items-center justify-center text-[13px] text-ud-muted">
             Select a conversation
@@ -264,17 +261,29 @@ export function CommunicationsClient({
         ) : (
           <>
             {/* Thread header */}
-            <div className="px-6 py-4 border-b border-ud">
-              <div className="font-semibold text-[15px] text-ud-ink">
-                {getContactDisplayName(selectedThread)}
-              </div>
-              <div className="text-[12px] text-ud-faint">
-                {selectedThread.contact_phone ?? selectedThread.channel}
+            <div className="px-4 md:px-6 py-4 border-b border-ud flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileView("list")}
+                aria-label="Back to conversations"
+                className="md:hidden shrink-0 -ml-1 p-1 text-ud-muted hover:text-ud-ink"
+              >
+                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+              <div className="min-w-0">
+                <div className="font-semibold text-[15px] text-ud-ink truncate">
+                  {getContactDisplayName(selectedThread)}
+                </div>
+                <div className="text-[12px] text-ud-faint">
+                  {selectedThread.contact_phone ?? selectedThread.channel}
+                </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4">
               {messageGroups.map((group) => (
                 <div key={group.date}>
                   <div className="text-center text-[11px] text-ud-faint my-3">
@@ -314,7 +323,7 @@ export function CommunicationsClient({
                 gets a plain explanation instead of a composer that would
                 just fail with a 422 every time someone hit Send. */}
             {selectedThread.channel !== "sms" ? (
-              <div className="px-6 py-4 border-t border-ud">
+              <div className="px-4 md:px-6 py-4 border-t border-ud">
                 <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
                   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
                     <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
@@ -326,7 +335,7 @@ export function CommunicationsClient({
                 </div>
               </div>
             ) : (
-              <div className="px-6 py-4 border-t border-ud">
+              <div className="px-4 md:px-6 py-4 border-t border-ud">
                 {sendError && (
                   <p className="text-[12px] text-ud-danger mb-2">{sendError}</p>
                 )}
