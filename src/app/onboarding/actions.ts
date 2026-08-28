@@ -174,6 +174,88 @@ export async function createWizardFollowUpAction(
   return {};
 }
 
+// Phase 04 — a blank Pipeline board on day one reads as broken, not clean,
+// and gives Vera nothing true to say about a business it has no data for.
+// Every earlier wizard step is skippable, so this runs once at the very end
+// (see OnboardingForm's step-5 effect) and only if the company still has
+// zero jobs/customers/sales -- i.e. the owner skipped every manual-entry
+// step. If they added anything real, this does nothing: sample rows are
+// never mixed in alongside data the owner just entered themselves.
+export async function seedSampleDataIfEmptyAction(companyId: string): Promise<void> {
+  let user;
+  try {
+    user = await requireSubscription();
+  } catch {
+    return;
+  }
+
+  const supabase = await createClient();
+  if (!(await isCompanyMember(supabase, companyId, user.profileId))) return;
+
+  const [{ count: customerCount }, { count: jobCount }, { count: saleCount }] = await Promise.all([
+    supabase.from("master_customers").select("id", { count: "exact", head: true }).eq("organization_id", companyId),
+    supabase.from("jobs").select("id", { count: "exact", head: true }).eq("company_id", companyId),
+    supabase.from("sales").select("id", { count: "exact", head: true }).eq("company_id", companyId),
+  ]);
+  if ((customerCount ?? 0) > 0 || (jobCount ?? 0) > 0 || (saleCount ?? 0) > 0) return;
+
+  const { data: company } = await supabase.from("companies").select("business_sector").eq("id", companyId).single();
+  const profile = getIndustryProfile(company?.business_sector);
+  const jobLabel = profile.labels.jobSingular;
+
+  const { data: customer, error: customerError } = await supabase
+    .from("master_customers")
+    .insert({
+      organization_id: companyId,
+      first_name: "Sample",
+      last_name: "Customer",
+      primary_email: "sample.customer@example.com",
+      relationship_status: "new",
+      source: "sample",
+      is_sample: true,
+    })
+    .select("id")
+    .single();
+  if (customerError || !customer) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // One in-flight sample so the board isn't just "done" work, and one
+  // completed + paid sample so a first-time owner can see what a finished,
+  // collected job looks like without having to do one themselves first.
+  await supabase.from("jobs").insert([
+    {
+      company_id: companyId,
+      contact_id: customer.id,
+      service_type: `Sample ${jobLabel}`,
+      status: "Scheduled",
+      paid_status: "Unpaid",
+      start_date: today,
+      is_sample: true,
+    },
+    {
+      company_id: companyId,
+      contact_id: customer.id,
+      service_type: `Sample ${jobLabel} (completed)`,
+      status: "Completed",
+      paid_status: "Paid",
+      start_date: today,
+      is_sample: true,
+    },
+  ]);
+
+  await supabase.from("sales").insert({
+    company_id: companyId,
+    contact_id: customer.id,
+    amount: 250,
+    payment_status: "Paid",
+    sale_date: today,
+    service_type: `Sample ${jobLabel} (completed)`,
+    source: "sample",
+    is_sample: true,
+  });
+}
+
 type ActionState = { error?: string };
 
 export async function createCompanyAction(

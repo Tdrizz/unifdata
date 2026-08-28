@@ -1457,6 +1457,7 @@ export type Database = {
           embedding: string | null
           embedding_updated_at: string | null
           id: string
+          is_sample: boolean
           job_value: number | null
           lead_id: string | null
           notes: string | null
@@ -1475,6 +1476,7 @@ export type Database = {
           embedding?: string | null
           embedding_updated_at?: string | null
           id?: string
+          is_sample?: boolean
           job_value?: number | null
           lead_id?: string | null
           notes?: string | null
@@ -1493,6 +1495,7 @@ export type Database = {
           embedding?: string | null
           embedding_updated_at?: string | null
           id?: string
+          is_sample?: boolean
           job_value?: number | null
           lead_id?: string | null
           notes?: string | null
@@ -1642,6 +1645,7 @@ export type Database = {
           first_name: string | null
           hubspot_contact_id: string | null
           id: string
+          is_sample: boolean
           jobber_client_id: string | null
           keeper_last_swept_at: string | null
           keeper_sweep_status: string | null
@@ -1667,6 +1671,7 @@ export type Database = {
           first_name?: string | null
           hubspot_contact_id?: string | null
           id?: string
+          is_sample?: boolean
           jobber_client_id?: string | null
           keeper_last_swept_at?: string | null
           keeper_sweep_status?: string | null
@@ -1692,6 +1697,7 @@ export type Database = {
           first_name?: string | null
           hubspot_contact_id?: string | null
           id?: string
+          is_sample?: boolean
           jobber_client_id?: string | null
           keeper_last_swept_at?: string | null
           keeper_sweep_status?: string | null
@@ -1853,6 +1859,7 @@ export type Database = {
           embedding: string | null
           embedding_updated_at: string | null
           id: string
+          is_sample: boolean
           job_id: string | null
           last_synced_at: string | null
           payment_status: string
@@ -1870,6 +1877,7 @@ export type Database = {
           embedding?: string | null
           embedding_updated_at?: string | null
           id?: string
+          is_sample?: boolean
           job_id?: string | null
           last_synced_at?: string | null
           payment_status?: string
@@ -1887,6 +1895,7 @@ export type Database = {
           embedding?: string | null
           embedding_updated_at?: string | null
           id?: string
+          is_sample?: boolean
           job_id?: string | null
           last_synced_at?: string | null
           payment_status?: string

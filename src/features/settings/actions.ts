@@ -281,6 +281,26 @@ export async function deleteWorkspaceAction(): Promise<void> {
   redirect("/sign-in?workspace_deleted=1");
 }
 
+// Phase 04 — deletes exactly the rows seedSampleDataIfEmptyAction inserted
+// (see database/045_sample_data_flag.sql), never anything the owner created
+// themselves, and is safe to call even if nothing was ever seeded.
+export async function removeSampleDataAction(): Promise<void> {
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) throw new Error("Unauthorized");
+  const companyId = currentCompany.company.id;
+
+  // Children before parent -- jobs/sales reference the sample contact, so
+  // deleting it first would fail (or orphan them) if that FK is enforced.
+  const supabase = await createClient();
+  await supabase.from("sales").delete().eq("company_id", companyId).eq("is_sample", true);
+  await supabase.from("jobs").delete().eq("company_id", companyId).eq("is_sample", true);
+  await supabase.from("master_customers").delete().eq("organization_id", companyId).eq("is_sample", true);
+
+  revalidatePath("/workspace");
+  revalidatePath("/crm");
+  revalidatePath("/customers");
+}
+
 export async function updateMonthlyGoalAction(goal: number): Promise<void> {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) throw new Error("Unauthorized");

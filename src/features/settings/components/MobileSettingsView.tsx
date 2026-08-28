@@ -245,7 +245,7 @@ export function MobileSettingsView({
       </div>
 
       {/* Team members card */}
-      <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
+      <div id="team" className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden scroll-mt-20">
         <div className="px-[22px] py-[18px] border-b border-ud">
           <p className="text-[14.5px] font-semibold text-ud-ink">Team Members</p>
           <p className="mt-0.5 text-[13px] text-ud-muted">Manage who has access to this workspace.</p>

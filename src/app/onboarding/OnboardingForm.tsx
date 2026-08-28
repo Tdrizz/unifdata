@@ -9,6 +9,7 @@ import {
   createWizardCustomersAction,
   createWizardJobAction,
   createWizardFollowUpAction,
+  seedSampleDataIfEmptyAction,
 } from "./actions";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
 import { acceptedFileExtensions } from "@/lib/imports/parser";
@@ -141,11 +142,23 @@ export function OnboardingForm() {
 
   // Step 5: hand off to the workspace — Vera's nightly pipeline and the
   // live KPI dashboard take over from here, no separate generation step
-  // to wait on.
+  // to wait on. If every earlier step was skipped, seed a small sample
+  // record first so the board isn't empty on first look; it's a no-op the
+  // moment the owner has added anything real (see the action's own guard).
   useEffect(() => {
     if (step !== 5) return;
-    router.push("/workspace");
-  }, [step, router]);
+    (async () => {
+      if (companyId) {
+        try {
+          await seedSampleDataIfEmptyAction(companyId);
+        } catch {
+          // Non-fatal — an empty board is a worse first impression than a
+          // failed seed, but neither should block getting into the app.
+        }
+      }
+      router.push("/workspace");
+    })();
+  }, [step, router, companyId]);
 
   async function analyzeUpload(file: File) {
     setUploadLoading(true);
