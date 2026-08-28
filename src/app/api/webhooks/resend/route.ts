@@ -7,6 +7,26 @@ import { normalizeEmail } from "@/lib/normalize";
 
 export const runtime = "nodejs";
 
+// Good-enough HTML -> plain text for storing/previewing an inbound email
+// whose text field came back empty -- not meant to be a faithful render,
+// just readable instead of blank.
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 // Inbound email, via Resend's webhooks-based receiving feature. The
 // predecessor to this (the Mailgun webhook) only ever wrote to
 // communications_log, a write-only legacy table nothing reads -- so an
@@ -63,17 +83,36 @@ export async function POST(request: Request) {
   const supabase = createAdminClient();
 
   // Look up master customer by email -- same "which business does this
-  // belong to" resolution the Twilio webhook does by phone.
-  const { data: customer } = await supabase
+  // belong to" resolution the Twilio webhook does by phone. The same real
+  // person can be a contact under more than one business (each keeps its
+  // own customer list), so this can return several rows for one address --
+  // not just one.
+  const { data: customers } = await supabase
     .from("master_customers")
     .select("id, organization_id")
-    .eq("primary_email", senderEmail)
-    .limit(1)
-    .maybeSingle();
+    .eq("primary_email", senderEmail);
 
-  if (!customer) {
+  if (!customers || customers.length === 0) {
     console.info("[resend.webhook] Unmatched email, ignored", { from: senderEmail });
     return NextResponse.json({ received: true });
+  }
+
+  // When more than one business has this person as a contact, route to
+  // whichever one already has an email conversation with them (this is a
+  // reply, almost by definition, to something that business sent) instead
+  // of picking whichever row Postgres happens to return first.
+  let customer = customers[0];
+  if (customers.length > 1) {
+    const { data: activeThread } = await (supabase as any)
+      .from("communications")
+      .select("contact_id")
+      .eq("channel", "email")
+      .in("contact_id", customers.map((c) => c.id))
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    const preferred = customers.find((c) => c.id === activeThread?.contact_id);
+    if (preferred) customer = preferred;
   }
 
   const orgId = customer.organization_id as string;
@@ -81,9 +120,15 @@ export async function POST(request: Request) {
   await setOrgScope(supabase, orgId);
 
   // The webhook payload is metadata only (Resend's Inbound design) -- the
-  // body has to be fetched separately.
-  const { data: fullEmail } = await resend.emails.receiving.get(emailId);
-  const bodyText = fullEmail?.text ?? "";
+  // body has to be fetched separately. Some inbound emails (observed from a
+  // real Gmail reply) come back with an empty text field despite having
+  // real content in html -- fall back to a stripped-down plain-text version
+  // of that instead of silently storing an empty message.
+  const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(emailId);
+  if (fetchError) {
+    console.error("[resend.webhook] Could not fetch email body", { emailId, error: fetchError });
+  }
+  const bodyText = fullEmail?.text?.trim() || htmlToPlainText(fullEmail?.html ?? "");
 
   const { data: existingThread } = await (supabase as any)
     .from("communications")

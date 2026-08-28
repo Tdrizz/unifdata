@@ -140,6 +140,7 @@ export function CommunicationsClient({
   // Load messages when thread changes
   useEffect(() => {
     if (!selectedId) return;
+    let cancelled = false;
 
     async function loadMessages() {
       const { data } = await (supabase as any)
@@ -147,7 +148,12 @@ export function CommunicationsClient({
         .select("id, communication_id, direction, body, status, sent_at")
         .eq("communication_id", selectedId)
         .order("sent_at", { ascending: true });
-      setMessages(data ?? []);
+      // Ignore a stale fetch that resolves after a newer one started (this
+      // effect is known to sometimes run twice for the same thread -- see
+      // the stale-channel guard right below). Without this, an old
+      // response landing late can overwrite messages a user just sent with
+      // pre-send data, making the message they just typed appear to vanish.
+      if (!cancelled) setMessages(data ?? []);
     }
 
     loadMessages();
@@ -177,12 +183,17 @@ export function CommunicationsClient({
           filter: `communication_id=eq.${selectedId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const inserted = payload.new as Message;
+          // The send routes already append the message they just inserted
+          // optimistically -- without this check, the realtime event for
+          // that same row lands a second time right behind it.
+          setMessages((prev) => (prev.some((m) => m.id === inserted.id) ? prev : [...prev, inserted]));
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [selectedId, supabase]);
