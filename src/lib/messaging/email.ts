@@ -25,8 +25,13 @@ export async function sendEmail(opts: {
   const apiKey = process.env.RESEND_API_KEY;
   const fromAddress = process.env.RESEND_FROM_EMAIL;
 
+  // Name exactly which var is absent -- "Missing Resend environment
+  // variables" alone gives no way to tell a genuinely-missing var from a
+  // deployment that hasn't picked up a recently-saved one, or a typo'd var
+  // name, without digging through Vercel's env var UI blind.
   if (!apiKey || !fromAddress) {
-    throw new Error("Missing Resend environment variables.");
+    const missing = [!apiKey && "RESEND_API_KEY", !fromAddress && "RESEND_FROM_EMAIL"].filter(Boolean).join(", ");
+    throw new Error(`Missing Resend environment variable(s): ${missing}.`);
   }
 
   const domain = fromAddress.split("@")[1];
