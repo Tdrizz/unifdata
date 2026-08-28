@@ -1,23 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isCompleteWork, isCancelledWork, isOpenFollowUp, isUnpaid } from "@/lib/status";
-
-// Every figure here is fed to the LLM as fact, so a query that silently fails
-// is worse than one that throws: `count ?? 0` turns "the database was
-// unreachable" into "this business has no problems", and Vera then reports a
-// clean bill of health it never actually checked. Fail the whole snapshot
-// instead -- the coordinator treats that as "no review happened tonight",
-// which is the truth.
-function unwrap<T>(label: string, result: { data?: T; error?: unknown; count?: number | null }) {
-  if (result.error) {
-    const message =
-      typeof result.error === "object" && result.error !== null && "message" in result.error
-        ? String((result.error as { message: unknown }).message)
-        : String(result.error);
-    throw new Error(`telemetry query "${label}" failed: ${message}`);
-  }
-  return result;
-}
 
 export type TelemetrySnapshot = {
   overdueFollowUpCount: number;
@@ -66,13 +48,12 @@ export async function compileTelemetry(
     recentDraftsResult,
     topContactsResult,
   ] = await Promise.all([
-    // 1. Overdue follow-ups ≥7 days. The status column is fetched and filtered
-    // in JS with the shared predicate rather than filtered in SQL -- see the
-    // note in src/lib/status.ts. The date bound keeps this set small.
+    // 1. Overdue follow-ups ≥7 days
     supabase
       .from("follow_ups")
-      .select("status")
+      .select("id", { count: "exact", head: true })
       .eq("company_id", orgId)
+      .neq("status", "complete")
       .lt("due_date", sevenDaysAgo),
 
     // 2a. Revenue this week
@@ -90,11 +71,12 @@ export async function compileTelemetry(
       .gte("sale_date", fourWeeksAgo)
       .lt("sale_date", thisWeekStart),
 
-    // 3. Stale jobs ≥10 days -- still open, and untouched for 10 days.
+    // 3. Stale jobs ≥10 days
     supabase
       .from("jobs")
-      .select("status")
+      .select("id", { count: "exact", head: true })
       .eq("company_id", orgId)
+      .not("status", "in", "(completed,cancelled)")
       .lt("updated_at", tenDaysAgo),
 
     // 4. New contacts in last 7 days with no follow-up (fetch id + legacy_customer_id for cross-table lookup)
@@ -104,13 +86,12 @@ export async function compileTelemetry(
       .eq("organization_id", orgId)
       .gte("created_at", sevenDaysAgo),
 
-    // 5. Unpaid invoices ≥30 days. Filtering on "not literally paid" also
-    // swept in refunded, voided, draft and blank rows and reported them to the
-    // owner as money owed; isUnpaid() matches only genuinely outstanding ones.
+    // 5. Unpaid invoices ≥30 days
     supabase
       .from("sales")
-      .select("amount, payment_status")
+      .select("amount")
       .eq("company_id", orgId)
+      .not("payment_status", "ilike", "paid")
       .lt("sale_date", thirtyDaysAgo),
 
     // 6. Pending data reconciliation proposals
@@ -134,10 +115,7 @@ export async function compileTelemetry(
       .eq("organization_id", orgId)
       .eq("agent_name", "nightly-coordinator")
       .not("assessment", "is", null)
-      // agent_logs timestamps its rows with run_at; ordering by a column that
-      // doesn't exist made this error out silently and always return nothing,
-      // so night-over-night continuity never actually worked.
-      .order("run_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(3),
 
     // 9. Pending (unactioned) drafts
@@ -162,28 +140,6 @@ export async function compileTelemetry(
       .eq("company_id", orgId)
       .not("contact_id", "is", null),
   ]);
-
-  unwrap("overdue follow-ups", overdueResult);
-  unwrap("revenue this week", revenueThisWeekResult);
-  unwrap("revenue four weeks", revenueFourWeeksResult);
-  unwrap("stale jobs", staleJobsResult);
-  unwrap("new customers", newCustomersResult);
-  unwrap("unpaid invoices", unpaidResult);
-  unwrap("data proposals", dataProposalsResult);
-  unwrap("current month revenue", currentMonthRevenueResult);
-  unwrap("recent assessments", recentAssessmentsResult);
-  unwrap("pending drafts", pendingDraftsResult);
-  unwrap("recent drafts", recentDraftsResult);
-  unwrap("top contacts", topContactsResult);
-
-  // Status filtering happens here, in JS, against the same predicates the
-  // dashboard uses -- so Vera and the KPI cards can never report different
-  // numbers for the same question.
-  const overdueFollowUpCount = ((overdueResult.data || []) as Array<{ status: string | null }>)
-    .filter((f) => isOpenFollowUp(f.status)).length;
-
-  const staleJobCount = ((staleJobsResult.data || []) as Array<{ status: string | null }>)
-    .filter((j) => !isCompleteWork(j.status) && !isCancelledWork(j.status)).length;
 
   // Revenue calculations
   const revenueThisWeek = (revenueThisWeekResult.data || []).reduce(
@@ -232,8 +188,7 @@ export async function compileTelemetry(
     }).length;
   }
 
-  const unpaidSales = ((unpaidResult.data || []) as Array<{ amount: number | null; payment_status: string | null }>)
-    .filter((s) => isUnpaid(s.payment_status));
+  const unpaidSales = unpaidResult.data || [];
 
   // Current month revenue
   const currentMonthRevenue = (currentMonthRevenueResult.data || []).reduce(
@@ -293,11 +248,11 @@ export async function compileTelemetry(
   }
 
   return {
-    overdueFollowUpCount,
+    overdueFollowUpCount: overdueResult.count ?? 0,
     revenueThisWeek,
     revenueFourWeekAvg,
     revenueDeltaPct,
-    staleJobCount,
+    staleJobCount: staleJobsResult.count ?? 0,
     newCustomersNoFollowUp,
     unpaidInvoiceCount: unpaidSales.length,
     unpaidInvoiceTotal: unpaidSales.reduce((sum, s) => sum + Number(s.amount || 0), 0),

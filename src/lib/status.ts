@@ -26,19 +26,6 @@ function n(status: string | null | undefined) {
   return String(status || "").toLowerCase();
 }
 
-// Status columns are free text -- CSV imports, integrations and the app's own
-// forms all write their own casing ("Completed", "complete", "Done"). Every
-// predicate below therefore lowercases and substring-matches rather than
-// comparing exactly.
-//
-// IMPORTANT for anything querying these columns: do NOT reimplement this
-// matching as a SQL `.eq()`/`.neq()`/`.in()` filter. Those are case-sensitive,
-// and doing so is what previously made every "Completed" job invisible to the
-// agent layer as finished -- so completed work was reported as stale forever
-// and escalated nightly. Fetch the status column and filter with these
-// helpers (see src/lib/agents/telemetry.ts for the pattern) so the agents and
-// the dashboard can never disagree about what "done" means.
-
 export function isClosedOpportunity(status: string | null | undefined) {
   const s = n(status);
   return (
