@@ -14,9 +14,17 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; status?: string; tag?: string; source?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; status?: string; tag?: string; source?: string; missing?: string }>;
 }) {
   const params = await searchParams;
+  // Data Hub's "View →" links (missing email/phone/address) land here. It's
+  // not a plain column filter -- address lives in the nested billing_address
+  // JSON column -- so it's resolved the same way the `tag` filter below is:
+  // pre-fetch the matching ids, then narrow the main paginated query to them.
+  const missingFilter =
+    params.missing === "email" || params.missing === "phone" || params.missing === "address"
+      ? params.missing
+      : undefined;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
@@ -38,7 +46,7 @@ export default async function CustomersPage({
   ] = await Promise.all([
     supabase
       .from("master_customers")
-      .select("id, relationship_status, source")
+      .select("id, relationship_status, source, primary_email, primary_phone, billing_address")
       .eq("organization_id", company.id),
     (supabase as any)
       .from("tags")
@@ -46,8 +54,16 @@ export default async function CustomersPage({
       .eq("organization_id", company.id),
   ]);
 
-  const allContacts: Array<{ id: string; relationship_status?: string | null; source?: string | null }> =
-    allContactsResult.data ?? [];
+  const allContacts: Array<{
+    id: string;
+    relationship_status?: string | null;
+    source?: string | null;
+    primary_email?: string | null;
+    primary_phone?: string | null;
+    billing_address?: { line1?: string | null } | null;
+    // billing_address is typed as raw Json by the generated Supabase types;
+    // narrowed here the same way legacy-shape.ts's MasterCustomerRow does.
+  }> = (allContactsResult.data ?? []) as any;
 
   // Status counts
   const statusCounts: Record<string, number> = {};
@@ -111,6 +127,24 @@ export default async function CustomersPage({
     }
   }
 
+  // Same "missing" predicates Data Hub uses to count these issues
+  // (src/features/data-hub/components/DataHubView.tsx) — kept in sync so a
+  // "View →" link always lands on exactly the flagged records.
+  const missingIds = missingFilter
+    ? allContacts
+        .filter((c) => {
+          if (missingFilter === "email") return !c.primary_email;
+          if (missingFilter === "phone") return !c.primary_phone;
+          return !c.billing_address?.line1;
+        })
+        .map((c) => c.id)
+    : undefined;
+  if (missingIds) {
+    query = missingIds.length > 0
+      ? query.in("id", missingIds)
+      : query.in("id", ["00000000-0000-0000-0000-000000000000"]);
+  }
+
   const { data: customers } = await query;
   const contactList = customers ?? [];
   const contactIds = contactList.map((c: { id: string }) => c.id);
@@ -172,6 +206,7 @@ export default async function CustomersPage({
           <ContactsTableClient
             customers={contactList}
             profile={profile}
+            missingFilter={missingFilter}
             activityMap={activityMap}
             tagsMap={tagsMap}
           />

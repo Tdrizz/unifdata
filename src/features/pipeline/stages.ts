@@ -131,6 +131,7 @@ export function mapRecordsToCards(
       editHref: `/sales/${sale.id}/edit`,
       chain: { leadId: job?.lead_id ?? null, jobId: sale.job_id, saleId: sale.id },
       openFollowUp: findOpenFollowUp(followUpIndex, job?.lead_id ?? null, sale.contact_id),
+      source: null,
     });
   }
 
@@ -150,6 +151,7 @@ export function mapRecordsToCards(
       editHref: `/jobs/${job.id}/edit`,
       chain: { leadId: job.lead_id, jobId: job.id, saleId: null },
       openFollowUp: findOpenFollowUp(followUpIndex, job.lead_id, job.contact_id),
+      source: null,
     });
   }
 
@@ -169,6 +171,7 @@ export function mapRecordsToCards(
       editHref: `/leads/${lead.id}/edit`,
       chain: { leadId: lead.id, jobId: null, saleId: null },
       openFollowUp: findOpenFollowUp(followUpIndex, lead.id, lead.contact_id),
+      source: lead.source,
     });
   }
 

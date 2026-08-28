@@ -52,7 +52,15 @@ function formatSaleDate(dateStr: string | null | undefined) {
 export function SalesList({ sales, count, page: _page, q: _q, contacts = [], jobs = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
-    selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
+    selectedStatus === "paid"
+      ? "paid"
+      : selectedStatus === "overdue"
+      ? "overdue"
+      // "pending" is how Data Hub links here for its "unpaid sales" issue —
+      // it means the same thing the Pending chip already means below.
+      : selectedStatus === "pending"
+      ? "pending"
+      : "all"
   );
   const saleSingular = profile?.labels.saleSingular ?? p.labels.saleSingular;
   const salePlural = profile?.labels.salePlural ?? p.labels.salePlural;

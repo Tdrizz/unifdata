@@ -23,8 +23,18 @@ type TagInfo = { name: string; color: string };
 type Props = {
   customers: CustomerRow[];
   profile?: IndustryProfile;
+  // Set when Data Hub's "View →" link sent the user here to fix a specific
+  // gap (?missing=email|phone|address) — the page.tsx query is already
+  // narrowed to just those contacts; this only drives the banner copy.
+  missingFilter?: "email" | "phone" | "address";
   activityMap?: Record<string, string>;
   tagsMap?: Record<string, TagInfo[]>;
+};
+
+const MISSING_FILTER_LABEL: Record<"email" | "phone" | "address", string> = {
+  email: "missing an email address",
+  phone: "missing a phone number",
+  address: "missing an address",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -89,6 +99,7 @@ function avatarColor(name: string) {
 export function ContactsTableClient({
   customers,
   profile,
+  missingFilter,
   activityMap = {},
   tagsMap = {},
 }: Props) {
@@ -128,6 +139,16 @@ export function ContactsTableClient({
           </button>
         </div>
       </div>
+      {missingFilter && (
+        <div className="flex items-center justify-between gap-2 mb-3 px-3 py-2 bg-ud-warning-bg border border-ud-warning/20 rounded-[8px]">
+          <p className="text-[12px] text-ud-ink">
+            Showing {customers.length} contact{customers.length === 1 ? "" : "s"} {MISSING_FILTER_LABEL[missingFilter]}
+          </p>
+          <Link href="/customers" className="text-[12px] font-semibold text-ud-accent shrink-0">
+            Clear
+          </Link>
+        </div>
+      )}
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
           <p className="text-[13px] text-ud-muted text-center py-8">No contacts yet.</p>
@@ -190,6 +211,17 @@ export function ContactsTableClient({
           </a>
         </div>
       </div>
+
+      {missingFilter && (
+        <div className="flex items-center justify-between gap-2 mb-4 px-4 py-2.5 bg-ud-warning-bg border border-ud-warning/20 rounded-[9px]">
+          <p className="text-[13px] text-ud-ink">
+            Showing {customers.length} contact{customers.length === 1 ? "" : "s"} {MISSING_FILTER_LABEL[missingFilter]}
+          </p>
+          <Link href="/customers" className="text-[13px] font-semibold text-ud-accent shrink-0 hover:underline">
+            Clear filter
+          </Link>
+        </div>
+      )}
 
       {/* Search */}
       <div className="flex items-center gap-2.5 px-[14px] py-[9px] bg-ud-surface border border-ud rounded-[10px] shadow-ud mb-4">

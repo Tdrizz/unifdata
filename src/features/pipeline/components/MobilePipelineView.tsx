@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -9,6 +10,7 @@ import { Pill } from "@/components/ui/Pill";
 import { formatCurrency } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCardsByStage } from "../stages";
+import { PIPELINE_ISSUE_FILTERS, PIPELINE_ISSUE_LABELS, isPipelineIssueId } from "../issue-filters";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import { PipelineCardActions } from "./PipelineCardActions";
 import { formatDateOnly } from "@/lib/date-format";
@@ -29,7 +31,50 @@ const SOURCE_TYPE_LABEL: Record<PipelineCard["sourceType"], string> = {
   sale: "Sale",
 };
 
+// Pulled out of the stage-chip card list so the issue-filtered view (below)
+// can render the exact same card without duplicating this JSX.
+function MobilePipelineCardRow({ card }: { card: PipelineCard }) {
+  return (
+    <div className="bg-ud-surface rounded-[10px] border border-ud p-4 active:bg-ud-surface-sunk">
+      <Link href={card.editHref} className="block">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-semibold text-[14px] text-ud-ink leading-snug">{card.title}</p>
+          {card.value != null && (
+            <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
+              {formatCurrency(card.value)}
+            </p>
+          )}
+        </div>
+        <div className="mt-[8px] flex flex-wrap items-center gap-[6px]">
+          <Pill tone="neutral">{SOURCE_TYPE_LABEL[card.sourceType]}</Pill>
+          <span className="text-[11px] text-ud-muted">{card.statusLabel}</span>
+        </div>
+        <p className="mt-[8px]">
+          {card.contactName ? (
+            <span className="text-[12px] text-ud-muted">{card.contactName}</span>
+          ) : (
+            <span className="text-[12px] text-ud-faint italic">No contact linked</span>
+          )}
+        </p>
+        {card.openFollowUp && (
+          <p className="mt-2 text-[11px] font-semibold text-ud-danger">
+            Follow-up due {formatDateOnly(card.openFollowUp.dueDate)}
+          </p>
+        )}
+      </Link>
+      <PipelineCardActions card={card} />
+    </div>
+  );
+}
+
 export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
+  // See PipelineView's matching block — same /crm?issue=<id> deep link from
+  // Data Hub, same flat-list-instead-of-board treatment on mobile.
+  const searchParams = useSearchParams();
+  const issueParam = searchParams.get("issue");
+  const activeIssue = isPipelineIssueId(issueParam) ? issueParam : null;
+  const issueCards = activeIssue ? cards.filter(PIPELINE_ISSUE_FILTERS[activeIssue]) : null;
+
   const grouped = groupCardsByStage(cards);
   // Every sale card lands in the "Paid" stage regardless of its own payment
   // status (see mapRecordsToCards), so filter sale cards down to ones whose
@@ -65,6 +110,27 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
         </p>
       </div>
 
+      {activeIssue && (
+        <div className="mx-4 mb-[14px] flex items-center justify-between gap-2 px-3 py-2.5 bg-ud-warning-bg border border-ud-warning/20 rounded-[9px]">
+          <p className="text-[12px] text-ud-ink">
+            {issueCards!.length} record{issueCards!.length === 1 ? "" : "s"} {PIPELINE_ISSUE_LABELS[activeIssue]}
+          </p>
+          <Link href="/crm" className="text-[12px] font-semibold text-ud-accent shrink-0">
+            Clear
+          </Link>
+        </div>
+      )}
+
+      {issueCards ? (
+        <div className="px-4 flex flex-col gap-3">
+          {issueCards.length === 0 ? (
+            <EmptyState title="Nothing here anymore" description="These records have already been fixed or removed." />
+          ) : (
+            issueCards.map((card) => <MobilePipelineCardRow key={card.id} card={card} />)
+          )}
+        </div>
+      ) : (
+        <>
       {/* Stage chips — all 5, same as desktop's always-visible kanban columns */}
       <div className="overflow-x-auto no-scrollbar flex gap-2 px-4 pb-[14px]">
         {PIPELINE_STAGES.map((stage) => {
@@ -94,35 +160,7 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
       ) : (
         <div className="px-4 flex flex-col gap-3">
           {activeStageCards.map((card) => (
-            <div key={card.id} className="bg-ud-surface rounded-[10px] border border-ud p-4 active:bg-ud-surface-sunk">
-              <Link href={card.editHref} className="block">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-[14px] text-ud-ink leading-snug">{card.title}</p>
-                  {card.value != null && (
-                    <p className="text-[13px] font-semibold text-ud-accent [font-variant-numeric:tabular-nums] shrink-0">
-                      {formatCurrency(card.value)}
-                    </p>
-                  )}
-                </div>
-                <div className="mt-[8px] flex flex-wrap items-center gap-[6px]">
-                  <Pill tone="neutral">{SOURCE_TYPE_LABEL[card.sourceType]}</Pill>
-                  <span className="text-[11px] text-ud-muted">{card.statusLabel}</span>
-                </div>
-                <p className="mt-[8px]">
-                  {card.contactName ? (
-                    <span className="text-[12px] text-ud-muted">{card.contactName}</span>
-                  ) : (
-                    <span className="text-[12px] text-ud-faint italic">No contact linked</span>
-                  )}
-                </p>
-                {card.openFollowUp && (
-                  <p className="mt-2 text-[11px] font-semibold text-ud-danger">
-                    Follow-up due {formatDateOnly(card.openFollowUp.dueDate)}
-                  </p>
-                )}
-              </Link>
-              <PipelineCardActions card={card} />
-            </div>
+            <MobilePipelineCardRow key={card.id} card={card} />
           ))}
         </div>
       )}
@@ -164,6 +202,8 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
           )}
         </SectionCard>
       </div>
+        </>
+      )}
 
       <button
         onClick={() => setSheetOpen(true)}
