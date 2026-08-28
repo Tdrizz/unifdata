@@ -95,7 +95,12 @@ export function createAutomationWorker() {
     {
       connection: getRedisConnection(),
       autorun: false,
-      concurrency: 2,
+      // Each job spends nearly all its time waiting on the LLM API, not on
+      // CPU or the local DB connection -- raising this multiplies how many
+      // companies get reviewed in the route's time budget without adding
+      // real load. Kept well short of anything that would strain Supabase's
+      // connection pooling under concurrent per-company queries.
+      concurrency: 5,
     },
   );
 

@@ -5,6 +5,7 @@ import { getIndustryProfile } from "@/lib/industry-profiles";
 import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
 import { buildVocabularyBlock } from "@/lib/ai/prompts/shared";
 import { hasRecentAlert } from "@/lib/agents/memory";
+import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
 const ForecastAlertSchema = z.object({
   title: z.string().max(100),
@@ -94,7 +95,7 @@ Respond ONLY with valid JSON:
     });
 
     const raw = response.choices[0]?.message?.content ?? "{}";
-    const parsed = ForecastAlertSchema.safeParse(JSON.parse(raw));
+    const parsed = ForecastAlertSchema.safeParse(tryParseJson(raw));
 
     logGeneration(ctx, {
       name: "volume-anticipator",
@@ -107,7 +108,10 @@ Respond ONLY with valid JSON:
       zodPassed: parsed.success,
     });
 
-    if (!parsed.success) return;
+    if (!parsed.success) {
+      await logWorkerFailure(supabase, orgId, "volume-anticipator", parsed.error.message);
+      return;
+    }
     if (await hasRecentAlert(orgId, "volume_forecast", null)) return;
 
     await supabase.from("agent_alerts").insert({

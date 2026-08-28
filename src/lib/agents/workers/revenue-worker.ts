@@ -8,6 +8,7 @@ import type { TelemetrySnapshot } from "../telemetry";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { hasRecentAlert, recordExists } from "@/lib/agents/memory";
 import { isUnpaid } from "@/lib/status";
+import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
 const RevenueAlertSchema = z.object({
   alerts: z
@@ -65,7 +66,7 @@ export async function runRevenueWorker(
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
-  const parsed = RevenueAlertSchema.safeParse(JSON.parse(raw));
+  const parsed = RevenueAlertSchema.safeParse(tryParseJson(raw));
 
   logGeneration(ctx, {
     name: "revenue-alerts",
@@ -79,7 +80,11 @@ export async function runRevenueWorker(
     error: parsed.success ? undefined : parsed.error.message,
   });
 
-  if (!parsed.success || parsed.data.alerts.length === 0) return;
+  if (!parsed.success) {
+    await logWorkerFailure(supabase, orgId, "revenue-worker", parsed.error.message);
+    return;
+  }
+  if (parsed.data.alerts.length === 0) return;
 
   const freshAlerts: Array<{ alert: typeof parsed.data.alerts[number]; recordId: string | null }> = [];
   for (const alert of parsed.data.alerts) {

@@ -5,6 +5,7 @@ import { startSpan, endSpan, logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { TelemetrySnapshot } from "./telemetry";
 import type { IndustryProfile } from "@/lib/industry-profiles";
+import { tryParseJson } from "@/lib/agents/log-failure";
 
 const WorkerTaskSchema = z.object({
   worker: z.enum(["outreach", "revenue", "data_quality", "alert_formatter"]),
@@ -69,7 +70,12 @@ export async function runManagerAgent(
     lastInputTokens = attempt1.inputTokens;
     lastOutputTokens = attempt1.outputTokens;
 
-    const parsed1 = ManagerBlueprintSchema.safeParse(JSON.parse(lastRaw));
+    // tryParseJson rather than a bare JSON.parse: a response that isn't
+    // valid JSON at all used to throw straight past the retry-with-schema-
+    // reminder logic below and into the catch block, meaning the one
+    // scenario the retry exists for -- a malformed first response -- was
+    // exactly the one case it never actually got a second attempt at.
+    const parsed1 = ManagerBlueprintSchema.safeParse(tryParseJson(lastRaw));
     if (parsed1.success) {
       logGeneration(span, {
         name: "manager-blueprint",
@@ -95,7 +101,7 @@ export async function runManagerAgent(
     lastInputTokens += attempt2.inputTokens;
     lastOutputTokens += attempt2.outputTokens;
 
-    const parsed2 = ManagerBlueprintSchema.safeParse(JSON.parse(lastRaw));
+    const parsed2 = ManagerBlueprintSchema.safeParse(tryParseJson(lastRaw));
     if (parsed2.success) {
       logGeneration(span, {
         name: "manager-blueprint",
