@@ -6,6 +6,7 @@ import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { getEscalationLevel, recordSignalFired, hasRecentAlert, recordExists, normalizeAlertType } from "@/lib/agents/memory";
+import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
 const AgentAlertSchema = z.object({
   alerts: z
@@ -65,7 +66,7 @@ export async function runAlertFormatterWorker(
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
-  const parsed = AgentAlertSchema.safeParse(JSON.parse(raw));
+  const parsed = AgentAlertSchema.safeParse(tryParseJson(raw));
 
   logGeneration(ctx, {
     name: "alert-cards",
@@ -79,7 +80,11 @@ export async function runAlertFormatterWorker(
     error: parsed.success ? undefined : parsed.error.message,
   });
 
-  if (!parsed.success || parsed.data.alerts.length === 0) return;
+  if (!parsed.success) {
+    await logWorkerFailure(supabase, orgId, "alert-formatter-worker", parsed.error.message);
+    return;
+  }
+  if (parsed.data.alerts.length === 0) return;
 
   const primarySignalType = signals[0]?.type ?? "alert";
   // Keyed by the same signal type recordSignalFired writes below -- keying

@@ -5,6 +5,7 @@ import { isDataFixAutopilot } from "@/lib/feature-gates";
 import { buildDataQualityPrompt, buildDataQualityUserMessage } from "@/lib/ai/prompts";
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
+import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
 const DataQualityDecisionSchema = z.object({
   decisions: z.array(
@@ -46,7 +47,7 @@ export async function runDataQualityWorker(
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
-  const parsed = DataQualityDecisionSchema.safeParse(JSON.parse(raw));
+  const parsed = DataQualityDecisionSchema.safeParse(tryParseJson(raw));
 
   logGeneration(ctx, {
     name: "data-quality-decisions",
@@ -60,7 +61,10 @@ export async function runDataQualityWorker(
     error: parsed.success ? undefined : parsed.error.message,
   });
 
-  if (!parsed.success) return;
+  if (!parsed.success) {
+    await logWorkerFailure(supabase, company.id, "data-quality-worker", parsed.error.message);
+    return;
+  }
 
   const { decisions } = parsed.data;
 

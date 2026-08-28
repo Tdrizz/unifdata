@@ -12,6 +12,7 @@ import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecent
 import { sendSms } from "@/lib/messaging/sms";
 import { toE164 } from "@/lib/webhook-validation";
 import { isUnpaid, isCompleteWork } from "@/lib/status";
+import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
@@ -186,7 +187,7 @@ export async function runOutreachWorker(
   });
 
   const raw = response.choices[0]?.message?.content ?? "{}";
-  const parsed = OutreachDraftSchema.safeParse(JSON.parse(raw));
+  const parsed = OutreachDraftSchema.safeParse(tryParseJson(raw));
 
   logGeneration(ctx, {
     name: "outreach-draft",
@@ -200,7 +201,10 @@ export async function runOutreachWorker(
     error: parsed.success ? undefined : parsed.error.message,
   });
 
-  if (!parsed.success) return;
+  if (!parsed.success) {
+    await logWorkerFailure(supabase, company.id, "outreach-worker", parsed.error.message);
+    return;
+  }
 
   const draft = parsed.data;
   const recipientInfo = {

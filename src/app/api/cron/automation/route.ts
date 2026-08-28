@@ -108,9 +108,21 @@ export async function GET(request: Request) {
 
   try {
     // Run each worker sequentially, draining available jobs then moving on.
-    await drainWorker(worker);
-    await drainWorker(dkWorker);
-    await drainWorker(swWorker);
+    //
+    // All three used to get a flat 60s regardless of load, inside a 300s
+    // route budget -- a fixed window that has nothing to do with how many
+    // companies are actually queued. The automation worker runs the nightly
+    // coordinator: 1 manager call plus up to 8 further LLM calls per
+    // company, so at ~20-40s/company and concurrency 2, 60s was only ever
+    // enough for a handful of companies before force-closing mid-run and
+    // leaving the rest queued for tomorrow (with no per-org log row for the
+    // ones that got cut, since that's written after the job completes).
+    // Give it most of the route's budget; the other two workers do
+    // lighter, faster work per job. 290s total leaves a 10s margin under
+    // Vercel's 300s hard cutoff for the response itself to return.
+    await drainWorker(worker, 220_000);
+    await drainWorker(dkWorker, 40_000);
+    await drainWorker(swWorker, 30_000);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

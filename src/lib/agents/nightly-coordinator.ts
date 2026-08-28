@@ -50,6 +50,22 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
         agent_name: "manager-agent",
         error: raw.slice(0, 2000),
       });
+      // The manager failing is this run's most common failure mode (it was
+      // the entire cause of a 100%-error streak in production), and this
+      // early return used to skip the nightly-coordinator row written at
+      // the end of the function -- so the admin health page's "Nightly Runs
+      // success rate" excluded every night this happened from its
+      // denominator entirely, rather than counting it as a failure. A run
+      // that never produced a review is a failed run.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("agent_logs").insert({
+        organization_id: orgId,
+        agent_name: "nightly-coordinator",
+        signals_checked: 6,
+        events_fired: 0,
+        autopilot: isOutreachAutopilot(company as { preferences?: Record<string, unknown> }),
+        error: `manager-agent failed: ${raw.slice(0, 1900)}`,
+      });
       return;
     }
 

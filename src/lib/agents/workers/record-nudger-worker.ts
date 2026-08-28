@@ -122,12 +122,19 @@ export async function runRecordNudgerWorker(
 
     const raw = response.choices[0]?.message?.content ?? "[]";
     let parsed: z.infer<typeof NudgerAlertSchema> | null = null;
+    // Distinguished from "nothing needed nudging" below -- both used to
+    // collapse into the same events_fired: 0 with no error recorded, which
+    // is indistinguishable from an unremarkable quiet run.
+    let parseError: string | null = null;
 
     try {
       const jsonData = JSON.parse(raw);
       const result = NudgerAlertSchema.safeParse(Array.isArray(jsonData) ? jsonData : jsonData.alerts ?? []);
       if (result.success) parsed = result.data;
-    } catch { /* ignore parse error */ }
+      else parseError = result.error.message;
+    } catch (err) {
+      parseError = err instanceof Error ? err.message : "Invalid JSON response";
+    }
 
     logGeneration(ctx, {
       name: "record-nudger",
@@ -182,6 +189,7 @@ export async function runRecordNudgerWorker(
       organization_id: orgId,
       agent_name: "record-nudger",
       events_fired: parsed?.length ?? 0,
+      error: parseError,
     });
   } finally {
     await flushLangfuse();
