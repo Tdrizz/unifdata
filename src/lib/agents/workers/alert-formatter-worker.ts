@@ -5,7 +5,7 @@ import { buildAlertFormatterPrompt, buildAlertFormatterUserMessage } from "@/lib
 import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { getEscalationLevel, recordSignalFired, hasRecentAlert, recordExists } from "@/lib/agents/memory";
+import { getEscalationLevel, recordSignalFired, hasRecentAlert, recordExists, normalizeAlertType } from "@/lib/agents/memory";
 
 const AgentAlertSchema = z.object({
   alerts: z
@@ -95,7 +95,7 @@ export async function runAlertFormatterWorker(
         const recordId = (await recordExists(orgId, alert.record_id)) ? alert.record_id! : null;
         return {
           organization_id: orgId,
-          alert_type: alert.alert_type,
+          alert_type: normalizeAlertType(alert.alert_type),
           severity: alert.severity,
           title: alert.title,
           body: alert.body,

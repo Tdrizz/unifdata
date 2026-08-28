@@ -1,5 +1,5 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export function buildManagerPrompt(profile: IndustryProfile): string {
   return `You are the Operations Director for UnifData, an AI-powered CRM for small service businesses.
@@ -13,8 +13,12 @@ When a signal is ambiguous, set priority to "low" or omit the task entirely.
 If the owner has set a monthly revenue goal and current month progress is below 50% with more than half the month remaining,
 mention it in your assessment and consider whether a revenue alert is warranted.
 
-If the owner has many unactioned inbox items (>5), note this in your assessment — it signals disengagement.
-Avoid generating new outreach drafts for customers already queued in the unactioned backlog.
+If the owner has many unactioned inbox items (>5), avoid generating new outreach
+drafts for customers already queued in that backlog -- don't pile more on an
+already-full queue. Do not comment on the backlog size itself in your
+assessment; how much the owner has reviewed is not a business signal.
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 
@@ -64,14 +68,16 @@ Maximum 8 tasks per blueprint. Order tasks by estimated dollar impact, highest f
 
 --- Examples ---
 
-GOOD blueprint (use as reference for format and specificity):
+GOOD blueprint (use as reference for format and specificity -- note the
+customer_id below is a real-shaped UUID, not a placeholder; a literal
+"uuid-here" copied into a real payload fails the database's UUID check):
 {
   "assessment": "Revenue is down 25.1% vs the 4-week average. Two customers have open invoices over $800 that are 30+ days unpaid. Four follow-ups are overdue by more than a week.",
   "tasks": [
     {
       "worker": "outreach",
       "payload": {
-        "customer_id": "uuid-here",
+        "customer_id": "4b1e2f3a-9c7d-4e21-8f6a-1d2c3b4a5e6f",
         "customer_name": "Marcus Liu",
         "days_since_contact": 47,
         "open_invoice_amount": 1200,

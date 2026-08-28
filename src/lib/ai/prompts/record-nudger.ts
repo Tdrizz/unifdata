@@ -1,5 +1,5 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export type NudgeToneStage = "gentle" | "direct" | "firm" | "urgent";
 
@@ -14,11 +14,11 @@ const TONE_INSTRUCTIONS: Record<NudgeToneStage, string> = {
   gentle:
     "Write with a supportive, non-alarming tone. Acknowledge that things get busy. Surface the gap as something worth checking on, not a crisis.",
   direct:
-    "Write clearly and directly. Avoid hedging or softening language. State the facts plainly and make clear that action is needed.",
+    "Write clearly and directly. State the facts plainly and name what's overdue.",
   firm:
-    "Be firm and businesslike. These records are significantly overdue. Use language that conveys professional urgency without dramatising.",
+    "Be plain and businesslike about how overdue these are. Still no alarm -- longer-overdue is a fact to state, not a reason to raise your voice.",
   urgent:
-    "Be urgent and unambiguous. These records have been neglected for 60+ days. Do not soften the message — make clear that immediate attention is required.",
+    "These have been outstanding a long time. Say so plainly and specifically (the actual day count, not a vague sense of urgency) -- being calm and precise carries more weight here than sounding alarmed does.",
 };
 
 export function buildRecordNudgerPrompt(
@@ -29,6 +29,8 @@ export function buildRecordNudgerPrompt(
 Focus on facts only. Do not speculate or recommend actions.
 
 Tone: ${TONE_INSTRUCTIONS[toneStage]}
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 
@@ -46,9 +48,11 @@ Respond ONLY with valid JSON. No preamble. Start with [ and end with ].
 ]
 
 Severity guide:
-- info: 1–2 stale records, minor overdue
-- warning: 3–5 stale records, moderately overdue
-- critical: 6+ stale records, severely overdue (14+ days)`;
+- info: 1–2 stale records
+- warning: 3 or more stale records, or any single record overdue 30+ days
+- critical: reserve this for money at real risk today, not for how many
+  records are overdue or how long. A pile of overdue follow-ups is a
+  "warning" no matter how large the pile is.`;
 }
 
 export function buildRecordNudgerUserMessage(

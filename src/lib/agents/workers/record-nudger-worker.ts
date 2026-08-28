@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
-import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
+import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert, normalizeAlertType } from "@/lib/agents/memory";
 import { isCompleteWork, isCancelledWork, isOpenFollowUp } from "@/lib/status";
 import {
   buildRecordNudgerPrompt,
@@ -158,7 +158,7 @@ export async function runRecordNudgerWorker(
             if (await hasRecentAlert(orgId, alert.alert_type, null)) return null;
             return {
               organization_id: orgId,
-              alert_type: alert.alert_type,
+              alert_type: normalizeAlertType(alert.alert_type),
               severity: alert.severity,
               title: alert.title,
               body: alert.body,
