@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { sendSms } from "@/lib/messaging/sms";
-import { recordOutboundSms } from "@/lib/messaging/record-outbound-sms";
+import { sendEmail } from "@/lib/messaging/email";
+import { recordOutboundMessage } from "@/lib/messaging/record-outbound-message";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(
@@ -46,29 +47,46 @@ export async function POST(
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
   const messageBody = body.body.trim();
+  const channel = thread.channel === "email" ? "email" : "sms";
 
-  if (thread.channel !== "sms") {
-    return NextResponse.json({ error: "Only SMS threads are supported" }, { status: 422 });
-  }
-
-  if (!thread.contact_phone) {
-    return NextResponse.json({ error: "Thread has no phone number" }, { status: 422 });
-  }
-
-  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
-    return NextResponse.json({ error: "SMS is not configured. Add Twilio credentials in settings." }, { status: 503 });
-  }
-
-  try {
-    await sendSms(thread.contact_phone, messageBody, company.name);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "SMS send failed";
-    return NextResponse.json({ error: message }, { status: 502 });
+  if (channel === "sms") {
+    if (!thread.contact_phone) {
+      return NextResponse.json({ error: "Thread has no phone number" }, { status: 422 });
+    }
+    try {
+      await sendSms(thread.contact_phone, messageBody, company.name);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "SMS send failed";
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
+  } else {
+    // No contact_email column on the thread (only contact_phone is
+    // denormalized onto it) -- look the current address up from the linked
+    // contact instead of adding a migration for it.
+    let toEmail: string | null = null;
+    if (thread.contact_id) {
+      const { data: contact } = await (supabase as any)
+        .from("master_customers")
+        .select("primary_email")
+        .eq("id", thread.contact_id)
+        .eq("organization_id", company.id)
+        .maybeSingle();
+      toEmail = contact?.primary_email ?? null;
+    }
+    if (!toEmail) {
+      return NextResponse.json({ error: "This contact doesn't have an email address on file." }, { status: 422 });
+    }
+    try {
+      await sendEmail({ to: toEmail, subject: `Message from ${company.name}`, text: messageBody, companyName: company.name });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Email send failed";
+      return NextResponse.json({ error: message }, { status: 502 });
+    }
   }
 
   let message;
   try {
-    message = await recordOutboundSms(supabase, company.id, threadId, thread.contact_id, messageBody);
+    message = await recordOutboundMessage(supabase, company.id, threadId, thread.contact_id, messageBody, channel);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Could not save the message.";
     return NextResponse.json({ error: errorMessage }, { status: 500 });

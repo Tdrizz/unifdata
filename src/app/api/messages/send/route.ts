@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { toE164 } from "@/lib/webhook-validation";
 import { rateLimit } from "@/lib/rate-limit";
 import { sendSms } from "@/lib/messaging/sms";
+import { sendEmail } from "@/lib/messaging/email";
 
 export const runtime = "nodejs";
 
@@ -16,40 +17,6 @@ type SendMessageBody = {
   body: string;
   subject?: string;
 };
-
-async function sendEmail(to: string, subject: string, body: string, companyName: string): Promise<string> {
-  const apiKey = process.env.MAILGUN_API_KEY;
-  const domain = process.env.MAILGUN_DOMAIN;
-  const fromAddress = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
-  // Shared sending domain across every company -- the display name is what
-  // actually tells the recipient which business emailed them.
-  const from = `${companyName} <${fromAddress}>`;
-
-  if (!apiKey || !domain) {
-    throw new Error("Missing Mailgun environment variables.");
-  }
-
-  const response = await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-    },
-    body: new URLSearchParams({
-      from,
-      to,
-      subject: subject || "(no subject)",
-      text: body,
-    }),
-  });
-
-  const data = (await response.json()) as { id?: string; message?: string };
-
-  if (!response.ok) {
-    throw new Error(data.message ?? "Mailgun send failed.");
-  }
-
-  return data.id ?? "";
-}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -116,7 +83,12 @@ export async function POST(request: Request) {
       if (!customer.primary_email) {
         return NextResponse.json({ error: "Customer has no email address." }, { status: 422 });
       }
-      providerMessageId = await sendEmail(customer.primary_email as string, subject, messageBody, company.name);
+      providerMessageId = await sendEmail({
+        to: customer.primary_email as string,
+        subject: subject || "(no subject)",
+        text: messageBody,
+        companyName: company.name,
+      });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Send failed.";

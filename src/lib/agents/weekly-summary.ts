@@ -2,6 +2,7 @@ import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { markdownToEmailHtml, stripMarkdown } from "@/lib/email/format";
 import { isCompleteWork, isOpenFollowUp } from "@/lib/status";
 import { buildVoiceBlock } from "@/lib/ai/prompts/shared";
+import { sendEmail } from "@/lib/messaging/email";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendWeeklySummary(
@@ -127,25 +128,21 @@ no markdown, no severity words in brackets.`;
   });
 
   const emailBody = response.choices[0]?.message?.content ?? "";
-  if (!emailBody) return;
+  if (!emailBody || !ownerEmail) return;
 
-  const apiKey = process.env.MAILGUN_API_KEY;
-  const domain = process.env.MAILGUN_DOMAIN;
-  const from = process.env.MAILGUN_FROM_EMAIL ?? `noreply@${domain}`;
-
-  if (!apiKey || !domain || !ownerEmail) return;
-
-  await fetch(`https://api.mailgun.net/v3/${domain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`api:${apiKey}`).toString("base64")}`,
-    },
-    body: new URLSearchParams({
-      from,
+  // This goes to the business owner ABOUT their business, not to one of
+  // their customers -- so it's sent as UnifData (the product), same as the
+  // waitlist/invite emails, not as the business's own name the way every
+  // customer-facing send in this file set is.
+  try {
+    await sendEmail({
       to: ownerEmail,
       subject: `Your weekly business summary — ${company.name}`,
       text: stripMarkdown(emailBody),
       html: markdownToEmailHtml(emailBody),
-    }),
-  });
+      companyName: "UnifData",
+    });
+  } catch (err) {
+    console.error("[weekly-summary] send failed", err);
+  }
 }
