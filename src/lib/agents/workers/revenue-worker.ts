@@ -6,7 +6,8 @@ import { logGeneration } from "@/lib/observability/tracing";
 import type { TraceContext } from "@/lib/observability/tracing";
 import type { TelemetrySnapshot } from "../telemetry";
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { hasRecentAlert } from "@/lib/agents/memory";
+import { hasRecentAlert, recordExists } from "@/lib/agents/memory";
+import { isUnpaid } from "@/lib/status";
 
 const RevenueAlertSchema = z.object({
   alerts: z
@@ -29,13 +30,20 @@ export async function runRevenueWorker(
   profile: IndustryProfile,
   ctx: TraceContext,
 ): Promise<void> {
-  const { data: invoiceDetails } = await supabase
+  // "Not literally paid" also matched refunded, voided, draft and blank rows,
+  // so the owner was shown money owed that nobody actually owes. isUnpaid()
+  // matches only genuinely outstanding invoices. Fetch a wider window and
+  // narrow in JS, since the filter can't be expressed in SQL safely.
+  const { data: candidateInvoices } = await supabase
     .from("sales")
     .select("id, amount, payment_status, sale_date, service_type")
     .eq("company_id", orgId)
-    .not("payment_status", "ilike", "paid")
     .order("amount", { ascending: false })
-    .limit(5);
+    .limit(50);
+
+  const invoiceDetails = (candidateInvoices ?? [])
+    .filter((s) => isUnpaid((s as { payment_status: string | null }).payment_status))
+    .slice(0, 5);
 
   const start = Date.now();
   const systemPrompt = buildRevenuePrompt(profile);
@@ -73,22 +81,23 @@ export async function runRevenueWorker(
 
   if (!parsed.success || parsed.data.alerts.length === 0) return;
 
-  const freshAlerts = [];
+  const freshAlerts: Array<{ alert: typeof parsed.data.alerts[number]; recordId: string | null }> = [];
   for (const alert of parsed.data.alerts) {
-    if (!(await hasRecentAlert(orgId, "revenue", alert.record_id ?? null))) {
-      freshAlerts.push(alert);
-    }
+    if (await hasRecentAlert(orgId, "revenue", alert.record_id ?? null)) continue;
+    // Drop an invented record id rather than shipping a card that 404s.
+    const recordId = (await recordExists(orgId, alert.record_id)) ? alert.record_id! : null;
+    freshAlerts.push({ alert, recordId });
   }
   if (freshAlerts.length === 0) return;
 
   await supabase.from("agent_alerts").insert(
-    freshAlerts.map((alert) => ({
+    freshAlerts.map(({ alert, recordId }) => ({
       organization_id: orgId,
       alert_type: "revenue",
       severity: alert.severity,
       title: alert.title,
       body: alert.body,
-      record_id: alert.record_id ?? null,
+      record_id: recordId,
       reasoning: alert.reasoning ?? null,
     })),
   );

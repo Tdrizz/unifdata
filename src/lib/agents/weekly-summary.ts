@@ -1,5 +1,6 @@
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { markdownToEmailHtml, stripMarkdown } from "@/lib/email/format";
+import { isCompleteWork, isOpenFollowUp } from "@/lib/status";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendWeeklySummary(
@@ -45,9 +46,8 @@ export async function sendWeeklySummary(
       .lt("created_at", startOfThisWeek.toISOString()),
     supabase
       .from("jobs")
-      .select("id")
+      .select("id, status")
       .eq("company_id", orgId)
-      .eq("status", "completed")
       .gte("updated_at", startOfThisWeek.toISOString()),
     supabase
       .from("follow_ups")
@@ -76,10 +76,14 @@ export async function sendWeeklySummary(
     (sum, r) => sum + Number(r.amount || 0),
     0,
   );
-  const jobsCompleted = jobsCompletedResult.data?.length ?? 0;
+  // Both counts previously compared status exactly, so "Completed" never
+  // matched and the weekly email always reported zero work finished.
+  const jobsCompleted = (jobsCompletedResult.data ?? []).filter(
+    (j) => isCompleteWork((j as { status: string | null }).status),
+  ).length;
   const followUpsAdded = followUpsResult.data?.length ?? 0;
   const followUpsResolved = (followUpsResult.data ?? []).filter(
-    (f) => f.status === "complete" || f.status === "completed",
+    (f) => !isOpenFollowUp(f.status),
   ).length;
   const topAlerts = (alertsResult.data ?? [])
     .slice(0, 3)

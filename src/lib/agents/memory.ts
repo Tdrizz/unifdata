@@ -117,6 +117,37 @@ export function hoursSince(isoTimestamp: string): number {
 // elapsed). This checks for ANY alert of the same type+record within the
 // lookback window regardless of status, so a dismissed alert stays dismissed
 // instead of reappearing.
+// record_id on agent_alerts/agent_drafts has no foreign key, so a model that
+// emits a well-formed but invented UUID inserts cleanly -- and the card then
+// 404s when the owner clicks it. Confirm the row exists before we point at it;
+// a null record_id is fine (the card just routes to a list page instead).
+export async function recordExists(
+  orgId: string,
+  recordId: string | null | undefined,
+): Promise<boolean> {
+  if (!recordId) return false;
+  const supabase = db();
+
+  const checks: Array<[string, string]> = [
+    ["master_customers", "organization_id"],
+    ["leads", "company_id"],
+    ["jobs", "company_id"],
+    ["sales", "company_id"],
+    ["follow_ups", "company_id"],
+  ];
+
+  for (const [table, orgColumn] of checks) {
+    const { data } = await supabase
+      .from(table)
+      .select("id")
+      .eq("id", recordId)
+      .eq(orgColumn, orgId)
+      .maybeSingle();
+    if (data) return true;
+  }
+  return false;
+}
+
 export async function hasRecentAlert(
   orgId: string,
   alertType: string,

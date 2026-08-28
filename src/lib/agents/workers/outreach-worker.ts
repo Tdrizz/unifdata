@@ -11,6 +11,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
 import { sendSms } from "@/lib/messaging/sms";
 import { toE164 } from "@/lib/webhook-validation";
+import { isUnpaid, isCompleteWork } from "@/lib/status";
 
 const OutreachDraftSchema = z.object({
   draft_type: z.enum(["outreach_email", "outreach_sms"]),
@@ -23,6 +24,70 @@ type OutreachPayload = Record<string, unknown>;
 
 const OUTREACH_COOLDOWN_HOURS = 7 * 24; // 7 days
 
+/**
+ * Replaces the customer facts on an incoming payload with values read from the
+ * database.
+ *
+ * The manager agent is asked to emit `customer_name`, `days_since_contact`,
+ * `last_service_type` and `open_invoice_amount` per task, but it is only ever
+ * shown org-level aggregates -- it has never seen any of those fields. So it
+ * invents them, and they used to flow into the draft prompt as fact, which is
+ * how a message about a job that never happened could end up one click from
+ * being sent to a real customer.
+ *
+ * Returns null when the contact can't be found, which means: don't draft.
+ */
+async function groundCustomerFacts(
+  supabase: SupabaseClient,
+  orgId: string,
+  customerId: string,
+): Promise<OutreachPayload | null> {
+  const { data: contact } = await (supabase as any)
+    .from("master_customers")
+    .select("id, first_name, last_name, primary_email, primary_phone")
+    .eq("id", customerId)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
+  if (!contact) return null;
+
+  const [{ data: lastJob }, { data: openInvoices }] = await Promise.all([
+    (supabase as any)
+      .from("jobs")
+      .select("service_type, updated_at, status")
+      .eq("company_id", orgId)
+      .eq("contact_id", customerId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    (supabase as any)
+      .from("sales")
+      .select("amount, payment_status")
+      .eq("company_id", orgId)
+      .eq("contact_id", customerId),
+  ]);
+
+  const openInvoiceAmount = ((openInvoices ?? []) as Array<{ amount: number | null; payment_status: string | null }>)
+    .filter((s) => isUnpaid(s.payment_status))
+    .reduce((sum, s) => sum + Number(s.amount ?? 0), 0);
+
+  const daysSinceContact = lastJob?.updated_at
+    ? Math.floor((Date.now() - new Date(lastJob.updated_at).getTime()) / 86_400_000)
+    : null;
+
+  const name = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+
+  return {
+    customer_id: customerId,
+    customer_name: name || "there",
+    // Only real, completed work is described as a past service. An in-flight
+    // or cancelled job is not something to reference as "last time we...".
+    last_service_type: isCompleteWork(lastJob?.status) ? lastJob?.service_type ?? null : null,
+    days_since_contact: daysSinceContact,
+    open_invoice_amount: openInvoiceAmount,
+  };
+}
+
 export async function runOutreachWorker(
   payload: OutreachPayload,
   company: { id: string; name: string; preferences?: Record<string, unknown> },
@@ -31,6 +96,14 @@ export async function runOutreachWorker(
   ctx: TraceContext,
 ): Promise<void> {
   const customerId = payload.customer_id as string | undefined;
+
+  // Never draft a message about a contact we can't verify. A hallucinated but
+  // well-formed UUID otherwise produces a confident message about a customer
+  // who doesn't exist.
+  if (!customerId) return;
+  const grounded = await groundCustomerFacts(supabase, company.id, customerId);
+  if (!grounded) return;
+  payload = { ...payload, ...grounded };
 
   // Memory guard
   if (customerId) {
