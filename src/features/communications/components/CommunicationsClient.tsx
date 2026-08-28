@@ -149,9 +149,22 @@ export function CommunicationsClient({
 
     loadMessages();
 
+    // supabase.channel(topic) reuses an existing channel instance if one
+    // with the same topic hasn't been torn down yet, and calling .on() on a
+    // channel that's already subscribed throws -- uncaught inside a
+    // useEffect, that crashes the whole page (React's nearest error
+    // boundary catches it, which is what "Something went wrong" was). Clear
+    // out any stale channel for this thread first so a fast
+    // remount/re-render of this effect can't hit that race.
+    const topic = `comm-${selectedId}`;
+    const stale = supabase.getChannels().find((c) => c.topic === `realtime:${topic}`);
+    if (stale) {
+      supabase.removeChannel(stale);
+    }
+
     // Real-time subscription
     const channel = supabase
-      .channel(`comm-${selectedId}`)
+      .channel(topic)
       .on(
         "postgres_changes",
         {
