@@ -112,13 +112,21 @@ export function ContactsTableClient({
     <div className="md:hidden px-4 pt-5 pb-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
-        <button
-          type="button"
-          onClick={() => setSheetOpen(true)}
-          className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
-        >
-          + Add
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/export/csv?table=customers"
+            className="px-3 py-1.5 text-[12px] font-semibold bg-ud-surface border border-ud text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard"
+          >
+            Export
+          </a>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
+          >
+            + Add
+          </button>
+        </div>
       </div>
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
@@ -167,12 +175,20 @@ export function ContactsTableClient({
           <h1 className="text-[22px] font-bold text-ud-ink">All contacts</h1>
           <div className="text-[13px] text-ud-muted mt-0.5">{customers.length} contacts</div>
         </div>
-        <a
-          href="#add-contact"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-accent text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
-        >
-          + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/export/csv?table=customers"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted text-[13px] font-semibold hover:text-ud-ink hover:border-ud-hard transition-colors"
+          >
+            Export CSV
+          </a>
+          <a
+            href="#add-contact"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-accent text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
+          >
+            + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
+          </a>
+        </div>
       </div>
 
       {/* Search */}
