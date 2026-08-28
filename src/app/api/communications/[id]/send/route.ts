@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { logActivity } from "@/lib/crm/activity";
 import { sendSms } from "@/lib/messaging/sms";
+import { recordOutboundSms } from "@/lib/messaging/record-outbound-sms";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(
@@ -46,7 +46,6 @@ export async function POST(
   if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
 
   const messageBody = body.body.trim();
-  const now = new Date().toISOString();
 
   if (thread.channel !== "sms") {
     return NextResponse.json({ error: "Only SMS threads are supported" }, { status: 422 });
@@ -67,45 +66,12 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  // Insert outbound message
-  const { data: message, error } = await (supabase as any)
-    .from("communication_messages")
-    .insert({
-      communication_id: threadId,
-      organization_id: company.id,
-      direction: "outbound",
-      body: messageBody,
-      status: "delivered",
-      sent_at: now,
-    })
-    .select("id, communication_id, direction, body, status, sent_at")
-    .single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Update thread metadata
-  await (supabase as any)
-    .from("communications")
-    .update({
-      last_message_at: now,
-      last_message_preview: messageBody.slice(0, 100),
-    })
-    .eq("id", threadId);
-
-  // Log activity if contact is known
-  if (thread.contact_id) {
-    try {
-      await logActivity(supabase, company.id, thread.contact_id, {
-        type: "message_sent",
-        label: "SMS sent",
-        detail: messageBody.slice(0, 100),
-        referenceId: message.id,
-        referenceType: "communication_message",
-        source: "user",
-      });
-    } catch {
-      // Non-fatal
-    }
+  let message;
+  try {
+    message = await recordOutboundSms(supabase, company.id, threadId, thread.contact_id, messageBody);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Could not save the message.";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 
   return NextResponse.json(message);
