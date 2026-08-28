@@ -25,7 +25,7 @@ export default async function WorkspacePage() {
 
   const profile = getIndustryProfile(company.business_sector);
 
-  const [data, draftsResult, alertsResult, chatSession] = await Promise.all([
+  const [data, draftsResult, alertsResult, lastReviewResult, chatSession] = await Promise.all([
     getWorkspaceData(supabase, company.id),
     supabase
       .from("agent_drafts")
@@ -41,6 +41,20 @@ export default async function WorkspacePage() {
       .eq("status", "unread")
       .order("created_at", { ascending: false })
       .limit(10),
+    // When Vera last actually finished a nightly review. The panel used to
+    // claim "Vera reviewed your business overnight" purely because there were
+    // no cards to show -- so it said that on a ten-minute-old account, and on
+    // any night the queue was down and no run happened at all. Nothing is
+    // claimed now unless there's a successful run to point at.
+    supabase
+      .from("agent_logs")
+      .select("run_at")
+      .eq("organization_id", company.id)
+      .eq("agent_name", "nightly-coordinator")
+      .is("error", null)
+      .order("run_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     // Best-effort: the Vera panel just starts with an empty conversation if
     // this fails, rather than the whole dashboard failing to load over a
     // chat-history nicety.
@@ -69,6 +83,8 @@ export default async function WorkspacePage() {
 
   const agentInboxCount = drafts.length + alerts.length;
 
+  const lastReviewAt = (lastReviewResult.data as { run_at: string } | null)?.run_at ?? null;
+
   return (
     <AppShell
       companyName={company.name}
@@ -95,6 +111,7 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
+          lastReviewAt={lastReviewAt}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
         />
@@ -104,6 +121,7 @@ export default async function WorkspacePage() {
           companyName={company.name}
           drafts={drafts}
           alerts={alerts}
+          lastReviewAt={lastReviewAt}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
         />

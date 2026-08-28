@@ -238,7 +238,7 @@ export default function HomePage() {
             </div>
             <div className="space-y-3">
               {[
-                { icon: "📬", title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. You approve or skip — nothing sends without your sign-off." },
+                { icon: "📬", title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. You approve or skip — nothing sends until you say so, unless you switch on auto-send yourself." },
                 { icon: "⚠️", title: "Revenue alerts", body: "Flags unpaid invoices, stalling jobs, and revenue drops before they become problems." },
                 { icon: "🔁", title: "Runs every night", body: "The briefing refreshes automatically. You start every morning knowing exactly where things stand." },
                 { icon: "🎯", title: "Adapts to your business", body: "Vera learns your patterns. The longer you use it, the better its prioritization gets." },
