@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
 import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 
 type QueueItem = {
   id: string;
@@ -38,12 +39,14 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   lastReviewAt?: string | null;
   lastAssessment?: string | null;
+  checklist?: { hasRealCustomer: boolean; hasSampleData: boolean; hasTeammate: boolean } | null;
   initialChatSessionId?: string | null;
   initialChatMessages?: ChatMessage[];
 };
 
 export function WorkspaceView({
   customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null, lastAssessment = null,
+  checklist = null,
   initialChatSessionId = null, initialChatMessages = [],
 }: Props) {
   const [draftList, setDraftList] = useState<Draft[]>(drafts);
@@ -335,6 +338,14 @@ export function WorkspaceView({
         description={statusLine}
         className="mb-6"
       />
+
+      {checklist && (
+        <OnboardingChecklist
+          hasRealCustomer={checklist.hasRealCustomer}
+          hasSampleData={checklist.hasSampleData}
+          hasTeammate={checklist.hasTeammate}
+        />
+      )}
 
       {/* Vera panel — collapsed to a one-line summary by default so business
           data is what you see first; expands to the full cards + live chat. */}

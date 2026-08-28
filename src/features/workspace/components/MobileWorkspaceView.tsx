@@ -14,6 +14,7 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { WorkspaceData } from "../queries";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 import { getDayLabel, getGreeting, getSortDate, getFollowUpLabel, getFollowUpTone, computeWorkspaceStats } from "../compute";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 
 type QueueItem = {
   id: string;
@@ -36,6 +37,7 @@ type Props = WorkspaceData & {
   alerts?: Alert[];
   lastReviewAt?: string | null;
   lastAssessment?: string | null;
+  checklist?: { hasRealCustomer: boolean; hasSampleData: boolean; hasTeammate: boolean } | null;
   initialChatSessionId?: string | null;
   initialChatMessages?: ChatMessage[];
 };
@@ -45,6 +47,7 @@ type Props = WorkspaceData & {
 // stacked single-column instead of a side-by-side grid.
 export function MobileWorkspaceView({
   customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null, lastAssessment = null,
+  checklist = null,
   initialChatSessionId = null, initialChatMessages = [],
 }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -326,6 +329,16 @@ export function MobileWorkspaceView({
           {statusLine}
         </p>
       </div>
+
+      {checklist && (
+        <div className="px-4 pb-4">
+          <OnboardingChecklist
+            hasRealCustomer={checklist.hasRealCustomer}
+            hasSampleData={checklist.hasSampleData}
+            hasTeammate={checklist.hasTeammate}
+          />
+        </div>
+      )}
 
       {/* Business at a glance — trimmed to the 3 non-overlapping numbers,
           same as desktop (Follow-ups Due dropped as redundant with the

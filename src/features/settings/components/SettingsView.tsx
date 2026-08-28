@@ -207,7 +207,7 @@ export function SettingsView({
         </div>
 
         {/* Team members */}
-        <div className="py-[26px] border-b border-ud">
+        <div id="team" className="py-[26px] border-b border-ud scroll-mt-20">
           <div className="mb-[18px]">
             <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Team members</p>
             <p className="text-[12px] text-ud-muted">Manage who has access to this workspace.</p>

@@ -61,6 +61,26 @@ export default async function WorkspacePage() {
     getOrCreateSession(supabase, company.id).catch(() => ({ id: null, messages: [] })),
   ]);
 
+  // Phase 04 — the post-onboarding checklist. Dismissed once and for all via
+  // company.preferences (already fetched by getCurrentCompany), so it isn't
+  // recomputed per item here; the three items themselves are.
+  const checklistDismissed = Boolean(
+    (company.preferences as Record<string, unknown> | null)?.onboarding_checklist_dismissed,
+  );
+  let checklist: { hasRealCustomer: boolean; hasSampleData: boolean; hasTeammate: boolean } | null = null;
+  if (!checklistDismissed) {
+    const [{ count: realCustomerCount }, { count: sampleCustomerCount }, { count: memberCount }] = await Promise.all([
+      supabase.from("master_customers").select("id", { count: "exact", head: true }).eq("organization_id", company.id).eq("is_sample", false),
+      supabase.from("master_customers").select("id", { count: "exact", head: true }).eq("organization_id", company.id).eq("is_sample", true),
+      supabase.from("company_members").select("user_id", { count: "exact", head: true }).eq("company_id", company.id),
+    ]);
+    checklist = {
+      hasRealCustomer: (realCustomerCount ?? 0) > 0,
+      hasSampleData: (sampleCustomerCount ?? 0) > 0,
+      hasTeammate: (memberCount ?? 0) > 1,
+    };
+  }
+
   const drafts = (draftsResult.data ?? []) as unknown as Array<{
     id: string;
     draft_type: string;
@@ -119,6 +139,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           lastReviewAt={lastReviewAt}
+          checklist={checklist}
           lastAssessment={lastAssessment}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
@@ -130,6 +151,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           lastReviewAt={lastReviewAt}
+          checklist={checklist}
           lastAssessment={lastAssessment}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
