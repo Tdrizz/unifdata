@@ -15,7 +15,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, business_sector, tier, preferences")
+    .select("id, name, business_sector, tier, preferences, email_slug")
     .eq("id", orgId)
     .single();
 
@@ -82,7 +82,7 @@ export async function runNightlyCoordinator(orgId: string): Promise<void> {
           case "outreach":
             await runOutreachWorker(
               task.payload as Parameters<typeof runOutreachWorker>[0],
-              company as { id: string; name: string; preferences?: Record<string, unknown> },
+              company as { id: string; name: string; email_slug?: string | null; preferences?: Record<string, unknown> },
               supabase,
               profile,
               ctx,

@@ -92,7 +92,7 @@ async function groundCustomerFacts(
 
 export async function runOutreachWorker(
   payload: OutreachPayload,
-  company: { id: string; name: string; preferences?: Record<string, unknown> },
+  company: { id: string; name: string; email_slug?: string | null; preferences?: Record<string, unknown> },
   supabase: SupabaseClient,
   profile: IndustryProfile,
   ctx: TraceContext,
@@ -240,6 +240,7 @@ export async function runOutreachWorker(
           text: stripMarkdown(draft.body),
           html: markdownToEmailHtml(draft.body),
           companyName: company.name,
+          fromLocalPart: company.email_slug,
         });
         sendSucceeded = true;
       } catch (err) {

@@ -7,6 +7,27 @@ import { redirect } from "next/navigation";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { isCompanyMember, verifyOwned } from "@/lib/security/ownership";
 import { splitName } from "@/lib/crm/legacy-shape";
+import { slugify } from "@/lib/crm/slug";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// Every company gets its own mailbox name under the shared sending domain
+// (see sendEmail's fromLocalPart) so customer-facing email reads as coming
+// from the business, not a shared generic address. Resend only verifies at
+// the domain level, so this needs no per-company DNS work -- just a slug
+// that doesn't collide with another company's.
+async function generateUniqueEmailSlug(supabase: SupabaseClient, name: string): Promise<string> {
+  const base = slugify(name);
+  let candidate = base;
+  for (let suffix = 2; ; suffix++) {
+    const { data: existing } = await (supabase as any)
+      .from("companies")
+      .select("id")
+      .eq("email_slug", candidate)
+      .maybeSingle();
+    if (!existing) return candidate;
+    candidate = `${base}-${suffix}`;
+  }
+}
 
 export async function createCompanyStepAction(
   formData: FormData,
@@ -34,9 +55,11 @@ export async function createCompanyStepAction(
     .maybeSingle();
   if (existing) return { companyId: existing.company_id };
 
+  const emailSlug = await generateUniqueEmailSlug(supabase, companyName);
+
   const { data: company, error: companyError } = await supabase
     .from("companies")
-    .insert({ name: companyName, industry: industry || null, business_sector: businessSector || "general", subscription_active: true })
+    .insert({ name: companyName, industry: industry || null, business_sector: businessSector || "general", subscription_active: true, email_slug: emailSlug })
     .select("id")
     .single();
   if (companyError) return { error: companyError.message };

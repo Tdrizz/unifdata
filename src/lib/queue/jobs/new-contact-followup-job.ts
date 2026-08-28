@@ -16,7 +16,7 @@ export async function processNewContactFollowupJob(
 
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, business_sector, tier, preferences")
+    .select("id, name, business_sector, tier, preferences, email_slug")
     .eq("id", data.orgId)
     .single();
 
@@ -52,7 +52,7 @@ export async function processNewContactFollowupJob(
         last_service_type: "first contact",
         trigger: "new_customer",
       },
-      company as { id: string; name: string; preferences?: Record<string, unknown> },
+      company as { id: string; name: string; email_slug?: string | null; preferences?: Record<string, unknown> },
       supabase,
       profile,
       ctx,
