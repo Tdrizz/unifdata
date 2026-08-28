@@ -148,6 +148,17 @@ export async function recordExists(
   return false;
 }
 
+// alert_type is written by an LLM as free text -- "stale_jobs",
+// "overdue_follow-ups" and "Overdue Follow Ups" have all been observed on
+// the same underlying signal. Comparing it exactly meant a dismissed alert
+// could reappear the very next night just because the model phrased the
+// type differently that time, which is indistinguishable from the dedup
+// never having worked at all. Canonicalize wherever it's written or
+// compared, so every future row converges on one spelling.
+export function normalizeAlertType(alertType: string): string {
+  return alertType.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
 export async function hasRecentAlert(
   orgId: string,
   alertType: string,
@@ -161,7 +172,7 @@ export async function hasRecentAlert(
     .from("agent_alerts")
     .select("id")
     .eq("organization_id", orgId)
-    .eq("alert_type", alertType)
+    .eq("alert_type", normalizeAlertType(alertType))
     .gte("created_at", cutoff)
     .limit(1);
 

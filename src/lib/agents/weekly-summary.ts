@@ -1,6 +1,7 @@
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { markdownToEmailHtml, stripMarkdown } from "@/lib/email/format";
 import { isCompleteWork, isOpenFollowUp } from "@/lib/status";
+import { buildVoiceBlock } from "@/lib/ai/prompts/shared";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function sendWeeklySummary(
@@ -85,9 +86,13 @@ export async function sendWeeklySummary(
   const followUpsResolved = (followUpsResult.data ?? []).filter(
     (f) => !isOpenFollowUp(f.status),
   ).length;
+  // Plain titles, not "[severity] title" -- the bracketed severity word was
+  // leaking straight into the email as literal text (an email could read
+  // "[critical] ..."), which is exactly the raw, alarming phrasing the voice
+  // guidelines below ask the model to avoid everywhere else.
   const topAlerts = (alertsResult.data ?? [])
     .slice(0, 3)
-    .map((a) => `[${a.severity}] ${a.title}`)
+    .map((a) => a.title)
     .join("\n");
   const roiTotal = (roiResult.data ?? []).reduce(
     (sum, r) => sum + Number(r.amount_recovered || 0),
@@ -99,16 +104,21 @@ export async function sendWeeklySummary(
       ? `${revenueThisWeek >= revenueLastWeek ? "+" : ""}${Math.round(((revenueThisWeek - revenueLastWeek) / revenueLastWeek) * 100)}% vs last week`
       : "no data for comparison";
 
-  const prompt = `Write a concise weekly business summary email for ${company.name}.
+  const prompt = `${buildVoiceBlock()}
+
+Write this week's business summary email for ${company.name}.
 
 Data this week:
 - Revenue: $${Math.round(revenueThisWeek).toLocaleString()} (${revDelta})
 - Jobs completed: ${jobsCompleted}
 - Follow-ups added: ${followUpsAdded}, resolved: ${followUpsResolved}
-- AI recovered this month: $${Math.round(roiTotal).toLocaleString()}
-${topAlerts ? `- Top alerts:\n${topAlerts}` : ""}
+${roiTotal > 0 ? `- Recovered via outreach this month: $${Math.round(roiTotal).toLocaleString()}\n` : ""}${topAlerts ? `- Open items this week:\n${topAlerts}` : ""}
 
-Write a friendly 3-4 sentence summary covering revenue trend, operational activity, and one actionable recommendation. Plain text only, no markdown.`;
+Write a friendly 3-4 sentence summary covering the revenue trend and this
+week's activity. You may point at one specific open item worth looking at
+(name it plainly, don't invent detail beyond what's given above), but do not
+tell the owner what to do about it or promise any outcome. Plain text only,
+no markdown, no severity words in brackets.`;
 
   const response = await aiRouter.chat.completions.create({
     model: AI_MODELS.alertFormatter,

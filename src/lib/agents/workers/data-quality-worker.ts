@@ -67,6 +67,11 @@ export async function runDataQualityWorker(
   const autoApprove = decisions.filter((d) => d.action === "AUTO_APPROVE").map((d) => d.proposal_id);
   const autoIgnore = decisions.filter((d) => d.action === "AUTO_IGNORE").map((d) => d.proposal_id);
 
+  // Both branches are gated on autopilot. Dismissing sat outside the gate,
+  // so with auto-fix switched OFF Vera still quietly discarded duplicate
+  // proposals the owner had never seen -- while the docs promised anything
+  // ambiguous would be left in Data Hub for review. With autopilot off, the
+  // model's opinion is advisory and the rows stay pending for a human.
   if (isDataFixAutopilot(company)) {
     if (autoApprove.length > 0) {
       await supabase
@@ -75,13 +80,13 @@ export async function runDataQualityWorker(
         .in("id", autoApprove)
         .eq("organization_id", company.id);
     }
-  }
 
-  if (autoIgnore.length > 0) {
-    await supabase
-      .from("data_reconciliation_proposals")
-      .update({ status: "dismissed" })
-      .in("id", autoIgnore)
-      .eq("organization_id", company.id);
+    if (autoIgnore.length > 0) {
+      await supabase
+        .from("data_reconciliation_proposals")
+        .update({ status: "dismissed" })
+        .in("id", autoIgnore)
+        .eq("organization_id", company.id);
+    }
   }
 }

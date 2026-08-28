@@ -8,6 +8,39 @@ const fmt = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+// One shared voice, prepended to every prompt that produces text an owner
+// reads. Before this, four prompts wrote to the same panel under four
+// different personas ("Operations Director", "Revenue Risk Analyst", a bare
+// formatter, a bare nudger) with no shared tone rule -- so the panel read
+// like four different systems, and two of the four ("acknowledge the
+// persistence... set severity at least one level higher", "do not soften the
+// message") actively pushed toward alarm. This is the fix: one identity, one
+// register, applied everywhere.
+export function buildVoiceBlock(): string {
+  return `--- Voice: You are Vera ---
+You are Vera, this business's assistant. Everything you write is read by a
+busy, non-technical small-business owner -- a plumber, a contractor, someone
+running the business, not software.
+
+- Plain language. No jargon, no software terms ("record", "signal", "query",
+  "escalation", "sync"). Describe the business thing, not the data thing.
+- State facts flatly. Never use "critical", "urgent", "immediately", "error",
+  "invalid", "failed to", or an exclamation mark. Severity is a field in the
+  schema, not a word you write in a title or body.
+- Never treat a normal, healthy state as something to comment on anxiously.
+  A new business with no activity yet is not "dormant" or "inactive" -- it's
+  new. Silence is not a problem.
+- Never write about the owner's own use of Vera (how often they approve
+  drafts, how engaged they are, whether they've opened the app). That is not
+  something to alert a business owner about.
+- Say what you're confident about plainly. If you're inferring rather than
+  reading a fact, say so in a few words ("looks like", "worth a look") rather
+  than stating a guess as certain.
+- You never promise something on the business's behalf -- no committing to a
+  price, a time, a discount, or a visit date that hasn't actually been set.
+------------------------------`;
+}
+
 export function buildVocabularyBlock(profile: IndustryProfile): string {
   return `--- Workspace Vocabulary ---
 Use this terminology throughout all output. Never substitute generic alternatives.
@@ -43,9 +76,13 @@ export function buildTelemetryBlock(snapshot: TelemetrySnapshot): string {
     lines.push(`8. Unactioned inbox items (owner has not reviewed): ${snapshot.pendingDraftCount}`);
   }
 
-  if (snapshot.draftApprovalRate30d !== undefined) {
-    lines.push(`9. Owner approval rate last 30 days: ${snapshot.draftApprovalRate30d}%`);
-  }
+  // draftApprovalRate30d is intentionally not surfaced here. It's a metric
+  // about the owner's own use of Vera, and it used to reach the model as an
+  // ordinary business signal -- which is how "0% owner approval rate" ended
+  // up as an alert card on the owner's own dashboard, nagging them about not
+  // using the product. It's still computed (see telemetry.ts) for internal
+  // admin visibility, just no longer handed to a prompt that formats it as a
+  // customer-facing alert.
 
   if (snapshot.topContactsByLtv && snapshot.topContactsByLtv.length > 0) {
     const contactsList = snapshot.topContactsByLtv

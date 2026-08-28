@@ -34,6 +34,8 @@ type Props = WorkspaceData & {
   companyName: string;
   drafts?: Draft[];
   alerts?: Alert[];
+  lastReviewAt?: string | null;
+  lastAssessment?: string | null;
   initialChatSessionId?: string | null;
   initialChatMessages?: ChatMessage[];
 };
@@ -42,7 +44,7 @@ type Props = WorkspaceData & {
 // Vera panel, same priority queue, same jobs/pipeline sections — just
 // stacked single-column instead of a side-by-side grid.
 export function MobileWorkspaceView({
-  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [],
+  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null, lastAssessment = null,
   initialChatSessionId = null, initialChatMessages = [],
 }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -55,6 +57,7 @@ export function MobileWorkspaceView({
   useEffect(() => setDraftList(drafts), [drafts]);
   useEffect(() => setAlertList(alerts), [alerts]);
   const [showAllVera, setShowAllVera] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   // Hydrated from the persisted session server-side — see WorkspaceView.tsx
   // for why (conversation used to reset every time this panel remounted).
@@ -146,8 +149,23 @@ export function MobileWorkspaceView({
   }
 
   async function handleApproveDraft(id: string) {
-    const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
-    if (res.ok) setDraftList((prev) => prev.filter((d) => d.id !== id));
+    setDraftError(null);
+    // The approve route returns a real reason when a send can't go through
+    // (no email on file, delivery rejected, sending not configured). Without
+    // an else branch here the button simply reset and the card stayed put,
+    // so the owner clicked Send over and over with no idea why nothing
+    // happened -- worse than showing them the problem.
+    try {
+      const res = await fetch(`/api/v1/agent-drafts/${id}/approve`, { method: "POST" });
+      if (res.ok) {
+        setDraftList((prev) => prev.filter((d) => d.id !== id));
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setDraftError(data.error || "That didn't send. Try again in a moment.");
+    } catch {
+      setDraftError("Couldn't reach the server. Check your connection and try again.");
+    }
   }
   async function handleDismissDraft(id: string) {
     const res = await fetch(`/api/v1/agent-drafts/${id}/dismiss`, { method: "POST" });
@@ -254,7 +272,9 @@ export function MobileWorkspaceView({
   const veraSummaryLine =
     veraItems.length > 0
       ? `${veraItems.length} thing${veraItems.length === 1 ? "" : "s"} to look at`
-      : "Reviewed your business overnight — nothing urgent.";
+      : lastReviewAt
+        ? "Checked overnight — nothing needs you today."
+        : "Vera runs overnight. Your first review lands tomorrow morning.";
 
   // One unified pipeline list instead of two disconnected ones — see
   // WorkspaceView.tsx for the full reasoning (this is the same merge).
@@ -395,6 +415,14 @@ export function MobileWorkspaceView({
 
           {veraExpanded && (veraItems.length > 0 ? (
             <div className="p-3.5 space-y-3 border-b border-ud-soft">
+              {lastAssessment && (
+                <p className="mb-3 text-[13px] leading-relaxed text-ud-muted">{lastAssessment}</p>
+              )}
+              {draftError && (
+                <div className="mb-3 rounded-[9px] border border-ud bg-ud-warning-bg px-3 py-2 text-[12.5px] text-ud-warning">
+                  {draftError}
+                </div>
+              )}
               {veraPreview.map((entry) =>
                 entry.kind === "draft" ? (
                   <VeraDraftCard
@@ -416,7 +444,18 @@ export function MobileWorkspaceView({
             </div>
           ) : (
             <div className="px-4 py-3.5 border-b border-ud-soft">
-              <p className="text-[13px] text-ud-muted">Vera reviewed your business overnight. Everything looks good.</p>
+              <p className="text-[13px] text-ud-muted">
+                {lastAssessment
+                  ? lastAssessment
+                  : lastReviewAt
+                    ? "Checked overnight — nothing needs you today."
+                    : "Vera runs overnight. Your first review lands tomorrow morning."}
+              </p>
+              {lastReviewAt && (
+                <p className="mt-1 text-[12px] text-ud-faint">
+                  Looked at {activeWork.length} active {jobPlural.toLowerCase()}, {manualFollowUpItems.length + opportunityFollowUpItems.length} follow-up{manualFollowUpItems.length + opportunityFollowUpItems.length === 1 ? "" : "s"}, and {formatCurrency(unpaidRevenueValue)} outstanding.
+                </p>
+              )}
             </div>
           ))}
 

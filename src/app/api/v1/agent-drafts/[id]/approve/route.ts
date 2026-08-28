@@ -109,6 +109,13 @@ export async function POST(
     }
   }
 
+  // approve_action is nullable and free text -- both branches above return
+  // early on any failure, but a null or unrecognized action falls through
+  // here having sent nothing. Catch that rather than marking it approved.
+  if (!sendSucceeded) {
+    return NextResponse.json({ error: "This draft isn't set up to send yet." }, { status: 422 });
+  }
+
   // Mark approved
   await supabase
     .from("agent_drafts")

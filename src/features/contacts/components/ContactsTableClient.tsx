@@ -6,6 +6,8 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CustomerCreateForm } from "@/features/customers/components/CustomerCreateForm";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { QuickFilterChips } from "./QuickFilterChips";
+import { SavedViewsBar } from "./SavedViewsBar";
 
 type CustomerRow = {
   id: string;
@@ -29,6 +31,9 @@ type Props = {
   missingFilter?: "email" | "phone" | "address";
   activityMap?: Record<string, string>;
   tagsMap?: Record<string, TagInfo[]>;
+  statusCounts?: Record<string, number>;
+  activeStatus?: string;
+  currentFilters?: Record<string, string | undefined>;
 };
 
 const MISSING_FILTER_LABEL: Record<"email" | "phone" | "address", string> = {
@@ -102,6 +107,9 @@ export function ContactsTableClient({
   missingFilter,
   activityMap = {},
   tagsMap = {},
+  statusCounts = {},
+  activeStatus,
+  currentFilters = {},
 }: Props) {
   const custPlural = profile?.labels.customerPlural ?? "Contacts";
   const [search, setSearch] = useState("");
@@ -138,6 +146,12 @@ export function ContactsTableClient({
             + Add
           </button>
         </div>
+      </div>
+      <div className="mb-2">
+        <QuickFilterChips pathname="/customers" statusCounts={statusCounts} activeStatus={activeStatus} />
+      </div>
+      <div className="mb-3">
+        <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
       </div>
       {missingFilter && (
         <div className="flex items-center justify-between gap-2 mb-3 px-3 py-2 bg-ud-warning-bg border border-ud-warning/20 rounded-[8px]">
@@ -212,6 +226,13 @@ export function ContactsTableClient({
         </div>
       </div>
 
+      {/* Quick filters */}
+      <div className="mb-2">
+        <QuickFilterChips pathname="/customers" statusCounts={statusCounts} activeStatus={activeStatus} />
+      </div>
+      <div className="mb-4">
+        <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
+      </div>
       {missingFilter && (
         <div className="flex items-center justify-between gap-2 mb-4 px-4 py-2.5 bg-ud-warning-bg border border-ud-warning/20 rounded-[9px]">
           <p className="text-[13px] text-ud-ink">
