@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
@@ -67,7 +68,15 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
   const activeIssue = isPipelineIssueId(issueParam) ? issueParam : null;
   const issueCards = activeIssue ? cards.filter(PIPELINE_ISSUE_FILTERS[activeIssue]) : null;
 
+  // Lost leads and cancelled jobs are deliberately left out of
+  // PIPELINE_STAGES (see the comment there) so the board opens on active
+  // work by default -- but that used to mean there was NO way back to them
+  // short of guessing a /leads/[id]/edit URL. This toggle is the way back;
+  // it starts closed every load, same as the board always has.
+  const [showClosed, setShowClosed] = useState(false);
+
   const grouped = groupCardsByStage(cards);
+  const closedCards = grouped.get("Lost") ?? [];
 
   const activeCards = cards.filter((c) => c.stage !== "Lost");
   const pipelineValue = activeCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
@@ -86,6 +95,17 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
         title={profile.pipelineLabel}
         description={`${activeCards.length} active · ${formatCurrency(pipelineValue)} · ${paidCards.length} paid`}
         className="mb-6"
+        actions={
+          !issueCards && closedCards.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowClosed((v) => !v)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              {showClosed ? "Hide" : "Show"} closed ({closedCards.length})
+            </button>
+          ) : undefined
+        }
       />
 
       {activeIssue && (
@@ -155,6 +175,26 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
           );
         })}
       </div>
+
+      {/* Closed — Lost leads and cancelled jobs, hidden unless toggled on above */}
+      {showClosed && (
+        <div className="mb-8">
+          <SectionCard
+            title="Closed"
+            description="Lost leads and cancelled jobs — kept out of the board above so it stays focused on active work."
+          >
+            {closedCards.length === 0 ? (
+              <EmptyState title="Nothing closed" description="Lost leads and cancelled jobs will show up here." />
+            ) : (
+              <div className="p-3">
+                {closedCards.map((card) => (
+                  <PipelineCardRow key={card.id} card={card} />
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      )}
 
       {/* Revenue */}
       <SectionCard

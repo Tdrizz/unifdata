@@ -89,6 +89,11 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const activeStageCards = grouped.get(activeStage) ?? [];
+  // Lost leads and cancelled jobs stay out of PIPELINE_STAGES (see stages.ts)
+  // so the board opens on active work by default -- this is the mobile way
+  // back to them, an extra chip appended after the 5 real stages rather than
+  // folded into the scroll row, so it never gets picked as defaultStage.
+  const closedCards = grouped.get("Lost") ?? [];
 
   // Same targeting desktop's per-column "Add" links use: opening the sheet
   // from a given stage defaults the quick-add tab to whatever record type
@@ -150,12 +155,27 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
             </button>
           );
         })}
+        {closedCards.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveStage("Lost")}
+            className={[
+              "flex-shrink-0 rounded-full px-[16px] py-[9px] text-[13px] font-semibold transition-colors",
+              activeStage === "Lost" ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud-hard text-ud-faint",
+            ].join(" ")}
+          >
+            Closed {closedCards.length}
+          </button>
+        )}
       </div>
 
       {/* Card list */}
       {activeStageCards.length === 0 ? (
         <div className="px-4">
-          <EmptyState title="Nothing in this stage" description="Move a record here when it's ready." />
+          <EmptyState
+            title={activeStage === "Lost" ? "Nothing closed" : "Nothing in this stage"}
+            description={activeStage === "Lost" ? "Lost leads and cancelled jobs will show up here." : "Move a record here when it's ready."}
+          />
         </div>
       ) : (
         <div className="px-4 flex flex-col gap-3">
