@@ -6,7 +6,9 @@ import { Command } from "cmdk";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { cn } from "@/lib/utils";
 
-type ContactResult = { id: string; name: string; email: string | null; phone: string | null };
+type SearchResult = { type: "contact" | "lead" | "job" | "sale"; id: string; title: string; subtitle: string | null; href: string };
+type SearchResponse = { contacts: SearchResult[]; leads: SearchResult[]; jobs: SearchResult[]; sales: SearchResult[] };
+const EMPTY_SEARCH: SearchResponse = { contacts: [], leads: [], jobs: [], sales: [] };
 
 function buildCommands(businessSector?: string | null) {
   const profile = getIndustryProfile(businessSector);
@@ -26,7 +28,7 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
-  const [contactResults, setContactResults] = useState<ContactResult[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResponse>(EMPTY_SEARCH);
   const router = useRouter();
   const commands = buildCommands(businessSector);
 
@@ -39,20 +41,21 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
     }
   }, [open]);
 
-  // Real record search, not just static nav — a name typed here (e.g. an
-  // existing contact) previously only matched "No results found" despite
-  // the placeholder implying it could find records, not just pages.
+  // Real record search, not just static nav — a name, service type, or
+  // address typed here previously only matched contacts (and only "No
+  // results found" for anything that only appeared on a lead/job/sale).
+  // /api/search covers contacts, leads, jobs, and sales in one round trip.
   useEffect(() => {
     const q = query.trim();
     if (!q) {
-      setContactResults([]);
+      setSearchResults(EMPTY_SEARCH);
       return;
     }
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/contacts/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
-        if (res.ok) setContactResults(await res.json());
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+        if (res.ok) setSearchResults(await res.json());
       } catch {
         // best-effort — search results are a nice-to-have, not load-bearing
       }
@@ -127,25 +130,33 @@ export function CommandPalette({ businessSector }: { businessSector?: string | n
               No results found.
             </Command.Empty>
 
-            {contactResults.length > 0 && (
-              <Command.Group
-                heading="Contacts"
-                className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.13em] [&>[cmdk-group-heading]]:text-ud-faint"
-              >
-                {contactResults.map((c) => (
-                  <Command.Item
-                    key={c.id}
-                    value={c.name || c.email || c.phone || c.id}
-                    onSelect={() => handleSelect(`/customers/${c.id}`)}
-                    className="flex cursor-pointer items-center gap-[10px] px-[18px] py-[10px] text-[13.5px] text-ud-ink aria-selected:bg-ud-surface-soft aria-selected:text-ud-accent"
-                  >
-                    <span className="flex-1 truncate">{c.name || "Unnamed"}</span>
-                    {(c.email || c.phone) && (
-                      <span className="shrink-0 text-[12px] text-ud-faint">{c.email ?? c.phone}</span>
-                    )}
-                  </Command.Item>
-                ))}
-              </Command.Group>
+            {([
+              ["Contacts", searchResults.contacts],
+              ["Jobs", searchResults.jobs],
+              ["Leads", searchResults.leads],
+              ["Sales", searchResults.sales],
+            ] as const).map(([heading, items]) =>
+              items.length > 0 && (
+                <Command.Group
+                  key={heading}
+                  heading={heading}
+                  className="[&>[cmdk-group-heading]]:px-[18px] [&>[cmdk-group-heading]]:py-[8px] [&>[cmdk-group-heading]]:text-[10.5px] [&>[cmdk-group-heading]]:font-semibold [&>[cmdk-group-heading]]:uppercase [&>[cmdk-group-heading]]:tracking-[0.13em] [&>[cmdk-group-heading]]:text-ud-faint"
+                >
+                  {items.map((r) => (
+                    <Command.Item
+                      key={`${r.type}-${r.id}`}
+                      value={`${r.title} ${r.subtitle ?? ""}`}
+                      onSelect={() => handleSelect(r.href)}
+                      className="flex cursor-pointer items-center gap-[10px] px-[18px] py-[10px] text-[13.5px] text-ud-ink aria-selected:bg-ud-surface-soft aria-selected:text-ud-accent"
+                    >
+                      <span className="flex-1 truncate">{r.title}</span>
+                      {r.subtitle && (
+                        <span className="shrink-0 text-[12px] text-ud-faint">{r.subtitle}</span>
+                      )}
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              ),
             )}
 
             {["Navigate", "Actions"].map((group) => {
