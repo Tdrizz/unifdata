@@ -67,13 +67,21 @@ export async function POST(request: Request) {
   // normal reply instead of a 500.
   const { data: existingThread } = await (supabase as any)
     .from("communications")
-    .select("id, contact_id, contact_phone, channel, unread_count, last_message_at, last_message_preview, status")
+    .select("id, contact_id, contact_phone, channel, unread_count, last_message_at, last_message_preview, status, archived_at")
     .eq("organization_id", company.id)
     .eq("contact_id", contact.id)
     .eq("channel", channel)
     .maybeSingle();
 
   let thread = existingThread;
+  // A previously-deleted conversation is still the same unique
+  // (org, contact, channel) row -- messaging the contact again should
+  // bring it back into the inbox rather than silently reuse it while it
+  // stays hidden.
+  if (thread?.archived_at) {
+    await (supabase as any).from("communications").update({ archived_at: null }).eq("id", thread.id);
+    thread.archived_at = null;
+  }
   if (!thread) {
     const { data: newThread, error: threadError } = await (supabase as any)
       .from("communications")
