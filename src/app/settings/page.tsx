@@ -47,7 +47,7 @@ export default async function SettingsPage() {
     getTeamMembers(company.id),
     getNotificationPreferences(company.id),
     supabase.from("sales").select("amount").eq("company_id", company.id).gte("sale_date", thisMonthStartStr),
-    (supabase as any).from("tags").select("id, name, color").eq("organization_id", company.id).order("name"),
+    (supabase as any).from("tags").select("id, name, color, contact_tags(count)").eq("organization_id", company.id).order("name"),
     (supabase as any).from("custom_field_definitions").select("id, label, field_key, field_type, options, required, position, entity_type").eq("organization_id", company.id).eq("entity_type", "contact").order("position"),
     supabase.from("companies").select("profile_overrides").eq("id", company.id).single(),
   ]);
@@ -57,8 +57,22 @@ export default async function SettingsPage() {
     0,
   );
 
-  const rawTags = (tagsResult?.data ?? []) as Array<{ id: string; name: string; color: string }>;
-  const tags = rawTags.map((t) => ({ ...t, contactCount: 0 }));
+  // contact_tags(count) comes back as an aggregate row array (same shape the
+  // Customers sidebar reads) -- sum it rather than trusting a single row.
+  const rawTags = (tagsResult?.data ?? []) as Array<{
+    id: string;
+    name: string;
+    color: string | null;
+    contact_tags?: Array<{ count: number | null }> | null;
+  }>;
+  const tags = rawTags.map((t) => ({
+    id: t.id,
+    name: t.name,
+    color: t.color ?? "#6B7280",
+    contactCount: Array.isArray(t.contact_tags)
+      ? t.contact_tags.reduce((sum, row) => sum + (row.count ?? 0), 0)
+      : 0,
+  }));
 
   const contactFields = (contactFieldsResult?.data ?? []) as Array<{
     id: string; label: string; field_key: string; field_type: string;
