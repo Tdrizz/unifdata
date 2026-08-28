@@ -314,16 +314,6 @@ export function WorkspaceView({
         title={`${getGreeting()}, ${companyName}.`}
         description={statusLine}
         className="mb-6"
-        actions={
-          <>
-            <Link href="/crm#pipeline-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold tracking-[-0.005em] transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-[120ms] ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ud-accent/40 disabled:opacity-50 bg-ud-surface text-ud-ink border border-ud shadow-ud hover:border-ud-hard px-3 py-2 text-[13px] rounded-[9px]">
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Quick add
-            </Link>
-          </>
-        }
       />
 
       {/* Vera panel — collapsed to a one-line summary by default so business
