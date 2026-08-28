@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getMemory, recordSignalFired, getEscalationLevel, hoursSince, hasRecentAlert } from "@/lib/agents/memory";
+import { isCompleteWork, isCancelledWork, isOpenFollowUp } from "@/lib/status";
 import {
   buildRecordNudgerPrompt,
   buildRecordNudgerUserMessage,
@@ -39,25 +40,31 @@ export async function runRecordNudgerWorker(
   const tenDaysAgo = new Date(now.getTime() - 10 * 86400000).toISOString();
 
   // Fetch actual records (not just counts) so we can compute max days overdue
+  // Status is filtered in JS with the shared predicates rather than in SQL --
+  // see the note in src/lib/status.ts. Matching exactly here meant finished
+  // work stayed permanently "overdue" and got nudged about every night.
   const [overdueResult, staleResult] = await Promise.all([
     supabase
       .from("follow_ups")
-      .select("due_date")
+      .select("due_date, status")
       .eq("company_id", orgId)
-      .neq("status", "complete")
       .lt("due_date", sevenDaysAgo)
       .order("due_date"),
     supabase
       .from("jobs")
-      .select("updated_at")
+      .select("updated_at, status")
       .eq("company_id", orgId)
-      .not("status", "in", "(completed,cancelled)")
       .lt("updated_at", tenDaysAgo)
       .order("updated_at"),
   ]);
 
-  const overdueFollowUps = overdueResult.data ?? [];
-  const staleJobs = staleResult.data ?? [];
+  const overdueFollowUps = (overdueResult.data ?? []).filter(
+    (f) => isOpenFollowUp((f as { status: string | null }).status),
+  );
+  const staleJobs = (staleResult.data ?? []).filter((j) => {
+    const s = (j as { status: string | null }).status;
+    return !isCompleteWork(s) && !isCancelledWork(s);
+  });
   const overdueFollowUpCount = overdueFollowUps.length;
   const staleJobCount = staleJobs.length;
 

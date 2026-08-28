@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { flushLangfuse } from "@/lib/observability/tracing";
 import { hasRecentAlert } from "@/lib/agents/memory";
+import { isCompleteWork } from "@/lib/status";
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -19,18 +20,21 @@ export async function runPatternSpotterWorker(
 
   if (!company) return;
 
-  // Fetch all completed jobs that have a service type and a linked customer
-  const { data: jobs } = await supabase
+  // Fetch jobs that have a service type and a linked customer, then keep the
+  // completed ones. Matching status in SQL missed every "Completed" row, so
+  // this worker saw zero finished jobs and never once fired.
+  const { data: allJobs } = await supabase
     .from("jobs")
-    .select("contact_id, service_type, completed_date")
+    .select("contact_id, service_type, completed_date, status")
     .eq("company_id", orgId)
-    .eq("status", "completed")
     .not("service_type", "is", null)
     .not("contact_id", "is", null)
     .order("contact_id")
     .order("completed_date");
 
-  if (!jobs || jobs.length < 5) return;
+  const jobs = (allJobs ?? []).filter((j) => isCompleteWork(j.status as string | null));
+
+  if (jobs.length < 5) return;
 
   // Build ordered service list per customer (unique services in first-seen order)
   const customerServices = new Map<string, string[]>();
