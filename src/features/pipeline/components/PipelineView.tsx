@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -9,6 +10,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { StatCard } from "@/components/ui/StatCard";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCardsByStage } from "../stages";
+import { PIPELINE_ISSUE_FILTERS, PIPELINE_ISSUE_LABELS, isPipelineIssueId } from "../issue-filters";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import { PipelineCardActions } from "./PipelineCardActions";
 import { formatDateOnly } from "@/lib/date-format";
@@ -56,7 +58,25 @@ function PipelineCardRow({ card }: { card: PipelineCardType }) {
 }
 
 export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
+  // Data Hub's "View →" links land here as /crm?issue=<id> -- see
+  // issue-filters.ts. When present, the board is replaced by a flat list of
+  // just the matching cards (across every stage, Lost included, since the
+  // flagged records aren't necessarily "active" work) instead of the normal
+  // Kanban, so the user actually lands on what they were told to fix.
+  const searchParams = useSearchParams();
+  const issueParam = searchParams.get("issue");
+  const activeIssue = isPipelineIssueId(issueParam) ? issueParam : null;
+  const issueCards = activeIssue ? cards.filter(PIPELINE_ISSUE_FILTERS[activeIssue]) : null;
+
+  // Lost leads and cancelled jobs are deliberately left out of
+  // PIPELINE_STAGES (see the comment there) so the board opens on active
+  // work by default -- but that used to mean there was NO way back to them
+  // short of guessing a /leads/[id]/edit URL. This toggle is the way back;
+  // it starts closed every load, same as the board always has.
+  const [showClosed, setShowClosed] = useState(false);
+
   const grouped = groupCardsByStage(cards);
+  const closedCards = grouped.get("Lost") ?? [];
 
   const activeCards = cards.filter((c) => c.stage !== "Lost");
   const pipelineValue = activeCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
@@ -85,8 +105,44 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
         title={profile.pipelineLabel}
         description={`${activeCards.length} active · ${formatCurrency(pipelineValue)} · ${paidCards.length} paid`}
         className="mb-6"
+        actions={
+          !issueCards && closedCards.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowClosed((v) => !v)}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors"
+            >
+              {showClosed ? "Hide" : "Show"} closed ({closedCards.length})
+            </button>
+          ) : undefined
+        }
       />
 
+      {activeIssue && (
+        <div className="flex items-center justify-between gap-3 mb-6 px-5 py-3 bg-ud-warning-bg border border-ud-warning/20 rounded-[10px]">
+          <p className="text-[13px] text-ud-ink">
+            Showing {issueCards!.length} record{issueCards!.length === 1 ? "" : "s"} {PIPELINE_ISSUE_LABELS[activeIssue]}
+          </p>
+          <Link href="/crm" className="text-[13px] font-semibold text-ud-accent shrink-0 hover:underline">
+            Clear filter · back to board
+          </Link>
+        </div>
+      )}
+
+      {issueCards ? (
+        <SectionCard title="Flagged records" description="Every record behind this Data Hub issue, regardless of stage.">
+          {issueCards.length === 0 ? (
+            <EmptyState title="Nothing here anymore" description="These records have already been fixed or removed." />
+          ) : (
+            <div className="p-3">
+              {issueCards.map((card) => (
+                <PipelineCardRow key={card.id} card={card} />
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      ) : (
+        <>
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <StatCard label="Pipeline value" value={formatCurrency(pipelineValue)} helper={`${activeCards.length} active records`} tone={pipelineValue > 0 ? "positive" : "default"} />
@@ -155,6 +211,26 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
         })}
       </div>
 
+      {/* Closed — Lost leads and cancelled jobs, hidden unless toggled on above */}
+      {showClosed && (
+        <div className="mb-8">
+          <SectionCard
+            title="Closed"
+            description="Lost leads and cancelled jobs — kept out of the board above so it stays focused on active work."
+          >
+            {closedCards.length === 0 ? (
+              <EmptyState title="Nothing closed" description="Lost leads and cancelled jobs will show up here." />
+            ) : (
+              <div className="p-3">
+                {closedCards.map((card) => (
+                  <PipelineCardRow key={card.id} card={card} />
+                ))}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      )}
+
       {/* Revenue */}
       <SectionCard
         title="Revenue"
@@ -193,6 +269,8 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
       <div id="pipeline-quick-add" style={{ marginTop: "24px" }}>
         <PipelineQuickAdd profile={profile} leads={jobPickerLeads} jobs={leadPickerJobs} />
       </div>
+        </>
+      )}
     </div>
   );
 }

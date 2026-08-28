@@ -52,7 +52,15 @@ function formatSaleDate(dateStr: string | null | undefined) {
 export function SalesList({ sales, count, page: _page, q: _q, contacts = [], jobs = [], selectedStatus, selectedSource, profile }: Props) {
   const p = useProfile();
   const [filter, setFilter] = useState<FilterType>(
-    selectedStatus === "paid" ? "paid" : selectedStatus === "overdue" ? "overdue" : "all"
+    selectedStatus === "paid"
+      ? "paid"
+      : selectedStatus === "overdue"
+      ? "overdue"
+      // "pending" is how Data Hub links here for its "unpaid sales" issue —
+      // it means the same thing the Pending chip already means below.
+      : selectedStatus === "pending"
+      ? "pending"
+      : "all"
   );
   const saleSingular = profile?.labels.saleSingular ?? p.labels.saleSingular;
   const salePlural = profile?.labels.salePlural ?? p.labels.salePlural;
@@ -92,12 +100,17 @@ export function SalesList({ sales, count, page: _page, q: _q, contacts = [], job
         description={`${formatCurrency(revenueMTD)} this month · ${openCount} open ${openCount === 1 ? saleSingular.toLowerCase() : salePlural.toLowerCase()}`}
         className="mb-6"
         actions={
-          <a href="#sale-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]">
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            New {saleSingular.toLowerCase()}
-          </a>
+          <>
+            <a href="/api/export/csv?table=sales" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-colors">
+              Export CSV
+            </a>
+            <a href="#sale-quick-add" className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[13px] px-3 py-2 rounded-[9px] bg-ud-accent text-white hover:opacity-90 transition-opacity duration-[120ms]">
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New {saleSingular.toLowerCase()}
+            </a>
+          </>
         }
       />
 

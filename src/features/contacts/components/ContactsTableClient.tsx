@@ -25,11 +25,21 @@ type TagInfo = { name: string; color: string };
 type Props = {
   customers: CustomerRow[];
   profile?: IndustryProfile;
+  // Set when Data Hub's "View →" link sent the user here to fix a specific
+  // gap (?missing=email|phone|address) — the page.tsx query is already
+  // narrowed to just those contacts; this only drives the banner copy.
+  missingFilter?: "email" | "phone" | "address";
   activityMap?: Record<string, string>;
   tagsMap?: Record<string, TagInfo[]>;
   statusCounts?: Record<string, number>;
   activeStatus?: string;
   currentFilters?: Record<string, string | undefined>;
+};
+
+const MISSING_FILTER_LABEL: Record<"email" | "phone" | "address", string> = {
+  email: "missing an email address",
+  phone: "missing a phone number",
+  address: "missing an address",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -94,6 +104,7 @@ function avatarColor(name: string) {
 export function ContactsTableClient({
   customers,
   profile,
+  missingFilter,
   activityMap = {},
   tagsMap = {},
   statusCounts = {},
@@ -120,13 +131,21 @@ export function ContactsTableClient({
     <div className="md:hidden px-4 pt-5 pb-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-[18px] font-bold text-ud-ink">Contacts</h1>
-        <button
-          type="button"
-          onClick={() => setSheetOpen(true)}
-          className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
-        >
-          + Add
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/export/csv?table=customers"
+            className="px-3 py-1.5 text-[12px] font-semibold bg-ud-surface border border-ud text-ud-muted rounded-[8px] hover:text-ud-ink hover:border-ud-hard"
+          >
+            Export
+          </a>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className="px-3 py-1.5 text-[12px] font-semibold bg-ud-accent text-white rounded-[8px] hover:opacity-90"
+          >
+            + Add
+          </button>
+        </div>
       </div>
       <div className="mb-2">
         <QuickFilterChips pathname="/customers" statusCounts={statusCounts} activeStatus={activeStatus} />
@@ -134,6 +153,16 @@ export function ContactsTableClient({
       <div className="mb-3">
         <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
       </div>
+      {missingFilter && (
+        <div className="flex items-center justify-between gap-2 mb-3 px-3 py-2 bg-ud-warning-bg border border-ud-warning/20 rounded-[8px]">
+          <p className="text-[12px] text-ud-ink">
+            Showing {customers.length} contact{customers.length === 1 ? "" : "s"} {MISSING_FILTER_LABEL[missingFilter]}
+          </p>
+          <Link href="/customers" className="text-[12px] font-semibold text-ud-accent shrink-0">
+            Clear
+          </Link>
+        </div>
+      )}
       <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
         {filtered.length === 0 ? (
           <p className="text-[13px] text-ud-muted text-center py-8">No contacts yet.</p>
@@ -181,12 +210,20 @@ export function ContactsTableClient({
           <h1 className="text-[22px] font-bold text-ud-ink">All contacts</h1>
           <div className="text-[13px] text-ud-muted mt-0.5">{customers.length} contacts</div>
         </div>
-        <a
-          href="#add-contact"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-accent text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
-        >
-          + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/export/csv?table=customers"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-surface border border-ud text-ud-muted text-[13px] font-semibold hover:text-ud-ink hover:border-ud-hard transition-colors"
+          >
+            Export CSV
+          </a>
+          <a
+            href="#add-contact"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[9px] bg-ud-accent text-white text-[13px] font-semibold hover:opacity-90 transition-opacity"
+          >
+            + Add {profile?.labels.customerSingular.toLowerCase() ?? "contact"}
+          </a>
+        </div>
       </div>
 
       {/* Quick filters */}
@@ -196,6 +233,16 @@ export function ContactsTableClient({
       <div className="mb-4">
         <SavedViewsBar pathname="/customers" currentFilters={currentFilters} />
       </div>
+      {missingFilter && (
+        <div className="flex items-center justify-between gap-2 mb-4 px-4 py-2.5 bg-ud-warning-bg border border-ud-warning/20 rounded-[9px]">
+          <p className="text-[13px] text-ud-ink">
+            Showing {customers.length} contact{customers.length === 1 ? "" : "s"} {MISSING_FILTER_LABEL[missingFilter]}
+          </p>
+          <Link href="/customers" className="text-[13px] font-semibold text-ud-accent shrink-0 hover:underline">
+            Clear filter
+          </Link>
+        </div>
+      )}
 
       {/* Search */}
       <div className="flex items-center gap-2.5 px-[14px] py-[9px] bg-ud-surface border border-ud rounded-[10px] shadow-ud mb-4">

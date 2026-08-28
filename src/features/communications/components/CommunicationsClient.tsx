@@ -204,7 +204,7 @@ export function CommunicationsClient({
       <div className="w-72 shrink-0 border-r border-ud flex flex-col">
         <div className="px-4 py-4 border-b border-ud">
           <h1 className="text-[16px] font-bold text-ud-ink">Communications</h1>
-          <p className="text-[12px] text-ud-faint mt-0.5">SMS conversations</p>
+          <p className="text-[12px] text-ud-faint mt-0.5">Text and email conversations</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {threads.length === 0 && (
@@ -233,6 +233,11 @@ export function CommunicationsClient({
                       <span className="text-[13px] font-semibold text-ud-ink truncate">
                         {name}
                       </span>
+                      {thread.channel !== "sms" && (
+                        <span className="text-[9px] font-bold uppercase tracking-[0.06em] text-ud-faint bg-ud-surface-sunk border border-ud rounded-[4px] px-1 py-[1px] shrink-0">
+                          Email
+                        </span>
+                      )}
                     </div>
                     {thread.last_message_preview && (
                       <div className="text-[12px] text-ud-muted truncate mt-0.5">
@@ -303,35 +308,53 @@ export function CommunicationsClient({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Compose */}
-            <div className="px-6 py-4 border-t border-ud">
-              {sendError && (
-                <p className="text-[12px] text-ud-danger mb-2">{sendError}</p>
-              )}
-              <div className="flex gap-2 items-end">
-                <textarea
-                  value={compose}
-                  onChange={(e) => setCompose(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder="Type a message… (Enter to send)"
-                  rows={2}
-                  className="flex-1 px-3 py-2 bg-ud-surface border border-ud rounded-[10px] text-[13px] text-ud-ink placeholder:text-ud-faint outline-none focus:border-ud-accent resize-none"
-                  style={{ fontFamily: "var(--font)" }}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={isSending || !compose.trim()}
-                  className="px-4 py-2 bg-ud-accent text-white text-[13px] font-semibold rounded-[10px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
-                >
-                  Send
-                </button>
+            {/* Compose — the send API only knows how to hand a reply to
+                Twilio (SMS), so an email thread (see the mailgun webhook,
+                which is the only thing that creates channel: "email" threads)
+                gets a plain explanation instead of a composer that would
+                just fail with a 422 every time someone hit Send. */}
+            {selectedThread.channel !== "sms" ? (
+              <div className="px-6 py-4 border-t border-ud">
+                <div className="flex items-start gap-3 px-4 py-3 bg-ud-surface-sunk border border-ud rounded-[10px]">
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} className="text-ud-faint shrink-0 mt-0.5">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+                  </svg>
+                  <p className="text-[13px] text-ud-muted leading-[1.5]">
+                    This conversation came in by email, and replying from here isn&apos;t available yet.
+                    To respond, reach out to this customer by phone or send them a new email directly.
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="px-6 py-4 border-t border-ud">
+                {sendError && (
+                  <p className="text-[12px] text-ud-danger mb-2">{sendError}</p>
+                )}
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    value={compose}
+                    onChange={(e) => setCompose(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder="Type a message… (Enter to send)"
+                    rows={2}
+                    className="flex-1 px-3 py-2 bg-ud-surface border border-ud rounded-[10px] text-[13px] text-ud-ink placeholder:text-ud-faint outline-none focus:border-ud-accent resize-none"
+                    style={{ fontFamily: "var(--font)" }}
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={isSending || !compose.trim()}
+                    className="px-4 py-2 bg-ud-accent text-white text-[13px] font-semibold rounded-[10px] hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

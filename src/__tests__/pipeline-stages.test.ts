@@ -18,6 +18,7 @@ function lead(overrides: Partial<RawLead> = {}): RawLead {
     status: "New",
     estimated_value: 5000,
     next_follow_up_date: null,
+    source: "Referral",
     contact: { id: "contact-1", first_name: "Jamie", last_name: "Lee" },
     ...overrides,
   };

@@ -14,6 +14,10 @@ export type PipelineCard = {
   editHref: string;
   chain: { leadId: string | null; jobId: string | null; saleId: string | null };
   openFollowUp: { id: string; dueDate: string } | null;
+  // Only ever set for sourceType "lead" (jobs/sales don't carry a source).
+  // Threaded through so Data Hub's "missing source" issue link
+  // (/crm?issue=lead-no-source) can filter for it — see issue-filters.ts.
+  source: string | null;
 };
 
 export type RawContact = { id: string; first_name: string | null; last_name: string | null } | null;
@@ -25,6 +29,7 @@ export type RawLead = {
   status: string | null;
   estimated_value: number | null;
   next_follow_up_date: string | null;
+  source: string | null;
   contact?: RawContact;
 };
 

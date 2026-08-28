@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { mapRecordsToCards } from "./stages";
 import type { PipelinePageData, RawFollowUp, RawJob, RawLead, RawSale } from "./types";
 
-const LEAD_FIELDS = "id, contact_id, service_requested, status, estimated_value, next_follow_up_date, contact:master_customers(id, first_name, last_name)";
+const LEAD_FIELDS = "id, contact_id, service_requested, status, estimated_value, next_follow_up_date, source, contact:master_customers(id, first_name, last_name)";
 const JOB_FIELDS = "id, contact_id, lead_id, service_type, status, job_value, paid_status, start_date, contact:master_customers(id, first_name, last_name)";
 const SALE_FIELDS = "id, contact_id, job_id, service_type, amount, payment_status, sale_date, contact:master_customers(id, first_name, last_name)";
 const FOLLOW_UP_FIELDS = "id, lead_id, contact_id, due_date, status";

@@ -47,6 +47,32 @@ export default async function CustomerEditPage({
 
   const profile = getIndustryProfile(company.business_sector);
 
+  // Custom fields: definitions the org has set up in Settings, plus any
+  // values already saved on this contact (see ContactCustomFields.tsx).
+  const [fieldDefsResult, fieldValuesResult] = await Promise.all([
+    supabase
+      .from("custom_field_definitions")
+      .select("id, label, field_key, field_type, options, required, position")
+      .eq("organization_id", company.id)
+      .eq("entity_type", "contact")
+      .order("position", { ascending: true }),
+    supabase
+      .from("custom_field_values")
+      .select("field_id, value")
+      .eq("organization_id", company.id)
+      .eq("entity_type", "contact")
+      .eq("entity_id", id),
+  ]);
+
+  const customFields = (fieldDefsResult.data ?? []).map((f) => ({
+    ...f,
+    options: f.options as string[] | null,
+  }));
+  const customFieldValues: Record<string, string | null> = {};
+  for (const v of fieldValuesResult.data ?? []) {
+    customFieldValues[v.field_id] = v.value;
+  }
+
   return (
     <AppShell
       companyName={company.name}
@@ -62,6 +88,8 @@ export default async function CustomerEditPage({
           }}
           profile={profile}
           errorParam={errorParam}
+          customFields={customFields}
+          customFieldValues={customFieldValues}
         />
       </div>
     </AppShell>

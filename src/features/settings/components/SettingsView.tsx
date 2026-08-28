@@ -284,7 +284,7 @@ export function SettingsView({
         <div className="py-[26px] border-b border-ud">
           <div className="mb-[18px]">
             <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Custom fields</p>
-            <p className="text-[12px] text-ud-muted">Add extra data fields to contacts.</p>
+            <p className="text-[12px] text-ud-muted">Add extra data fields to contacts — set their values from a contact&apos;s edit page.</p>
           </div>
           <CustomFieldsSettings orgId={company.id} contactFields={contactFields} />
         </div>
