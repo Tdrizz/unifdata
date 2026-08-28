@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { logGeneration, createNightlyTrace, flushLangfuse } from "@/lib/observability/tracing";
-import { buildVocabularyBlock } from "@/lib/ai/prompts/shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "@/lib/ai/prompts/shared";
 import { hasRecentAlert } from "@/lib/agents/memory";
 import { tryParseJson, logWorkerFailure } from "@/lib/agents/log-failure";
 
@@ -46,7 +46,12 @@ export async function runVolumeAnticipatorWorker(
       .gte("created_at", sixMonthsAgoStr),
   ]);
 
-  if (!jobsResult.data || jobsResult.data.length < 2) return;
+  // 2 jobs total was enough to trigger a "forecast" -- for a business that
+  // just signed up with one or two jobs on record, that's not a trend, it's
+  // noise, and the model would say so at length rather than staying quiet.
+  // Require enough history to actually describe a pattern: real volume,
+  // spread across enough distinct months to show a direction.
+  if (!jobsResult.data || jobsResult.data.length < 6) return;
 
   // Bucket by month
   function bucketByMonth(rows: Array<{ created_at: string }>): Record<string, number> {
@@ -62,6 +67,7 @@ export async function runVolumeAnticipatorWorker(
   const customersByMonth = bucketByMonth(customersResult.data ?? []);
 
   const months = Object.keys(jobsByMonth).sort();
+  if (months.length < 3) return;
   const jobSummary = months.map((m) => `${m}: ${jobsByMonth[m] ?? 0} jobs, ${customersByMonth[m] ?? 0} new customers`).join("\n");
 
   const nextMonth = new Date();
@@ -72,6 +78,8 @@ export async function runVolumeAnticipatorWorker(
   const systemPrompt = `You forecast next-month volume for a small service business.
 Based on the monthly job and customer counts, estimate whether next month will be higher, lower, or similar to recent months.
 Be specific: cite the trend and the expected direction. If there's too little data to forecast, say so.
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 

@@ -48,7 +48,7 @@ export default async function WorkspacePage() {
     // claimed now unless there's a successful run to point at.
     supabase
       .from("agent_logs")
-      .select("run_at")
+      .select("run_at, assessment")
       .eq("organization_id", company.id)
       .eq("agent_name", "nightly-coordinator")
       .is("error", null)
@@ -83,7 +83,14 @@ export default async function WorkspacePage() {
 
   const agentInboxCount = drafts.length + alerts.length;
 
-  const lastReviewAt = (lastReviewResult.data as { run_at: string } | null)?.run_at ?? null;
+  const lastReview = lastReviewResult.data as { run_at: string; assessment: string | null } | null;
+  const lastReviewAt = lastReview?.run_at ?? null;
+  // The nightly manager already writes a specific, well-grounded 2-3 sentence
+  // read of the business every night (see manager.ts) -- it was computed and
+  // stored and then never actually shown to anyone; the panel only ever
+  // rendered a bare item count. This is the product's headline promise
+  // ("a briefing every morning") delivered from data that already exists.
+  const lastAssessment = lastReview?.assessment ?? null;
 
   return (
     <AppShell
@@ -112,6 +119,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           lastReviewAt={lastReviewAt}
+          lastAssessment={lastAssessment}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
         />
@@ -122,6 +130,7 @@ export default async function WorkspacePage() {
           drafts={drafts}
           alerts={alerts}
           lastReviewAt={lastReviewAt}
+          lastAssessment={lastAssessment}
           initialChatSessionId={chatSession.id}
           initialChatMessages={chatSession.messages}
         />

@@ -17,7 +17,11 @@ type Props = {
   profileSourceOptions: string[];
 };
 
-function buildHref(base: string, params: Record<string, string | undefined>): string {
+// Exported so QuickFilterChips.tsx (the one-click chip row on the Customers
+// list) can build the exact same status/tag/source query-param hrefs the
+// facet sidebar uses — chips are a faster path to the same filters, not a
+// second, competing filter mechanism.
+export function buildHref(base: string, params: Record<string, string | undefined>): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     if (v) q.set(k, v);
@@ -26,7 +30,7 @@ function buildHref(base: string, params: Record<string, string | undefined>): st
   return s ? `${base}?${s}` : base;
 }
 
-const STATUS_LABELS: Record<string, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   new: "New",
   active: "Active",
   inactive: "Inactive",
@@ -34,7 +38,7 @@ const STATUS_LABELS: Record<string, string> = {
   closed: "Closed",
 };
 
-const STATUS_COLORS: Record<string, string> = {
+export const STATUS_COLORS: Record<string, string> = {
   new: "#3B82F6",
   active: "#22C55E",
   inactive: "#9CA3AF",

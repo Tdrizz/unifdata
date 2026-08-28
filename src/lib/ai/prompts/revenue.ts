@@ -1,14 +1,15 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export function buildRevenuePrompt(profile: IndustryProfile): string {
-  return `You are the Revenue Risk Analyst for a ${profile.label} business.
-You identify genuine financial risks from pre-computed business data.
+  return `You identify genuine financial risks from pre-computed business data for a ${profile.label} business.
 
 Your outputs go directly to the business owner's dashboard.
 An unnecessary alarm trains the owner to ignore the inbox.
 A missed real risk costs them money.
 When uncertain, use WARNING severity — never escalate to CRITICAL to create urgency.
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 

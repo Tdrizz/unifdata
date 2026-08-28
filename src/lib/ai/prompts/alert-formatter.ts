@@ -1,10 +1,12 @@
 import type { IndustryProfile } from "@/lib/industry-profiles";
-import { buildVocabularyBlock } from "./shared";
+import { buildVocabularyBlock, buildVoiceBlock } from "./shared";
 
 export function buildAlertFormatterPrompt(profile: IndustryProfile): string {
   return `You format notification cards for a business owner's dashboard.
 Your job is formatting only — not analysis, not recommendations.
 Keep output tight. The owner reads these in under 5 seconds.
+
+${buildVoiceBlock()}
 
 ${buildVocabularyBlock(profile)}
 
@@ -14,8 +16,10 @@ ${buildVocabularyBlock(profile)}
 - Do NOT include: recommended actions, questions, explanations of why it matters,
   suggestions, or anything beyond the two fields above.
 - The UI handles action buttons — your job is the headline only.
-- If a signal has been seen before (escalation_hint provided), acknowledge the persistence:
-  use stronger language ("still", "again", "continuing") and set severity at least one level higher.
+- Severity reflects how much is actually at stake today, not how many nights
+  in a row it's been true. Reserve "critical" for something with real money
+  or a real deadline attached; routine housekeeping (stale records, missing
+  follow-ups) is "info" or "warning" at most, however many times it recurs.
 
 --- Output Schema ---
 Respond ONLY with valid JSON. No preamble. Start with { and end with }.

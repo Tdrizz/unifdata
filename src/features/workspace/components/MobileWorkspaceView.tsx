@@ -35,6 +35,7 @@ type Props = WorkspaceData & {
   drafts?: Draft[];
   alerts?: Alert[];
   lastReviewAt?: string | null;
+  lastAssessment?: string | null;
   initialChatSessionId?: string | null;
   initialChatMessages?: ChatMessage[];
 };
@@ -43,7 +44,7 @@ type Props = WorkspaceData & {
 // Vera panel, same priority queue, same jobs/pipeline sections — just
 // stacked single-column instead of a side-by-side grid.
 export function MobileWorkspaceView({
-  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null,
+  customers, leads, jobs, sales, followUps, profile, companyName, drafts = [], alerts = [], lastReviewAt = null, lastAssessment = null,
   initialChatSessionId = null, initialChatMessages = [],
 }: Props) {
   const customerById = new Map(customers.map((c) => [c.id, c]));
@@ -414,6 +415,9 @@ export function MobileWorkspaceView({
 
           {veraExpanded && (veraItems.length > 0 ? (
             <div className="p-3.5 space-y-3 border-b border-ud-soft">
+              {lastAssessment && (
+                <p className="mb-3 text-[13px] leading-relaxed text-ud-muted">{lastAssessment}</p>
+              )}
               {draftError && (
                 <div className="mb-3 rounded-[9px] border border-ud bg-ud-warning-bg px-3 py-2 text-[12.5px] text-ud-warning">
                   {draftError}
@@ -441,9 +445,11 @@ export function MobileWorkspaceView({
           ) : (
             <div className="px-4 py-3.5 border-b border-ud-soft">
               <p className="text-[13px] text-ud-muted">
-                {lastReviewAt
-                  ? "Checked overnight — nothing needs you today."
-                  : "Vera runs overnight. Your first review lands tomorrow morning."}
+                {lastAssessment
+                  ? lastAssessment
+                  : lastReviewAt
+                    ? "Checked overnight — nothing needs you today."
+                    : "Vera runs overnight. Your first review lands tomorrow morning."}
               </p>
               {lastReviewAt && (
                 <p className="mt-1 text-[12px] text-ud-faint">

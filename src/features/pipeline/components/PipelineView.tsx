@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -67,6 +68,16 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
   const paidCards = (grouped.get("Paid") ?? []).filter((c) => c.sourceType !== "sale" || c.statusLabel === "Paid");
   const paidValue = paidCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
 
+  // "Has open follow-up" is the one board-wide quick filter that cuts across
+  // every stage column at once (unlike stage, which the kanban already
+  // segments visually) — one click surfaces exactly what needs a call/email
+  // today without hunting through five columns for the danger-red follow-up
+  // line. It only narrows the kanban columns below, not the KPI stats or
+  // the Revenue section above/below it, which stay true totals.
+  const [followUpOnly, setFollowUpOnly] = useState(false);
+  const followUpCount = cards.filter((c) => c.openFollowUp).length;
+  const boardGrouped = followUpOnly ? groupCardsByStage(cards.filter((c) => c.openFollowUp)) : grouped;
+
   return (
     <div className="hidden md:block px-8 pt-7 pb-12">
       <PageHeader
@@ -83,10 +94,35 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
         <StatCard label="Paid" value={formatCurrency(paidValue)} helper={`${paidCards.length} records`} tone={paidValue > 0 ? "positive" : "default"} />
       </div>
 
+      {/* Quick filters */}
+      <div className="flex items-center gap-1.5 mb-3">
+        <button
+          type="button"
+          onClick={() => setFollowUpOnly(false)}
+          className={[
+            "rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+            !followUpOnly ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard",
+          ].join(" ")}
+        >
+          All <span className="tabular-nums opacity-70">{cards.length}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setFollowUpOnly(true)}
+          disabled={followUpCount === 0}
+          className={[
+            "rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+            followUpOnly ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard",
+          ].join(" ")}
+        >
+          Has open follow-up <span className="tabular-nums opacity-70">{followUpCount}</span>
+        </button>
+      </div>
+
       {/* Kanban */}
       <div className="grid grid-cols-5 gap-3.5 items-start mb-8">
         {PIPELINE_STAGES.map((stage) => {
-          const stageCards = grouped.get(stage.name) ?? [];
+          const stageCards = boardGrouped.get(stage.name) ?? [];
           const totalValue = stageCards.reduce((sum, c) => sum + (c.value ?? 0), 0);
           const quickAddType = STAGE_TO_QUICK_ADD_TYPE[stage.name];
           const displayLabel = getStageDisplayLabel(stage.name, profile);

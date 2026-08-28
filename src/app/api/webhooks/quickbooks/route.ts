@@ -137,16 +137,26 @@ export async function POST(request: Request) {
         enqueued: ok,
       });
 
-      // ROI detection: check if a prior approved agent_draft for this sale triggered payment
+      // ROI detection: check if a prior approved agent_draft to this customer
+      // may have prompted the payment. agent_drafts.record_id is always the
+      // customer/contact id an outreach draft was written for (see
+      // outreach-worker.ts) -- it is never a sale id, so matching against
+      // sale.id here could never find a row, and "AI recovered this month"
+      // was structurally always $0. Match on the contact instead: an
+      // approved outreach draft to this customer in the last 30 days,
+      // followed by their previously-unpaid invoice clearing, is the
+      // available signal.
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: approvedDraft } = await supabase
-        .from("agent_drafts")
-        .select("id")
-        .eq("organization_id", companyId)
-        .eq("record_id", sale.id)
-        .eq("status", "approved")
-        .gte("created_at", thirtyDaysAgo)
-        .maybeSingle();
+      const { data: approvedDraft } = sale.contact_id
+        ? await supabase
+            .from("agent_drafts")
+            .select("id")
+            .eq("organization_id", companyId)
+            .eq("record_id", sale.contact_id as string)
+            .eq("status", "approved")
+            .gte("created_at", thirtyDaysAgo)
+            .maybeSingle()
+        : { data: null };
 
       if (approvedDraft) {
         await supabase.from("roi_events").insert({
