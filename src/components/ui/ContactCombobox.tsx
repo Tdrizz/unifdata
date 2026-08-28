@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { ContactForSelect } from "@/lib/crm/types";
+import { normalizeEmail, normalizePhone } from "@/lib/imports/normalizer";
+import type { ContactForSelect, DuplicateContactMatch } from "@/lib/crm/types";
 
 const DEFAULT_INPUT_CLASS =
   "w-full rounded-[9px] border border-ud bg-ud-surface px-3.5 py-[10px] text-[14px] text-ud-ink outline-none transition-[box-shadow,border-color] duration-150 focus:ring-2 focus:ring-ud-accent/10 focus:border-ud-accent placeholder:text-ud-faint";
@@ -38,6 +40,14 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
   const [newName, setNewName] = useState("");
   const [newContact, setNewContact] = useState("");
   const [saving, setSaving] = useState(false);
+  // Phase 03 — while filling out "+ Add new contact", flag it if the
+  // phone/email already belongs to someone in this org. Non-blocking (the
+  // "Add contact" button below stays enabled either way) since two people
+  // can legitimately share a line — but "Use existing contact" is offered
+  // because in this context the *right* fix usually isn't creating a
+  // near-duplicate at all, it's picking the contact that's already there.
+  const [duplicate, setDuplicate] = useState<DuplicateContactMatch | null>(null);
+  const [duplicateDismissed, setDuplicateDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -64,6 +74,29 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
     }, 250);
     return () => clearTimeout(timer);
   }, [query]);
+
+  useEffect(() => {
+    if (!creating) return;
+    setDuplicateDismissed(false);
+    const trimmed = newContact.trim();
+    const isEmail = trimmed.includes("@");
+    // Don't fire until the phone/email looks complete — avoids a request
+    // (and a premature banner) on every keystroke of a still-partial value.
+    if (!(isEmail ? normalizeEmail(trimmed) : normalizePhone(trimmed))) {
+      setDuplicate(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const params = new URLSearchParams(isEmail ? { email: trimmed } : { phone: trimmed });
+      try {
+        const res = await fetch(`/api/contacts/check-duplicate?${params}`);
+        if (res.ok) setDuplicate((await res.json()) as DuplicateContactMatch | null);
+      } catch {
+        // Non-fatal — the check is a nicety, not a requirement.
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [newContact, creating]);
 
   useEffect(() => {
     if (!open) return;
@@ -188,6 +221,25 @@ export function ContactCombobox({ name, defaultValue, defaultLabel, placeholder 
                   placeholder="Phone or email (optional)"
                   className="w-full rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-2 text-[13px] text-ud-ink outline-none placeholder:text-ud-faint focus:border-ud-accent"
                 />
+                {duplicate && !duplicateDismissed && (
+                  <div className="rounded-[8px] border border-ud-warning/30 bg-ud-warning/10 px-2.5 py-2 text-[11.5px] text-ud-ink">
+                    <p>
+                      This looks like <span className="font-semibold">{duplicate.name}</span> — same {duplicate.matchedOn === "email" ? "email" : "phone number"}.
+                    </p>
+                    <div className="mt-1.5 flex gap-3">
+                      <Link href={`/customers/${duplicate.id}`} className="font-semibold text-ud-accent hover:underline">
+                        View existing
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setDuplicateDismissed(true)}
+                        className="font-semibold text-ud-muted hover:text-ud-ink"
+                      >
+                        Add anyway
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleCreate}
