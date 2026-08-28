@@ -174,6 +174,8 @@ export default async function CustomersPage({
             profile={profile}
             activityMap={activityMap}
             tagsMap={tagsMap}
+            statusCounts={statusCounts}
+            activeStatus={params.status}
           />
         </div>
       </div>

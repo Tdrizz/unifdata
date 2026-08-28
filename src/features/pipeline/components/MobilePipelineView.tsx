@@ -43,7 +43,13 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
   const [activeStage, setActiveStage] = useState(defaultStage);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const activeStageCards = grouped.get(activeStage) ?? [];
+  // Second-level quick filter within the active stage tab — stage chips
+  // already narrow to one column, and this narrows further to just the cards
+  // that actually need a follow-up today, matching the desktop board's chip.
+  const [followUpOnly, setFollowUpOnly] = useState(false);
+  const stageCards = grouped.get(activeStage) ?? [];
+  const stageFollowUpCount = stageCards.filter((c) => c.openFollowUp).length;
+  const activeStageCards = followUpOnly ? stageCards.filter((c) => c.openFollowUp) : stageCards;
 
   // Same targeting desktop's per-column "Add" links use: opening the sheet
   // from a given stage defaults the quick-add tab to whatever record type
@@ -74,7 +80,10 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
             <button
               key={stage.name}
               type="button"
-              onClick={() => setActiveStage(stage.name)}
+              onClick={() => {
+                setActiveStage(stage.name);
+                setFollowUpOnly(false);
+              }}
               className={[
                 "flex-shrink-0 rounded-full px-[16px] py-[9px] text-[13px] font-semibold transition-colors",
                 isActive ? "bg-ud-ink text-white" : "bg-ud-surface border border-ud text-ud-muted",
@@ -85,6 +94,24 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
           );
         })}
       </div>
+
+      {/* Quiet secondary filter — narrows the active stage tab further to
+          just what needs a call/email today, without competing visually
+          with the bolder stage tabs above it. */}
+      {stageFollowUpCount > 0 && (
+        <div className="px-4 pb-[14px]">
+          <button
+            type="button"
+            onClick={() => setFollowUpOnly((v) => !v)}
+            className={[
+              "rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
+              followUpOnly ? "bg-ud-danger/15 text-ud-danger border border-ud-danger/30" : "bg-ud-surface border border-ud text-ud-muted",
+            ].join(" ")}
+          >
+            Has open follow-up <span className="tabular-nums opacity-70">{stageFollowUpCount}</span>
+          </button>
+        </div>
+      )}
 
       {/* Card list */}
       {activeStageCards.length === 0 ? (
