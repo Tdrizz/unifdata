@@ -126,24 +126,35 @@ type SceneProps = { active: boolean };
 // animation not working at all, not just as bad timing.
 //
 // Every traveling-dot circle/rect below also gets an explicit
-// `opacity: active ? undefined : 0` alongside the animation toggle. Their
-// position (cx/x) only ever comes from the animation's own keyframes, never
-// a static attribute -- so the instant a scene goes inactive and its
-// animation switches to "none", the shape snaps to the SVG default position
-// (0,0) and sits frozen there for the rest of that scene's ~650ms fade-out,
-// which is still mostly opaque. That stray, motionless dot glued to the
-// left edge during every transition is what read as a broken artifact (and,
-// since it's a hard visual interruption right at the cut, as the animation
-// "not working"). Hiding it outright the instant it's inactive removes it
-// instead of freezing it in the wrong place.
+// `opacity: active ? undefined : 0` alongside the animation toggle, and a
+// static cx/cy (or x/y) attribute for its resting position, with the actual
+// travel done via an animated `transform: translate()` rather than
+// animating cx/cy/x themselves. Two separate reasons:
+//
+// 1. Safari has long had incomplete support for animating raw SVG geometry
+//    attributes (cx/cy/x/y/r) through CSS @keyframes -- opacity animates
+//    fine there, but the position just doesn't move, so the dot sits fully
+//    visible and motionless at its starting point for the whole scene
+//    instead of traveling. `transform` (including unitless translate values,
+//    which resolve in the SVG's own user-unit space the same way cx/cy do)
+//    is universally well supported for CSS animation, SVG included, so it's
+//    the cross-browser-safe way to move these.
+// 2. Without a static resting attribute, the instant a scene goes inactive
+//    and its animation switches to "none", the shape would snap to the SVG
+//    default position (0,0) and sit frozen there for the rest of that
+//    scene's ~650ms fade-out, which is still mostly opaque -- a stray,
+//    motionless dot glued to the left edge on every transition. Giving it
+//    a real static position removes that failure mode regardless of browser,
+//    and the explicit opacity toggle hides it outright the instant it's
+//    inactive rather than leaving it visible anywhere at all.
 //
 // Any of these that also stagger with a CSS `animation-delay` (the four
 // Connections dots, the reply bubble) additionally need `backwards` in
 // their animation shorthand -- without it, a delayed animation has no
-// effect at all until its delay elapses, so the shape sits at that same
-// undefined default position, fully opaque, for the entire delay. `backwards`
-// makes the browser apply the animation's own 0% keyframe (which already
-// starts at opacity 0) throughout the delay instead.
+// effect at all until its delay elapses, so the shape sits at its static
+// resting position, fully opaque, for the entire delay. `backwards` makes
+// the browser apply the animation's own 0% keyframe (which already starts
+// at opacity 0) throughout the delay instead.
 
 // Three stages flowing into each other, a single particle traveling the
 // whole path -- an abstraction of "a job moves from lead to paid," not a
@@ -166,6 +177,7 @@ function FlowScene({ active }: SceneProps) {
           <FlowLine x1={50} y1={11} x2={93} y2={11} />
           <circle
             r={1.8}
+            cx={5}
             cy={11}
             fill="var(--ud-accent)"
             style={{ animation: active ? "demo-pipeline-dot 3200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
@@ -201,6 +213,7 @@ function PingScene({ active }: SceneProps) {
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={16} y1={11} x2={84} y2={11} />
           <rect
+            x={13}
             y={9.4}
             width={6}
             height={3.2}
@@ -209,6 +222,7 @@ function PingScene({ active }: SceneProps) {
             style={{ animation: active ? "demo-msg-bubble-out 3400ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
           />
           <rect
+            x={81}
             y={9.4}
             width={6}
             height={3.2}
@@ -271,6 +285,8 @@ function NetworkScene({ active }: SceneProps) {
             <circle
               key={anim}
               r={1.6}
+              cx={[10, 36, 64, 90][i]}
+              cy={5}
               fill="var(--ud-accent)"
               style={{ animation: active ? `${anim} 2400ms ease-in-out ${i * 320}ms infinite backwards` : "none", opacity: active ? undefined : 0 }}
             />
