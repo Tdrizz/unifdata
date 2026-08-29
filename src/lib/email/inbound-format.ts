@@ -28,10 +28,16 @@ export function htmlToPlainText(html: string): string {
 // that's only quoted content, or an unrecognized format, still shows
 // something rather than nothing).
 export function stripQuotedReply(text: string): string {
+  // [\s\S] instead of "." -- Gmail (and others) line-wrap the quote header
+  // at ~78 chars, which can land a real newline mid-sentence (observed:
+  // right after the "<" of "Name <email> wrote:"). "." never matches "\n"
+  // in JS regex, so a plain .{0,150} silently fails to match the moment
+  // that wrap happens, which is often -- most quote headers are long enough
+  // to wrap at least once.
   const patterns = [
     /\n\s*-{2,}\s*Original Message\s*-{2,}/i,
     /\n\s*-{2,}\s*Forwarded message\s*-{2,}/i,
-    /\n\s*On .{0,150}wrote:/i,
+    /\n\s*On [\s\S]{0,150}wrote:/i,
   ];
 
   let cutoff = text.length;

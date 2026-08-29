@@ -35,6 +35,24 @@ describe("stripQuotedReply", () => {
     const text = "On Fri, Aug 28, 2026 at 6:03 PM Demo Company Test <demo-company-test@unifdata.com> wrote:\n> hi";
     expect(stripQuotedReply(text)).toBe(text);
   });
+
+  it("cuts a Gmail-style trailer even when Gmail line-wraps mid-header (real example: a newline lands right after the '<')", () => {
+    const text = [
+      "Yoo-hoo dev",
+      "",
+      "",
+      "Sincerely,",
+      "Tittan Olson",
+      "",
+      "On Fri, Aug 28, 2026 at 6:39 PM Demo Company Test <",
+      "demo-company-test@unifdata.com> wrote:",
+      "",
+      "> Final test",
+      ">",
+    ].join("\n");
+
+    expect(stripQuotedReply(text)).toBe("Yoo-hoo dev\n\n\nSincerely,\nTittan Olson");
+  });
 });
 
 describe("htmlToPlainText", () => {
