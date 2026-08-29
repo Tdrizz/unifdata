@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SceneId = "pipeline" | "inbox" | "connect" | "brief";
 
@@ -115,16 +115,27 @@ function FlowLine({ x1, y1, x2, y2, delay = 0 }: { x1: number; y1: number; x2: n
   );
 }
 
+type SceneProps = { active: boolean };
+
+// Every continuous ("infinite") animation below is gated on `active` --
+// while a scene sits mounted but off-screen (kept mounted only so the CSS
+// grid sizing trick has something to measure), none of its dots/pulses are
+// actually running. Without this, all four scenes' animations play from
+// the moment the page loads regardless of which one is visible, so by the
+// time a scene's turn comes around its motion is already mid-cycle instead
+// of starting fresh in sync with the crossfade -- which reads as the
+// animation not working at all, not just as bad timing.
+
 // Three stages flowing into each other, a single particle traveling the
 // whole path -- an abstraction of "a job moves from lead to paid," not a
 // recreation of the kanban board itself.
-function FlowScene() {
+function FlowScene({ active }: SceneProps) {
   const leads = useCountUp(12, 1000);
-  const active = useCountUp(8, 1000);
+  const inProgress = useCountUp(8, 1000);
   const won = useCountUp(5, 1000);
   const nodes = [
     { label: "New leads", value: leads },
-    { label: "In progress", value: active },
+    { label: "In progress", value: inProgress },
     { label: "Won", value: won },
   ];
   return (
@@ -134,14 +145,14 @@ function FlowScene() {
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={7} y1={11} x2={50} y2={11} delay={150} />
           <FlowLine x1={50} y1={11} x2={93} y2={11} delay={650} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-pipeline-dot 2400ms ease-in-out infinite" }} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-pipeline-dot 2400ms ease-in-out infinite" : "none" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           {nodes.map((n, i) => (
             <div key={n.label} className="flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: `${i * 150}ms` }}>
               <div
                 className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
-                style={{ animation: `demo-node-breathe 2800ms ease-in-out ${i * 250}ms infinite` }}
+                style={{ animation: active ? `demo-node-breathe 2800ms ease-in-out ${i * 250}ms infinite` : "none" }}
               >
                 <span className="text-[17px] font-bold tabular-nums text-ud-ink">{n.value}</span>
               </div>
@@ -157,20 +168,20 @@ function FlowScene() {
 // A message traveling back and forth between two nodes -- the abstraction
 // of "a text and a reply land in the same thread," not a rendering of any
 // specific conversation UI.
-function PingScene() {
+function PingScene({ active }: SceneProps) {
   return (
     <div className="animate-fade-in">
       <p className="text-[13px] text-ud-text leading-relaxed mb-5">Every text and email, one thread — nothing lost in someone&apos;s phone.</p>
       <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={16} y1={11} x2={84} y2={11} delay={100} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-ping-dot 1900ms ease-in-out infinite" }} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-ping-dot 1900ms ease-in-out infinite" : "none" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           <div className="flex flex-col items-center gap-2 animate-fade-up">
             <div
               className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
-              style={{ animation: "demo-node-breathe 2800ms ease-in-out infinite" }}
+              style={{ animation: active ? "demo-node-breathe 2800ms ease-in-out infinite" : "none" }}
             >
               <ChatIcon size={18} />
             </div>
@@ -179,7 +190,7 @@ function PingScene() {
           <div className="flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: "150ms" }}>
             <div
               className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
-              style={{ animation: "demo-node-breathe 2800ms ease-in-out 950ms infinite" }}
+              style={{ animation: active ? "demo-node-breathe 2800ms ease-in-out 950ms infinite" : "none" }}
             >
               <MailIcon size={18} />
             </div>
@@ -193,7 +204,7 @@ function PingScene() {
 
 // Four tools converging into one glowing hub -- "connect what you already
 // use," visualized rather than shown as a literal list of provider rows.
-function NetworkScene() {
+function NetworkScene({ active }: SceneProps) {
   const dotAnimations = ["demo-net-dot-1", "demo-net-dot-2", "demo-net-dot-3", "demo-net-dot-4"];
   return (
     <div className="animate-fade-in">
@@ -216,13 +227,13 @@ function NetworkScene() {
           <FlowLine x1={64} y1={5} x2={50} y2={27} delay={300} />
           <FlowLine x1={90} y1={5} x2={50} y2={27} delay={450} />
           {dotAnimations.map((anim, i) => (
-            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: `${anim} 1500ms ease-in-out ${i * 260}ms infinite` }} />
+            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: active ? `${anim} 1500ms ease-in-out ${i * 260}ms infinite` : "none" }} />
           ))}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div
             className="w-11 h-11 rounded-full bg-ud-accent flex items-center justify-center shadow-[0_8px_24px_rgba(74,63,168,0.4)]"
-            style={{ animation: "demo-hub-pulse 2000ms ease-in-out infinite" }}
+            style={{ animation: active ? "demo-hub-pulse 2000ms ease-in-out infinite" : "none" }}
           >
             <PlugIcon size={16} />
           </div>
@@ -235,7 +246,7 @@ function NetworkScene() {
 // A pulsing spark resolving into a handful of numbers -- "Vera turns your
 // business into a few things that matter," visualized as the AI noticing
 // and surfacing signal, not a copy of the brief panel's actual layout.
-function InsightScene() {
+function InsightScene({ active }: SceneProps) {
   const followUps = useCountUp(4, 900);
   const jobs = useCountUp(7, 900);
   const tiles = [
@@ -247,10 +258,10 @@ function InsightScene() {
   return (
     <div className="animate-fade-in text-center">
       <div className="relative mx-auto mb-4 w-12 h-12">
-        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: "demo-ping-ring 2200ms ease-out infinite" }} />
+        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: active ? "demo-ping-ring 2200ms ease-out infinite" : "none" }} />
         <div
           className="relative w-12 h-12 rounded-full bg-ud-surface border border-ud-accent/30 shadow-ud flex items-center justify-center"
-          style={{ animation: "demo-node-breathe 2600ms ease-in-out infinite" }}
+          style={{ animation: active ? "demo-node-breathe 2600ms ease-in-out infinite" : "none" }}
         >
           <SparkleIcon size={18} />
         </div>
@@ -261,7 +272,7 @@ function InsightScene() {
           <div key={t.label} className="flex flex-col items-center gap-1.5 animate-fade-up" style={{ animationDelay: `${300 + i * 100}ms` }}>
             <div
               className={`w-14 h-14 rounded-full flex items-center justify-center border-2 shadow-ud ${t.urgent ? "border-red-200 bg-red-50/60" : "border-ud-accent/20 bg-ud-surface"}`}
-              style={{ animation: `demo-node-breathe 2800ms ease-in-out ${i * 220}ms infinite` }}
+              style={{ animation: active ? `demo-node-breathe 2800ms ease-in-out ${i * 220}ms infinite` : "none" }}
             >
               <span className={`text-[13px] font-bold tabular-nums ${t.urgent ? "text-red-600" : "text-ud-ink"}`}>{t.value}</span>
             </div>
@@ -273,91 +284,42 @@ function InsightScene() {
   );
 }
 
-const SCENE_CONTENT: Record<SceneId, () => React.JSX.Element> = {
+const SCENE_CONTENT: Record<SceneId, (props: SceneProps) => React.JSX.Element> = {
   brief: InsightScene,
   inbox: PingScene,
   pipeline: FlowScene,
   connect: NetworkScene,
 };
 
-const EMPTY_HEIGHTS: Record<SceneId, number> = { pipeline: 280, inbox: 280, connect: 280, brief: 280 };
-
 // A looping, auto-playing motion-graphics reel instead of a video file --
 // loads instantly, needs no hosting, and (since it's an abstraction rather
 // than a mockup of specific screens) can't go stale the way a literal UI
-// recreation would the moment the real product changes. All four scenes
-// sit stacked in one continuous strip; the reel scrolls smoothly from one to
-// the next instead of cutting between separate cards, so it plays more like
-// a trailer than a slideshow. Each scene's real rendered height is
-// measured after layout -- the viewport animates to match it exactly, so
-// content is never clipped or left floating in dead space.
+// recreation would the moment the real product changes.
+//
+// The frame's height was previously tracked in JS (measure every scene's
+// real height via ResizeObserver, keep the tallest in state) and it never
+// stopped visibly wobbling by a few pixels -- sub-pixel text-metric
+// rounding as the count-up digits change width was enough to nudge a
+// measurement, and any measurement-based approach means fighting that
+// forever. This uses a CSS-only technique instead: all four scenes occupy
+// the exact same grid cell (each explicitly placed at row 1 / column 1),
+// so the single grid track sizes itself to whichever occupant is tallest
+// -- a native, deterministic part of how CSS grid lays out overlapping
+// content, not something computed and re-computed in JS on every render.
+// There is no height to get wrong because nothing ever sets one.
+//
+// Scenes cross-fade (opacity + a slight scale) instead of scrolling past
+// each other -- a scroll needs to know how far to travel, which reintroduces
+// exactly the height-tracking problem this is meant to avoid.
 export function LiveDemo() {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [epoch, setEpoch] = useState<Record<SceneId, number>>({ pipeline: 0, inbox: 0, connect: 0, brief: 0 });
-  const [heights, setHeights] = useState<Record<SceneId, number>>(EMPTY_HEIGHTS);
-  const sceneRefs = useRef<Record<SceneId, HTMLDivElement | null>>({ pipeline: null, inbox: null, connect: null, brief: null });
   const reducedMotion = useRef(false);
   const scene = SCENES[sceneIndex];
   const Icon = SCENE_ICON[scene.id];
 
-  // The viewport's own height is React state, not a value CSS-transitions
-  // toward -- animating "height" directly meant the box visually lagged
-  // behind content for as long as the transition took (800ms), and for
-  // that whole window whatever had ALREADY rendered at its real size (the
-  // new scene's content, or the inbox reply landing mid-scene) stuck out
-  // past the still-catching-up box and got clipped by overflow-hidden.
-  // Instead: grow the box height INSTANTLY the moment content needs more
-  // room (so it's never shorter than what's actually rendered), and only
-  // shrink back down -- once, well after the scroll transition and any
-  // in-scene growth (the inbox reply) have had time to finish -- to fit
-  // the scene's final settled size exactly, so a shorter new scene doesn't
-  // leave permanent dead space below it.
-  const [boxHeight, setBoxHeight] = useState<number>(() => EMPTY_HEIGHTS[SCENES[0].id]);
-  const heightsRef = useRef(heights);
-  heightsRef.current = heights;
-  const activeHeight = heights[scene.id];
-
-  useEffect(() => {
-    setBoxHeight((prev) => Math.max(prev, activeHeight));
-  }, [scene.id, activeHeight]);
-
-  useEffect(() => {
-    // 2100ms clears both the ~800ms scroll transition and the inbox
-    // scene's own slowest growth step (its reply appears at 1900ms) --
-    // reading heightsRef here (not `heights` via closure) means this picks
-    // up whatever the scene's height actually settled at by fire time,
-    // not a stale value captured back when the scene first became active.
-    const t = setTimeout(() => setBoxHeight(heightsRef.current[scene.id]), 2100);
-    return () => clearTimeout(t);
-  }, [scene.id]);
-
   useEffect(() => {
     reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
-
-  // A plain one-time measurement isn't enough -- the inbox scene's own
-  // content grows after mount as it moves from "inbound only" to "inbound +
-  // typing" to "inbound + reply", so a snapshot taken at mount locks the
-  // viewport to the shortest state and clips whatever grows in later.
-  // ResizeObserver keeps every scene's measured height current for as long
-  // as it's mounted, not just at first paint.
-  useLayoutEffect(() => {
-    const observers: ResizeObserver[] = [];
-    for (const s of SCENES) {
-      const el = sceneRefs.current[s.id];
-      if (!el) continue;
-      const ro = new ResizeObserver(() => {
-        // offsetHeight (border-box, includes the div's own px-5/py-4
-        // padding) -- entries[0].contentRect excludes that padding, which
-        // under-measured every scene by exactly its vertical padding and
-        // clipped the last ~32px of every scene's content.
-        const rounded = el.offsetHeight;
-        setHeights((prev) => (prev[s.id] === rounded ? prev : { ...prev, [s.id]: rounded }));
-      });
-      ro.observe(el);
-      observers.push(ro);
-    }
-    return () => observers.forEach((ro) => ro.disconnect());
   }, []);
 
   useEffect(() => {
@@ -365,7 +327,7 @@ export function LiveDemo() {
     const timer = setTimeout(() => {
       const next = (sceneIndex + 1) % SCENES.length;
       const nextId = SCENES[next].id;
-      // Remounting only the scene about to scroll into view (not the whole
+      // Remounting only the scene about to become active (not the whole
       // reel) replays its entrance animation every loop, so the demo still
       // feels alive on pass two instead of settling into a static screenshot.
       setEpoch((e) => ({ ...e, [nextId]: e[nextId] + 1 }));
@@ -374,14 +336,11 @@ export function LiveDemo() {
     return () => clearTimeout(timer);
   }, [sceneIndex, scene.duration]);
 
-  let cumulative = 0;
-  const offsets: Record<SceneId, number> = { pipeline: 0, inbox: 0, connect: 0, brief: 0 };
-  for (const s of SCENES) {
-    offsets[s.id] = cumulative;
-    cumulative += heights[s.id];
-  }
-
-  const transition = reducedMotion.current ? "none" : "800ms cubic-bezier(0.65, 0, 0.35, 1)";
+  // A plain cross-fade is gentle enough to keep even under reduced-motion
+  // (unlike the floating tilt, glow pulse, and traveling dots, which are
+  // all switched off below) -- an instant hard swap between differently
+  // sized scenes is more jarring than a soft fade, not less.
+  const crossfade = reducedMotion.current ? "opacity 400ms ease" : "opacity 650ms ease, transform 650ms ease";
 
   return (
     <div className="relative mx-auto max-w-2xl" style={{ perspective: 1400 }}>
@@ -425,20 +384,31 @@ export function LiveDemo() {
           </span>
         </div>
 
-        <div
-          className="relative bg-ud-page overflow-hidden"
-          style={{ height: boxHeight, transition: "none" }}
-        >
-          <div style={{ transform: `translateY(-${offsets[scene.id]}px)`, transition: `transform ${transition}` }}>
-            {SCENES.map((s) => {
+        <div className="relative bg-ud-page overflow-hidden">
+          <div className="grid">
+            {SCENES.map((s, i) => {
               const Content = SCENE_CONTENT[s.id];
+              const isActive = i === sceneIndex;
               return (
+                // Every scene sits in the SAME grid cell (explicit row 1 /
+                // column 1 on all four) -- the grid's single track sizes
+                // itself to the tallest occupant natively, so this box's
+                // height is never computed in JS at all, just laid out by
+                // the browser like any other CSS grid.
                 <div
                   key={s.id}
-                  ref={(el) => { sceneRefs.current[s.id] = el; }}
-                  className="px-5 py-4"
+                  aria-hidden={!isActive}
+                  className="px-5 py-4 flex flex-col justify-center"
+                  style={{
+                    gridColumn: 1,
+                    gridRow: 1,
+                    opacity: isActive ? 1 : 0,
+                    transform: reducedMotion.current || isActive ? "scale(1)" : "scale(0.98)",
+                    transition: crossfade,
+                    pointerEvents: isActive ? "auto" : "none",
+                  }}
                 >
-                  <Content key={`${s.id}-${epoch[s.id]}`} />
+                  <Content key={`${s.id}-${epoch[s.id]}`} active={isActive} />
                 </div>
               );
             })}
