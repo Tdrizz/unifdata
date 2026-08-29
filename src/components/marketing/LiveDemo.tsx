@@ -44,7 +44,7 @@ const providers = ["QuickBooks", "Jobber", "HubSpot", "Square"];
 
 function SparkleIcon({ size = 12 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--ud-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
     </svg>
   );
@@ -52,7 +52,7 @@ function SparkleIcon({ size = 12 }: { size?: number }) {
 
 function KanbanIcon({ size = 12 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--ud-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="5" height="18" rx="1" /><rect x="9.5" y="3" width="5" height="18" rx="1" /><rect x="16" y="3" width="5" height="18" rx="1" />
     </svg>
   );
@@ -60,7 +60,7 @@ function KanbanIcon({ size = 12 }: { size?: number }) {
 
 function ChatIcon({ size = 12 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--ud-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
@@ -68,7 +68,7 @@ function ChatIcon({ size = 12 }: { size?: number }) {
 
 function PlugIcon({ size = 12 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="var(--ud-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22v-5" /><path d="M9 8V2" /><path d="M15 8V2" /><path d="M18 8v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
     </svg>
   );
@@ -83,7 +83,7 @@ const SCENE_ICON: Record<SceneId, (props: { size?: number }) => React.JSX.Elemen
 
 function TypingDots() {
   return (
-    <div className="flex gap-1 rounded-[12px] bg-[#4A3FA8] px-3 py-2.5">
+    <div className="flex gap-1 rounded-[12px] bg-ud-accent px-3 py-2.5">
       {[0, 1, 2].map((i) => (
         <span key={i} className="h-1.5 w-1.5 rounded-full bg-white/80 animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
       ))}
@@ -93,38 +93,38 @@ function TypingDots() {
 
 function BriefScene() {
   return (
-    <div className="animate-fade-in">
+    <div className="h-full flex flex-col justify-center animate-fade-in">
       <div className="flex gap-3 mb-4">
-        <div className="w-7 h-7 rounded-full bg-[#4A3FA8]/10 flex items-center justify-center shrink-0 mt-0.5">
+        <div className="w-7 h-7 rounded-full bg-ud-accent/[0.1] flex items-center justify-center shrink-0 mt-0.5">
           <SparkleIcon />
         </div>
-        <p className="text-[13px] text-slate-700 leading-relaxed">Good morning. Here&apos;s what needs your attention.</p>
+        <p className="text-[13px] text-ud-text leading-relaxed">Good morning. Here&apos;s what needs your attention.</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         {stats.map((stat, i) => (
           <div
             key={stat.label}
-            className={`animate-fade-up rounded-[10px] border p-3 ${stat.urgent ? "border-red-200/60 bg-red-50/60" : "border-black/[0.06] bg-white"}`}
+            className={`animate-fade-up rounded-[10px] border p-3 ${stat.urgent ? "border-red-200/60 bg-red-50/60" : "border-ud bg-ud-surface"}`}
             style={{ animationDelay: `${i * 70}ms` }}
           >
-            <p className="text-[10px] font-medium text-slate-500 mb-1 leading-tight">{stat.label}</p>
-            <p className={`text-[18px] font-bold tabular-nums leading-none ${stat.urgent ? "text-red-600" : "text-slate-900"}`}>{stat.value}</p>
+            <p className="text-[10px] font-medium text-ud-muted mb-1 leading-tight">{stat.label}</p>
+            <p className={`text-[18px] font-bold tabular-nums leading-none ${stat.urgent ? "text-red-600" : "text-ud-ink"}`}>{stat.value}</p>
           </div>
         ))}
       </div>
 
       <div className="space-y-2">
-        <div className="animate-fade-up rounded-[10px] border border-[#4A3FA8]/20 bg-[#4A3FA8]/[0.04] p-3.5" style={{ animationDelay: "280ms" }}>
-          <p className="text-[12px] text-slate-700 leading-relaxed mb-2.5">{action.text}</p>
+        <div className="animate-fade-up rounded-[10px] border border-ud-accent/25 bg-ud-accent/[0.05] p-3.5" style={{ animationDelay: "280ms" }}>
+          <p className="text-[12px] text-ud-text leading-relaxed mb-2.5">{action.text}</p>
           <div className="flex gap-2">
-            <div className="rounded-[7px] bg-[#4A3FA8] px-3 py-1.5 text-[11.5px] font-semibold text-white">{action.cta}</div>
-            <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500">Skip</div>
+            <div className="rounded-[7px] bg-ud-accent px-3 py-1.5 text-[11.5px] font-semibold text-white">{action.cta}</div>
+            <div className="rounded-[7px] border border-ud-hard bg-ud-surface px-3 py-1.5 text-[11.5px] font-semibold text-ud-muted">Skip</div>
           </div>
         </div>
-        <div className="animate-fade-up rounded-[10px] border border-black/[0.06] bg-white p-3.5" style={{ animationDelay: "350ms" }}>
-          <p className="text-[12px] text-slate-700 leading-relaxed mb-2.5">{alert}</p>
-          <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500 inline-flex">Got it</div>
+        <div className="animate-fade-up rounded-[10px] border border-ud bg-ud-surface p-3.5" style={{ animationDelay: "350ms" }}>
+          <p className="text-[12px] text-ud-text leading-relaxed mb-2.5">{alert}</p>
+          <div className="rounded-[7px] border border-ud-hard bg-ud-surface px-3 py-1.5 text-[11.5px] font-semibold text-ud-muted inline-flex">Got it</div>
         </div>
       </div>
     </div>
@@ -133,18 +133,18 @@ function BriefScene() {
 
 function InboxScene() {
   return (
-    <div className="animate-fade-in flex flex-col justify-end min-h-[248px] gap-2.5 py-2">
-      <p className="text-center text-[11px] text-slate-400 mb-1">Texts and emails land in the same thread as the customer&apos;s record</p>
+    <div className="h-full animate-fade-in flex flex-col justify-end gap-2.5 py-2">
+      <p className="text-center text-[11px] text-ud-faint mb-1">Texts and emails land in the same thread as the customer&apos;s record</p>
       <div className="flex justify-start">
-        <div className="max-w-[75%] rounded-[12px] border border-black/[0.06] bg-white px-3 py-2 animate-fade-up">
-          <p className="text-[12.5px] text-slate-700 leading-relaxed">{thread.inbound}</p>
+        <div className="max-w-[75%] rounded-[12px] border border-ud bg-ud-surface px-3 py-2 animate-fade-up">
+          <p className="text-[12.5px] text-ud-text leading-relaxed">{thread.inbound}</p>
         </div>
       </div>
       <div className="flex justify-end animate-fade-up" style={{ animationDelay: "900ms" }}>
         <TypingDots />
       </div>
       <div className="flex justify-end animate-fade-up" style={{ animationDelay: "1900ms" }}>
-        <div className="max-w-[75%] rounded-[12px] bg-[#4A3FA8] px-3 py-2">
+        <div className="max-w-[75%] rounded-[12px] bg-ud-accent px-3 py-2">
           <p className="text-[12.5px] text-white leading-relaxed">{thread.outbound}</p>
         </div>
       </div>
@@ -154,22 +154,22 @@ function InboxScene() {
 
 function PipelineScene() {
   return (
-    <div className="animate-fade-in">
-      <p className="text-[13px] text-slate-700 leading-relaxed mb-4">Every job and quote, tracked automatically — no spreadsheet to update.</p>
+    <div className="h-full flex flex-col justify-center animate-fade-in">
+      <p className="text-[13px] text-ud-text leading-relaxed mb-4">Every job and quote, tracked automatically — no spreadsheet to update.</p>
       <div className="grid grid-cols-3 gap-2.5">
         {pipeline.map((col, ci) => (
           <div
             key={col.title}
-            className="animate-fade-up rounded-[10px] border border-black/[0.06] bg-white p-2.5"
+            className="animate-fade-up rounded-[10px] border border-ud bg-ud-surface p-2.5"
             style={{ animationDelay: `${ci * 100}ms` }}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500 mb-1">{col.title}</p>
-            <p className="text-[15px] font-bold tabular-nums text-slate-900 mb-2.5">{col.total}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-ud-muted mb-1">{col.title}</p>
+            <p className="text-[15px] font-bold tabular-nums text-ud-ink mb-2.5">{col.total}</p>
             <div className="space-y-1.5">
               {col.jobs.map((job, ji) => (
                 <div
                   key={job}
-                  className="animate-fade-up rounded-[7px] bg-[#f6f5f2] px-2 py-1.5 text-[10.5px] leading-snug text-slate-600"
+                  className="animate-fade-up rounded-[7px] bg-ud-surface-sunk px-2 py-1.5 text-[10.5px] leading-snug text-ud-muted"
                   style={{ animationDelay: `${ci * 100 + ji * 90 + 120}ms` }}
                 >
                   {job}
@@ -185,22 +185,22 @@ function PipelineScene() {
 
 function ConnectScene() {
   return (
-    <div className="animate-fade-in">
-      <p className="text-[13px] text-slate-700 leading-relaxed mb-4">Connect the software you already use — everything syncs in automatically.</p>
+    <div className="h-full flex flex-col justify-center animate-fade-in">
+      <p className="text-[13px] text-ud-text leading-relaxed mb-4">Connect the software you already use — everything syncs in automatically.</p>
       <div className="space-y-2">
         {providers.map((name, i) => (
           <div
             key={name}
-            className="animate-fade-up flex items-center justify-between rounded-[10px] border border-black/[0.06] bg-white px-3.5 py-3"
+            className="animate-fade-up flex items-center justify-between rounded-[10px] border border-ud bg-ud-surface px-3.5 py-3"
             style={{ animationDelay: `${i * 260}ms` }}
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[8px] bg-[#4A3FA8]/10 flex items-center justify-center text-[11px] font-bold text-[#4A3FA8]">
+              <div className="w-7 h-7 rounded-[8px] bg-ud-accent/[0.1] flex items-center justify-center text-[11px] font-bold text-ud-accent">
                 {name.charAt(0)}
               </div>
-              <span className="text-[12.5px] font-semibold text-slate-700">{name}</span>
+              <span className="text-[12.5px] font-semibold text-ud-ink">{name}</span>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-ud-success-bg px-2.5 py-1 text-[11px] font-semibold text-ud-success">
               <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 13l4 4L19 7" />
               </svg>
@@ -244,14 +244,14 @@ export function LiveDemo() {
   }, [sceneIndex, scene.duration]);
 
   return (
-    <div className="mx-auto max-w-2xl rounded-[24px] border border-white/10 bg-white/[0.04] p-2 shadow-[0_32px_80px_rgba(0,0,0,0.5)]">
+    <div className="mx-auto max-w-2xl rounded-[18px] border border-ud bg-ud-surface shadow-[0_24px_60px_rgba(15,23,42,0.10)] overflow-hidden">
       {/* Story-style progress bar -- shows the reel is playing through
           several scenes without inviting anyone to click a control. */}
-      <div className="flex gap-1.5 px-2.5 pt-2.5 pb-1">
+      <div className="flex gap-1.5 px-4 pt-4 pb-2.5">
         {SCENES.map((s, i) => (
-          <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/15">
+          <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-ud-surface-sunk">
             <div
-              className="h-full origin-left bg-white"
+              className="h-full origin-left bg-ud-accent"
               style={
                 i < sceneIndex || (i === sceneIndex && reducedMotion.current)
                   ? { transform: "scaleX(1)" }
@@ -264,20 +264,18 @@ export function LiveDemo() {
         ))}
       </div>
 
-      <div className="rounded-[18px] bg-[#f6f5f2] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06]">
-          <div key={scene.id} className="flex items-center gap-2 animate-fade-in">
-            <div className="w-5 h-5 rounded-[5px] bg-[#4A3FA8]/20 flex items-center justify-center">
-              <Icon size={11} />
-            </div>
-            <span className="text-[12px] font-semibold text-slate-700">{scene.label}</span>
+      <div className="flex items-center justify-between px-5 pb-3.5 border-b border-ud">
+        <div key={scene.id} className="flex items-center gap-2 animate-fade-in">
+          <div className="w-5 h-5 rounded-[5px] bg-ud-accent/[0.12] flex items-center justify-center">
+            <Icon size={11} />
           </div>
-          <span className="text-[11px] text-slate-400">Today</span>
+          <span className="text-[12px] font-semibold text-ud-ink">{scene.label}</span>
         </div>
+        <span className="text-[11px] text-ud-faint">Today</span>
+      </div>
 
-        <div className="px-5 py-4 min-h-[280px]">
-          <Content key={scene.id} />
-        </div>
+      <div className="bg-ud-page px-5 py-4 h-[300px] overflow-hidden">
+        <Content key={scene.id} />
       </div>
     </div>
   );
