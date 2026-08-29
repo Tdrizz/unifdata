@@ -2,17 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type SceneId = "brief" | "inbox" | "pipeline" | "connect";
+type SceneId = "pipeline" | "inbox" | "connect" | "brief";
 
 // Four different corners of the product, not one story stretched thin --
 // each scene gets its own fixed dwell time and then the reel auto-advances
 // to the next, looping forever. No pills: nobody was clicking them, so the
 // only interaction left is watching.
+//
+// The product leads first (pipeline, inbox, integrations) -- Vera closes
+// the loop as one capability among several, not the whole pitch.
 const SCENES: { id: SceneId; label: string; duration: number }[] = [
-  { id: "brief", label: "Morning brief", duration: 4200 },
-  { id: "inbox", label: "One inbox", duration: 4000 },
   { id: "pipeline", label: "Pipeline", duration: 3800 },
+  { id: "inbox", label: "One inbox", duration: 4000 },
   { id: "connect", label: "Connections", duration: 3600 },
+  { id: "brief", label: "Vera's brief", duration: 4200 },
 ];
 
 const stats = [
@@ -46,6 +49,37 @@ function SparkleIcon({ size = 12 }: { size?: number }) {
     </svg>
   );
 }
+
+function KanbanIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="5" height="18" rx="1" /><rect x="9.5" y="3" width="5" height="18" rx="1" /><rect x="16" y="3" width="5" height="18" rx="1" />
+    </svg>
+  );
+}
+
+function ChatIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
+function PlugIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22v-5" /><path d="M9 8V2" /><path d="M15 8V2" /><path d="M18 8v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+    </svg>
+  );
+}
+
+const SCENE_ICON: Record<SceneId, (props: { size?: number }) => React.JSX.Element> = {
+  pipeline: KanbanIcon,
+  inbox: ChatIcon,
+  connect: PlugIcon,
+  brief: SparkleIcon,
+};
 
 function TypingDots() {
   return (
@@ -195,6 +229,7 @@ export function LiveDemo() {
   const reducedMotion = useRef(false);
   const scene = SCENES[sceneIndex];
   const Content = SCENE_CONTENT[scene.id];
+  const Icon = SCENE_ICON[scene.id];
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -233,7 +268,7 @@ export function LiveDemo() {
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06]">
           <div key={scene.id} className="flex items-center gap-2 animate-fade-in">
             <div className="w-5 h-5 rounded-[5px] bg-[#4A3FA8]/20 flex items-center justify-center">
-              <SparkleIcon size={11} />
+              <Icon size={11} />
             </div>
             <span className="text-[12px] font-semibold text-slate-700">{scene.label}</span>
           </div>
