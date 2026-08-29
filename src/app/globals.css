@@ -60,14 +60,22 @@
    the reset back to 0% is masked behind a brief opacity dip (or, for
    demo-hub-pulse, by starting and ending at the same scale) so looping
    never shows a visible "snap" back to the start position. */
+/* Position is animated via `transform: translate()` from a static cx/cy
+   (set as a plain attribute in JSX), not by animating cx/cy themselves.
+   Safari has long had incomplete support for animating raw SVG geometry
+   attributes (cx/cy/x/y) through CSS @keyframes -- opacity animates fine
+   there, but the position just never moves, so the dot sits fully visible
+   and motionless at its starting point instead of traveling. `transform`
+   is universally well-supported for CSS animation, including on SVG
+   elements, so translating is the cross-browser-safe way to move these. */
 @keyframes demo-pipeline-dot {
-  0%   { cx: 5;  opacity: 0; }
+  0%   { transform: translateX(0);  opacity: 0; }
   6%   { opacity: 1; }
-  42%  { cx: 50; opacity: 1; }
-  50%  { cx: 50; opacity: 1; }
-  86%  { cx: 95; opacity: 1; }
+  42%  { transform: translateX(45); opacity: 1; }
+  50%  { transform: translateX(45); opacity: 1; }
+  86%  { transform: translateX(90); opacity: 1; }
   94%  { opacity: 0; }
-  100% { cx: 5; opacity: 0; }
+  100% { transform: translateX(0); opacity: 0; }
 }
 /* Two small message "bubbles" instead of one plain dot -- a message going
    out (customer -> inbox) during the first half of the cycle, then a reply
@@ -76,10 +84,11 @@
    bouncing along a line. demo-msg-bubble-in runs the same shape in reverse,
    phase-shifted by half a cycle (via animation-delay) so the two never
    travel at the same time. */
-/* x endpoints (13, 81) center the 6-wide bubble at (16, 84) -- the same
-   node positions the connecting FlowLine below already uses, tuned to
-   actually reach the customer/inbox icons rather than stopping short in
-   the gap between the line and the circle, same reasoning as the
+/* Base x is 13 (out) or 81 (in) as a static attribute in JSX; translateX
+   here covers the same 68-unit gap to reach the other side (81-13=68) --
+   the same node positions the connecting FlowLine below already uses,
+   tuned to actually reach the customer/inbox icons rather than stopping
+   short in the gap between the line and the circle, same reasoning as the
    Connections hub above: the bubble travels and arrives at full opacity
    (40%), holds fully visible at the destination for a beat, and only
    fades out after that (40%-50%) -- not during the approach, which is
@@ -87,18 +96,18 @@
    bubble then sits invisible for the rest of its own cycle (50%-100%) so
    only one of the two bubbles is ever traveling at a time. */
 @keyframes demo-msg-bubble-out {
-  0%   { x: 13; opacity: 0; }
+  0%   { transform: translateX(0); opacity: 0; }
   8%   { opacity: 1; }
-  40%  { x: 81; opacity: 1; }
-  50%  { x: 81; opacity: 0; }
-  100% { x: 81; opacity: 0; }
+  40%  { transform: translateX(68); opacity: 1; }
+  50%  { transform: translateX(68); opacity: 0; }
+  100% { transform: translateX(68); opacity: 0; }
 }
 @keyframes demo-msg-bubble-in {
-  0%   { x: 81; opacity: 0; }
+  0%   { transform: translateX(0); opacity: 0; }
   8%   { opacity: 1; }
-  40%  { x: 13; opacity: 1; }
-  50%  { x: 13; opacity: 0; }
-  100% { x: 13; opacity: 0; }
+  40%  { transform: translateX(-68); opacity: 1; }
+  50%  { transform: translateX(-68); opacity: 0; }
+  100% { transform: translateX(-68); opacity: 0; }
 }
 /* cy travels from each provider's line origin (y:5, matching FlowLine's
    y1 in NetworkScene) down to the hub (y:27, matching FlowLine's y2) --
@@ -120,24 +129,24 @@
    instant and unnoticeable since the hub is already covering that screen
    position by then. */
 @keyframes demo-net-dot-1 {
-  0%   { cx: 10; cy: 5;  opacity: 0; }
+  0%   { transform: translate(0, 0); opacity: 0; }
   8%   { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 1; }
+  100% { transform: translate(40, 22); opacity: 1; }
 }
 @keyframes demo-net-dot-2 {
-  0%   { cx: 36; cy: 5;  opacity: 0; }
+  0%   { transform: translate(0, 0); opacity: 0; }
   8%   { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 1; }
+  100% { transform: translate(14, 22); opacity: 1; }
 }
 @keyframes demo-net-dot-3 {
-  0%   { cx: 64; cy: 5;  opacity: 0; }
+  0%   { transform: translate(0, 0); opacity: 0; }
   8%   { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 1; }
+  100% { transform: translate(-14, 22); opacity: 1; }
 }
 @keyframes demo-net-dot-4 {
-  0%   { cx: 90; cy: 5;  opacity: 0; }
+  0%   { transform: translate(0, 0); opacity: 0; }
   8%   { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 1; }
+  100% { transform: translate(-40, 22); opacity: 1; }
 }
 @keyframes demo-hub-pulse {
   0%, 60%, 100% { transform: scale(1); }
