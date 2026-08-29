@@ -92,11 +92,15 @@ const SCENE_ICON: Record<SceneId, (props: { size?: number }) => React.JSX.Elemen
   brief: SparkleIcon,
 };
 
-// A straight connector line that draws itself in, plus a small dot that
-// travels along it -- the two together are the "flow" motif reused (with
-// different node counts/paths) across every scene below.
-function FlowLine({ x1, y1, x2, y2, delay = 0 }: { x1: number; y1: number; x2: number; y2: number; delay?: number }) {
-  const length = Math.hypot(x2 - x1, y2 - y1);
+// A straight connector line, plus a small dot that travels along it -- the
+// two together are the "flow" motif reused (with different node
+// counts/paths) across every scene below. The line renders fully drawn from
+// the start -- it previously animated in with its own 900ms "draw" separate
+// from the scene's 650ms opacity crossfade, so the line was still only
+// partway drawn by the moment the scene had faded fully into view, which
+// read as a broken gap in the middle of the line rather than a line that
+// just hadn't arrived yet. The crossfade alone is enough of a reveal.
+function FlowLine({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number }) {
   return (
     <path
       d={`M ${x1} ${y1} L ${x2} ${y2}`}
@@ -106,11 +110,6 @@ function FlowLine({ x1, y1, x2, y2, delay = 0 }: { x1: number; y1: number; x2: n
       strokeWidth={1.5}
       vectorEffect="non-scaling-stroke"
       strokeLinecap="round"
-      style={{
-        strokeDasharray: length,
-        strokeDashoffset: length,
-        animation: `demo-draw-line 900ms ease-out ${delay}ms both`,
-      }}
     />
   );
 }
@@ -143,9 +142,9 @@ function FlowScene({ active }: SceneProps) {
       <p className="text-[13px] text-ud-text leading-relaxed mb-5">Every job, tracked automatically — from lead to paid.</p>
       <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
-          <FlowLine x1={7} y1={11} x2={50} y2={11} delay={150} />
-          <FlowLine x1={50} y1={11} x2={93} y2={11} delay={650} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-pipeline-dot 2400ms ease-in-out infinite" : "none" }} />
+          <FlowLine x1={7} y1={11} x2={50} y2={11} />
+          <FlowLine x1={50} y1={11} x2={93} y2={11} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-pipeline-dot 3200ms ease-in-out infinite" : "none" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           {nodes.map((n, i) => (
@@ -174,8 +173,8 @@ function PingScene({ active }: SceneProps) {
       <p className="text-[13px] text-ud-text leading-relaxed mb-5">Every text and email, one thread — nothing lost in someone&apos;s phone.</p>
       <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
-          <FlowLine x1={16} y1={11} x2={84} y2={11} delay={100} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-ping-dot 1900ms ease-in-out infinite" : "none" }} />
+          <FlowLine x1={16} y1={11} x2={84} y2={11} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-ping-dot 2800ms ease-in-out infinite" : "none" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           <div className="flex flex-col items-center gap-2 animate-fade-up">
@@ -222,18 +221,18 @@ function NetworkScene({ active }: SceneProps) {
       </div>
       <div className="relative" style={{ aspectRatio: "100 / 30" }}>
         <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
-          <FlowLine x1={10} y1={5} x2={50} y2={27} delay={0} />
-          <FlowLine x1={36} y1={5} x2={50} y2={27} delay={150} />
-          <FlowLine x1={64} y1={5} x2={50} y2={27} delay={300} />
-          <FlowLine x1={90} y1={5} x2={50} y2={27} delay={450} />
+          <FlowLine x1={10} y1={5} x2={50} y2={27} />
+          <FlowLine x1={36} y1={5} x2={50} y2={27} />
+          <FlowLine x1={64} y1={5} x2={50} y2={27} />
+          <FlowLine x1={90} y1={5} x2={50} y2={27} />
           {dotAnimations.map((anim, i) => (
-            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: active ? `${anim} 1500ms ease-in-out ${i * 260}ms infinite` : "none" }} />
+            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: active ? `${anim} 2400ms ease-in-out ${i * 320}ms infinite` : "none" }} />
           ))}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div
             className="w-11 h-11 rounded-full bg-ud-accent flex items-center justify-center shadow-[0_8px_24px_rgba(74,63,168,0.4)]"
-            style={{ animation: active ? "demo-hub-pulse 2000ms ease-in-out infinite" : "none" }}
+            style={{ animation: active ? "demo-hub-pulse 2600ms ease-in-out infinite" : "none" }}
           >
             <PlugIcon size={16} />
           </div>
@@ -258,7 +257,7 @@ function InsightScene({ active }: SceneProps) {
   return (
     <div className="animate-fade-in text-center">
       <div className="relative mx-auto mb-4 w-12 h-12">
-        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: active ? "demo-ping-ring 2200ms ease-out infinite" : "none" }} />
+        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: active ? "demo-ping-ring 2800ms ease-out infinite" : "none" }} />
         <div
           className="relative w-12 h-12 rounded-full bg-ud-surface border border-ud-accent/30 shadow-ud flex items-center justify-center"
           style={{ animation: active ? "demo-node-breathe 2600ms ease-in-out infinite" : "none" }}

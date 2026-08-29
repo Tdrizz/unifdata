@@ -55,12 +55,6 @@
   20%  { opacity: 1; }
   100% { opacity: 0; }
 }
-/* Generic SVG line "draw-in" -- the starting stroke-dashoffset is set
-   inline per-path (it depends on that path's own length), this keyframe
-   just always animates it down to 0 regardless of length. */
-@keyframes demo-draw-line {
-  to { stroke-dashoffset: 0; }
-}
 /* Every dot/pulse below loops for as long as its scene is on screen
    instead of playing once and sitting frozen for the rest of the dwell --
    the reset back to 0% is masked behind a brief opacity dip (or, for
@@ -79,29 +73,35 @@
   0%, 100% { cx: 15; }
   50%      { cx: 85; }
 }
+/* cy travels from each provider's line origin (y:5, matching FlowLine's
+   y1 in NetworkScene) down to the hub (y:27, matching FlowLine's y2) --
+   this previously ended at cy:85, far below the 30-unit-tall viewBox, so
+   each dot traveled out of the visible box (and got clipped) well before
+   ever visibly reaching the hub, which is what read as the motion not
+   "flowing" into place. */
 @keyframes demo-net-dot-1 {
-  0%   { cx: 10; cy: 8;  opacity: 0; }
+  0%   { cx: 10; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
   92%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 0; }
 }
 @keyframes demo-net-dot-2 {
-  0%   { cx: 36; cy: 8;  opacity: 0; }
+  0%   { cx: 36; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
   92%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 0; }
 }
 @keyframes demo-net-dot-3 {
-  0%   { cx: 64; cy: 8;  opacity: 0; }
+  0%   { cx: 64; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
   92%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 0; }
 }
 @keyframes demo-net-dot-4 {
-  0%   { cx: 90; cy: 8;  opacity: 0; }
+  0%   { cx: 90; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
   92%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 0; }
 }
 @keyframes demo-hub-pulse {
   0%, 60%, 100% { transform: scale(1); }
