@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripQuotedReply, htmlToPlainText } from "@/app/api/webhooks/resend/route";
+import { stripQuotedReply, htmlToPlainText } from "@/lib/email/inbound-format";
 
 describe("stripQuotedReply", () => {
   it("cuts a Gmail-style quoted trailer, keeping the new text and signature", () => {
