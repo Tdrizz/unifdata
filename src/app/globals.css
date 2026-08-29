@@ -61,41 +61,47 @@
 @keyframes demo-draw-line {
   to { stroke-dashoffset: 0; }
 }
+/* Every dot/pulse below loops for as long as its scene is on screen
+   instead of playing once and sitting frozen for the rest of the dwell --
+   the reset back to 0% is masked behind a brief opacity dip (or, for
+   demo-hub-pulse, by starting and ending at the same scale) so looping
+   never shows a visible "snap" back to the start position. */
 @keyframes demo-pipeline-dot {
   0%   { cx: 5;  opacity: 0; }
-  8%   { opacity: 1; }
-  45%  { cx: 50; opacity: 1; }
-  55%  { cx: 50; opacity: 1; }
-  92%  { cx: 95; opacity: 1; }
-  100% { cx: 95; opacity: 0; }
+  6%   { opacity: 1; }
+  42%  { cx: 50; opacity: 1; }
+  50%  { cx: 50; opacity: 1; }
+  86%  { cx: 95; opacity: 1; }
+  94%  { opacity: 0; }
+  100% { cx: 5; opacity: 0; }
 }
 @keyframes demo-ping-dot {
-  0%   { cx: 15; opacity: 0; }
-  8%   { opacity: 1; }
-  40%  { cx: 85; opacity: 1; }
-  55%  { cx: 85; opacity: 1; }
-  85%  { cx: 15; opacity: 1; }
-  100% { cx: 15; opacity: 1; }
+  0%, 100% { cx: 15; }
+  50%      { cx: 85; }
 }
 @keyframes demo-net-dot-1 {
   0%   { cx: 10; cy: 8;  opacity: 0; }
-  10%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 1; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { cx: 50; cy: 85; opacity: 0; }
 }
 @keyframes demo-net-dot-2 {
   0%   { cx: 36; cy: 8;  opacity: 0; }
-  10%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 1; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { cx: 50; cy: 85; opacity: 0; }
 }
 @keyframes demo-net-dot-3 {
   0%   { cx: 64; cy: 8;  opacity: 0; }
-  10%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 1; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { cx: 50; cy: 85; opacity: 0; }
 }
 @keyframes demo-net-dot-4 {
   0%   { cx: 90; cy: 8;  opacity: 0; }
-  10%  { opacity: 1; }
-  100% { cx: 50; cy: 85; opacity: 1; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { cx: 50; cy: 85; opacity: 0; }
 }
 @keyframes demo-hub-pulse {
   0%, 60%, 100% { transform: scale(1); }
@@ -104,6 +110,13 @@
 @keyframes demo-ping-ring {
   0%   { transform: scale(1); opacity: 0.55; }
   100% { transform: scale(2.3); opacity: 0; }
+}
+/* A very subtle continuous scale pulse on the node/stat circles so they
+   still read as "alive" during the stretch between one traveling dot and
+   the next, not just frozen shapes waiting for the line animation. */
+@keyframes demo-node-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.045); }
 }
 @keyframes modal-enter {
   from { opacity: 0; transform: scale(0.98) translateY(4px); }

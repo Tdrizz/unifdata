@@ -130,16 +130,19 @@ function FlowScene() {
   return (
     <div className="animate-fade-in">
       <p className="text-[13px] text-ud-text leading-relaxed mb-5">Every job, tracked automatically — from lead to paid.</p>
-      <div className="relative h-[110px]">
+      <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={7} y1={11} x2={50} y2={11} delay={150} />
           <FlowLine x1={50} y1={11} x2={93} y2={11} delay={650} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-pipeline-dot 2600ms ease-in-out both" }} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-pipeline-dot 2400ms ease-in-out infinite" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           {nodes.map((n, i) => (
             <div key={n.label} className="flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: `${i * 150}ms` }}>
-              <div className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center">
+              <div
+                className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
+                style={{ animation: `demo-node-breathe 2800ms ease-in-out ${i * 250}ms infinite` }}
+              >
                 <span className="text-[17px] font-bold tabular-nums text-ud-ink">{n.value}</span>
               </div>
               <span className="text-[9.5px] font-semibold uppercase tracking-[0.05em] text-ud-muted">{n.label}</span>
@@ -158,20 +161,26 @@ function PingScene() {
   return (
     <div className="animate-fade-in">
       <p className="text-[13px] text-ud-text leading-relaxed mb-5">Every text and email, one thread — nothing lost in someone&apos;s phone.</p>
-      <div className="relative h-[110px]">
+      <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={16} y1={11} x2={84} y2={11} delay={100} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-ping-dot 3400ms ease-in-out both" }} />
+          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: "demo-ping-dot 1900ms ease-in-out infinite" }} />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           <div className="flex flex-col items-center gap-2 animate-fade-up">
-            <div className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center">
+            <div
+              className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
+              style={{ animation: "demo-node-breathe 2800ms ease-in-out infinite" }}
+            >
               <ChatIcon size={18} />
             </div>
             <span className="text-[9.5px] font-semibold uppercase tracking-[0.05em] text-ud-muted">Customer</span>
           </div>
           <div className="flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: "150ms" }}>
-            <div className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center">
+            <div
+              className="w-14 h-14 rounded-full bg-ud-surface border-2 border-ud-accent/25 shadow-ud flex items-center justify-center"
+              style={{ animation: "demo-node-breathe 2800ms ease-in-out 950ms infinite" }}
+            >
               <MailIcon size={18} />
             </div>
             <span className="text-[9.5px] font-semibold uppercase tracking-[0.05em] text-ud-muted">Your inbox</span>
@@ -200,20 +209,20 @@ function NetworkScene() {
           </span>
         ))}
       </div>
-      <div className="relative h-[130px]">
-        <svg viewBox="0 0 100 95" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
-          <FlowLine x1={10} y1={8} x2={50} y2={85} delay={0} />
-          <FlowLine x1={36} y1={8} x2={50} y2={85} delay={150} />
-          <FlowLine x1={64} y1={8} x2={50} y2={85} delay={300} />
-          <FlowLine x1={90} y1={8} x2={50} y2={85} delay={450} />
+      <div className="relative" style={{ aspectRatio: "100 / 30" }}>
+        <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
+          <FlowLine x1={10} y1={5} x2={50} y2={27} delay={0} />
+          <FlowLine x1={36} y1={5} x2={50} y2={27} delay={150} />
+          <FlowLine x1={64} y1={5} x2={50} y2={27} delay={300} />
+          <FlowLine x1={90} y1={5} x2={50} y2={27} delay={450} />
           {dotAnimations.map((anim, i) => (
-            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: `${anim} 1300ms ease-in-out ${i * 220}ms both` }} />
+            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: `${anim} 1500ms ease-in-out ${i * 260}ms infinite` }} />
           ))}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div
             className="w-11 h-11 rounded-full bg-ud-accent flex items-center justify-center shadow-[0_8px_24px_rgba(74,63,168,0.4)]"
-            style={{ animation: "demo-hub-pulse 2000ms ease-in-out 900ms both" }}
+            style={{ animation: "demo-hub-pulse 2000ms ease-in-out infinite" }}
           >
             <PlugIcon size={16} />
           </div>
@@ -239,7 +248,10 @@ function InsightScene() {
     <div className="animate-fade-in text-center">
       <div className="relative mx-auto mb-4 w-12 h-12">
         <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: "demo-ping-ring 2200ms ease-out infinite" }} />
-        <div className="relative w-12 h-12 rounded-full bg-ud-surface border border-ud-accent/30 shadow-ud flex items-center justify-center">
+        <div
+          className="relative w-12 h-12 rounded-full bg-ud-surface border border-ud-accent/30 shadow-ud flex items-center justify-center"
+          style={{ animation: "demo-node-breathe 2600ms ease-in-out infinite" }}
+        >
           <SparkleIcon size={18} />
         </div>
       </div>
@@ -247,7 +259,10 @@ function InsightScene() {
       <div className="flex items-center justify-center gap-3">
         {tiles.map((t, i) => (
           <div key={t.label} className="flex flex-col items-center gap-1.5 animate-fade-up" style={{ animationDelay: `${300 + i * 100}ms` }}>
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 shadow-ud ${t.urgent ? "border-red-200 bg-red-50/60" : "border-ud-accent/20 bg-ud-surface"}`}>
+            <div
+              className={`w-14 h-14 rounded-full flex items-center justify-center border-2 shadow-ud ${t.urgent ? "border-red-200 bg-red-50/60" : "border-ud-accent/20 bg-ud-surface"}`}
+              style={{ animation: `demo-node-breathe 2800ms ease-in-out ${i * 220}ms infinite` }}
+            >
               <span className={`text-[13px] font-bold tabular-nums ${t.urgent ? "text-red-600" : "text-ud-ink"}`}>{t.value}</span>
             </div>
             <span className="text-[9px] font-semibold uppercase tracking-[0.05em] text-ud-muted">{t.label}</span>
