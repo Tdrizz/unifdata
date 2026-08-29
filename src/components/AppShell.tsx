@@ -58,6 +58,11 @@ export async function AppShell({
           .select("unread_count")
           .eq("organization_id", companyId)
           .gt("unread_count", 0)
+          // A deleted conversation's unread_count isn't reset -- without
+          // this, the nav badge shows a phantom unread count that can
+          // never clear, since the inbox itself never shows the thread to
+          // open and mark it read.
+          .is("archived_at", null)
       : Promise.resolve({ data: [] }),
   ]);
 
