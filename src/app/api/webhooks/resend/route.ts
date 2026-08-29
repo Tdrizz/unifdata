@@ -4,28 +4,9 @@ import { Resend } from "resend";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { setOrgScope } from "@/lib/supabase/org-scope";
 import { normalizeEmail } from "@/lib/normalize";
+import { htmlToPlainText, stripQuotedReply } from "@/lib/email/inbound-format";
 
 export const runtime = "nodejs";
-
-// Good-enough HTML -> plain text for storing/previewing an inbound email
-// whose text field came back empty -- not meant to be a faithful render,
-// just readable instead of blank.
-function htmlToPlainText(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
 
 // Inbound email, via Resend's webhooks-based receiving feature. The
 // predecessor to this (the Mailgun webhook) only ever wrote to
@@ -128,7 +109,8 @@ export async function POST(request: Request) {
   if (fetchError) {
     console.error("[resend.webhook] Could not fetch email body", { emailId, error: fetchError });
   }
-  const bodyText = fullEmail?.text?.trim() || htmlToPlainText(fullEmail?.html ?? "");
+  const rawBodyText = fullEmail?.text?.trim() || htmlToPlainText(fullEmail?.html ?? "");
+  const bodyText = stripQuotedReply(rawBodyText);
 
   const { data: existingThread } = await (supabase as any)
     .from("communications")
