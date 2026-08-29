@@ -33,3 +33,31 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+// Marks a thread read (unread_count -> 0). Same client-side-RLS-can't-see-
+// anything reason as the messages route: this used to be a direct client
+// update through the anon-key browser client, which silently affected zero
+// rows every time.
+export async function PATCH(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: threadId } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const currentCompany = await getCurrentCompany();
+  if (!currentCompany) return NextResponse.json({ error: "No company" }, { status: 403 });
+  const { company } = currentCompany;
+
+  const { error } = await (supabase as any)
+    .from("communications")
+    .update({ unread_count: 0 })
+    .eq("id", threadId)
+    .eq("organization_id", company.id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true });
+}

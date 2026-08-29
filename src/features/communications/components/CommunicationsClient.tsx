@@ -1,8 +1,6 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect, useRef, useTransition } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 type Thread = {
   id: string;
@@ -132,71 +130,43 @@ export function CommunicationsClient({
   const [isDeletingThread, setIsDeletingThread] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
 
   const selectedThread = threads.find((t) => t.id === selectedId) ?? null;
 
-  // Load messages when thread changes
+  // Load messages when thread changes, then poll for new ones. This used to
+  // be a direct client-side Supabase query plus a postgres_changes realtime
+  // subscription -- neither could ever work, because the browser's Supabase
+  // client (src/lib/supabase/client.ts) has no real session (this app's
+  // identity system is Clerk, not Supabase Auth), so auth.uid() is always
+  // null and RLS silently returns zero rows to it no matter what's actually
+  // in the table. Fetching through api/communications/[id]/messages (a
+  // server route using the same verified-then-admin-client pattern every
+  // other route here uses) instead of Supabase directly is what actually
+  // works; polling is a plain, reliable stand-in for the realtime updates
+  // that in practice were never being delivered.
   useEffect(() => {
     if (!selectedId) return;
     let cancelled = false;
 
     async function loadMessages() {
-      const { data } = await (supabase as any)
-        .from("communication_messages")
-        .select("id, communication_id, direction, body, status, sent_at")
-        .eq("communication_id", selectedId)
-        .order("sent_at", { ascending: true });
-      // Ignore a stale fetch that resolves after a newer one started (this
-      // effect is known to sometimes run twice for the same thread -- see
-      // the stale-channel guard right below). Without this, an old
-      // response landing late can overwrite messages a user just sent with
-      // pre-send data, making the message they just typed appear to vanish.
-      if (!cancelled) setMessages(data ?? []);
+      try {
+        const res = await fetch(`/api/communications/${selectedId}/messages`);
+        if (res.ok && !cancelled) {
+          setMessages(await res.json());
+        }
+      } catch {
+        // Best-effort -- the next poll tick will retry.
+      }
     }
 
     loadMessages();
-
-    // supabase.channel(topic) reuses an existing channel instance if one
-    // with the same topic hasn't been torn down yet, and calling .on() on a
-    // channel that's already subscribed throws -- uncaught inside a
-    // useEffect, that crashes the whole page (React's nearest error
-    // boundary catches it, which is what "Something went wrong" was). Clear
-    // out any stale channel for this thread first so a fast
-    // remount/re-render of this effect can't hit that race.
-    const topic = `comm-${selectedId}`;
-    const stale = supabase.getChannels().find((c) => c.topic === `realtime:${topic}`);
-    if (stale) {
-      supabase.removeChannel(stale);
-    }
-
-    // Real-time subscription
-    const channel = supabase
-      .channel(topic)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "communication_messages",
-          filter: `communication_id=eq.${selectedId}`,
-        },
-        (payload) => {
-          const inserted = payload.new as Message;
-          // The send routes already append the message they just inserted
-          // optimistically -- without this check, the realtime event for
-          // that same row lands a second time right behind it.
-          setMessages((prev) => (prev.some((m) => m.id === inserted.id) ? prev : [...prev, inserted]));
-        }
-      )
-      .subscribe();
+    const interval = setInterval(loadMessages, 4000);
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
-  }, [selectedId, supabase]);
+  }, [selectedId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -209,11 +179,8 @@ export function CommunicationsClient({
     setThreads((prev) =>
       prev.map((t) => (t.id === selectedId ? { ...t, unread_count: 0 } : t))
     );
-    void (supabase as any)
-      .from("communications")
-      .update({ unread_count: 0 })
-      .eq("id", selectedId);
-  }, [selectedId, supabase]);
+    void fetch(`/api/communications/${selectedId}`, { method: "PATCH" });
+  }, [selectedId]);
 
   // Switching threads shouldn't carry over an in-progress delete confirmation
   useEffect(() => {

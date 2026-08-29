@@ -1,8 +1,6 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 type Message = {
   id: string;
@@ -27,9 +25,13 @@ function formatMessageTime(iso: string): string {
 
 export function ContactCommunicationsTab({
   contactId,
-  orgId,
+  orgId: _orgId,
 }: {
   contactId: string;
+  // Kept for call-site compatibility (ContactTabs passes it to every tab) --
+  // org scoping now happens server-side in api/communications/by-contact,
+  // derived from the authenticated session rather than trusted from a
+  // client-side prop.
   orgId: string;
 }) {
   const [thread, setThread] = useState<Thread | null | undefined>(undefined);
@@ -37,35 +39,24 @@ export function ContactCommunicationsTab({
 
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
 
     async function load() {
-      const { data: threadRow } = await (supabase as any)
-        .from("communications")
-        .select("id, contact_phone")
-        .eq("organization_id", orgId)
-        .eq("contact_id", contactId)
-        .maybeSingle();
-
-      if (cancelled) return;
-      const foundThread = (threadRow as Thread | null) ?? null;
-      setThread(foundThread);
-      if (!foundThread) return;
-
-      const { data: messageRows } = await (supabase as any)
-        .from("communication_messages")
-        .select("id, direction, body, sent_at")
-        .eq("communication_id", foundThread.id)
-        .order("sent_at", { ascending: true });
-
-      if (!cancelled) setMessages((messageRows as Message[]) ?? []);
+      try {
+        const res = await fetch(`/api/communications/by-contact?contact_id=${encodeURIComponent(contactId)}`);
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { thread: Thread | null; messages: Message[] };
+        setThread(data.thread);
+        setMessages(data.messages);
+      } catch {
+        if (!cancelled) setThread(null);
+      }
     }
 
     load();
     return () => {
       cancelled = true;
     };
-  }, [contactId, orgId]);
+  }, [contactId]);
 
   if (thread === undefined) {
     return (
