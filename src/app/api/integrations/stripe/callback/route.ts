@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { finalizeIntegrationResponse } from "@/lib/integrations/popup-response";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
@@ -6,7 +7,7 @@ import { exchangeStripeCode } from "@/lib/integrations/stripe";
 
 const SYNC_RECORD_TYPES = ["relationships", "revenue"] as const;
 
-export async function GET(request: Request) {
+async function handleCallback(request: Request): Promise<NextResponse> {
   try {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -123,4 +124,8 @@ export async function GET(request: Request) {
     console.error("[stripe-callback]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+export async function GET(request: Request): Promise<NextResponse> {
+  const response = await handleCallback(request);
+  return finalizeIntegrationResponse(request, response, "stripe");
 }
