@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { aiRouter, AI_MODELS } from "@/lib/ai/router";
 import { rateLimit } from "@/lib/rate-limit";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { logWorkerFailure } from "@/lib/agents/log-failure";
 import type { NormalizedPayload, ScoredMatch, DataKeeperAction } from "./types";
 
 const SYSTEM_PROMPT = `You are a data reconciliation assistant for a CRM platform. Your job is to decide whether an incoming customer record should be automatically merged with an existing record, staged as a proposal for human review, or ignored.
@@ -86,11 +88,22 @@ export async function aiRefinement(
     const parsed = JSON.parse(text);
     return AiRefinementResponseSchema.parse(parsed);
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("[data-keeper.ai-refinement] AI call failed, falling back to deterministic reasoning", err);
     Sentry.captureException(err, {
       tags: { module: "data-keeper", phase: "ai-refinement" },
       extra: { organizationId },
     });
+    // Vercel's log retention is short and this runs inside a cron-drained
+    // queue job, not a request a person is watching live -- by the time
+    // anyone goes looking for why a proposal fell back to "AI unavailable",
+    // the console line above is usually already gone. Writing it to
+    // agent_logs makes it durably visible on /admin/ai-health instead.
+    try {
+      await logWorkerFailure(createAdminClient(), organizationId, "data-keeper-ai-refinement", message);
+    } catch {
+      // Best-effort -- don't let failure-logging itself break the fallback.
+    }
     return null;
   }
 }
