@@ -60,7 +60,7 @@ export default function HomePage() {
               </Link>
             </div>
             <p className="animate-fade-up [animation-delay:240ms] mt-5 text-[12.5px] text-slate-500">
-              $300 setup · $100/month · No contracts
+              $100/month · No setup fee · No contracts
             </p>
           </div>
 
@@ -146,20 +146,13 @@ export default function HomePage() {
           <div className="max-w-lg mx-auto text-center mb-12">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Pricing</p>
             <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em] mb-4">One price.<br />Everything included.</h2>
-            <p className="text-[16px] text-slate-400 leading-[1.75]">No tiers. No feature gating. No contracts. Pay once to get set up — then $100 a month, cancel any time.</p>
+            <p className="text-[16px] text-slate-400 leading-[1.75]">No tiers. No feature gating. No contracts. No setup fee — just $100 a month, cancel any time.</p>
           </div>
           <div className="mx-auto max-w-md rounded-[24px] border border-white/12 bg-white/[0.05] p-10">
-            <div className="grid grid-cols-2 gap-6 mb-8">
-              <div className="text-center">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">Setup</p>
-                <p className="text-[52px] font-semibold leading-none tabular-nums">$300</p>
-                <p className="text-[12.5px] text-slate-400 mt-1.5">one time</p>
-              </div>
-              <div className="text-center border-l border-white/[0.08] pl-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">Monthly</p>
-                <p className="text-[52px] font-semibold leading-none tabular-nums">$100</p>
-                <p className="text-[12.5px] text-slate-400 mt-1.5">per month</p>
-              </div>
+            <div className="text-center mb-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">Monthly</p>
+              <p className="text-[64px] font-semibold leading-none tabular-nums">$100</p>
+              <p className="text-[12.5px] text-slate-400 mt-2">per month · no setup fee</p>
             </div>
             <div className="h-px bg-white/[0.08] mb-7" />
             <ul className="space-y-2.5 mb-8">
@@ -190,7 +183,7 @@ export default function HomePage() {
           <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(74,63,168,0.45)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
             Book a free demo
           </a>
-          <p className="mt-4 text-[12.5px] text-slate-500">$300 setup · $100/month · No contracts</p>
+          <p className="mt-4 text-[12.5px] text-slate-500">$100/month · No setup fee · No contracts</p>
         </div>
       </section>
 

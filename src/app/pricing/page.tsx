@@ -5,7 +5,7 @@ import { DEMO_FORM_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Pricing — UnifData",
-  description: "One setup fee, one flat monthly rate. No tiers, no feature gating, no contracts.",
+  description: "One flat monthly rate, no setup fee. No tiers, no feature gating, no contracts.",
 };
 
 const included = [
@@ -21,12 +21,12 @@ const included = [
 
 const faqs = [
   {
-    q: "What's included in the $300 setup fee?",
-    a: "A hands-on onboarding session where we configure your workspace, import your existing data, connect your integrations, and walk you through the app with your real customers and jobs. You're not left to figure it out yourself.",
+    q: "What happens on the setup call?",
+    a: "A hands-on onboarding session where we configure your workspace, import your existing data, connect your integrations, and walk you through the app with your real customers and jobs. It's free — you're not left to figure it out yourself, and there's no separate fee for it.",
   },
   {
     q: "When do I get charged?",
-    a: "The $300 setup fee is charged once after the demo call if you decide to move forward. Your first $100 monthly payment starts 30 days after your workspace goes live.",
+    a: "Nothing on the demo call itself. Your first $100 monthly payment starts 30 days after your workspace goes live.",
   },
   {
     q: "Is there a free trial?",
@@ -54,22 +54,15 @@ export default function PricingPage() {
       <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-4">Pricing</p>
         <h1 className="text-[52px] sm:text-[64px] font-semibold leading-[1.05] tracking-[-0.03em] mb-5">One price.<br />Everything included.</h1>
-        <p className="mx-auto max-w-lg text-[17px] leading-[1.75] text-slate-400">No tiers. No feature gating. No contracts. Pay once to get set up — then $100 a month, cancel any time.</p>
+        <p className="mx-auto max-w-lg text-[17px] leading-[1.75] text-slate-400">No tiers. No feature gating. No contracts. No setup fee — just $100 a month, cancel any time.</p>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">
         <div className="mx-auto max-w-lg rounded-[24px] border border-white/12 bg-white/[0.05] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.4)]">
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 mb-8">
-            <div className="text-center min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">Setup</p>
-              <p className="text-[38px] sm:text-[60px] font-semibold leading-none tabular-nums">$300</p>
-              <p className="text-[13px] text-slate-400 mt-2">one time</p>
-            </div>
-            <div className="text-center min-w-0 border-l border-white/[0.08] pl-3 sm:pl-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">Monthly</p>
-              <p className="text-[38px] sm:text-[60px] font-semibold leading-none tabular-nums">$100</p>
-              <p className="text-[13px] text-slate-400 mt-2">per month</p>
-            </div>
+          <div className="text-center mb-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-3">Monthly</p>
+            <p className="text-[60px] sm:text-[76px] font-semibold leading-none tabular-nums">$100</p>
+            <p className="text-[13px] text-slate-400 mt-2">per month · no setup fee</p>
           </div>
           <div className="h-px bg-white/[0.08] mb-8" />
           <ul className="space-y-3 mb-9">
@@ -133,7 +126,7 @@ export default function PricingPage() {
           <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-8 py-4 text-[15px] font-semibold text-white shadow-[0_8px_32px_rgba(74,63,168,0.45)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
             Book a free demo
           </a>
-          <p className="mt-4 text-[12.5px] text-slate-500">$300 setup · $100/month · No contracts</p>
+          <p className="mt-4 text-[12.5px] text-slate-500">$100/month · No setup fee · No contracts</p>
         </div>
       </section>
 
