@@ -1,54 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import { PublicNav } from "@/components/PublicNav";
+import { LiveDemo } from "@/components/marketing/LiveDemo";
 import { DEMO_FORM_URL } from "@/lib/constants";
-
-const industries = [
-  {
-    label: "Home services",
-    brief: "Good morning. Here's what needs your attention.",
-    stats: [
-      { label: "Follow-ups due", value: "4", urgent: true },
-      { label: "Open quotes", value: "$12.4k", urgent: false },
-      { label: "Unpaid work", value: "$3.8k", urgent: true },
-      { label: "Active jobs", value: "7", urgent: false },
-    ],
-    actions: [
-      { type: "draft", text: "Follow-up with David Reyes — roof quote sent 8 days ago, no response.", cta: "Send follow-up" },
-      { type: "alert", text: "Marcus Webb's water heater job completed 5 weeks ago. Invoice still unpaid ($1,400)." },
-    ],
-  },
-  {
-    label: "Construction",
-    brief: "Good morning. Here's what needs your attention.",
-    stats: [
-      { label: "Pending estimates", value: "3", urgent: true },
-      { label: "Active projects", value: "$18.2k", urgent: false },
-      { label: "Unpaid work", value: "$6.1k", urgent: true },
-      { label: "Scheduled jobs", value: "5", urgent: false },
-    ],
-    actions: [
-      { type: "draft", text: "Check in with Apex Realty — roofing estimate open for 12 days.", cta: "Send check-in" },
-      { type: "alert", text: "2 project records are missing completed dates. Revenue may be understated." },
-    ],
-  },
-  {
-    label: "Professional services",
-    brief: "Good morning. Here's what needs your attention.",
-    stats: [
-      { label: "Open proposals", value: "3", urgent: true },
-      { label: "Active projects", value: "$15.8k", urgent: false },
-      { label: "Unpaid invoices", value: "$5.2k", urgent: true },
-      { label: "Data health", value: "93%", urgent: false },
-    ],
-    actions: [
-      { type: "draft", text: "Follow up with Greenfield Partners — proposal sent 14 days ago.", cta: "Send follow-up" },
-      { type: "alert", text: "One client file is missing a primary contact email." },
-    ],
-  },
-];
 
 const howItWorks = [
   {
@@ -64,16 +17,13 @@ const howItWorks = [
   {
     step: "03",
     title: "You make the calls",
-    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment. Vera does the thinking. You make the decisions.",
+    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment — or reply to a text or email right from the same inbox. Vera does the thinking. You make the decisions.",
   },
 ];
 
 const integrations = ["QuickBooks", "Jobber", "HubSpot", "Square", "Google Sheets", "CSV"];
 
 export default function HomePage() {
-  const [activeIndustry, setActiveIndustry] = useState(0);
-  const industry = industries[activeIndustry];
-
   return (
     <main className="min-h-screen bg-[#090e1a] text-white antialiased">
       <PublicNav />
@@ -114,76 +64,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Industry picker + Vera mock */}
+          {/* Live, looping product demo — real UI, no video file */}
           <div className="mt-16 animate-fade-up [animation-delay:300ms]">
-            <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {industries.map((ind, i) => (
-                <button
-                  key={ind.label}
-                  onClick={() => setActiveIndustry(i)}
-                  className={`rounded-full border px-4 py-1.5 text-[13px] font-medium transition-all duration-150 active:scale-[0.96] ${
-                    activeIndustry === i
-                      ? "border-white/30 bg-white text-slate-950"
-                      : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/20 hover:text-white"
-                  }`}
-                >
-                  {ind.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="mx-auto max-w-2xl rounded-[24px] border border-white/10 bg-white/[0.04] p-2 shadow-[0_32px_80px_rgba(0,0,0,0.5)]">
-              <div className="rounded-[18px] bg-[#f6f5f2] overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-black/[0.06]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-[5px] bg-[#4A3FA8]/20 flex items-center justify-center">
-                      <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-                      </svg>
-                    </div>
-                    <span className="text-[12px] font-semibold text-slate-700">Vera</span>
-                  </div>
-                  <span className="text-[11px] text-slate-400">Today</span>
-                </div>
-
-                <div className="px-5 py-4">
-                  <div className="flex gap-3 mb-4">
-                    <div className="w-7 h-7 rounded-full bg-[#4A3FA8]/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#4A3FA8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
-                      </svg>
-                    </div>
-                    <p className="text-[13px] text-slate-700 leading-relaxed">{industry.brief}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                    {industry.stats.map((stat) => (
-                      <div key={stat.label} className={`rounded-[10px] border p-3 ${stat.urgent ? "border-red-200/60 bg-red-50/60" : "border-black/[0.06] bg-white"}`}>
-                        <p className="text-[10px] font-medium text-slate-500 mb-1 leading-tight">{stat.label}</p>
-                        <p className={`text-[18px] font-bold tabular-nums leading-none ${stat.urgent ? "text-red-600" : "text-slate-900"}`}>{stat.value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    {industry.actions.map((action, i) => (
-                      <div key={i} className={`rounded-[10px] border p-3.5 ${action.type === "draft" ? "border-[#4A3FA8]/20 bg-[#4A3FA8]/[0.04]" : "border-black/[0.06] bg-white"}`}>
-                        <p className="text-[12px] text-slate-700 leading-relaxed mb-2.5">{action.text}</p>
-                        {action.type === "draft" && action.cta && (
-                          <div className="flex gap-2">
-                            <div className="rounded-[7px] bg-[#4A3FA8] px-3 py-1.5 text-[11.5px] font-semibold text-white">{action.cta}</div>
-                            <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500">Skip</div>
-                          </div>
-                        )}
-                        {action.type === "alert" && (
-                          <div className="rounded-[7px] border border-black/[0.08] bg-white px-3 py-1.5 text-[11.5px] font-semibold text-slate-500 inline-flex">Got it</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LiveDemo />
           </div>
         </div>
       </section>
@@ -239,6 +122,7 @@ export default function HomePage() {
             <div className="space-y-3">
               {[
                 { icon: "📬", title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. You approve or skip — nothing sends until you say so, unless you switch on auto-send yourself." },
+                { icon: "💬", title: "Texting and email, in one inbox", body: "Every reply — text or email — lands in one thread tied to that customer's record. Nothing gets lost in someone's personal phone." },
                 { icon: "⚠️", title: "Revenue alerts", body: "Flags unpaid invoices, stalling jobs, and revenue drops before they become problems." },
                 { icon: "🔁", title: "Runs every night", body: "The briefing refreshes automatically. You start every morning knowing exactly where things stand." },
                 { icon: "🎯", title: "Adapts to your business", body: "Vera learns your patterns. The longer you use it, the better its prioritization gets." },
