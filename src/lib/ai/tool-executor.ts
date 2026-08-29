@@ -4,6 +4,11 @@ import { verifyOwned } from "@/lib/security/ownership";
 import { runSweeperBatch } from "@/lib/data-keeper/sweeper";
 import { runDataQualityWorker } from "@/lib/agents/workers/data-quality-worker";
 import { createChatTrace } from "@/lib/observability/tracing";
+import { normalizePhone } from "@/lib/crm/phone";
+import { sendSms } from "@/lib/messaging/sms";
+import { sendEmail } from "@/lib/messaging/email";
+import { recordOutboundMessage } from "@/lib/messaging/record-outbound-message";
+import { rateLimit } from "@/lib/rate-limit";
 import {
   isAcceptedOpportunityStatus,
   syncAcceptedOpportunity,
@@ -101,6 +106,13 @@ const FlagForReviewSchema = z.object({
   record_type: z.enum(["customer", "job", "sale", "lead", "follow_up"]),
   record_id: z.string().uuid(),
   reason: z.string().min(1).max(500),
+});
+
+const SendMessageSchema = z.object({
+  customer_id: z.string().uuid(),
+  channel: z.enum(["sms", "email"]),
+  body: z.string().min(1).max(2000),
+  subject: z.string().max(200).optional(),
 });
 
 // Resolves a contact id to a display name for building tool result messages.
@@ -450,6 +462,113 @@ export async function executeTool(
           .eq("company_id", orgId);
         if (error) return { success: false, message: `Failed to update follow-up: ${error.message}` };
         return { success: true, message: "Follow-up marked complete." };
+      }
+
+      case "send_message": {
+        const data = SendMessageSchema.parse(args);
+        if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
+          return { success: false, message: "That customer isn't in your workspace." };
+        }
+
+        // Same per-actor send cap the Communications reply/start routes
+        // enforce (10/min) -- keyed on the org since a tool call has no
+        // user id in hand, but the intent is identical: a runaway chat
+        // loop shouldn't be able to blast a contact with real messages.
+        if (!(await rateLimit(`send_message:org:${orgId}`, 10, 60_000))) {
+          return { success: false, message: "Too many messages sent in the last minute — try again shortly." };
+        }
+
+        const { data: contact } = await supabase
+          .from("master_customers")
+          .select("id, first_name, last_name, primary_phone, primary_email")
+          .eq("id", data.customer_id)
+          .eq("organization_id", orgId)
+          .maybeSingle();
+        if (!contact) return { success: false, message: "Contact not found." };
+
+        const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "the contact";
+        if (data.channel === "sms" && !contact.primary_phone) {
+          return { success: false, message: `${contactName} doesn't have a phone number on file, so I can't text them.` };
+        }
+        if (data.channel === "email" && !contact.primary_email) {
+          return { success: false, message: `${contactName} doesn't have an email address on file, so I can't email them.` };
+        }
+
+        const { data: company } = await supabase
+          .from("companies")
+          .select("name, email_slug")
+          .eq("id", orgId)
+          .single();
+        const companyName = (company?.name as string | undefined) ?? "";
+
+        // Same find-or-create-thread pattern as api/communications/start --
+        // one thread per (org, contact, channel), reopened if it was
+        // archived, so an AI-sent message lands in the exact same place a
+        // manually-sent one would.
+        const { data: existingThread } = await supabase
+          .from("communications")
+          .select("id, contact_phone, archived_at")
+          .eq("organization_id", orgId)
+          .eq("contact_id", contact.id)
+          .eq("channel", data.channel)
+          .maybeSingle();
+
+        let thread = existingThread as { id: string; contact_phone: string | null; archived_at?: string | null } | null;
+        if (thread?.archived_at) {
+          await supabase.from("communications").update({ archived_at: null }).eq("id", thread.id);
+        }
+
+        const normalizedPhone = contact.primary_phone ? normalizePhone(contact.primary_phone as string) : null;
+
+        if (!thread) {
+          const { data: newThread, error: threadError } = await supabase
+            .from("communications")
+            .insert({
+              organization_id: orgId,
+              contact_id: contact.id,
+              contact_phone: data.channel === "sms" ? normalizedPhone : null,
+              channel: data.channel,
+              status: "open",
+            })
+            .select("id, contact_phone")
+            .single();
+          if (threadError || !newThread) {
+            return { success: false, message: `Could not start the conversation: ${threadError?.message ?? "unknown error"}` };
+          }
+          thread = newThread;
+        }
+
+        try {
+          if (data.channel === "sms") {
+            await sendSms(thread.contact_phone ?? normalizedPhone ?? "", data.body, companyName);
+          } else {
+            await sendEmail({
+              to: contact.primary_email as string,
+              subject: data.subject?.trim() || `Message from ${companyName}`,
+              text: data.body,
+              companyName,
+              fromLocalPart: (company?.email_slug as string | null) ?? null,
+            });
+          }
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : "send failed";
+          return { success: false, message: `Could not send the ${data.channel === "sms" ? "text" : "email"}: ${reason}` };
+        }
+
+        try {
+          await recordOutboundMessage(supabase, orgId, thread.id, contact.id, data.body, data.channel);
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : "unknown error";
+          // The message was actually sent at this point -- say so plainly
+          // rather than reporting a clean failure for something that did
+          // go out, just didn't get logged.
+          return { success: false, message: `Sent to ${contactName}, but couldn't save it to Communications: ${reason}` };
+        }
+
+        return {
+          success: true,
+          message: `${data.channel === "sms" ? "Text" : "Email"} sent to ${contactName} and logged in Communications.`,
+        };
       }
 
       case "scan_workspace": {
