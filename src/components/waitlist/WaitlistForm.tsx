@@ -17,7 +17,7 @@ const companySizes = [
 ];
 
 const inputClass =
-  "mt-2 w-full rounded-[10px] border border-white/15 bg-white/8 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-white/30 focus:ring-2 focus:ring-[#4A3FA8]/40";
+  "mt-2 w-full rounded-[10px] border border-ud bg-ud-surface px-4 py-3 text-ud-ink placeholder:text-ud-faint outline-none focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/20";
 
 export function WaitlistForm() {
   const [state, formAction, pending] = useActionState(
@@ -27,9 +27,9 @@ export function WaitlistForm() {
 
   if (state.ok) {
     return (
-      <div className="rounded-[14px] border border-emerald-300/25 bg-emerald-400/10 p-6 text-emerald-50">
+      <div className="rounded-[14px] border border-ud-success/25 bg-ud-success-bg p-6 text-ud-success">
         <p className="text-lg font-semibold">Request received.</p>
-        <p className="mt-2 text-sm leading-6 text-emerald-100/85">
+        <p className="mt-2 text-sm leading-6 text-ud-success/85">
           We&apos;ll review your company fit and follow up with pilot onboarding
           details if UnifData is a match.
         </p>
@@ -72,7 +72,7 @@ export function WaitlistForm() {
           autoComplete="organization"
         />
         <div>
-          <label className="text-sm font-medium text-slate-200">
+          <label className="text-sm font-medium text-ud-text">
             Company size
           </label>
           <select
@@ -81,17 +81,17 @@ export function WaitlistForm() {
             className={inputClass + " cursor-pointer"}
             defaultValue=""
           >
-            <option value="" disabled className="bg-[#0d1423] text-slate-400">
+            <option value="" disabled>
               Select size
             </option>
             {companySizes.map((size) => (
-              <option key={size} value={size} className="bg-[#0d1423] text-white">
+              <option key={size} value={size}>
                 {size}
               </option>
             ))}
           </select>
           {state.fieldErrors?.companySize && (
-            <p className="mt-2 text-sm text-red-300">
+            <p className="mt-2 text-sm text-ud-danger">
               {state.fieldErrors.companySize}
             </p>
           )}
@@ -99,7 +99,7 @@ export function WaitlistForm() {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-200">
+        <label className="text-sm font-medium text-ud-text">
           Use case or pain points
         </label>
         <textarea
@@ -110,14 +110,14 @@ export function WaitlistForm() {
           placeholder="Tell us what data is scattered, duplicated, or hard to act on today."
         />
         {state.fieldErrors?.useCase && (
-          <p className="mt-2 text-sm text-red-300">
+          <p className="mt-2 text-sm text-ud-danger">
             {state.fieldErrors.useCase}
           </p>
         )}
       </div>
 
       {state.error && (
-        <div className="rounded-[10px] border border-red-300/30 bg-red-500/10 p-3 text-sm text-red-200">
+        <div className="rounded-[10px] border border-ud-danger/30 bg-ud-danger-bg p-3 text-sm text-ud-danger">
           {state.error}
         </div>
       )}
@@ -125,7 +125,7 @@ export function WaitlistForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-[10px] bg-[#4A3FA8] px-4 py-3.5 font-semibold text-white hover:bg-[#3D3494] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-[10px] bg-ud-ink px-4 py-3.5 font-semibold text-white hover:opacity-85 transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? "Submitting..." : "Request access"}
       </button>
@@ -148,7 +148,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="text-sm font-medium text-slate-200">{label}</label>
+      <label className="text-sm font-medium text-ud-text">{label}</label>
       <input
         name={name}
         type={type}
@@ -156,7 +156,7 @@ function Field({
         required
         className={inputClass}
       />
-      {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
+      {error && <p className="mt-2 text-sm text-ud-danger">{error}</p>}
     </div>
   );
 }

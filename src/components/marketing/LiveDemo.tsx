@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from "react";
 type SceneId = "pipeline" | "inbox" | "connect" | "brief";
 
 // Four different corners of the product, not one story stretched thin --
-// each scene gets its own fixed dwell time and then the reel auto-advances
-// to the next, looping forever. No pills: nobody was clicking them, so the
-// only interaction left is watching.
+// each scene gets its own fixed dwell time before the reel smoothly scrolls
+// on to the next, looping forever. This plays like continuous footage of
+// someone using the app (one frame, one scroll, no slide-deck chrome)
+// rather than a stack of cards cutting from one to the next.
 //
 // The product leads first (pipeline, inbox, integrations) -- Vera closes
 // the loop as one capability among several, not the whole pitch.
@@ -17,6 +18,8 @@ const SCENES: { id: SceneId; label: string; duration: number }[] = [
   { id: "connect", label: "Connections", duration: 3600 },
   { id: "brief", label: "Vera's brief", duration: 4200 },
 ];
+
+const SCENE_HEIGHT = 300;
 
 const stats = [
   { label: "Follow-ups due", value: "4", urgent: true },
@@ -134,7 +137,7 @@ function BriefScene() {
 function InboxScene() {
   return (
     <div className="h-full animate-fade-in flex flex-col justify-end gap-2.5 py-2">
-      <p className="text-center text-[11px] text-ud-faint mb-1">Texts and emails land in the same thread as the customer&apos;s record</p>
+      <p className="text-center text-[11px] text-ud-muted mb-1">Texts and emails land in the same thread as the customer&apos;s record</p>
       <div className="flex justify-start">
         <div className="max-w-[75%] rounded-[12px] border border-ud bg-ud-surface px-3 py-2 animate-fade-up">
           <p className="text-[12.5px] text-ud-text leading-relaxed">{thread.inbound}</p>
@@ -223,12 +226,15 @@ const SCENE_CONTENT: Record<SceneId, () => React.JSX.Element> = {
 // Replaces a static screenshot with a looping, auto-playing reel built from
 // real app UI (colors, layout, copy) instead of a video file -- loads
 // instantly, needs no hosting, and can't drift out of sync with a
-// screen-recorded product the way a video eventually does.
+// screen-recorded product the way a video eventually does. All four scenes
+// sit stacked in one continuous strip; the reel scrolls smoothly from one to
+// the next instead of cutting between separate cards, so it plays more like
+// a screen recording than a slideshow.
 export function LiveDemo() {
   const [sceneIndex, setSceneIndex] = useState(0);
+  const [epoch, setEpoch] = useState<Record<SceneId, number>>({ pipeline: 0, inbox: 0, connect: 0, brief: 0 });
   const reducedMotion = useRef(false);
   const scene = SCENES[sceneIndex];
-  const Content = SCENE_CONTENT[scene.id];
   const Icon = SCENE_ICON[scene.id];
 
   useEffect(() => {
@@ -238,44 +244,48 @@ export function LiveDemo() {
   useEffect(() => {
     if (reducedMotion.current) return;
     const timer = setTimeout(() => {
-      setSceneIndex((i) => (i + 1) % SCENES.length);
+      const next = (sceneIndex + 1) % SCENES.length;
+      const nextId = SCENES[next].id;
+      // Remounting only the scene about to scroll into view (not the whole
+      // reel) replays its entrance animation every loop, so the demo still
+      // feels alive on pass two instead of settling into a static screenshot.
+      setEpoch((e) => ({ ...e, [nextId]: e[nextId] + 1 }));
+      setSceneIndex(next);
     }, scene.duration);
     return () => clearTimeout(timer);
   }, [sceneIndex, scene.duration]);
 
   return (
     <div className="mx-auto max-w-2xl rounded-[18px] border border-ud bg-ud-surface shadow-[0_24px_60px_rgba(15,23,42,0.10)] overflow-hidden">
-      {/* Story-style progress bar -- shows the reel is playing through
-          several scenes without inviting anyone to click a control. */}
-      <div className="flex gap-1.5 px-4 pt-4 pb-2.5">
-        {SCENES.map((s, i) => (
-          <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-ud-surface-sunk">
-            <div
-              className="h-full origin-left bg-ud-accent"
-              style={
-                i < sceneIndex || (i === sceneIndex && reducedMotion.current)
-                  ? { transform: "scaleX(1)" }
-                  : i === sceneIndex
-                    ? { animation: `demo-scene-fill ${scene.duration}ms linear forwards` }
-                    : { transform: "scaleX(0)" }
-              }
-            />
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-between px-5 pb-3.5 border-b border-ud">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-ud">
         <div key={scene.id} className="flex items-center gap-2 animate-fade-in">
           <div className="w-5 h-5 rounded-[5px] bg-ud-accent/[0.12] flex items-center justify-center">
             <Icon size={11} />
           </div>
           <span className="text-[12px] font-semibold text-ud-ink">{scene.label}</span>
         </div>
-        <span className="text-[11px] text-ud-faint">Today</span>
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-ud-muted">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Live
+        </span>
       </div>
 
-      <div className="bg-ud-page px-5 py-4 h-[300px] overflow-hidden">
-        <Content key={scene.id} />
+      <div className="relative bg-ud-page overflow-hidden" style={{ height: SCENE_HEIGHT }}>
+        <div
+          style={{
+            transform: `translateY(-${sceneIndex * SCENE_HEIGHT}px)`,
+            transition: reducedMotion.current ? "none" : "transform 800ms cubic-bezier(0.65, 0, 0.35, 1)",
+          }}
+        >
+          {SCENES.map((s) => {
+            const Content = SCENE_CONTENT[s.id];
+            return (
+              <div key={s.id} className="px-5 py-4" style={{ height: SCENE_HEIGHT }}>
+                <Content key={`${s.id}-${epoch[s.id]}`} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

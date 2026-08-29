@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { haptic } from "@/lib/haptics";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { LogoutButton } from "@/components/LogoutButton";
 
 // ── Per-tab SVG icons (21px, variable strokeWidth) ─────────────────────────
 function SvgHome({ active }: { active: boolean }) {
@@ -56,6 +57,7 @@ function SvgMore({ active }: { active: boolean }) {
 // ── "More" sheet icons (17px, matches AppNav's desktop set) ────────────────
 function IconTools() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L2 19l3 3 7.1-7.1a4 4 0 0 0 5.6-5.6L14.5 12 12 9.5l2.7-3.2z"/></svg>; }
 function IconSettings() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>; }
+function IconLogout() { return <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>; }
 
 // ── Component ───────────────────────────────────────────────────────────────
 export function MobileTabBar({
@@ -205,6 +207,13 @@ export function MobileTabBar({
               </Link>
             );
           })}
+          <div className="my-1 h-px bg-ud" />
+          <LogoutButton className="flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-[15px] font-medium text-ud-danger active:bg-ud-surface-sunk">
+            <span className="flex items-center justify-center w-8 h-8 rounded-[8px] bg-ud-surface-sunk text-ud-danger shrink-0">
+              <IconLogout />
+            </span>
+            Log out
+          </LogoutButton>
         </div>
       </BottomSheet>
     </>

@@ -192,7 +192,7 @@ export default function DocsPage() {
             <div className="divide-y divide-ud">
               {/* GETTING STARTED */}
               <section id="start" className="scroll-mt-20 py-10">
-                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-faint">
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ud-muted">
                   Quick start
                 </p>
                 <h2 className="mt-2 text-[24px] font-semibold text-ud-ink">Getting started</h2>
@@ -207,7 +207,7 @@ export default function DocsPage() {
                     { step: "03", title: "Work from the Today page", body: "The /workspace page shows what needs attention today — overdue follow-ups, open quotes, unpaid work, and data quality issues." },
                   ].map((item) => (
                     <div key={item.step} className="rounded-[14px] border border-ud bg-ud-surface p-5">
-                      <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-faint">{item.step}</p>
+                      <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-muted">{item.step}</p>
                       <p className="mt-3 text-[14px] font-semibold text-ud-ink">{item.title}</p>
                       <p className="mt-2 text-[13px] leading-[1.65] text-ud-text">{item.body}</p>
                     </div>
@@ -263,7 +263,7 @@ export default function DocsPage() {
                         <p className="text-[14px] font-semibold text-ud-ink">{item.title}</p>
                         <p className="mt-1 text-[13px] leading-[1.6] text-ud-text">{item.description}</p>
                       </div>
-                      <p className="text-[11.5px] font-medium text-ud-faint md:text-right">{item.examples}</p>
+                      <p className="text-[11.5px] font-medium text-ud-muted md:text-right">{item.examples}</p>
                     </div>
                   ))}
                 </div>
@@ -333,7 +333,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-ud">
-                  <div className="hidden border-b border-ud bg-ud-surface px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-ud-faint md:grid md:grid-cols-[200px_1fr]">
+                  <div className="hidden border-b border-ud bg-ud-surface px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-ud-muted md:grid md:grid-cols-[200px_1fr]">
                     <span>Sector</span>
                     <span>Workspace language</span>
                   </div>
@@ -364,7 +364,7 @@ export default function DocsPage() {
                       { step: "03", label: "Revenue tracked as unpaid", detail: "A revenue record is created with payment status set to unpaid until collected." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-faint">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-muted">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold text-ud-ink">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-ud-muted">{item.detail}</p>
                       </div>
@@ -410,7 +410,7 @@ export default function DocsPage() {
                       { step: "03", label: "Records sync in", detail: "Customers, jobs, and revenue records are pulled into the workspace and linked to existing data where possible." },
                     ].map((item) => (
                       <div key={item.step} className="p-6">
-                        <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-faint">{item.step}</p>
+                        <p className="text-[11px] font-semibold tracking-[0.13em] text-ud-muted">{item.step}</p>
                         <p className="mt-3 text-[14px] font-semibold text-ud-ink">{item.label}</p>
                         <p className="mt-2 text-[13px] leading-[1.65] text-ud-muted">{item.detail}</p>
                       </div>
@@ -427,7 +427,7 @@ export default function DocsPage() {
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[14px] border border-ud">
-                  <div className="hidden border-b border-ud bg-ud-surface px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-ud-faint md:grid md:grid-cols-[140px_80px_1fr_160px]">
+                  <div className="hidden border-b border-ud bg-ud-surface px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.13em] text-ud-muted md:grid md:grid-cols-[140px_80px_1fr_160px]">
                     <span>Column</span>
                     <span>Required</span>
                     <span>Description</span>
@@ -451,7 +451,7 @@ export default function DocsPage() {
                         )}
                       </span>
                       <span className="text-ud-text">{col.description}</span>
-                      <code className="text-[11.5px] text-ud-faint">{col.example}</code>
+                      <code className="text-[11.5px] text-ud-muted">{col.example}</code>
                     </div>
                   ))}
                 </div>
@@ -504,7 +504,7 @@ export default function DocsPage() {
 
       {/* Footer */}
       <footer className="border-t border-ud px-6 py-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-[13px] text-ud-faint md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 text-[13px] text-ud-muted md:flex-row md:items-center md:justify-between">
           <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-ud-ink transition-colors">Privacy</Link>

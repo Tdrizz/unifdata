@@ -63,7 +63,7 @@ export default function HomePage() {
       <section className="border-b border-ud">
         <div className="mx-auto max-w-6xl px-6 pt-20 pb-16">
           <div className="max-w-3xl mx-auto text-center">
-            <p className="animate-fade-up text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-6">
+            <p className="animate-fade-up text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-6">
               For home services, construction &amp; professional services
             </p>
             <h1 className="animate-fade-up [animation-delay:60ms] text-[46px] sm:text-[58px] lg:text-[68px] font-semibold leading-[1.05] tracking-[-0.03em] mb-6 text-ud-ink">
@@ -88,7 +88,7 @@ export default function HomePage() {
                 See pricing
               </Link>
             </div>
-            <p className="animate-fade-up [animation-delay:240ms] mt-5 text-[12.5px] text-ud-faint">
+            <p className="animate-fade-up [animation-delay:240ms] mt-5 text-[12.5px] text-ud-muted">
               $100/month · No setup fee · No contracts
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function HomePage() {
       {/* Integrations bar */}
       <section className="border-b border-ud py-10">
         <div className="mx-auto max-w-6xl px-6">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-5">Works with your existing tools</p>
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-5">Works with your existing tools</p>
           <div className="flex flex-wrap items-center justify-center gap-2.5">
             {integrations.map((name) => (
               <div key={name} className="rounded-full border border-ud bg-ud-surface px-4 py-2 text-[13px] font-medium text-ud-muted">{name}</div>
@@ -116,7 +116,7 @@ export default function HomePage() {
       <section className="border-b border-ud py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-14">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-3">The product</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-3">The product</p>
             <h2 className="text-[36px] font-semibold leading-[1.15] tracking-[-0.025em] text-ud-ink">Everything in one place.</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -137,7 +137,7 @@ export default function HomePage() {
       <section className="border-b border-ud py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-14">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-3">How it works</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-3">How it works</p>
             <h2 className="text-[36px] font-semibold leading-[1.15] tracking-[-0.025em] text-ud-ink">Set it up once.<br />It runs itself from there.</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -156,31 +156,22 @@ export default function HomePage() {
       <section className="border-b border-ud py-24">
         <div className="mx-auto max-w-4xl px-6">
           <div className="rounded-[18px] border border-ud bg-ud-surface shadow-ud p-8 sm:p-12">
-            <div className="flex items-start gap-5">
-              <div className="w-11 h-11 rounded-[12px] bg-ud-accent/[0.1] flex items-center justify-center shrink-0">
-                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="var(--ud-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-                </svg>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-2">Included with every plan</p>
-                <h2 className="text-[26px] sm:text-[30px] font-semibold leading-[1.2] tracking-[-0.02em] mb-4 text-ud-ink">Meet Vera, your AI assistant.</h2>
-                <p className="text-[15px] leading-[1.8] text-ud-muted mb-7 max-w-xl">
-                  Every night, Vera reviews your business and flags what actually needs attention — stale customers, unpaid work, follow-ups that slipped. No dashboards to dig through, no reports to run.
-                </p>
-                <ul className="grid gap-3 sm:grid-cols-3 mb-7">
-                  {["Flags what needs attention each morning", "Drafts follow-ups you approve before they send", "Learns your patterns the longer you use it"].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.6] text-ud-text">
-                      <svg className="w-4 h-4 shrink-0 mt-[2px] text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex text-[14px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
-                  See Vera in action →
-                </a>
-              </div>
-            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-2">Included with every plan</p>
+            <h2 className="text-[26px] sm:text-[30px] font-semibold leading-[1.2] tracking-[-0.02em] mb-4 text-ud-ink">Meet Vera, your AI assistant.</h2>
+            <p className="text-[15px] leading-[1.8] text-ud-muted mb-7 max-w-xl">
+              Every night, Vera reviews your business and flags what actually needs attention — stale customers, unpaid work, follow-ups that slipped. No dashboards to dig through, no reports to run.
+            </p>
+            <ul className="grid gap-3 sm:grid-cols-3 mb-7">
+              {["Flags what needs attention each morning", "Drafts follow-ups you approve before they send", "Learns your patterns the longer you use it"].map((f) => (
+                <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.6] text-ud-text">
+                  <svg className="w-4 h-4 shrink-0 mt-[2px] text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex text-[14px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
+              See Vera in action →
+            </a>
           </div>
         </div>
       </section>
@@ -189,13 +180,13 @@ export default function HomePage() {
       <section className="border-b border-ud py-24" id="pricing">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-lg mx-auto text-center mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-3">Pricing</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-3">Pricing</p>
             <h2 className="text-[36px] font-semibold leading-[1.15] tracking-[-0.025em] mb-4 text-ud-ink">One price.<br />Everything included.</h2>
             <p className="text-[16px] text-ud-muted leading-[1.75]">No tiers. No feature gating. No contracts. No setup fee — just $100 a month, cancel any time.</p>
           </div>
           <div className="mx-auto max-w-md rounded-[18px] border border-ud bg-ud-surface shadow-ud p-10">
             <div className="text-center mb-8">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ud-faint mb-2">Monthly</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ud-muted mb-2">Monthly</p>
               <p className="text-[56px] font-semibold leading-none tabular-nums text-ud-ink">$100</p>
               <p className="text-[12.5px] text-ud-muted mt-2">per month · no setup fee</p>
             </div>
@@ -211,7 +202,7 @@ export default function HomePage() {
             <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="block w-full rounded-[10px] bg-ud-ink px-5 py-3.5 text-center text-[14px] font-semibold text-white hover:opacity-85 transition-opacity active:scale-[0.97]">
               Book a free demo
             </a>
-            <p className="mt-3 text-center text-[12px] text-ud-faint">30-minute call. We set up your workspace with your real data.</p>
+            <p className="mt-3 text-center text-[12px] text-ud-muted">30-minute call. We set up your workspace with your real data.</p>
           </div>
         </div>
       </section>
@@ -228,13 +219,13 @@ export default function HomePage() {
           <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[10px] bg-ud-ink px-8 py-4 text-[15px] font-semibold text-white hover:opacity-85 transition-opacity active:scale-[0.97]">
             Book a free demo
           </a>
-          <p className="mt-4 text-[12.5px] text-ud-faint">$100/month · No setup fee · No contracts</p>
+          <p className="mt-4 text-[12.5px] text-ud-muted">$100/month · No setup fee · No contracts</p>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-ud py-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-[13px] text-ud-faint md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-[13px] text-ud-muted md:flex-row md:items-center md:justify-between">
           <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-ud-ink transition-colors">Privacy</Link>

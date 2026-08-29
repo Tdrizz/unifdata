@@ -52,7 +52,7 @@ export default function PricingPage() {
       <PublicNav active="pricing" />
 
       <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-4">Pricing</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-4">Pricing</p>
         <h1 className="text-[44px] sm:text-[54px] font-semibold leading-[1.1] tracking-[-0.03em] mb-5 text-ud-ink">One price.<br />Everything included.</h1>
         <p className="mx-auto max-w-lg text-[17px] leading-[1.75] text-ud-muted">No tiers. No feature gating. No contracts. No setup fee — just $100 a month, cancel any time.</p>
       </section>
@@ -60,7 +60,7 @@ export default function PricingPage() {
       <section className="mx-auto max-w-6xl px-6 pb-20">
         <div className="mx-auto max-w-lg rounded-[18px] border border-ud bg-ud-surface shadow-ud p-6 sm:p-10">
           <div className="text-center mb-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ud-faint mb-3">Monthly</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ud-muted mb-3">Monthly</p>
             <p className="text-[52px] sm:text-[64px] font-semibold leading-none tabular-nums text-ud-ink">$100</p>
             <p className="text-[13px] text-ud-muted mt-2">per month · no setup fee</p>
           </div>
@@ -76,14 +76,14 @@ export default function PricingPage() {
           <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="block w-full rounded-[10px] bg-ud-ink px-5 py-3.5 text-center text-[15px] font-semibold text-white hover:opacity-85 transition-opacity active:scale-[0.97]">
             Book a free demo
           </a>
-          <p className="mt-3 text-center text-[12.5px] text-ud-faint">30-minute call. We set up your workspace with your real data.</p>
+          <p className="mt-3 text-center text-[12.5px] text-ud-muted">30-minute call. We set up your workspace with your real data.</p>
         </div>
       </section>
 
       <section className="border-t border-ud py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-3">What you get</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-3">What you get</p>
             <h2 className="text-[32px] font-semibold leading-[1.2] tracking-[-0.025em] text-ud-ink">The setup session isn&apos;t optional — it&apos;s the product.</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -105,7 +105,7 @@ export default function PricingPage() {
       <section className="border-t border-ud py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-faint mb-3">FAQ</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ud-muted mb-3">FAQ</p>
             <h2 className="text-[32px] font-semibold leading-[1.2] tracking-[-0.025em] text-ud-ink">Common questions</h2>
           </div>
           <div className="max-w-2xl space-y-0 divide-y divide-ud">
@@ -126,12 +126,12 @@ export default function PricingPage() {
           <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[10px] bg-ud-ink px-8 py-4 text-[15px] font-semibold text-white hover:opacity-85 transition-opacity active:scale-[0.97]">
             Book a free demo
           </a>
-          <p className="mt-4 text-[12.5px] text-ud-faint">$100/month · No setup fee · No contracts</p>
+          <p className="mt-4 text-[12.5px] text-ud-muted">$100/month · No setup fee · No contracts</p>
         </div>
       </section>
 
       <footer className="border-t border-ud py-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-[13px] text-ud-faint md:flex-row md:items-center md:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-[13px] text-ud-muted md:flex-row md:items-center md:justify-between">
           <p>© 2026 UnifData. All rights reserved.</p>
           <div className="flex gap-5">
             <Link href="/privacy" className="hover:text-ud-ink transition-colors">Privacy</Link>
