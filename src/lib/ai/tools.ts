@@ -205,6 +205,24 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "send_message",
+      description:
+        "Sends a real text message or email to a customer/contact right now, and logs it on their Communications thread the same way a reply sent from the Communications page is logged, so it's fully traceable. Use this when the user asks you to text, email, or message a customer directly. This is not for internal reminders (use create_followup for those), and it cannot send to the business owner themselves — only to a customer/contact record that has a phone number (for sms) or email address (for email) on file. If the contact doesn't have one, say so rather than trying anyway.",
+      parameters: {
+        type: "object",
+        properties: {
+          customer_id: { type: "string", description: "UUID of the customer/contact to message" },
+          channel: { type: "string", enum: ["sms", "email"], description: "Send as a text message or an email" },
+          body: { type: "string", description: "The message text" },
+          subject: { type: "string", description: "Email subject line (email only; optional, falls back to a generic subject)" },
+        },
+        required: ["customer_id", "channel", "body"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "scan_workspace",
       description:
         "Scans the workspace for duplicate contacts and other data quality issues right now, instead of waiting for the nightly run. Automatically merges obvious duplicates and clears junk records if auto-fix is enabled in Settings; anything ambiguous is left for manual review in Data Hub. Use this when the user asks to clean up, dedupe, or check their data.",
