@@ -1,13 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { SignOutButton } from "@clerk/nextjs";
 
 export function LogoutButton({
   variant = "default",
   className: classNameOverride,
+  children,
 }: {
   variant?: "default" | "sidebar";
   className?: string;
+  children?: ReactNode;
 }) {
   const className =
     classNameOverride ??
@@ -17,7 +20,7 @@ export function LogoutButton({
 
   return (
     <SignOutButton redirectUrl="/">
-      <button className={className}>Log out</button>
+      <button className={className}>{children ?? "Log out"}</button>
     </SignOutButton>
   );
 }
