@@ -108,11 +108,7 @@ function IntegrationCard({ meta, connection }: { meta: IntegrationMeta; connecti
         )}
       </div>
 
-      {!meta.available ? (
-        <span className="inline-flex w-fit items-center rounded-[8px] border border-ud bg-ud-surface-sunk px-3 py-1.5 text-[12px] font-semibold text-ud-faint">
-          Coming soon
-        </span>
-      ) : connected ? (
+      {connected ? (
         <div className="flex flex-wrap items-center gap-2">
           <SyncNowButton provider={meta.provider} label={meta.name} />
           <button
