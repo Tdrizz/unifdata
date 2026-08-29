@@ -69,39 +69,75 @@
   94%  { opacity: 0; }
   100% { cx: 5; opacity: 0; }
 }
-@keyframes demo-ping-dot {
-  0%, 100% { cx: 15; }
-  50%      { cx: 85; }
+/* Two small message "bubbles" instead of one plain dot -- a message going
+   out (customer -> inbox) during the first half of the cycle, then a reply
+   coming back (inbox -> customer) during the second half, so the scene
+   reads as an actual back-and-forth conversation instead of one particle
+   bouncing along a line. demo-msg-bubble-in runs the same shape in reverse,
+   phase-shifted by half a cycle (via animation-delay) so the two never
+   travel at the same time. */
+/* x endpoints (13, 81) center the 6-wide bubble at (16, 84) -- the same
+   node positions the connecting FlowLine below already uses, tuned to
+   actually reach the customer/inbox icons rather than stopping short in
+   the gap between the line and the circle, same reasoning as the
+   Connections hub above: the bubble travels and arrives at full opacity
+   (40%), holds fully visible at the destination for a beat, and only
+   fades out after that (40%-50%) -- not during the approach, which is
+   what made it look like it vanished before ever reaching the icon. Each
+   bubble then sits invisible for the rest of its own cycle (50%-100%) so
+   only one of the two bubbles is ever traveling at a time. */
+@keyframes demo-msg-bubble-out {
+  0%   { x: 13; opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { x: 81; opacity: 1; }
+  50%  { x: 81; opacity: 0; }
+  100% { x: 81; opacity: 0; }
+}
+@keyframes demo-msg-bubble-in {
+  0%   { x: 81; opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { x: 13; opacity: 1; }
+  50%  { x: 13; opacity: 0; }
+  100% { x: 13; opacity: 0; }
 }
 /* cy travels from each provider's line origin (y:5, matching FlowLine's
    y1 in NetworkScene) down to the hub (y:27, matching FlowLine's y2) --
    this previously ended at cy:85, far below the 30-unit-tall viewBox, so
    each dot traveled out of the visible box (and got clipped) well before
    ever visibly reaching the hub, which is what read as the motion not
-   "flowing" into place. */
+   "flowing" into place.
+
+   Opacity stays at 1 all the way to 100% now instead of fading out over
+   the final stretch -- (50,27) sits well inside the hub circle's own
+   radius (confirmed by measuring both elements' actual screen rects, since
+   the SVG's coordinate space and the hub div's independent CSS position
+   aren't the same coordinate system and only line up by deliberate
+   measurement, not by construction), so a dot that's still fully visible
+   on arrival gets naturally covered by the hub's opaque fill -- which
+   reads as the dot flying into and merging with the hub. Fading it out
+   beforehand meant it vanished on its own partway there, never visibly
+   reaching the hub at all. The loop reset back to 0% (opacity 0) is still
+   instant and unnoticeable since the hub is already covering that screen
+   position by then. */
 @keyframes demo-net-dot-1 {
   0%   { cx: 10; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 1; }
 }
 @keyframes demo-net-dot-2 {
   0%   { cx: 36; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 1; }
 }
 @keyframes demo-net-dot-3 {
   0%   { cx: 64; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 1; }
 }
 @keyframes demo-net-dot-4 {
   0%   { cx: 90; cy: 5;  opacity: 0; }
   8%   { opacity: 1; }
-  92%  { opacity: 1; }
-  100% { cx: 50; cy: 27; opacity: 0; }
+  100% { cx: 50; cy: 27; opacity: 1; }
 }
 @keyframes demo-hub-pulse {
   0%, 60%, 100% { transform: scale(1); }

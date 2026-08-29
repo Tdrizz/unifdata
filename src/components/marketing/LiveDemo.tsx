@@ -124,6 +124,26 @@ type SceneProps = { active: boolean };
 // time a scene's turn comes around its motion is already mid-cycle instead
 // of starting fresh in sync with the crossfade -- which reads as the
 // animation not working at all, not just as bad timing.
+//
+// Every traveling-dot circle/rect below also gets an explicit
+// `opacity: active ? undefined : 0` alongside the animation toggle. Their
+// position (cx/x) only ever comes from the animation's own keyframes, never
+// a static attribute -- so the instant a scene goes inactive and its
+// animation switches to "none", the shape snaps to the SVG default position
+// (0,0) and sits frozen there for the rest of that scene's ~650ms fade-out,
+// which is still mostly opaque. That stray, motionless dot glued to the
+// left edge during every transition is what read as a broken artifact (and,
+// since it's a hard visual interruption right at the cut, as the animation
+// "not working"). Hiding it outright the instant it's inactive removes it
+// instead of freezing it in the wrong place.
+//
+// Any of these that also stagger with a CSS `animation-delay` (the four
+// Connections dots, the reply bubble) additionally need `backwards` in
+// their animation shorthand -- without it, a delayed animation has no
+// effect at all until its delay elapses, so the shape sits at that same
+// undefined default position, fully opaque, for the entire delay. `backwards`
+// makes the browser apply the animation's own 0% keyframe (which already
+// starts at opacity 0) throughout the delay instead.
 
 // Three stages flowing into each other, a single particle traveling the
 // whole path -- an abstraction of "a job moves from lead to paid," not a
@@ -144,7 +164,12 @@ function FlowScene({ active }: SceneProps) {
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={7} y1={11} x2={50} y2={11} />
           <FlowLine x1={50} y1={11} x2={93} y2={11} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-pipeline-dot 3200ms ease-in-out infinite" : "none" }} />
+          <circle
+            r={1.8}
+            cy={11}
+            fill="var(--ud-accent)"
+            style={{ animation: active ? "demo-pipeline-dot 3200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
+          />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           {nodes.map((n, i) => (
@@ -164,9 +189,10 @@ function FlowScene({ active }: SceneProps) {
   );
 }
 
-// A message traveling back and forth between two nodes -- the abstraction
-// of "a text and a reply land in the same thread," not a rendering of any
-// specific conversation UI.
+// Two small message bubbles traveling the path in opposite directions, one
+// after the other -- a message going out, then a reply coming back -- the
+// abstraction of "a text and a reply land in the same thread," not a
+// rendering of any specific conversation UI.
 function PingScene({ active }: SceneProps) {
   return (
     <div className="animate-fade-in">
@@ -174,7 +200,23 @@ function PingScene({ active }: SceneProps) {
       <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={16} y1={11} x2={84} y2={11} />
-          <circle r={1.8} cy={11} fill="var(--ud-accent)" style={{ animation: active ? "demo-ping-dot 2800ms ease-in-out infinite" : "none" }} />
+          <rect
+            y={9.4}
+            width={6}
+            height={3.2}
+            rx={1.6}
+            fill="var(--ud-accent)"
+            style={{ animation: active ? "demo-msg-bubble-out 3400ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
+          />
+          <rect
+            y={9.4}
+            width={6}
+            height={3.2}
+            rx={1.6}
+            fill="var(--ud-accent)"
+            fillOpacity={0.6}
+            style={{ animation: active ? "demo-msg-bubble-in 3400ms ease-in-out 1700ms infinite backwards" : "none", opacity: active ? undefined : 0 }}
+          />
         </svg>
         <div className="relative flex items-center justify-between h-full">
           <div className="flex flex-col items-center gap-2 animate-fade-up">
@@ -226,7 +268,12 @@ function NetworkScene({ active }: SceneProps) {
           <FlowLine x1={64} y1={5} x2={50} y2={27} />
           <FlowLine x1={90} y1={5} x2={50} y2={27} />
           {dotAnimations.map((anim, i) => (
-            <circle key={anim} r={1.6} fill="var(--ud-accent)" style={{ animation: active ? `${anim} 2400ms ease-in-out ${i * 320}ms infinite` : "none" }} />
+            <circle
+              key={anim}
+              r={1.6}
+              fill="var(--ud-accent)"
+              style={{ animation: active ? `${anim} 2400ms ease-in-out ${i * 320}ms infinite backwards` : "none", opacity: active ? undefined : 0 }}
+            />
           ))}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
