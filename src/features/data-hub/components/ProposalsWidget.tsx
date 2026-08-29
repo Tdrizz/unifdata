@@ -9,21 +9,42 @@ type Props = {
   initialProposals: ProposalRow[];
 };
 
-function FieldDiffRow({ field, from, to }: { field: string; from: unknown; to: unknown }) {
-  const label = field
+function fieldLabel(field: string): string {
+  return field
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
     .replace("Primary ", "");
+}
 
+// An update to a record that already exists -- applying this overwrites
+// that record's field with the new value, so showing the change as a real
+// diff is accurate.
+function FieldDiffRow({ field, from, to }: { field: string; from: unknown; to: unknown }) {
   const fromStr = from === null || from === undefined || from === "" ? "(empty)" : String(from);
   const toStr = to === null || to === undefined || to === "" ? "(empty)" : String(to);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-relaxed">
-      <span className="font-medium text-ud-muted min-w-[80px]">{label}:</span>
+      <span className="font-medium text-ud-muted min-w-[80px]">{fieldLabel(field)}:</span>
       <span className="text-ud-faint line-through">{fromStr}</span>
       <span className="text-ud-faint">→</span>
       <span className="font-medium text-ud-ink">{toStr}</span>
+    </div>
+  );
+}
+
+// A proposal with no target_record_id doesn't match anyone confidently
+// enough to update -- approving it creates a brand-new contact instead. The
+// "from" side of its field delta is the closest existing contact's value,
+// shown for context on why it was surfaced, not something that's about to
+// be overwritten -- rendering it as a from→to diff (as the update case
+// does) falsely implies an existing contact is being changed.
+function NewRecordFieldRow({ field, value }: { field: string; value: unknown }) {
+  const valueStr = value === null || value === undefined || value === "" ? "(empty)" : String(value);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 text-[12px] leading-relaxed">
+      <span className="font-medium text-ud-muted min-w-[80px]">{fieldLabel(field)}:</span>
+      <span className="font-medium text-ud-ink">{valueStr}</span>
     </div>
   );
 }
@@ -38,6 +59,11 @@ function ProposalRow({
   const [busy, setBusy] = useState(false);
   const updates = (proposal.proposed_changes?.updates ?? {}) as FieldDelta;
   const hasDiff = Object.keys(updates).length > 0;
+  // No target means the match wasn't confident enough to update anyone --
+  // approving this creates a new contact rather than changing an existing
+  // one (see api/v1/proposals/[id]/approve/route.ts's branch on this same
+  // field).
+  const isNewRecord = !proposal.target_record_id;
 
   async function act(action: "approve" | "reject") {
     setBusy(true);
@@ -60,27 +86,42 @@ function ProposalRow({
   return (
     <div className="px-4 py-[14px] border-b border-ud-soft last:border-0">
       <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-[12.5px] font-semibold text-ud-ink">
-          {Math.round(proposal.confidence_score * 100)}% confidence match
-        </span>
-        {proposal.target_table === "master_customers" && proposal.target_record_id && (
-          <Link
-            href={`/customers/${proposal.target_record_id}`}
-            className="text-[12px] font-medium text-ud-accent hover:underline"
-          >
-            View contact
-          </Link>
+        {isNewRecord ? (
+          <span className="text-[12.5px] font-semibold text-ud-ink">New contact suggested</span>
+        ) : (
+          <>
+            <span className="text-[12.5px] font-semibold text-ud-ink">
+              {Math.round(proposal.confidence_score * 100)}% confidence match
+            </span>
+            {proposal.target_table === "master_customers" && proposal.target_record_id && (
+              <Link
+                href={`/customers/${proposal.target_record_id}`}
+                className="text-[12px] font-medium text-ud-accent hover:underline"
+              >
+                View contact
+              </Link>
+            )}
+          </>
         )}
       </div>
 
       {hasDiff && (
         <div className="space-y-1 mb-2.5">
+          {isNewRecord && (
+            <p className="text-[11.5px] text-ud-faint mb-1">
+              Didn&apos;t confidently match an existing contact — approving creates a new one:
+            </p>
+          )}
           {Object.entries(updates)
             .filter(([f]) => !f.startsWith("metadata."))
             .slice(0, 4)
-            .map(([field, change]) => (
-              <FieldDiffRow key={field} field={field} from={change.from} to={change.to} />
-            ))}
+            .map(([field, change]) =>
+              isNewRecord ? (
+                <NewRecordFieldRow key={field} field={field} value={change.to} />
+              ) : (
+                <FieldDiffRow key={field} field={field} from={change.from} to={change.to} />
+              )
+            )}
         </div>
       )}
 
