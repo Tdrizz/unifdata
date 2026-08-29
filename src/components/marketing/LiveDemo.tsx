@@ -13,10 +13,10 @@ type SceneId = "pipeline" | "inbox" | "connect" | "brief";
 // The product leads first (pipeline, inbox, integrations) -- Vera closes
 // the loop as one capability among several, not the whole pitch.
 const SCENES: { id: SceneId; label: string; duration: number }[] = [
-  { id: "pipeline", label: "Pipeline", duration: 3800 },
-  { id: "inbox", label: "One inbox", duration: 4000 },
-  { id: "connect", label: "Connections", duration: 3600 },
-  { id: "brief", label: "Vera's brief", duration: 4200 },
+  { id: "pipeline", label: "Pipeline", duration: 4400 },
+  { id: "inbox", label: "One inbox", duration: 4600 },
+  { id: "connect", label: "Connections", duration: 4200 },
+  { id: "brief", label: "Vera's brief", duration: 4400 },
 ];
 
 // Every scene is an abstract, generative-motion "impression" of the product
@@ -180,7 +180,7 @@ function FlowScene({ active }: SceneProps) {
             cx={5}
             cy={11}
             fill="var(--ud-accent)"
-            style={{ animation: active ? "demo-pipeline-dot 3200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
+            style={{ animation: active ? "demo-pipeline-dot 4200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
           />
         </svg>
         <div className="relative flex items-center justify-between h-full">
@@ -219,7 +219,7 @@ function PingScene({ active }: SceneProps) {
             height={3.2}
             rx={1.6}
             fill="var(--ud-accent)"
-            style={{ animation: active ? "demo-msg-bubble-out 3400ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
+            style={{ animation: active ? "demo-msg-bubble-out 4200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
           />
           <rect
             x={81}
@@ -229,7 +229,7 @@ function PingScene({ active }: SceneProps) {
             rx={1.6}
             fill="var(--ud-accent)"
             fillOpacity={0.6}
-            style={{ animation: active ? "demo-msg-bubble-in 3400ms ease-in-out 1700ms infinite backwards" : "none", opacity: active ? undefined : 0 }}
+            style={{ animation: active ? "demo-msg-bubble-in 4200ms ease-in-out 2100ms infinite backwards" : "none", opacity: active ? undefined : 0 }}
           />
         </svg>
         <div className="relative flex items-center justify-between h-full">
@@ -288,14 +288,14 @@ function NetworkScene({ active }: SceneProps) {
               cx={[10, 36, 64, 90][i]}
               cy={5}
               fill="var(--ud-accent)"
-              style={{ animation: active ? `${anim} 2400ms ease-in-out ${i * 320}ms infinite backwards` : "none", opacity: active ? undefined : 0 }}
+              style={{ animation: active ? `${anim} 3000ms ease-in-out ${i * 380}ms infinite backwards` : "none", opacity: active ? undefined : 0 }}
             />
           ))}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div
             className="w-11 h-11 rounded-full bg-ud-accent flex items-center justify-center shadow-[0_8px_24px_rgba(74,63,168,0.4)]"
-            style={{ animation: active ? "demo-hub-pulse 2600ms ease-in-out infinite" : "none" }}
+            style={{ animation: active ? "demo-hub-pulse 3200ms ease-in-out infinite" : "none" }}
           >
             <PlugIcon size={16} />
           </div>
@@ -320,7 +320,7 @@ function InsightScene({ active }: SceneProps) {
   return (
     <div className="animate-fade-in text-center">
       <div className="relative mx-auto mb-4 w-12 h-12">
-        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: active ? "demo-ping-ring 2800ms ease-out infinite" : "none" }} />
+        <span className="absolute inset-0 rounded-full bg-ud-accent/25" style={{ animation: active ? "demo-ping-ring 3400ms ease-out infinite" : "none" }} />
         <div
           className="relative w-12 h-12 rounded-full bg-ud-surface border border-ud-accent/30 shadow-ud flex items-center justify-center"
           style={{ animation: active ? "demo-node-breathe 2600ms ease-in-out infinite" : "none" }}
