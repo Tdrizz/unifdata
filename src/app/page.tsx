@@ -7,21 +7,52 @@ const howItWorks = [
   {
     step: "01",
     title: "Connect your data",
-    body: "Import a spreadsheet or connect Jobber, QuickBooks, HubSpot, or Square. Vera maps your records automatically — customers, jobs, revenue, follow-ups.",
+    body: "Import a spreadsheet or connect Jobber, QuickBooks, HubSpot, or Square. Everything maps automatically — customers, jobs, revenue, follow-ups.",
   },
   {
     step: "02",
-    title: "Vera learns your business",
-    body: "Every night, Vera reviews everything. Stale customers. Unpaid work. Overdue follow-ups. Missed opportunities. It prepares a brief so you don't have to dig.",
+    title: "Everything stays in sync",
+    body: "Customers, jobs, and invoices update automatically as work happens — from your integrations, your team, or a CSV import. No more re-typing the same thing into three different tools.",
   },
   {
     step: "03",
     title: "You make the calls",
-    body: "Open the app each morning and see exactly what needs attention. Approve a follow-up, mark a job complete, collect a payment — or reply to a text or email right from the same inbox. Vera does the thinking. You make the decisions.",
+    body: "See exactly what needs attention, update a job, collect a payment, or reply to a text or email — all from the same place. Vera flags what's urgent so nothing slips through.",
+  },
+];
+
+const capabilities = [
+  {
+    icon: "kanban" as const,
+    title: "Customers & pipeline",
+    body: "Every lead, quote, and job tied to the right customer record — searchable, always current, never a stale spreadsheet.",
+  },
+  {
+    icon: "dollar" as const,
+    title: "Revenue & invoicing",
+    body: "See what's paid, what's owed, and what's stalling — in real numbers pulled from your actual jobs, not guesses.",
+  },
+  {
+    icon: "chat" as const,
+    title: "Communications",
+    body: "Texts and emails land in one inbox, tied to the customer's record. Nothing gets lost in someone's personal phone.",
+  },
+  {
+    icon: "plug" as const,
+    title: "Integrations",
+    body: "Connect QuickBooks, Jobber, HubSpot, and Square in a few clicks. No CSV exports, no double entry.",
   },
 ];
 
 const integrations = ["QuickBooks", "Jobber", "HubSpot", "Square", "Google Sheets", "CSV"];
+
+function CapabilityIcon({ icon }: { icon: "kanban" | "dollar" | "chat" | "plug" }) {
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "#8B80E0", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (icon === "kanban") return <svg {...common}><rect x="3" y="3" width="5" height="18" rx="1" /><rect x="9.5" y="3" width="5" height="18" rx="1" /><rect x="16" y="3" width="5" height="18" rx="1" /></svg>;
+  if (icon === "dollar") return <svg {...common}><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>;
+  if (icon === "chat") return <svg {...common}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>;
+  return <svg {...common}><path d="M12 22v-5" /><path d="M9 8V2" /><path d="M15 8V2" /><path d="M18 8v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" /></svg>;
+}
 
 export default function HomePage() {
   return (
@@ -30,18 +61,17 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-[#4A3FA8] opacity-[0.09] blur-[160px]" />
+        <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[560px] w-[820px] rounded-full bg-[#2f3a52] opacity-[0.35] blur-[160px]" />
         <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-16">
           <div className="max-w-3xl mx-auto text-center">
             <div className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[12.5px] font-medium text-slate-400 mb-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#7B72D4]" />
-              Vera — your AI business assistant
+              For home services, construction & professional services
             </div>
             <h1 className="animate-fade-up [animation-delay:60ms] text-[52px] sm:text-[64px] lg:text-[76px] font-semibold leading-[1.02] tracking-[-0.03em] mb-6">
-              Your business,<br />briefed every morning.
+              One system for your<br />customers, jobs, and revenue.
             </h1>
             <p className="animate-fade-up [animation-delay:120ms] text-[18px] leading-[1.75] text-slate-300 max-w-xl mx-auto mb-10">
-              Stop running your business from memory. Vera reviews your customers, jobs, revenue, and follow-ups overnight — and tells you exactly what needs attention when you wake up.
+              Stop juggling spreadsheets, texts, and three different apps. UnifData brings your customers, jobs, invoices, and messages into one place — with Vera, an AI assistant that flags what needs your attention.
             </p>
             <div className="animate-fade-up [animation-delay:180ms] flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
@@ -83,17 +113,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Everything in one place */}
+      <section className="border-t border-white/[0.06] py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="max-w-xl mb-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">The product</p>
+            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Everything in one place.</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {capabilities.map((c) => (
+              <div key={c.title} className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-7">
+                <div className="w-9 h-9 rounded-[10px] bg-white/[0.06] flex items-center justify-center mb-5">
+                  <CapabilityIcon icon={c.icon} />
+                </div>
+                <p className="text-[17px] font-semibold leading-snug mb-2.5">{c.title}</p>
+                <p className="text-[14px] leading-[1.75] text-slate-400">{c.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="border-t border-white/[0.06] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="max-w-xl mb-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">How it works</p>
-            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Set it up once.<br />Vera handles the rest.</h2>
+            <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em]">Set it up once.<br />It runs itself from there.</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {howItWorks.map((step) => (
               <div key={step.step} className="rounded-[18px] border border-white/[0.08] bg-white/[0.03] p-7">
-                <div className="w-9 h-9 rounded-[10px] bg-[#4A3FA8]/20 flex items-center justify-center text-[12px] font-bold text-[#8B80E0] mb-5">{step.step}</div>
+                <div className="w-9 h-9 rounded-[10px] bg-white/[0.06] flex items-center justify-center text-[12px] font-bold text-slate-300 mb-5">{step.step}</div>
                 <p className="text-[17px] font-semibold leading-snug mb-3">{step.title}</p>
                 <p className="text-[14px] leading-[1.75] text-slate-400">{step.body}</p>
               </div>
@@ -102,39 +153,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What Vera does */}
+      {/* Meet Vera — a feature, not the whole pitch */}
       <section className="border-t border-white/[0.06] py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Meet Vera</p>
-              <h2 className="text-[40px] font-semibold leading-[1.1] tracking-[-0.025em] mb-5">The assistant that works while you sleep.</h2>
-              <p className="text-[16px] leading-[1.8] text-slate-400 mb-8">
-                Every night, Vera reviews your entire business. Customers who haven&apos;t been contacted. Jobs sitting unpaid. Follow-ups that slipped through. Proposals that went quiet.
-              </p>
-              <p className="text-[16px] leading-[1.8] text-slate-400 mb-10">
-                By morning, it&apos;s prepared a briefing with the specific actions that matter most — and drafts the messages to go with them. You review, approve, and move on.
-              </p>
-              <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-[12px] bg-[#4A3FA8] px-6 py-3 text-[14px] font-semibold text-white shadow-[0_8px_28px_rgba(74,63,168,0.4)] hover:bg-[#3D3494] transition-colors active:scale-[0.97]">
-                See Vera in action →
-              </a>
-            </div>
-            <div className="space-y-3">
-              {[
-                { icon: "📬", title: "Outreach drafts", body: "Vera writes follow-up messages for customers who need contact. You approve or skip — nothing sends until you say so, unless you switch on auto-send yourself." },
-                { icon: "💬", title: "Texting and email, in one inbox", body: "Every reply — text or email — lands in one thread tied to that customer's record. Nothing gets lost in someone's personal phone." },
-                { icon: "⚠️", title: "Revenue alerts", body: "Flags unpaid invoices, stalling jobs, and revenue drops before they become problems." },
-                { icon: "🔁", title: "Runs every night", body: "The briefing refreshes automatically. You start every morning knowing exactly where things stand." },
-                { icon: "🎯", title: "Adapts to your business", body: "Vera learns your patterns. The longer you use it, the better its prioritization gets." },
-              ].map((item) => (
-                <div key={item.title} className="flex gap-4 rounded-[14px] border border-white/[0.07] bg-white/[0.03] p-5">
-                  <span className="text-[20px] shrink-0 mt-0.5">{item.icon}</span>
-                  <div>
-                    <p className="text-[14px] font-semibold mb-1">{item.title}</p>
-                    <p className="text-[13.5px] leading-[1.65] text-slate-400">{item.body}</p>
-                  </div>
-                </div>
-              ))}
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-8 sm:p-12">
+            <div className="flex items-start gap-5">
+              <div className="w-11 h-11 rounded-[12px] bg-[#4A3FA8]/20 flex items-center justify-center shrink-0">
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#8B80E0" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 mb-2">Included with every plan</p>
+                <h2 className="text-[28px] sm:text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] mb-4">Meet Vera, your AI assistant.</h2>
+                <p className="text-[15px] leading-[1.8] text-slate-400 mb-7 max-w-xl">
+                  Every night, Vera reviews your business and flags what actually needs attention — stale customers, unpaid work, follow-ups that slipped. No dashboards to dig through, no reports to run.
+                </p>
+                <ul className="grid gap-3 sm:grid-cols-3 mb-7">
+                  {["Flags what needs attention each morning", "Drafts follow-ups you approve before they send", "Learns your patterns the longer you use it"].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.6] text-slate-300">
+                      <svg className="w-4 h-4 shrink-0 mt-[2px] text-[#8B80E0]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href={DEMO_FORM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex text-[14px] font-semibold text-[#8B80E0] hover:text-[#a89de8] transition-colors">
+                  See Vera in action →
+                </a>
+              </div>
             </div>
           </div>
         </div>

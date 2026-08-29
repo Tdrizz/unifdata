@@ -197,12 +197,12 @@ export function SettingsView({
           </div>
         </div>
 
-        {/* Integrations moved to /imports */}
+        {/* Integrations live on their own page */}
         <div className="py-[26px] border-b border-ud">
           <p className="text-[13.5px] font-semibold text-ud-ink mb-0.5">Integrations</p>
           <p className="text-[12px] text-ud-muted mb-3">Connect your existing tools to sync data automatically.</p>
-          <Link href="/imports" className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
-            Manage integrations in Imports →
+          <Link href="/integrations" className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
+            Manage integrations →
           </Link>
         </div>
 

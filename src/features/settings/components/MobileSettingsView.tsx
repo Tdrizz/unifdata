@@ -233,13 +233,13 @@ export function MobileSettingsView({
         </div>
       </div>
 
-      {/* Integrations moved to /imports */}
+      {/* Integrations live on their own page */}
       <div className="rounded-[14px] border border-ud bg-ud-surface shadow-ud overflow-hidden">
         <div className="px-[22px] py-[18px]">
           <p className="text-[14.5px] font-semibold text-ud-ink">Integrations</p>
           <p className="mt-0.5 mb-3 text-[13px] text-ud-muted">Connect your existing tools to sync data automatically.</p>
-          <Link href="/imports" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
-            Manage integrations in Imports →
+          <Link href="/integrations" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ud-accent hover:opacity-80 transition-opacity">
+            Manage integrations →
           </Link>
         </div>
       </div>

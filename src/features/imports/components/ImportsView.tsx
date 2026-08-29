@@ -2,13 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { CsvImportSessionFlow } from "@/app/imports/CsvImportSessionFlow";
 import { GoogleSheetsImportFlow } from "@/app/imports/GoogleSheetsImportFlow";
 import { ColumnMapper } from "@/features/imports/components/ColumnMapper";
-import { SyncNowButton } from "@/components/ui/SyncNowButton";
-import { disconnectIntegrationAction } from "@/features/settings/actions";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { useProfile } from "@/lib/profile-context";
@@ -85,12 +82,6 @@ function sessionStatusLabel(session: ImportsPageData["importSessions"][number]) 
   if (session.error_rows && session.error_rows > 0) return `${session.error_rows} errors`;
   return session.status || "—";
 }
-
-function isConnected(integration: { status: string | null } | undefined) {
-  const s = String(integration?.status || "").toLowerCase();
-  return s.includes("active") || s.includes("connected");
-}
-
 
 function PublicSheetsFlow() {
   const router = useRouter();
@@ -234,62 +225,10 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
     String(i.provider ?? "").toLowerCase().includes("google"),
   );
 
-  const googleIntegration = integrations.find((i) =>
-    String(i.provider || "").toLowerCase().includes("google"),
-  );
-  const quickbooksIntegration = integrations.find((i) => i.provider === "quickbooks");
-  const squareIntegration = integrations.find((i) => i.provider === "square");
-  const hubspotIntegration = integrations.find((i) => i.provider === "hubspot");
-  const jobberIntegration = integrations.find((i) => i.provider === "jobber");
-  const stripeIntegration = integrations.find((i) => i.provider === "stripe");
-
-  const integrationRows = [
-    { provider: "quickbooks", label: "QuickBooks", desc: "Sync customers, invoices, and revenue", integration: quickbooksIntegration, startHref: "/api/integrations/quickbooks/start" },
-    { provider: "google_sheets", label: "Google Sheets", desc: "Used for bulk imports below", integration: googleIntegration, startHref: "/api/integrations/google/start" },
-    { provider: "jobber", label: "Jobber", desc: "Sync jobs, quotes, and field schedules", integration: jobberIntegration, startHref: "/api/integrations/jobber/start" },
-    // HubSpot and Stripe are hidden for new connections but stay manageable
-    // where already connected.
-    ...(hubspotIntegration
-      ? [{ provider: "hubspot", label: "HubSpot", desc: "Sync contacts and deal activity", integration: hubspotIntegration, startHref: "/api/integrations/hubspot/start" }]
-      : []),
-    ...(stripeIntegration
-      ? [{ provider: "stripe", label: "Stripe", desc: "Sync customers and payment records", integration: stripeIntegration, startHref: "/api/integrations/stripe/start" }]
-      : []),
-    { provider: "square", label: "Square", desc: "Import payments, invoices, and customer records", integration: squareIntegration, startHref: "/api/integrations/square/start" },
-  ];
-
-  // Most recent sync run per provider (syncRuns arrive ordered newest-first)
-  const lastSyncByProvider: Record<string, string> = {};
-  // A connection can stay "active" in the integrations table indefinitely
-  // even after its refresh token expires and every sync since has been
-  // silently failing — the row itself never changes, only the sync runs do.
-  // Surface that failure next to the connection instead of only in the
-  // buried "Recent syncs" list below.
-  const lastFailureByProvider: Record<string, string | null> = {};
-  for (const run of syncRuns) {
-    const meta = (run.metadata ?? {}) as Record<string, unknown>;
-    const provider = typeof meta.provider === "string" ? meta.provider : "";
-    if (!provider) continue;
-    if (run.started_at && !lastSyncByProvider[provider]) {
-      lastSyncByProvider[provider] = run.started_at;
-    }
-    if (!(provider in lastFailureByProvider)) {
-      const isError = run.status === "error" || run.status === "failed";
-      lastFailureByProvider[provider] = isError ? (run.error_message ?? "Sync failing") : null;
-    }
-  }
-
   const syncSessions = importSessions.filter((s) => SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
   const manualSessions = importSessions.filter((s) => !SYNC_SOURCE_TYPES.has(s.source_type ?? ""));
 
   const sessionById = new Map(syncSessions.map((s) => [s.id, s]));
-
-  const badgePill = (connected: boolean) => {
-    const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
-    return connected
-      ? `${base} bg-ud-success-bg text-ud-success`
-      : `${base} bg-ud-surface-sunk text-ud-muted`;
-  };
 
   const syncBadge = (isError: boolean, hasRecords: boolean) => {
     const base = "inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold";
@@ -317,61 +256,19 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
         className="mb-6"
       />
 
-      {/* Connected sources */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-[15px] font-semibold text-ud-ink">Connected sources</h2>
-            <p className="text-[12.5px] text-ud-muted mt-0.5">Sync data automatically from your existing tools.</p>
-          </div>
+      {/* Connected sources live on /integrations now -- this is just a
+          pointer over there, not a second copy of the connect UI. */}
+      <div className="mb-8 flex items-center justify-between gap-4 rounded-[12px] border border-ud bg-ud-surface px-5 py-4">
+        <div>
+          <p className="text-[13px] font-semibold text-ud-ink">Connect QuickBooks, Jobber, and more</p>
+          <p className="text-[12px] text-ud-muted mt-0.5">Sync data automatically from your existing tools.</p>
         </div>
-        <div className="bg-ud-surface border border-ud rounded-[12px] overflow-hidden">
-          {integrationRows.map(({ provider, label, desc, integration, startHref }) => {
-            const connected = isConnected(integration);
-            const lastSync = lastSyncByProvider[provider];
-            const failure = connected ? lastFailureByProvider[provider] : null;
-            return (
-              <div key={provider} className={queueItem}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-semibold text-ud-ink">{label}</p>
-                    <span className={badgePill(connected)}>
-                      {connected ? "Connected" : "Not connected"}
-                    </span>
-                    {failure && (
-                      <span className="inline-flex items-center px-[9px] py-[3px] rounded-[6px] text-[11px] font-semibold bg-ud-danger-bg text-ud-danger">
-                        Sync failing
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[12px] text-ud-muted mt-[1px]">{desc}</p>
-                  {failure && (
-                    <p className="text-[11px] text-ud-danger mt-0.5">{failure}</p>
-                  )}
-                  {(integration?.provider_account_name || lastSync) && (
-                    <p className="text-[11px] text-ud-faint mt-0.5">
-                      {integration?.provider_account_name}
-                      {integration?.provider_account_name && lastSync && " · "}
-                      {lastSync && <>Last synced {formatSyncTime(lastSync)}</>}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {connected && integration?.status === "active" && (
-                    <SyncNowButton provider={provider} label={label} />
-                  )}
-                  {connected ? (
-                    <form action={disconnectIntegrationAction.bind(null, provider)}>
-                      <Button type="submit" variant="secondary" size="sm">Disconnect</Button>
-                    </form>
-                  ) : (
-                    <Link href={startHref} className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold text-[12px] px-[11px] py-[5px] rounded-[7px] bg-ud-surface border border-ud text-ud-muted hover:text-ud-ink hover:border-ud-hard transition-[color,border-color] duration-[120ms]">Connect</Link>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <Link
+          href="/integrations"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] border border-ud bg-ud-surface px-[13px] py-[7px] text-[12.5px] font-semibold text-ud-ink hover:border-ud-hard transition-colors"
+        >
+          Manage integrations →
+        </Link>
       </div>
 
       {/* Two import cards */}
