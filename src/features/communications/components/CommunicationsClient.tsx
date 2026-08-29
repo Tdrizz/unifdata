@@ -561,7 +561,7 @@ export function CommunicationsClient({
                             : "bg-ud-surface-sunk text-ud-ink border border-ud"
                         }`}
                       >
-                        <div className="text-[13px]">{msg.body}</div>
+                        <div className="text-[13px] whitespace-pre-wrap">{msg.body}</div>
                         <div
                           className={`text-[10px] mt-0.5 ${
                             msg.direction === "outbound" ? "text-white/70" : "text-ud-faint"
