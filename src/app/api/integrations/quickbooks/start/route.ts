@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import { setPopupFlagCookie } from "@/lib/integrations/popup-response";
 
 export async function GET(request: Request) {
   try {
@@ -36,6 +37,10 @@ export async function GET(request: Request) {
       path: "/",
       maxAge: 60 * 10,
     });
+
+    if (new URL(request.url).searchParams.get("popup") === "1") {
+      setPopupFlagCookie(response);
+    }
 
     return response;
   } catch (err) {

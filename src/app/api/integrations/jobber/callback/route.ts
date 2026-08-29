@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { finalizeIntegrationResponse } from "@/lib/integrations/popup-response";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
@@ -11,7 +12,7 @@ const SYNC_RECORD_TYPES = [
   { recordType: "revenue", label: "Invoices" },
 ] as const;
 
-export async function GET(request: Request) {
+async function handleCallback(request: Request): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
@@ -141,4 +142,8 @@ export async function GET(request: Request) {
   response.cookies.delete("frontierops_jobber_oauth_state");
 
   return response;
+}
+export async function GET(request: Request): Promise<NextResponse> {
+  const response = await handleCallback(request);
+  return finalizeIntegrationResponse(request, response, "jobber");
 }
