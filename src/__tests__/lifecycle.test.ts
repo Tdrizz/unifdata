@@ -6,7 +6,6 @@
  */
 import { describe, it, expect } from "vitest";
 import {
-  isAcceptedOpportunityStatus,
   isCompletedPaidJob,
   syncAcceptedOpportunity,
   syncSaleForJob,
@@ -68,15 +67,6 @@ function makeFakeSupabase() {
     client: { from: (table: "jobs" | "sales") => makeBuilder(table) } as any,
   };
 }
-
-describe("isAcceptedOpportunityStatus", () => {
-  it("is true only for exactly 'Won'", () => {
-    expect(isAcceptedOpportunityStatus("Won")).toBe(true);
-    expect(isAcceptedOpportunityStatus("won")).toBe(false);
-    expect(isAcceptedOpportunityStatus("Lost")).toBe(false);
-    expect(isAcceptedOpportunityStatus(null)).toBe(false);
-  });
-});
 
 describe("isCompletedPaidJob", () => {
   it("requires both a completed status and Paid payment status", () => {

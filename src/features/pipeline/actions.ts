@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
-import { isAcceptedOpportunityStatus, isCompletedPaidJob, syncAcceptedOpportunity, syncSaleForJob } from "@/lib/lifecycle";
+import { isCompletedPaidJob, syncAcceptedOpportunity, syncSaleForJob } from "@/lib/lifecycle";
+import { isWon } from "@/lib/status";
 
 // Small, direct status transitions for the Pipeline board's per-card action
 // buttons -- deliberately not the full create/update forms (JobForm.tsx,
@@ -33,7 +34,7 @@ export async function setLeadStatusAction(leadId: string, status: string): Promi
   // change above already committed, so a transient failure here shouldn't
   // surface as if nothing happened; it should still revalidate and let the
   // card show its new (already-saved) status.
-  if (isAcceptedOpportunityStatus(status)) {
+  if (isWon(status)) {
     try {
       await syncAcceptedOpportunity({
         supabase,

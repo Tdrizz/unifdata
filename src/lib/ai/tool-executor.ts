@@ -11,17 +11,16 @@ import { sendEmail } from "@/lib/messaging/email";
 import { recordOutboundMessage } from "@/lib/messaging/record-outbound-message";
 import { rateLimit } from "@/lib/rate-limit";
 import {
-  isAcceptedOpportunityStatus,
   syncAcceptedOpportunity,
   isCompletedPaidJob,
   syncSaleForJob,
   resolveOpenFollowUps,
 } from "@/lib/lifecycle";
-import { isLost, isCompleteWork, isCancelledWork } from "@/lib/status";
+import { isWon, isLost, isCompleteWork, isCancelledWork } from "@/lib/status";
 
 // Same vocabularies the human-facing forms use — see tools.ts for why this
-// matters (consistency with human-written data, and lifecycle.ts's exact
-// "Won" / "complete"+"paid" checks).
+// matters (consistency with human-written data, and lifecycle.ts's
+// "complete"+"paid" check).
 const LEAD_STATUSES = ["New", "Contacted", "Estimate Sent", "Follow Up", "Won", "Lost"] as const;
 const JOB_STATUSES = ["Scheduled", "Active", "In Progress", "Completed", "Cancelled"] as const;
 const JOB_PAID_STATUSES = ["Unpaid", "Partial", "Paid"] as const;
@@ -242,7 +241,7 @@ export async function executeTool(
         }
 
         let note = "";
-        if (isAcceptedOpportunityStatus(status)) {
+        if (isWon(status)) {
           try {
             await syncAcceptedOpportunity({
               supabase,
@@ -286,7 +285,7 @@ export async function executeTool(
         if (error) return { success: false, message: `Failed to update lead: ${error.message}` };
 
         let note = "";
-        if (isAcceptedOpportunityStatus(data.status)) {
+        if (isWon(data.status)) {
           try {
             await syncAcceptedOpportunity({
               supabase,

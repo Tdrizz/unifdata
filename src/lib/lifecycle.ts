@@ -2,10 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import { isOpenFollowUp } from "@/lib/status";
 
-export function isAcceptedOpportunityStatus(status: string | null) {
-  return status === "Won";
-}
-
 export function isCompletedPaidJob(status: string | null, paidStatus: string | null) {
   const s = (status || "").toLowerCase();
   const p = (paidStatus || "").toLowerCase();

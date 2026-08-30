@@ -1,4 +1,5 @@
 import { isCompletedPaidJob } from "@/lib/lifecycle";
+import { isOpenFollowUp } from "@/lib/status";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { PipelineCard, PipelineStageName, RawContact, RawFollowUp, RawJob, RawLead, RawSale } from "./types";
 
@@ -72,15 +73,15 @@ function jobPipelineStage(status: string | null, paidStatus: string | null): Pip
 // the badge match is: exact lead_id for a lead card, else fall back to
 // contact_id (covers job/sale cards, and leads a follow-up wasn't explicitly
 // linked to). Earliest due date wins if a lead/contact has more than one.
-function isOpenFollowUpStatus(status: string | null): boolean {
-  return (status || "").toLowerCase().trim() !== "complete";
-}
-
+// Known limitation: a follow-up linked only by contact_id (no lead_id) can
+// end up matched to more than one card if the contact has multiple jobs/leads
+// with no lead_id of their own -- there's no schema field to disambiguate
+// which one it "really" belongs to.
 function buildFollowUpIndex(followUps: RawFollowUp[]) {
   const byLead = new Map<string, RawFollowUp>();
   const byContact = new Map<string, RawFollowUp>();
   const open = followUps
-    .filter((f) => isOpenFollowUpStatus(f.status))
+    .filter((f) => isOpenFollowUp(f.status))
     .sort((a, b) => a.due_date.localeCompare(b.due_date));
   for (const f of open) {
     if (f.lead_id && !byLead.has(f.lead_id)) byLead.set(f.lead_id, f);
