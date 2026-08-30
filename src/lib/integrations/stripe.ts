@@ -1,4 +1,5 @@
 import { registerSyncer } from "./registry";
+import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -82,7 +83,7 @@ export async function getStripeIntegration({
 
   if (error) throw new Error(error.message);
 
-  return data as StripeIntegration | null;
+  return data ? decryptIntegrationRow(data as StripeIntegration) : null;
 }
 
 export async function refreshStripeAccessToken({
@@ -118,8 +119,8 @@ export async function refreshStripeAccessToken({
   await supabase
     .from("integrations")
     .update({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || integration.refresh_token,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptTokenOrNull(data.refresh_token || integration.refresh_token),
       metadata: {
         ...(integration.metadata || {}),
         refreshed_at: new Date().toISOString(),

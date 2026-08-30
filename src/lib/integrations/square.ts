@@ -1,5 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
+import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
@@ -181,7 +182,7 @@ export async function getSquareIntegration({
 
   if (error) throw new Error(error.message);
 
-  return data as SquareIntegration | null;
+  return data ? decryptIntegrationRow(data as SquareIntegration) : null;
 }
 
 async function refreshSquareAccessToken({
@@ -222,8 +223,8 @@ async function refreshSquareAccessToken({
   await supabase
     .from("integrations")
     .update({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || integration.refresh_token,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptTokenOrNull(data.refresh_token || integration.refresh_token),
       token_expires_at: data.expires_at || null,
       metadata: {
         ...(integration.metadata || {}),

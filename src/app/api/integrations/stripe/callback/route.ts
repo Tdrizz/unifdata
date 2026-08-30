@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { exchangeStripeCode } from "@/lib/integrations/stripe";
+import { encryptToken, encryptTokenOrNull } from "@/lib/integrations/token-crypto";
 
 const SYNC_RECORD_TYPES = ["relationships", "revenue"] as const;
 
@@ -72,8 +73,8 @@ async function handleCallback(request: Request): Promise<NextResponse> {
       provider: "stripe",
       provider_account_name: tokenData.stripe_user_id || "Stripe Account",
       status: "active",
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || null,
+      access_token: encryptToken(tokenData.access_token),
+      refresh_token: encryptTokenOrNull(tokenData.refresh_token),
       token_expires_at: null,
       metadata: {
         stripe_user_id: tokenData.stripe_user_id || null,

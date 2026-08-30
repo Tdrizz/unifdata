@@ -3,6 +3,7 @@ import { verifyBearer } from "@/lib/security/secret";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
+import { decryptIntegrationRow } from "@/lib/integrations/token-crypto";
 
 // Import all syncers so they self-register via registerSyncer().
 import "@/lib/integrations/quickbooks";
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
     const startedAt = new Date().toISOString();
 
     try {
-      await refreshIntegrationToken(supabase, integration);
+      await refreshIntegrationToken(supabase, decryptIntegrationRow(integration));
 
       const { data: freshIntegration } = await supabase
         .from("integrations")
@@ -77,7 +78,7 @@ export async function GET(request: Request) {
       const result = await syncer.sync(
         supabase,
         integration.company_id,
-        freshIntegration,
+        decryptIntegrationRow(freshIntegration),
       );
 
       await supabase.from("sync_runs").insert({

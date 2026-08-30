@@ -1,5 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
+import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import { upsertMasterCustomer } from "@/lib/conflict-resolver";
 import type { IntegrationSyncer, SyncResult } from "./types";
@@ -232,7 +233,7 @@ export async function getHubSpotIntegration({
 
   if (error) throw new Error(error.message);
 
-  return data as HubSpotIntegration | null;
+  return data ? decryptIntegrationRow(data as HubSpotIntegration) : null;
 }
 
 async function refreshHubSpotAccessToken({
@@ -274,8 +275,8 @@ async function refreshHubSpotAccessToken({
   await supabase
     .from("integrations")
     .update({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || integration.refresh_token,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptTokenOrNull(data.refresh_token || integration.refresh_token),
       token_expires_at: expiresAt,
       metadata: {
         ...(integration.metadata || {}),

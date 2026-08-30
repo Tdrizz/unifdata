@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { exchangeHubSpotCode } from "@/lib/integrations/hubspot";
+import { encryptToken, encryptTokenOrNull } from "@/lib/integrations/token-crypto";
 
 const SYNC_RECORD_TYPES = [
   { recordType: "relationships", label: "Contacts" },
@@ -87,8 +88,8 @@ async function handleCallback(request: Request): Promise<NextResponse> {
       provider: "hubspot",
       provider_account_name: accountName,
       status: "active",
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || null,
+      access_token: encryptToken(tokenData.access_token),
+      refresh_token: encryptTokenOrNull(tokenData.refresh_token),
       token_expires_at: expiresAt,
       metadata: {
         token_type: tokenData.token_type || null,

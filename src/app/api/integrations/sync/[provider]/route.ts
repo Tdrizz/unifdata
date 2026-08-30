@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { getSyncer } from "@/lib/integrations/registry";
 import { refreshIntegrationToken } from "@/lib/integrations/token";
+import { decryptIntegrationRow } from "@/lib/integrations/token-crypto";
 import { rateLimit } from "@/lib/rate-limit";
 import { insertNotification } from "@/lib/notifications";
 
@@ -64,7 +65,7 @@ export async function POST(
   }
 
   try {
-    await refreshIntegrationToken(supabase, integration);
+    await refreshIntegrationToken(supabase, decryptIntegrationRow(integration));
 
     const { data: freshIntegration, error: freshError } = await supabase
       .from("integrations")
@@ -77,7 +78,7 @@ export async function POST(
     }
 
     const startedAt = new Date().toISOString();
-    const result = await syncer.sync(supabase, companyId, freshIntegration);
+    const result = await syncer.sync(supabase, companyId, decryptIntegrationRow(freshIntegration));
     const finishedAt = new Date().toISOString();
 
     await supabase.from("sync_runs").insert({

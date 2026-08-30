@@ -1,5 +1,6 @@
 import { registerSyncer } from "./registry";
 import { registerRefresher } from "./token";
+import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import { upsertMasterCustomer } from "@/lib/conflict-resolver";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -290,7 +291,7 @@ export async function getJobberIntegration({
 
   if (error) throw new Error(error.message);
 
-  return data as JobberIntegration | null;
+  return data ? decryptIntegrationRow(data as JobberIntegration) : null;
 }
 
 async function refreshJobberAccessToken({
@@ -332,8 +333,8 @@ async function refreshJobberAccessToken({
   await supabase
     .from("integrations")
     .update({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || integration.refresh_token,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptTokenOrNull(data.refresh_token || integration.refresh_token),
       token_expires_at: expiresAt,
       metadata: {
         ...(integration.metadata || {}),
