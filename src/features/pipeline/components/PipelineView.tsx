@@ -13,6 +13,7 @@ import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCa
 import { PIPELINE_ISSUE_FILTERS, PIPELINE_ISSUE_LABELS, isPipelineIssueId } from "../issue-filters";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import { PipelineCardActions } from "./PipelineCardActions";
+import { PipelineFollowUpsSection } from "./PipelineFollowUpsSection";
 import { formatDateOnly } from "@/lib/date-format";
 import type { PipelineCard as PipelineCardType, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -57,7 +58,7 @@ function PipelineCardRow({ card }: { card: PipelineCardType }) {
   );
 }
 
-export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
+export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs, followUps }: Props) {
   // Data Hub's "View →" links land here as /crm?issue=<id> -- see
   // issue-filters.ts. When present, the board is replaced by a flat list of
   // just the matching cards (across every stage, Lost included, since the
@@ -230,6 +231,12 @@ export function PipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }:
           </SectionCard>
         </div>
       )}
+
+      {/* Follow-ups — kept on this page rather than a separate destination,
+          so clearing one doesn't require leaving the board. */}
+      <div className="mb-8">
+        <PipelineFollowUpsSection followUps={followUps} />
+      </div>
 
       {/* Revenue */}
       <SectionCard

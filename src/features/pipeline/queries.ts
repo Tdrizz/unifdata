@@ -6,7 +6,7 @@ import type { PipelinePageData, RawFollowUp, RawJob, RawLead, RawSale } from "./
 const LEAD_FIELDS = "id, contact_id, service_requested, status, estimated_value, next_follow_up_date, source, contact:master_customers(id, first_name, last_name)";
 const JOB_FIELDS = "id, contact_id, lead_id, service_type, status, job_value, paid_status, start_date, contact:master_customers(id, first_name, last_name)";
 const SALE_FIELDS = "id, contact_id, job_id, service_type, amount, payment_status, sale_date, contact:master_customers(id, first_name, last_name)";
-const FOLLOW_UP_FIELDS = "id, lead_id, contact_id, due_date, status";
+const FOLLOW_UP_FIELDS = "id, lead_id, contact_id, due_date, status, message, contact:master_customers(id, first_name, last_name)";
 
 export async function getPipelinePageData(
   supabase: SupabaseClient,
@@ -52,5 +52,6 @@ export async function getPipelinePageData(
     leads,
     jobs,
     sales,
+    followUps,
   };
 }
