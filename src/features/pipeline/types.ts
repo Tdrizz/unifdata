@@ -62,6 +62,8 @@ export type RawFollowUp = {
   contact_id: string | null;
   due_date: string;
   status: string | null;
+  message?: string | null;
+  contact?: RawContact;
 };
 
 export type PipelinePageData = {
@@ -69,4 +71,5 @@ export type PipelinePageData = {
   leads: RawLead[];
   jobs: RawJob[];
   sales: RawSale[];
+  followUps: RawFollowUp[];
 };

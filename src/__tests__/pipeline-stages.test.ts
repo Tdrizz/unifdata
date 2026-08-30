@@ -183,6 +183,16 @@ describe("openFollowUp badge", () => {
     expect(cards[0].openFollowUp).toBeNull();
   });
 
+  // stages.ts used to have its own local isOpenFollowUpStatus() that only
+  // recognized an exact "complete" match -- now it shares status.ts's
+  // isOpenFollowUp(), which also treats "done"/"closed" (any casing) as
+  // finished, so a follow-up closed with different wording no longer keeps
+  // showing a stale "Follow-up due" badge on the board.
+  it("excludes a follow-up closed with different wording/casing than 'Complete'", () => {
+    const cards = mapRecordsToCards([lead()], [], [], [followUp({ status: "done" })]);
+    expect(cards[0].openFollowUp).toBeNull();
+  });
+
   it("picks the earliest due date when more than one is open", () => {
     const cards = mapRecordsToCards(
       [lead()],

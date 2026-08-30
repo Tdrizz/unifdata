@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
-import { isAcceptedOpportunityStatus, syncAcceptedOpportunity, resolveOpenFollowUps } from "@/lib/lifecycle";
-import { isLost } from "@/lib/status";
+import { syncAcceptedOpportunity, resolveOpenFollowUps } from "@/lib/lifecycle";
+import { isWon, isLost } from "@/lib/status";
 import { deleteLeadCascade } from "@/lib/crm/cascade-delete";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
@@ -61,7 +61,7 @@ export async function createLeadAction(
   if (error) return { error: error.message };
 
   let convertedJobId: string | null = null;
-  if (inserted && isAcceptedOpportunityStatus(status)) {
+  if (inserted && isWon(status)) {
     try {
       convertedJobId = await syncAcceptedOpportunity({
         supabase,
@@ -134,7 +134,7 @@ export async function updateLeadAction(
   if (error) return { error: error.message };
 
   let convertedJobId: string | null = null;
-  if (isAcceptedOpportunityStatus(status)) {
+  if (isWon(status)) {
     try {
       convertedJobId = await syncAcceptedOpportunity({
         supabase,
@@ -218,7 +218,7 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
   // reasoning for resolveOpenFollowUps on Lost, so bulk-marking a batch of
   // leads Lost doesn't leave every one of them still nagging about an open
   // follow-up for a dead opportunity.
-  if (isAcceptedOpportunityStatus(status)) {
+  if (isWon(status)) {
     for (const lead of updated ?? []) {
       try {
         await syncAcceptedOpportunity({

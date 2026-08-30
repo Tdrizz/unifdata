@@ -5,6 +5,8 @@ import { ContactActivityTab } from "./ContactActivityTab";
 import { ContactNotesTab } from "./ContactNotesTab";
 import { ContactCommunicationsTab } from "./ContactCommunicationsTab";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { MarkFollowUpDoneButton } from "@/features/follow-ups/components/MarkFollowUpDoneButton";
+import { isOpenFollowUp } from "@/lib/status";
 
 type Tone = "neutral" | "success" | "warning" | "danger" | "info";
 
@@ -148,15 +150,22 @@ function RecordsTab({ jobs, sales, followUps }: { jobs: JobRow[]; sales: SaleRow
           <SectionHeader title="Follow-ups" count={followUps.length} />
           <div className="space-y-2">
             {followUps.map((fu) => (
-              <a key={fu.id} href={`/follow-ups/${fu.id}/edit`} className="block p-3 rounded-[9px] border border-ud hover:bg-ud-surface-sunk transition-colors">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ud-ink truncate">{fu.message || "Follow-up"}</p>
-                    <p className="text-[11px] text-ud-muted mt-0.5">Due {formatDate(fu.due_date)}</p>
+              <div key={fu.id} className="relative rounded-[9px] border border-ud hover:bg-ud-surface-sunk transition-colors">
+                <a href={`/follow-ups/${fu.id}/edit`} className="block p-3">
+                  <div className="flex items-center justify-between gap-3 pr-[92px]">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-ud-ink truncate">{fu.message || "Follow-up"}</p>
+                      <p className="text-[11px] text-ud-muted mt-0.5">Due {formatDate(fu.due_date)}</p>
+                    </div>
+                    <StatusBadge tone={statusTone(fu.status)}>{fu.status ?? "open"}</StatusBadge>
                   </div>
-                  <StatusBadge tone={statusTone(fu.status)}>{fu.status ?? "open"}</StatusBadge>
-                </div>
-              </a>
+                </a>
+                {isOpenFollowUp(fu.status) && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <MarkFollowUpDoneButton id={fu.id} />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

@@ -17,6 +17,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { Pill } from "@/components/ui/Pill";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { OnboardingChecklist } from "./OnboardingChecklist";
+import { MarkFollowUpDoneButton } from "@/features/follow-ups/components/MarkFollowUpDoneButton";
 
 type QueueItem = {
   id: string;
@@ -27,6 +28,9 @@ type QueueItem = {
   tone: "success" | "warning" | "danger" | "neutral";
   due_date?: string | null;
   priority: number;
+  // Only set on manual follow-up items (not opportunity/payment/cleanup
+  // items) — drives the inline "Mark done" escape hatch on the row.
+  followUpId?: string;
 };
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
@@ -196,6 +200,7 @@ export function WorkspaceView({
       tone: getFollowUpTone(action.due_date),
       due_date: action.due_date,
       priority: isOverdue(action.due_date) ? 0 : isDueToday(action.due_date) ? 1 : action.due_date ? 2 : 4,
+      followUpId: action.id,
     }));
 
   const opportunityFollowUpItems: QueueItem[] = openLeads
@@ -546,15 +551,26 @@ export function WorkspaceView({
             <p className="px-5 py-5 text-sm text-ud-muted text-center">Nothing needs attention right now.</p>
           ) : (
             priorityQueue.map((item, idx) => (
-              <Link key={item.id} href={item.href}>
-                <ListRow
-                  leading={<Pill tone={item.tone}>{item.label}</Pill>}
-                  title={item.title}
-                  subtitle={item.detail}
-                  isLast={idx === priorityQueue.length - 1}
-                  onClick={() => {}}
-                />
-              </Link>
+              <div key={item.id} className="relative">
+                <Link href={item.href}>
+                  <ListRow
+                    leading={<Pill tone={item.tone}>{item.label}</Pill>}
+                    title={item.title}
+                    subtitle={item.detail}
+                    trailing={item.followUpId ? <span className="inline-block w-[86px]" /> : undefined}
+                    isLast={idx === priorityQueue.length - 1}
+                    onClick={() => {}}
+                  />
+                </Link>
+                {/* Sibling of the Link, not nested inside it — same reasoning
+                    as PipelineCardActions.tsx — so it stays clickable without
+                    triggering the row's own navigation. */}
+                {item.followUpId && (
+                  <div className="absolute right-[14px] top-1/2 -translate-y-1/2">
+                    <MarkFollowUpDoneButton id={item.followUpId} />
+                  </div>
+                )}
+              </div>
             ))
           )}
         </Card>
