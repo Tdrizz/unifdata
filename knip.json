@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/app/**/page.tsx",
+    "src/app/**/layout.tsx",
+    "src/app/**/route.ts",
+    "src/middleware.ts",
+    "scripts/**/*.{ts,mjs,js}",
+    "generate-splash.js",
+    "public/sw.js"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs,js}"
+  ],
+  "ignore": ["src/types/db.ts"]
+}
