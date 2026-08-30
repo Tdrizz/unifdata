@@ -19,6 +19,8 @@ import type { IndustryProfile } from "@/lib/industry-profiles";
 import type { LeadRow } from "../types";
 import type { ContactForSelect } from "@/lib/crm/types";
 import { updateLeadAction, deleteLeadAction, type ActionState } from "../actions";
+import { buildLeadDeleteCategories } from "@/lib/crm/cascade-delete";
+import type { LeadRelatedCounts } from "@/lib/crm/related-counts";
 
 type Props = {
   lead: LeadRow;
@@ -26,6 +28,7 @@ type Props = {
   profile: IndustryProfile;
   errorParam?: string;
   deleteWarning?: string | null;
+  relatedCounts?: LeadRelatedCounts | null;
 };
 
 function getOpportunityIssues(lead: LeadRow) {
@@ -52,7 +55,7 @@ function getOpportunityIssues(lead: LeadRow) {
   return issues;
 }
 
-export function LeadForm({ lead, linkedContact, profile, deleteWarning }: Props) {
+export function LeadForm({ lead, linkedContact, profile, deleteWarning, relatedCounts }: Props) {
   const issues = getOpportunityIssues(lead);
 
   const boundUpdateAction = updateLeadAction.bind(null, lead.id);
@@ -252,6 +255,7 @@ export function LeadForm({ lead, linkedContact, profile, deleteWarning }: Props)
                     ? `This will permanently delete this opportunity. ${deleteWarning}`
                     : "This will permanently delete this opportunity and cannot be undone."
                 }
+                categories={relatedCounts ? buildLeadDeleteCategories(relatedCounts) : undefined}
               />
             </div>
           </SectionCard>

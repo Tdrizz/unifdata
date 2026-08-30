@@ -49,6 +49,7 @@ export default async function EditOpportunityPage({
         linkedContact={linkedContact}
         profile={profile}
         deleteWarning={deleteWarning}
+        relatedCounts={relatedCounts}
       />
     </AppShell>
   );

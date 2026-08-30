@@ -7,6 +7,8 @@ import { updateContactAction, deleteContactAction, type ActionState } from "../a
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { ContactCustomFieldsEdit, type CustomFieldDef } from "./ContactCustomFields";
+import { buildContactDeleteCategories } from "@/lib/crm/cascade-delete";
+import type { ContactRelatedCounts } from "@/lib/crm/related-counts";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
 
@@ -36,9 +38,10 @@ type Props = {
   customFields?: CustomFieldDef[];
   customFieldValues?: Record<string, string | null>;
   deleteWarning?: string | null;
+  relatedCounts?: ContactRelatedCounts | null;
 };
 
-export function ContactEditForm({ contact, profile, errorParam, customFields = [], customFieldValues = {}, deleteWarning }: Props) {
+export function ContactEditForm({ contact, profile, errorParam, customFields = [], customFieldValues = {}, deleteWarning, relatedCounts }: Props) {
   const updateAction = updateContactAction.bind(null, contact.id);
   const [state, formAction] = useActionState<ActionState, FormData>(updateAction, null);
   const deleteAction = deleteContactAction.bind(null, contact.id);
@@ -142,6 +145,7 @@ export function ContactEditForm({ contact, profile, errorParam, customFields = [
         <DeleteConfirm
           action={deleteAction}
           description={deleteWarning ?? `This will permanently delete this ${customerLabel} and cannot be undone.`}
+          categories={relatedCounts ? buildContactDeleteCategories(relatedCounts) : undefined}
         />
       </div>
     </div>

@@ -95,6 +95,7 @@ export default async function CustomerEditPage({
           customFields={customFields}
           customFieldValues={customFieldValues}
           deleteWarning={deleteWarning}
+          relatedCounts={relatedCounts}
         />
       </div>
     </AppShell>
