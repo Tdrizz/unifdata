@@ -5,6 +5,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { getLeadById } from "@/features/leads/queries";
 import { getContactForSelect } from "@/lib/crm/contacts";
+import { getLeadRelatedCounts, describeLeadRelatedCounts } from "@/lib/crm/related-counts";
 import { LeadForm } from "@/features/leads/components/LeadForm";
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,8 @@ export default async function EditOpportunityPage({
   if (!lead) redirect("/crm");
 
   const linkedContact = await getContactForSelect(supabase, company.id, lead.contact_id ?? lead.customer_id);
+  const relatedCounts = await getLeadRelatedCounts(supabase, company.id, lead.id);
+  const deleteWarning = describeLeadRelatedCounts(relatedCounts);
 
   return (
     <AppShell
@@ -45,6 +48,7 @@ export default async function EditOpportunityPage({
         lead={lead}
         linkedContact={linkedContact}
         profile={profile}
+        deleteWarning={deleteWarning}
       />
     </AppShell>
   );

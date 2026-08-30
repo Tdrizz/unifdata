@@ -25,6 +25,7 @@ type Props = {
   linkedContact: ContactForSelect | null;
   profile: IndustryProfile;
   errorParam?: string;
+  deleteWarning?: string | null;
 };
 
 function getOpportunityIssues(lead: LeadRow) {
@@ -51,7 +52,7 @@ function getOpportunityIssues(lead: LeadRow) {
   return issues;
 }
 
-export function LeadForm({ lead, linkedContact, profile }: Props) {
+export function LeadForm({ lead, linkedContact, profile, deleteWarning }: Props) {
   const issues = getOpportunityIssues(lead);
 
   const boundUpdateAction = updateLeadAction.bind(null, lead.id);
@@ -246,7 +247,11 @@ export function LeadForm({ lead, linkedContact, profile }: Props) {
             <div className="p-5">
               <DeleteConfirm
                 action={deleteAction}
-                description="This will permanently delete this opportunity. Linked jobs and follow-ups will lose this connection but will not be deleted."
+                description={
+                  deleteWarning
+                    ? `This will permanently delete this opportunity. ${deleteWarning}`
+                    : "This will permanently delete this opportunity and cannot be undone."
+                }
               />
             </div>
           </SectionCard>

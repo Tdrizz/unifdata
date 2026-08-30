@@ -27,6 +27,7 @@ function makeFakeSupabase(seed: Record<string, Row[]>) {
     let inFilter: { col: string; vals: unknown[] } | null = null;
     let mode: "insert" | "update" | "delete" | "select" = "select";
     let payload: Row | null = null;
+    let isCountQuery = false;
 
     function rows() {
       return store[table] ?? (store[table] = []);
@@ -57,12 +58,19 @@ function makeFakeSupabase(seed: Record<string, Row[]>) {
         return { data: null, error: null, count: before - store[table].length };
       }
       const found = rows().filter(matches);
+      // getContactRelatedCounts/getLeadRelatedCounts use
+      // .select(cols, { count: "exact", head: true }) -- Postgrest returns
+      // the row count with no `data` in that mode.
+      if (isCountQuery) return { data: null, count: found.length, error: null };
       return { data: found, error: null };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const builder: any = {
-      select: () => builder,
+      select: (_cols?: string, opts?: { count?: string; head?: boolean }) => {
+        isCountQuery = Boolean(opts?.head);
+        return builder;
+      },
       insert: (p: Row) => {
         mode = "insert";
         payload = p;
@@ -152,6 +160,26 @@ describe("delete_contact", () => {
     const result = await executeTool("delete_contact", { customer_id: CUSTOMER_ID }, supabase, OTHER_ORG);
     expect(result.success).toBe(false);
     expect(db.master_customers).toHaveLength(1);
+  });
+
+  // The reported gap: deleting a contact left leads/jobs/follow-ups
+  // orphaned (contact_id set NULL) with no warning to whoever deleted it --
+  // AI or human. The seeded LEAD_ID is already linked via contact_id, so
+  // this exercises the real count path, not a synthetic one.
+  it("states what was actually attached when deleting a contact with linked records", async () => {
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool("delete_contact", { customer_id: CUSTOMER_ID }, supabase, ORG);
+    expect(result.success).toBe(true);
+    expect(result.message).toContain("1 opportunity");
+    expect(result.message).toContain("lose this connection but won't be deleted");
+  });
+
+  it("says just 'Contact deleted.' when nothing else references it", async () => {
+    db.leads = [];
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool("delete_contact", { customer_id: CUSTOMER_ID }, supabase, ORG);
+    expect(result.success).toBe(true);
+    expect(result.message).toBe("Contact deleted.");
   });
 });
 

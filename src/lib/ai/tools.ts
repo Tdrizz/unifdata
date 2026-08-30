@@ -51,7 +51,7 @@ export const CHAT_TOOLS: ChatCompletionTool[] = [
     function: {
       name: "delete_contact",
       description:
-        "Permanently deletes a customer/contact record. Use this when the user explicitly asks to remove, delete, or get rid of a contact — for example clearing out test or junk entries. This is immediate and cannot be undone, so only call it for records the user has clearly identified (e.g. by name or ID), never as a guess.",
+        "Permanently deletes a customer/contact record. Use this when the user explicitly asks to remove, delete, or get rid of a contact — for example clearing out test or junk entries. This is immediate and cannot be undone, so only call it for records the user has clearly identified (e.g. by name or ID), never as a guess. Any leads, jobs, sales, follow-ups, or message threads linked to this contact are not deleted — they just lose the link to this contact and keep existing on their own. Notes and activity-log entries on the contact ARE permanently deleted along with it. The tool's result states exactly what was affected; report that back to the user rather than assuming nothing else was touched.",
       parameters: {
         type: "object",
         properties: {
