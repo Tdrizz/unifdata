@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
+import { getPrimaryAdminEmail } from "@/lib/admin";
 
 const waitlistSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name.").max(120),
@@ -74,9 +75,7 @@ export async function submitWaitlistRequest(
     const resend = new Resend(resendKey);
 
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? `noreply@${new URL(appUrl || "https://example.com").hostname}`;
-    const adminEmail = (process.env.ADMIN_EMAILS ?? process.env.ADMIN_EMAIL ?? "")
-      .split(",")[0]
-      ?.trim() ?? "";
+    const adminEmail = getPrimaryAdminEmail();
     if (!adminEmail) {
       console.warn("[waitlist.submit] ADMIN_EMAILS env var not set — skipping notification email");
       return { ok: true };
