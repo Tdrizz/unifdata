@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { sanitizeSearchTerm } from "@/lib/search";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Unified global search (Cmd+K palette) across the record types a user
 // actually types names/phrases for: contacts, leads, jobs, and sales.
@@ -45,6 +46,13 @@ export async function GET(request: Request) {
   if (!currentCompany) return NextResponse.json([], { status: 401 });
 
   const { company } = currentCompany;
+
+  // Generous — this backs a live-typing Cmd+K palette, so it's a UX throttle
+  // against a runaway client more than a strict security limit.
+  if (!(await rateLimit(`search:${company.id}`, 60, 60_000))) {
+    return NextResponse.json({ error: "Too many searches. Try again in a moment." }, { status: 429 });
+  }
+
   const term = sanitizeSearchTerm(q);
 
   // Contacts are matched first, and separately from leads/jobs/sales, so

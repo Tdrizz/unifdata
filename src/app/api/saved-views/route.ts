@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { rateLimit } from "@/lib/rate-limit";
 
 // Saved views: a personal list of named filter combinations per user (see
 // database/044_saved_views.sql). Deliberately not shared — every query and
@@ -28,6 +29,10 @@ export async function GET(request: Request) {
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return NextResponse.json({ error: "No company" }, { status: 403 });
 
+  if (!(await rateLimit(`saved-views:read:${user.id}`, 60, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Try again in a moment." }, { status: 429 });
+  }
+
   const { data, error } = await supabase
     .from("saved_views")
     .select("id, name, filters, created_at")
@@ -47,6 +52,10 @@ export async function POST(request: Request) {
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return NextResponse.json({ error: "No company" }, { status: 403 });
+
+  if (!(await rateLimit(`saved-views:write:${user.id}`, 20, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Try again in a moment." }, { status: 429 });
+  }
 
   let body: { page?: string; name?: string; filters?: Record<string, string> };
   try {
