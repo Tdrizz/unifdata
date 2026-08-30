@@ -3,6 +3,7 @@ import { finalizeIntegrationResponse } from "@/lib/integrations/popup-response";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import { encryptToken, encryptTokenOrNull } from "@/lib/integrations/token-crypto";
 
 type QBTokenResponse = {
   access_token?: string;
@@ -114,8 +115,8 @@ async function handleCallback(request: Request): Promise<NextResponse> {
       provider: "quickbooks",
       provider_account_name: `QuickBooks (${realmId})`,
       status: "active",
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || null,
+      access_token: encryptToken(tokenData.access_token),
+      refresh_token: encryptTokenOrNull(tokenData.refresh_token),
       token_expires_at: expiresAt,
       metadata: {
         realm_id: realmId,

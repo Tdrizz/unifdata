@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import { encryptToken, encryptTokenOrNull } from "@/lib/integrations/token-crypto";
 
 type GoogleTokenResponse = {
   access_token?: string;
@@ -141,8 +142,8 @@ export async function GET(request: Request) {
       provider: "google_sheets",
       provider_account_name: accountName,
       status: "active",
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || null,
+      access_token: encryptToken(tokenData.access_token),
+      refresh_token: encryptTokenOrNull(tokenData.refresh_token),
       token_expires_at: expiresAt,
       metadata: {
         scope: tokenData.scope || null,

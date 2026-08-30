@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
 import { exchangeJobberCode } from "@/lib/integrations/jobber";
+import { encryptToken, encryptTokenOrNull } from "@/lib/integrations/token-crypto";
 
 const SYNC_RECORD_TYPES = [
   { recordType: "relationships", label: "Clients" },
@@ -101,8 +102,8 @@ async function handleCallback(request: Request): Promise<NextResponse> {
       provider: "jobber",
       provider_account_name: accountName,
       status: "active",
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token || null,
+      access_token: encryptToken(tokenData.access_token),
+      refresh_token: encryptTokenOrNull(tokenData.refresh_token),
       token_expires_at: expiresAt,
       metadata: { token_type: tokenData.token_type || null, account_id: accountId },
     })

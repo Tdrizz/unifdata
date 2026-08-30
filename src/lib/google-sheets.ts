@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./integrations/token-crypto";
 
 type GoogleIntegration = {
   id: string;
@@ -57,7 +58,7 @@ export async function getGoogleSheetsIntegration({
     throw new Error(error.message);
   }
 
-  return data as GoogleIntegration | null;
+  return data ? decryptIntegrationRow(data as GoogleIntegration) : null;
 }
 
 async function refreshGoogleAccessToken({
@@ -110,8 +111,8 @@ async function refreshGoogleAccessToken({
   const { error } = await supabase
     .from("integrations")
     .update({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token || integration.refresh_token,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptTokenOrNull(data.refresh_token || integration.refresh_token),
       token_expires_at: tokenExpiresAt,
       metadata: {
         token_type: data.token_type || null,

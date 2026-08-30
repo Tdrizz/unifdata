@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import type { IntegrationRow } from "./types";
+import { encryptToken } from "./token-crypto";
 
 type RefreshResult = { accessToken: string; expiresAt: string | null };
 
@@ -16,6 +17,9 @@ export function registerRefresher(
   refreshers[provider] = fn;
 }
 
+// `integration` must already be decrypted (see token-crypto.ts's
+// decryptIntegrationRow) -- this reads integration.access_token/
+// refresh_token as plaintext and only encrypts on the way back into the DB.
 export async function refreshIntegrationToken(
   supabase: SupabaseClient<Database>,
   integration: IntegrationRow,
@@ -36,7 +40,7 @@ export async function refreshIntegrationToken(
   const { error: updateError } = await supabase
     .from("integrations")
     .update({
-      access_token: accessToken,
+      access_token: encryptToken(accessToken),
       token_expires_at: expiresAt,
     })
     .eq("id", integration.id);
