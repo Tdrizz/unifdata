@@ -10,7 +10,8 @@ import { resolveOwnedContactId } from "@/lib/crm/contacts";
 import { verifyOwned } from "@/lib/security/ownership";
 import { syncEmbedding } from "@/lib/embeddings/sync";
 import { buildJobText } from "@/lib/embeddings/generate";
-import { isCompletedPaidJob, syncSaleForJob } from "@/lib/lifecycle";
+import { isCompletedPaidJob, syncSaleForJob, resolveOpenFollowUps } from "@/lib/lifecycle";
+import { isCompleteWork, isCancelledWork } from "@/lib/status";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -99,6 +100,13 @@ export async function createJobAction(
         console.error("[lifecycle] syncSaleForJob failed", err);
       }
     }
+    if (isCompleteWork(status) || isCancelledWork(status)) {
+      try {
+        await resolveOpenFollowUps({ supabase, companyId: company.id, leadId: leadId || null, contactId: contactId || null });
+      } catch (err) {
+        console.error("[lifecycle] resolveOpenFollowUps failed", err);
+      }
+    }
   }
 
   revalidatePath("/sales");
@@ -181,6 +189,13 @@ export async function updateJobAction(
       });
     } catch (err) {
       console.error("[lifecycle] syncSaleForJob failed", err);
+    }
+  }
+  if (isCompleteWork(status) || isCancelledWork(status)) {
+    try {
+      await resolveOpenFollowUps({ supabase, companyId: company.id, leadId: leadId || null, contactId: contactId || null });
+    } catch (err) {
+      console.error("[lifecycle] resolveOpenFollowUps failed", err);
     }
   }
 

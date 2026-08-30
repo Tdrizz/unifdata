@@ -68,11 +68,18 @@ export async function getWorkspaceData(
       .order("created_at", { ascending: false })
       .limit(500),
 
+    // No "open only" filter here on purpose -- status is free text
+    // ("Complete", "complete", "Done" all occur), and a `.not("status",
+    // "in", ...)` filter is case-sensitive, so it silently excludes nothing
+    // once a completed follow-up isn't spelled exactly like the filter's
+    // literal (this one never matched anything, since every completed
+    // follow-up in this app is written as "Complete", not "completed").
+    // WorkspaceView filters client-side with isOpenFollowUp() instead, same
+    // as status.ts's own guidance for this exact column.
     supabase
       .from("follow_ups")
       .select("id, customer_id, message, due_date, status, created_at")
       .eq("company_id", companyId)
-      .not("status", "in", '("completed","done","closed")')
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(500),
   ]);

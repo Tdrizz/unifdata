@@ -10,6 +10,7 @@ import {
   isCompletedPaidJob,
   syncAcceptedOpportunity,
   syncSaleForJob,
+  resolveOpenFollowUps,
 } from "@/lib/lifecycle";
 
 function makeFakeSupabase() {
@@ -197,5 +198,114 @@ describe("syncSaleForJob", () => {
     });
 
     expect(store.sales).toHaveLength(0);
+  });
+});
+
+// Minimal fake supporting exactly what resolveOpenFollowUps needs:
+// select().eq().or() to find candidates, update().in() to resolve them.
+// Not a general Postgrest emulator -- .or() only parses the
+// "col.eq.val,col.eq.val" shape resolveOpenFollowUps itself produces.
+function makeFakeFollowUpsSupabase(seedFollowUps: Record<string, unknown>[]) {
+  const store: { follow_ups: Record<string, unknown>[] } = { follow_ups: [...seedFollowUps] };
+
+  function makeBuilder() {
+    let mode: "select" | "update" = "select";
+    let payload: Record<string, unknown> | null = null;
+    const eqFilters: [string, unknown][] = [];
+    let orFilter: { col: string; val: string }[] | null = null;
+    let inFilter: { col: string; vals: unknown[] } | null = null;
+
+    function matches(row: Record<string, unknown>) {
+      if (!eqFilters.every(([k, v]) => row[k] === v)) return false;
+      if (orFilter && !orFilter.some(({ col, val }) => row[col] === val)) return false;
+      if (inFilter && !inFilter.vals.includes(row[inFilter.col])) return false;
+      return true;
+    }
+
+    function exec() {
+      if (mode === "update") {
+        store.follow_ups = store.follow_ups.map((r) => (matches(r) ? { ...r, ...payload } : r));
+        return { data: null, error: null };
+      }
+      return { data: store.follow_ups.filter(matches), error: null };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const builder: any = {
+      select: () => builder,
+      update: (p: Record<string, unknown>) => {
+        mode = "update";
+        payload = p;
+        return builder;
+      },
+      eq: (col: string, val: unknown) => {
+        eqFilters.push([col, val]);
+        return builder;
+      },
+      or: (expr: string) => {
+        orFilter = expr.split(",").map((part) => {
+          const [col, , ...rest] = part.split(".");
+          return { col, val: rest.join(".") };
+        });
+        return builder;
+      },
+      in: (col: string, vals: unknown[]) => {
+        inFilter = { col, vals };
+        return builder;
+      },
+      then: (resolve: (v: unknown) => void) => resolve(exec()),
+    };
+    return builder;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { store, client: { from: () => makeBuilder() } as any };
+}
+
+describe("resolveOpenFollowUps", () => {
+  it("marks an open follow-up linked by lead_id complete and reports the count", async () => {
+    const { store, client } = makeFakeFollowUpsSupabase([
+      { id: "fu-1", company_id: "c1", lead_id: "lead-1", contact_id: null, status: "Open" },
+    ]);
+    const count = await resolveOpenFollowUps({ supabase: client, companyId: "c1", leadId: "lead-1", contactId: null });
+    expect(count).toBe(1);
+    expect(store.follow_ups[0].status).toBe("Complete");
+    expect(store.follow_ups[0].completed_at).toBeTruthy();
+  });
+
+  it("marks an open follow-up linked only by contact_id complete -- how Vera's create_followup tool always links, since it has no lead_id parameter", async () => {
+    const { store, client } = makeFakeFollowUpsSupabase([
+      { id: "fu-1", company_id: "c1", lead_id: null, contact_id: "contact-1", status: "open" },
+    ]);
+    const count = await resolveOpenFollowUps({ supabase: client, companyId: "c1", leadId: "lead-1", contactId: "contact-1" });
+    expect(count).toBe(1);
+    expect(store.follow_ups[0].status).toBe("Complete");
+  });
+
+  it("leaves an already-complete follow-up alone and reports 0", async () => {
+    const { store, client } = makeFakeFollowUpsSupabase([
+      { id: "fu-1", company_id: "c1", lead_id: "lead-1", contact_id: null, status: "Complete" },
+    ]);
+    const count = await resolveOpenFollowUps({ supabase: client, companyId: "c1", leadId: "lead-1", contactId: null });
+    expect(count).toBe(0);
+    expect(store.follow_ups[0].status).toBe("Complete");
+  });
+
+  it("does nothing and reports 0 when neither leadId nor contactId is given", async () => {
+    const { store, client } = makeFakeFollowUpsSupabase([
+      { id: "fu-1", company_id: "c1", lead_id: "lead-1", contact_id: null, status: "Open" },
+    ]);
+    const count = await resolveOpenFollowUps({ supabase: client, companyId: "c1", leadId: null, contactId: null });
+    expect(count).toBe(0);
+    expect(store.follow_ups[0].status).toBe("Open");
+  });
+
+  it("never touches a follow-up belonging to a different company", async () => {
+    const { store, client } = makeFakeFollowUpsSupabase([
+      { id: "fu-1", company_id: "other-co", lead_id: "lead-1", contact_id: null, status: "Open" },
+    ]);
+    const count = await resolveOpenFollowUps({ supabase: client, companyId: "c1", leadId: "lead-1", contactId: null });
+    expect(count).toBe(0);
+    expect(store.follow_ups[0].status).toBe("Open");
   });
 });

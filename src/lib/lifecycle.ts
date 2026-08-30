@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
+import { isOpenFollowUp } from "@/lib/status";
 
 export function isAcceptedOpportunityStatus(status: string | null) {
   return status === "Won";
@@ -158,4 +159,58 @@ export async function syncSaleForJob({
   }
 
   return existingSale.id as string;
+}
+
+// A lead marked Lost, or a job marked Completed or Cancelled, means the work
+// it represents is done or dead -- but nothing else in the app ever resolved
+// the open follow-up(s) tied to it, so one survived indefinitely: it kept
+// showing as a "Follow-up due" badge on the pipeline board (even on the Sale
+// card that superseded a completed job), kept counting toward Data Hub's
+// overdue-follow-up issue total, and kept escalating as a nightly alert via
+// the record-nudger worker -- all for work that was actually finished. This
+// marks every currently-open follow-up linked to the given lead and/or
+// contact Complete. Matches on contactId too, not just leadId, because
+// Vera's create_followup tool has no lead_id parameter at all -- an
+// AI-created follow-up can only ever be linked via contact_id.
+//
+// Returns how many follow-ups it actually resolved, so a caller building a
+// user-facing message (the AI tool-executor in particular) can say so only
+// when something real happened, rather than always claiming it did.
+export async function resolveOpenFollowUps({
+  supabase,
+  companyId,
+  leadId,
+  contactId,
+}: {
+  supabase: SupabaseWriteClient;
+  companyId: string;
+  leadId?: string | null;
+  contactId?: string | null;
+}): Promise<number> {
+  if (!leadId && !contactId) return 0;
+
+  const orParts: string[] = [];
+  if (leadId) orParts.push(`lead_id.eq.${leadId}`);
+  if (contactId) orParts.push(`contact_id.eq.${contactId}`);
+
+  const { data: followUps, error } = await supabase
+    .from("follow_ups")
+    .select("id, status")
+    .eq("company_id", companyId)
+    .or(orParts.join(","));
+
+  if (error || !followUps) return 0;
+
+  const openIds = (followUps as { id: string; status: string }[])
+    .filter((fu) => isOpenFollowUp(fu.status))
+    .map((fu) => fu.id);
+
+  if (openIds.length === 0) return 0;
+
+  await supabase
+    .from("follow_ups")
+    .update({ status: "Complete", completed_at: new Date().toISOString() })
+    .in("id", openIds);
+
+  return openIds.length;
 }

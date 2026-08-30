@@ -20,6 +20,11 @@ function makeFakeSupabase(seed: Record<string, Row[]>) {
 
   function makeBuilder(table: string) {
     const filters: [string, unknown][] = [];
+    // Only for resolveOpenFollowUps' shape: select().eq().or() to find
+    // candidates, update().in() to resolve them -- not a general Postgrest
+    // emulator.
+    let orGroup: { col: string; val: string }[] | null = null;
+    let inFilter: { col: string; vals: unknown[] } | null = null;
     let mode: "insert" | "update" | "delete" | "select" = "select";
     let payload: Row | null = null;
 
@@ -28,7 +33,10 @@ function makeFakeSupabase(seed: Record<string, Row[]>) {
     }
 
     function matches(row: Row) {
-      return filters.every(([k, v]) => row[k] === v);
+      if (!filters.every(([k, v]) => row[k] === v)) return false;
+      if (orGroup && !orGroup.some(({ col, val }) => row[col] === val)) return false;
+      if (inFilter && !inFilter.vals.includes(row[inFilter.col])) return false;
+      return true;
     }
 
     function exec() {
@@ -71,6 +79,17 @@ function makeFakeSupabase(seed: Record<string, Row[]>) {
       },
       eq: (col: string, val: unknown) => {
         filters.push([col, val]);
+        return builder;
+      },
+      or: (expr: string) => {
+        orGroup = expr.split(",").map((part) => {
+          const [col, , ...rest] = part.split(".");
+          return { col, val: rest.join(".") };
+        });
+        return builder;
+      },
+      in: (col: string, vals: unknown[]) => {
+        inFilter = { col, vals };
         return builder;
       },
       order: () => builder,
@@ -167,6 +186,16 @@ describe("update_lead_status", () => {
     const supabase = makeFakeSupabase(db);
     await executeTool("update_lead_status", { lead_id: LEAD_ID, status: "Lost" }, supabase, ORG);
     expect(db.jobs).toHaveLength(0);
+  });
+
+  it("marking a lead Lost resolves its open follow-up instead of leaving it nagging about a dead opportunity forever", async () => {
+    const FOLLOWUP_ID_2 = "88888888-8888-4888-8888-888888888888";
+    db.follow_ups.push({ id: FOLLOWUP_ID_2, company_id: ORG, lead_id: LEAD_ID, contact_id: null, status: "Open" });
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool("update_lead_status", { lead_id: LEAD_ID, status: "Lost" }, supabase, ORG);
+    expect(result.success).toBe(true);
+    expect(db.follow_ups.find((f) => f.id === FOLLOWUP_ID_2)?.status).toBe("Complete");
+    expect(result.message).toContain("follow-up was marked complete");
   });
 
   it("rejects a lead id from another org", async () => {
@@ -280,6 +309,30 @@ describe("update_job", () => {
     await executeTool("update_job", { job_id: JOB_ID, status: "Cancelled" }, supabase, ORG);
     expect(db.jobs[0].paid_status).toBe("Unpaid");
     expect(db.sales).toHaveLength(0);
+  });
+
+  // The reported bug: marking a job done left its open follow-up showing
+  // forever, since nothing ever resolved it (see resolveOpenFollowUps in
+  // lifecycle.ts). Linked via contact_id here, not lead_id, since that's
+  // how the job itself is linked in this seed.
+  it("marking a job Completed resolves its open follow-up and says so", async () => {
+    db.jobs.push({ id: JOB_ID, company_id: ORG, status: "Active", paid_status: "Unpaid", contact_id: CUSTOMER_ID, lead_id: null, service_type: "Fence repair", job_value: 800 });
+    const FOLLOWUP_ID_2 = "99999999-9999-4999-9999-999999999999";
+    db.follow_ups.push({ id: FOLLOWUP_ID_2, company_id: ORG, lead_id: null, contact_id: CUSTOMER_ID, status: "Open" });
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool("update_job", { job_id: JOB_ID, status: "Completed" }, supabase, ORG);
+    expect(result.success).toBe(true);
+    expect(db.follow_ups.find((f) => f.id === FOLLOWUP_ID_2)?.status).toBe("Complete");
+    expect(result.message).toContain("follow-up was also marked complete");
+  });
+
+  it("marking a job Cancelled also resolves its open follow-up", async () => {
+    db.jobs.push({ id: JOB_ID, company_id: ORG, status: "Active", paid_status: "Unpaid", contact_id: CUSTOMER_ID, lead_id: null, service_type: "Fence repair", job_value: 800 });
+    const FOLLOWUP_ID_2 = "99999999-9999-4999-9999-999999999999";
+    db.follow_ups.push({ id: FOLLOWUP_ID_2, company_id: ORG, lead_id: null, contact_id: CUSTOMER_ID, status: "Open" });
+    const supabase = makeFakeSupabase(db);
+    await executeTool("update_job", { job_id: JOB_ID, status: "Cancelled" }, supabase, ORG);
+    expect(db.follow_ups.find((f) => f.id === FOLLOWUP_ID_2)?.status).toBe("Complete");
   });
 });
 

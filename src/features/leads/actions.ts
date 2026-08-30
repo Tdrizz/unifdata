@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
-import { isAcceptedOpportunityStatus, syncAcceptedOpportunity } from "@/lib/lifecycle";
+import { isAcceptedOpportunityStatus, syncAcceptedOpportunity, resolveOpenFollowUps } from "@/lib/lifecycle";
+import { isLost } from "@/lib/status";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -146,6 +147,13 @@ export async function updateLeadAction(
       console.error("[lifecycle] syncAcceptedOpportunity failed", err);
     }
   }
+  if (isLost(status)) {
+    try {
+      await resolveOpenFollowUps({ supabase, companyId: company.id, leadId: id, contactId });
+    } catch (err) {
+      console.error("[lifecycle] resolveOpenFollowUps failed", err);
+    }
+  }
 
   revalidatePath(`/leads/${id}/edit`);
   revalidatePath("/crm");
@@ -198,7 +206,10 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
   // syncAcceptedOpportunity on Won so a Job gets created -- this bulk path
   // updated the status directly and skipped that, so bulk-marking Won
   // silently never created a Job. Each conversion is independent and
-  // non-fatal so one bad lead can't abort the rest of the batch.
+  // non-fatal so one bad lead can't abort the rest of the batch. Same
+  // reasoning for resolveOpenFollowUps on Lost, so bulk-marking a batch of
+  // leads Lost doesn't leave every one of them still nagging about an open
+  // follow-up for a dead opportunity.
   if (isAcceptedOpportunityStatus(status)) {
     for (const lead of updated ?? []) {
       try {
@@ -212,6 +223,15 @@ export async function bulkUpdateLeadsStatus(ids: string[], status: string) {
         });
       } catch (err) {
         console.error("[lifecycle] syncAcceptedOpportunity failed", err);
+      }
+    }
+  }
+  if (isLost(status)) {
+    for (const lead of updated ?? []) {
+      try {
+        await resolveOpenFollowUps({ supabase, companyId: company.id, leadId: lead.id, contactId: lead.contact_id });
+      } catch (err) {
+        console.error("[lifecycle] resolveOpenFollowUps failed", err);
       }
     }
   }

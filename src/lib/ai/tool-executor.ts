@@ -14,7 +14,9 @@ import {
   syncAcceptedOpportunity,
   isCompletedPaidJob,
   syncSaleForJob,
+  resolveOpenFollowUps,
 } from "@/lib/lifecycle";
+import { isLost, isCompleteWork, isCancelledWork } from "@/lib/status";
 
 // Same vocabularies the human-facing forms use — see tools.ts for why this
 // matters (consistency with human-written data, and lifecycle.ts's exact
@@ -290,6 +292,21 @@ export async function executeTool(
             // non-fatal — the status update itself already succeeded
           }
         }
+        if (isLost(data.status)) {
+          try {
+            const resolvedCount = await resolveOpenFollowUps({
+              supabase,
+              companyId: orgId,
+              leadId: data.lead_id,
+              contactId: (existing.contact_id ?? existing.customer_id ?? null) as string | null,
+            });
+            if (resolvedCount > 0) {
+              note = resolvedCount === 1 ? " Its open follow-up was marked complete." : ` Its ${resolvedCount} open follow-ups were marked complete.`;
+            }
+          } catch {
+            // non-fatal — the status update itself already succeeded
+          }
+        }
         return { success: true, message: `Lead status updated to "${data.status}".${note}` };
       }
 
@@ -357,7 +374,7 @@ export async function executeTool(
         }
         const { data: existing } = await supabase
           .from("jobs")
-          .select("status, paid_status, contact_id, service_type, job_value")
+          .select("status, paid_status, contact_id, lead_id, service_type, job_value")
           .eq("id", data.job_id)
           .eq("company_id", orgId)
           .single();
@@ -386,6 +403,21 @@ export async function executeTool(
               source: null,
             });
             if (saleId) note = " A sale record was created for it.";
+          } catch {
+            // non-fatal — the job update itself already succeeded
+          }
+        }
+        if (isCompleteWork(newStatus) || isCancelledWork(newStatus)) {
+          try {
+            const resolvedCount = await resolveOpenFollowUps({
+              supabase,
+              companyId: orgId,
+              leadId: existing.lead_id as string | null,
+              contactId: existing.contact_id as string | null,
+            });
+            if (resolvedCount > 0) {
+              note += resolvedCount === 1 ? " Its open follow-up was also marked complete." : ` Its ${resolvedCount} open follow-ups were also marked complete.`;
+            }
           } catch {
             // non-fatal — the job update itself already succeeded
           }
@@ -440,7 +472,14 @@ export async function executeTool(
           contact_id: data.customer_id ?? null,
           due_date: data.due_date,
           message: data.note,
-          status: "open",
+          // Matches the human-facing form's default exactly (which relies on
+          // the column's own DB default, "Open") -- every *read* path
+          // already lowercases via isOpenFollowUp()/similar, so this was
+          // functionally harmless, but needless raw-data drift between the
+          // two write paths is exactly the kind of thing that's bitten this
+          // codebase before (see status.ts's own warning about exact-string
+          // status filters).
+          status: "Open",
         });
         if (error) return { success: false, message: `Failed to create follow-up: ${error.message}` };
         const contactLabel = await getContactLabel(supabase, orgId, data.customer_id ?? null);
