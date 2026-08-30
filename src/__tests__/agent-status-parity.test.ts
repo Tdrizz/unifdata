@@ -4,6 +4,7 @@ import {
   isCancelledWork,
   isOpenFollowUp,
   isUnpaid,
+  isWon,
 } from "@/lib/status";
 
 // These lock in the fix for the defect that made the whole agent layer
@@ -69,6 +70,19 @@ describe("status predicates are case-insensitive", () => {
   it("never reports a completed follow-up as open, whatever the casing", () => {
     for (const s of ["complete", "Complete", "Completed", "DONE", "closed", "Closed"]) {
       expect(isOpenFollowUp(s), `${s} should be closed`).toBe(false);
+    }
+  });
+
+  // lifecycle.ts used to have its own exact-match "=== 'Won'" check
+  // (isAcceptedOpportunityStatus) that disagreed with this tolerant one --
+  // an AI- or CSV-written "won" would auto-create a job via one code path
+  // but not another. Now every caller shares this single matcher.
+  it("treats every casing/wording of an accepted opportunity as won", () => {
+    for (const s of ["Won", "won", "WON", "Deal Accepted", "accepted"]) {
+      expect(isWon(s), `${s} should count as won`).toBe(true);
+    }
+    for (const s of ["Lost", "New", "Contacted", null, undefined, ""]) {
+      expect(isWon(s), `${s} should not count as won`).toBe(false);
     }
   });
 });
