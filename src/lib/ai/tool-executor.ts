@@ -480,13 +480,23 @@ export async function executeTool(
 
         const { data: contact } = await supabase
           .from("master_customers")
-          .select("id, first_name, last_name, primary_phone, primary_email")
+          .select("id, first_name, last_name, primary_phone, primary_email, is_sample")
           .eq("id", data.customer_id)
           .eq("organization_id", orgId)
           .maybeSingle();
         if (!contact) return { success: false, message: "Contact not found." };
 
         const contactName = [contact.first_name, contact.last_name].filter(Boolean).join(" ") || "the contact";
+        // Sample contacts (seeded on a fresh, empty workspace so the UI has
+        // something to show) carry a placeholder email like
+        // "sample.customer@example.com" -- Resend rejects that outright,
+        // and even if it didn't, actually delivering mail to a fake address
+        // makes no sense. Catch it here with a clear message instead of
+        // surfacing Resend's raw API error, which points at "our
+        // documentation" the user has no way to act on.
+        if (contact.is_sample) {
+          return { success: false, message: `${contactName} is sample data, not a real contact, so I can't send them a message.` };
+        }
         if (data.channel === "sms" && !contact.primary_phone) {
           return { success: false, message: `${contactName} doesn't have a phone number on file, so I can't text them.` };
         }

@@ -355,6 +355,33 @@ describe("mark_followup_complete", () => {
   });
 });
 
+describe("send_message", () => {
+  const SAMPLE_CUSTOMER_ID = "88888888-8888-4888-8888-888888888888";
+
+  it("refuses to send to a sample contact instead of letting Resend reject the placeholder address", async () => {
+    db.master_customers.push({
+      id: SAMPLE_CUSTOMER_ID,
+      organization_id: ORG,
+      first_name: "Sample",
+      last_name: "Customer",
+      primary_email: "sample.customer@example.com",
+      primary_phone: null,
+      is_sample: true,
+    });
+    const supabase = makeFakeSupabase(db);
+    const result = await executeTool(
+      "send_message",
+      { customer_id: SAMPLE_CUSTOMER_ID, channel: "email", body: "Hey!" },
+      supabase,
+      ORG,
+    );
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("sample data");
+    // no thread should have been opened for a send that never happened
+    expect(db.communications ?? []).toHaveLength(0);
+  });
+});
+
 describe("invalid input", () => {
   it("rejects a malformed uuid instead of writing anything", async () => {
     const supabase = makeFakeSupabase(db);

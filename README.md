@@ -18,7 +18,8 @@ Live at [unifdata.com](https://unifdata.com).
 - BullMQ + Upstash Redis (background job queue)
 - Twilio (outbound SMS)
 - Sentry (error monitoring)
-- Mailgun (outbound email)
+- Resend (primary outbound email — Communications, Vera, outreach, waitlist, settings)
+- Mailgun (Day-7 lost-quote follow-up email only)
 - Vercel (hosting + cron jobs)
 
 ---
@@ -85,13 +86,13 @@ POST /api/v1/agent-alerts/[id]/dismiss   Dismiss alert
 ## Key Features
 
 - **5-Step Onboarding Wizard** — Business info → import contacts (manual or CSV with column mapping) → first job → first follow-up → straight into the workspace. No redirect between steps; stays on the same page.
-- **Vera** — The AI assistant, embedded in a single panel on the `/workspace` dashboard (no separate chat page). Plain-language chat over live workspace data with tool calling — create or update leads, jobs, sales, follow-ups, and contacts, run an on-demand data cleanup scan — plus a nightly pipeline that surfaces outreach drafts and alerts right in the same panel. The conversation persists server-side and rehydrates on every page load, so navigating away and back doesn't lose it. Rate-limited (20 requests/day).
+- **Vera** — The AI assistant, embedded in a single panel on the `/workspace` dashboard (no separate chat page). Plain-language chat over live workspace data with tool calling — create or update leads, jobs, sales, follow-ups, and contacts, send a real text or email to a contact (logged in Communications like any other reply), run an on-demand data cleanup scan — plus a nightly pipeline that surfaces outreach drafts and alerts right in the same panel. The conversation persists server-side and rehydrates on every page load, so navigating away and back doesn't lose it. Rate-limited (20 requests/day).
 - **Nightly Agent Pipeline** — BullMQ cron at 6 AM UTC runs a manager agent that reads telemetry signals and dispatches three workers:
   - **Outreach worker** — drafts follow-up emails/SMS for stale customers
   - **Revenue worker** — surfaces revenue drops and unpaid invoice alerts
   - **Alert formatter** — formats operational signals into inbox cards
 - **Agent Inbox** — Pending drafts and alerts displayed on the workspace dashboard. Each item includes AI reasoning ("No contact in 47 days and $1,200 unpaid invoice").
-- **Two autopilot settings, split by risk** — *Auto-fix data issues* (on by default): Vera merges obvious duplicate contacts and clears junk records on its own, nothing customer-facing. *Auto-send outreach* (off by default, opt-in): outreach emails/SMS fire automatically via Mailgun/Twilio instead of queuing in the Agent Inbox for approval.
+- **Two autopilot settings, split by risk** — *Auto-fix data issues* (on by default): Vera merges obvious duplicate contacts and clears junk records on its own, nothing customer-facing. *Auto-send outreach* (off by default, opt-in): outreach emails/SMS fire automatically via Resend/Twilio instead of queuing in the Agent Inbox for approval.
 - **ROI Counter** — Tracks recovered revenue from approved outreach actions.
 - **Pipeline / CRM** — Opportunity tracking with lifecycle sync (accepted → job created → revenue tracked)
 - **Imports** — CSV and Google Sheets import with staged review (validate → resolve duplicates → commit)
@@ -128,6 +129,8 @@ UPSTASH_REDIS_REST_TOKEN=
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
 MAILGUN_API_KEY=
 MAILGUN_DOMAIN=
 CRON_SECRET=
@@ -140,6 +143,8 @@ SENTRY_AUTH_TOKEN=
 See `.env.example` for optional integration variables (Google Sheets, QuickBooks, Square, HubSpot, Jobber, Stripe Connect).
 
 > **Local Redis note:** `REDIS_URL=redis://localhost:6379` works for local dev if you have Redis running. For Vercel/production, use the Upstash `rediss://` URL. BullMQ cron jobs require a live Redis connection.
+
+> **Resend sandbox note:** Until `RESEND_FROM_EMAIL`'s domain is verified in the Resend dashboard (resend.com/domains), the account is in sandbox/test mode and Resend rejects any "to" address that isn't the email you signed up with — you'll see `Invalid to field... use our testing email address`. This affects Communications replies, Vera's send-message tool, and outreach sends alike; it's Resend enforcing its own restriction, not an app bug. Verify the domain to send to real recipients.
 
 Start the dev server:
 
