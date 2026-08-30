@@ -83,6 +83,8 @@ export async function updateFollowUpAction(
     return { fieldErrors: { lead_id: "Selected opportunity isn't in your workspace." } };
   }
 
+  const status = getFormString(formData, "status") || "Open";
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from("follow_ups")
@@ -91,7 +93,8 @@ export async function updateFollowUpAction(
       lead_id: leadId || null,
       message,
       due_date: dueDate,
-      status: getFormString(formData, "status") || "Open",
+      status,
+      completed_at: status === "Complete" ? new Date().toISOString() : null,
     })
     .eq("id", id)
     .eq("company_id", company.id);

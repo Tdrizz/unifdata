@@ -31,11 +31,13 @@ export async function getPipelinePageData(
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(500),
+    // Status is free text (see src/lib/status.ts's warning against exact-match
+    // SQL filters here) -- fetch all and let buildFollowUpIndex in stages.ts
+    // filter with the tolerant isOpenFollowUp() helper instead of .neq().
     (supabase as any)
       .from("follow_ups")
       .select(FOLLOW_UP_FIELDS)
       .eq("company_id", companyId)
-      .neq("status", "Complete")
       .order("due_date", { ascending: true })
       .limit(500),
   ]);
