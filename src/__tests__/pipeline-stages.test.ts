@@ -207,6 +207,24 @@ describe("openFollowUp badge", () => {
     const cards = mapRecordsToCards([lead()], [], []);
     expect(cards[0].openFollowUp).toBeNull();
   });
+
+  // Regression for the "deleted record's follow-up reappears on a different
+  // card" bug: a follow-up only linked by contact_id (no lead_id) used to
+  // survive a lead's deletion (ON DELETE SET NULL) and then get silently
+  // reattached to a sibling job/lead for the same contact via the
+  // contact_id fallback below. Cascade-deleting the follow-up along with
+  // its parent (see cascade-delete.ts) removes it from this array entirely
+  // instead of leaving an orphaned row to misattach -- this proves a job
+  // card for the same contact picks up nothing once it's simply gone.
+  it("does not misattach a follow-up to a sibling card once it's actually removed", () => {
+    const cards = mapRecordsToCards(
+      [],
+      [job({ id: "job-sibling", lead_id: null, contact_id: "contact-1" })],
+      [],
+      [], // the contact-1 follow-up that used to exist has been cascade-deleted
+    );
+    expect(cards[0].openFollowUp).toBeNull();
+  });
 });
 
 describe("getStageDisplayLabel", () => {

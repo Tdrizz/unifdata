@@ -8,6 +8,7 @@ import { getFormString, getOptionalNumber } from "@/lib/utils";
 import { resolveOwnedContactId } from "@/lib/crm/contacts";
 import { syncAcceptedOpportunity, resolveOpenFollowUps } from "@/lib/lifecycle";
 import { isWon, isLost } from "@/lib/status";
+import { deleteLeadCascade } from "@/lib/crm/cascade-delete";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
 
@@ -166,11 +167,18 @@ export async function updateLeadAction(
   redirect("/crm?toast=Opportunity+updated");
 }
 
-export async function deleteLeadAction(id: string) {
+export async function deleteLeadAction(id: string, selectedCategories: string[] = []) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
   const { company } = currentCompany;
+
+  // Categories the user explicitly checked get hard-deleted before the lead
+  // itself goes -- everything left unchecked still just loses its link via
+  // the DB's existing ON DELETE SET NULL, unaffected either way.
+  if (selectedCategories.length > 0) {
+    await deleteLeadCascade(supabase, company.id, id, selectedCategories);
+  }
 
   const { error } = await supabase
     .from("leads")

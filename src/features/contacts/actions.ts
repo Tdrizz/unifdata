@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getFormString } from "@/lib/utils";
+import { deleteContactCascade } from "@/lib/crm/cascade-delete";
 import type { Json } from "@/types/db";
 
 export type ActionState = { error?: string; fieldErrors?: Record<string, string> } | null;
@@ -127,7 +128,7 @@ export async function updateContactAction(
   redirect(`/customers/${id}?toast=Contact+updated`);
 }
 
-export async function deleteContactAction(id: string) {
+export async function deleteContactAction(id: string, selectedCategories: string[] = []) {
   const supabase = await createClient();
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) redirect("/onboarding");
@@ -141,6 +142,13 @@ export async function deleteContactAction(id: string) {
     .maybeSingle();
 
   if (!existing) redirect("/customers?toast=Contact+not+found");
+
+  // Categories the user explicitly checked get hard-deleted before the
+  // contact itself goes -- everything left unchecked still just loses its
+  // link via the DB's existing ON DELETE SET NULL, unaffected either way.
+  if (selectedCategories.length > 0) {
+    await deleteContactCascade(supabase, company.id, id, selectedCategories);
+  }
 
   const { error } = await supabase
     .from("master_customers")
