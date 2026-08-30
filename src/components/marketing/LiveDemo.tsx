@@ -28,20 +28,29 @@ const SCENES: { id: SceneId; label: string; duration: number }[] = [
 
 const providers = ["QuickBooks", "Jobber", "HubSpot", "Square"];
 
-function useCountUp(target: number, duration = 900) {
+// `delay` lets a count-up wait before it starts -- used in FlowScene to
+// have each node's number begin only once the traveling dot has actually
+// arrived there, instead of all three counting up together the instant the
+// scene mounts.
+function useCountUp(target: number, duration = 900, delay = 0) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     let raf = 0;
-    const start = performance.now();
-    function tick(now: number) {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(target * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      function tick(now: number) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        setValue(Math.round(target * eased));
+        if (t < 1) raf = requestAnimationFrame(tick);
+      }
+      raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    };
+  }, [target, duration, delay]);
   return value;
 }
 
@@ -126,43 +135,63 @@ type SceneProps = { active: boolean };
 // animation not working at all, not just as bad timing.
 //
 // Every traveling-dot circle/rect below also gets an explicit
-// `opacity: active ? undefined : 0` alongside the animation toggle, and a
-// static cx/cy (or x/y) attribute for its resting position, with the actual
-// travel done via an animated `transform: translate()` rather than
-// animating cx/cy/x themselves. Two separate reasons:
+// `opacity: active ? undefined : 0`. Without a static resting attribute for
+// its position, the instant a scene goes inactive the shape would snap to
+// the SVG default position (0,0) and sit frozen there for the rest of that
+// scene's ~650ms fade-out, which is still mostly opaque -- a stray,
+// motionless dot glued to the left edge on every transition. A real static
+// cx/cy (or x/y) removes that failure mode, and the explicit opacity toggle
+// hides the shape outright the instant it's inactive rather than leaving it
+// visible anywhere at all.
 //
-// 1. Safari has long had incomplete support for animating raw SVG geometry
-//    attributes (cx/cy/x/y/r) through CSS @keyframes -- opacity animates
-//    fine there, but the position just doesn't move, so the dot sits fully
-//    visible and motionless at its starting point for the whole scene
-//    instead of traveling. `transform` (including unitless translate values,
-//    which resolve in the SVG's own user-unit space the same way cx/cy do)
-//    is universally well supported for CSS animation, SVG included, so it's
-//    the cross-browser-safe way to move these.
-// 2. Without a static resting attribute, the instant a scene goes inactive
-//    and its animation switches to "none", the shape would snap to the SVG
-//    default position (0,0) and sit frozen there for the rest of that
-//    scene's ~650ms fade-out, which is still mostly opaque -- a stray,
-//    motionless dot glued to the left edge on every transition. Giving it
-//    a real static position removes that failure mode regardless of browser,
-//    and the explicit opacity toggle hides it outright the instant it's
-//    inactive rather than leaving it visible anywhere at all.
+// The actual travel is driven by native SVG SMIL <animate> elements
+// (attributeName="cx"/"cy"/"x"), not a CSS transform or CSS-animated cx/cy.
+// Two rounds of getting this wrong:
 //
-// Any of these that also stagger with a CSS `animation-delay` (the four
-// Connections dots, the reply bubble) additionally need `backwards` in
-// their animation shorthand -- without it, a delayed animation has no
-// effect at all until its delay elapses, so the shape sits at its static
-// resting position, fully opaque, for the entire delay. `backwards` makes
-// the browser apply the animation's own 0% keyframe (which already starts
-// at opacity 0) throughout the delay instead.
+// 1. CSS-animating cx/cy/x directly (@keyframes { 0% { cx: ... } }) has
+//    long had incomplete support in Safari -- opacity animates fine there,
+//    but the position just doesn't move, so the dot sits fully visible and
+//    motionless at its starting point instead of traveling.
+// 2. The fix for that was switching to `transform: translate()`, on the
+//    theory that unitless translate values on SVG elements resolve in the
+//    same user-unit coordinate space as cx/cy. That's wrong: measuring it
+//    directly (forcing the style and reading getBoundingClientRect) shows
+//    single-argument `translateX(<number>)` with no unit is silently a
+//    no-op in Chromium -- getComputedStyle reports back a matrix as if it
+//    applied, but nothing actually moves on screen. `translateX(<n>px)` and
+//    the two-argument `translate(<n>, <n>)` DO move things, but as literal
+//    CSS pixels layered on top of the SVG's own viewBox-to-viewport scale,
+//    not viewBox user-units -- not the coordinate space this file's
+//    distances were tuned against, and not something a fixed value in a
+//    static CSS keyframe can track across responsive widths anyway.
+//
+// SMIL sidesteps both: it animates the attribute directly, in the SVG's own
+// user-coordinate system by definition, with no CSS transform/unit ambiguity
+// and no Safari gap. A shape's <animate> children need no `active` gating of
+// their own -- the whole scene component remounts via `key` on every
+// activation (see LiveDemo below), so a plain `begin="0s"` already restarts
+// fresh in sync with the crossfade. Anything that also staggers its start
+// (the four Connections dots, the reply bubble) needs one extra one-shot
+// `<animate attributeName="opacity" values="0;0" .../>` covering the wait --
+// SMIL applies nothing at all before an animation's own `begin`, so without
+// that the shape would sit at its static resting attribute, fully opaque,
+// for the entire stagger instead of hidden.
 
 // Three stages flowing into each other, a single particle traveling the
-// whole path -- an abstraction of "a job moves from lead to paid," not a
-// recreation of the kanban board itself.
+// whole path once -- an abstraction of "a job moves from lead to paid," not
+// a recreation of the kanban board itself. The dot's own travel schedule
+// (see demo-pipeline-dot) drives when each node's count-up starts, so a
+// node's number only appears once the dot has actually reached it, rather
+// than all three counting up together the instant the scene mounts. The
+// dot plays once and holds at the last node (no `infinite`, `forwards`
+// fill-mode) instead of looping back to the start -- a repeating pass
+// would mean re-triggering the count-ups too, and there's no clean way to
+// reset a completed pipeline back to zero without it reading as backwards
+// progress.
 function FlowScene({ active }: SceneProps) {
   const leads = useCountUp(12, 1000);
-  const inProgress = useCountUp(8, 1000);
-  const won = useCountUp(5, 1000);
+  const inProgress = useCountUp(8, 1000, 1500);
+  const won = useCountUp(5, 1000, 3400);
   const nodes = [
     { label: "New leads", value: leads },
     { label: "In progress", value: inProgress },
@@ -175,13 +204,19 @@ function FlowScene({ active }: SceneProps) {
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={7} y1={11} x2={50} y2={11} />
           <FlowLine x1={50} y1={11} x2={93} y2={11} />
-          <circle
-            r={1.8}
-            cx={5}
-            cy={11}
-            fill="var(--ud-accent)"
-            style={{ animation: active ? "demo-pipeline-dot 4200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
-          />
+          <circle r={1.8} cx={5} cy={11} fill="var(--ud-accent)" style={{ opacity: active ? undefined : 0 }}>
+            <animate
+              attributeName="cx"
+              values="5;50;50;95"
+              keyTimes="0;0.44;0.56;1"
+              dur="3.4s"
+              begin="0s"
+              fill="freeze"
+              calcMode="spline"
+              keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
+            />
+            <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.04;1" dur="3.4s" begin="0s" fill="freeze" />
+          </circle>
         </svg>
         <div className="relative flex items-center justify-between h-full">
           {nodes.map((n, i) => (
@@ -212,25 +247,40 @@ function PingScene({ active }: SceneProps) {
       <div className="relative" style={{ aspectRatio: "100 / 22" }}>
         <svg viewBox="0 0 100 22" preserveAspectRatio="none" className="absolute inset-0 w-full h-full" aria-hidden>
           <FlowLine x1={16} y1={11} x2={84} y2={11} />
-          <rect
-            x={13}
-            y={9.4}
-            width={6}
-            height={3.2}
-            rx={1.6}
-            fill="var(--ud-accent)"
-            style={{ animation: active ? "demo-msg-bubble-out 4200ms ease-in-out infinite backwards" : "none", opacity: active ? undefined : 0 }}
-          />
-          <rect
-            x={81}
-            y={9.4}
-            width={6}
-            height={3.2}
-            rx={1.6}
-            fill="var(--ud-accent)"
-            fillOpacity={0.6}
-            style={{ animation: active ? "demo-msg-bubble-in 4200ms ease-in-out 2100ms infinite backwards" : "none", opacity: active ? undefined : 0 }}
-          />
+          {/* Two bubbles share one 3.4s cycle, half each -- "out" plays during
+              [0, 1.7s), "in" during [1.7s, 3.4s), and since begin=1.7s is
+              exactly half of dur=3.4s, each bubble's own indefinite repeat
+              naturally keeps landing back in its own half forever, never
+              overlapping with the other. */}
+          <rect x={13} y={9.4} width={6} height={3.2} rx={1.6} fill="var(--ud-accent)" style={{ opacity: active ? undefined : 0 }}>
+            <animate
+              attributeName="x"
+              values="13;81;81;81"
+              keyTimes="0;0.294;0.5;1"
+              dur="3.4s"
+              begin="0s"
+              repeatCount="indefinite"
+              calcMode="spline"
+              keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
+            />
+            <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.06;0.5;0.53;1" dur="3.4s" begin="0s" repeatCount="indefinite" />
+          </rect>
+          <rect x={81} y={9.4} width={6} height={3.2} rx={1.6} fill="var(--ud-accent)" fillOpacity={0.6} style={{ opacity: active ? undefined : 0 }}>
+            {/* Holds this bubble hidden for the first 1.7s, before its own
+                begin="1.7s" animations below have ever fired once. */}
+            <animate attributeName="opacity" values="0;0" dur="1.7s" begin="0s" fill="freeze" />
+            <animate
+              attributeName="x"
+              values="81;13;13;13"
+              keyTimes="0;0.294;0.5;1"
+              dur="3.4s"
+              begin="1.7s"
+              repeatCount="indefinite"
+              calcMode="spline"
+              keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"
+            />
+            <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.06;0.5;0.53;1" dur="3.4s" begin="1.7s" repeatCount="indefinite" />
+          </rect>
         </svg>
         <div className="relative flex items-center justify-between h-full">
           <div className="flex flex-col items-center gap-2 animate-fade-up">
@@ -260,7 +310,7 @@ function PingScene({ active }: SceneProps) {
 // Four tools converging into one glowing hub -- "connect what you already
 // use," visualized rather than shown as a literal list of provider rows.
 function NetworkScene({ active }: SceneProps) {
-  const dotAnimations = ["demo-net-dot-1", "demo-net-dot-2", "demo-net-dot-3", "demo-net-dot-4"];
+  const startPositions = [10, 36, 64, 90];
   return (
     <div className="animate-fade-in">
       <p className="text-[13px] text-ud-text leading-relaxed mb-4">Connect the software you already use — everything flows into one place.</p>
@@ -281,16 +331,39 @@ function NetworkScene({ active }: SceneProps) {
           <FlowLine x1={36} y1={5} x2={50} y2={27} />
           <FlowLine x1={64} y1={5} x2={50} y2={27} />
           <FlowLine x1={90} y1={5} x2={50} y2={27} />
-          {dotAnimations.map((anim, i) => (
-            <circle
-              key={anim}
-              r={1.6}
-              cx={[10, 36, 64, 90][i]}
-              cy={5}
-              fill="var(--ud-accent)"
-              style={{ animation: active ? `${anim} 3000ms ease-in-out ${i * 380}ms infinite backwards` : "none", opacity: active ? undefined : 0 }}
-            />
-          ))}
+          {startPositions.map((startCx, i) => {
+            const beginS = (i * 380) / 1000;
+            return (
+              <circle key={startCx} r={1.6} cx={startCx} cy={5} fill="var(--ud-accent)" style={{ opacity: active ? undefined : 0 }}>
+                {/* Holds this dot hidden for its own stagger, before its
+                    begin={beginS}s animations below have ever fired once. */}
+                {beginS > 0 && <animate attributeName="opacity" values="0;0" dur={`${beginS}s`} begin="0s" fill="freeze" />}
+                <animate
+                  attributeName="cx"
+                  values={`${startCx};50`}
+                  dur="3s"
+                  begin={`${beginS}s`}
+                  repeatCount="indefinite"
+                  calcMode="spline"
+                  keySplines="0.42 0 0.58 1"
+                />
+                <animate attributeName="cy" values="5;27" dur="3s" begin={`${beginS}s`} repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1" />
+                {/* Opacity stays at 1 all the way to 100% instead of fading
+                    out over the final stretch -- (50,27) sits well inside
+                    the hub circle's own radius (confirmed by measuring both
+                    elements' actual screen rects, since the SVG's coordinate
+                    space and the hub div's independent CSS position aren't
+                    the same coordinate system and only line up by deliberate
+                    measurement, not by construction), so a dot that's still
+                    fully visible on arrival gets naturally covered by the
+                    hub's opaque fill -- which reads as the dot flying into
+                    and merging with the hub. Fading it out beforehand meant
+                    it vanished on its own partway there, never visibly
+                    reaching the hub at all. */}
+                <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.08;1" dur="3s" begin={`${beginS}s`} repeatCount="indefinite" />
+              </circle>
+            );
+          })}
         </svg>
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div
