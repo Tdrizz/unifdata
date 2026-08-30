@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/admin";
 import {
   getDraftApprovalRates,
   getZodFailureRates,
@@ -73,7 +74,7 @@ export default async function AiHealthPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user?.email !== process.env.ADMIN_EMAIL) {
+  if (!isAdminEmail(user?.email)) {
     redirect("/");
   }
 
