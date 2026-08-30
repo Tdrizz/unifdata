@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function DELETE(
   request: Request,
@@ -13,6 +14,10 @@ export async function DELETE(
 
   const currentCompany = await getCurrentCompany();
   if (!currentCompany) return NextResponse.json({ error: "No company" }, { status: 403 });
+
+  if (!(await rateLimit(`saved-views:write:${user.id}`, 20, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Try again in a moment." }, { status: 429 });
+  }
 
   // Scoped to organization_id AND user_id, same as the list/create route --
   // this is what actually stops one member from deleting a teammate's saved

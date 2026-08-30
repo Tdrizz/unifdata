@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompanyId } from "@/lib/current-company";
+import { rateLimit } from "@/lib/rate-limit";
 
 type LinkUpdate = {
   table: "jobs" | "sales";
@@ -21,6 +22,12 @@ export async function POST(request: Request) {
         { error: "No company found for the current user." },
         { status: 401 },
       );
+    }
+
+    // Tightest limit of the routes gated this session -- this is a bulk
+    // write (potentially many jobs/sales updates per call), not a read.
+    if (!(await rateLimit(`link-suggestions:apply:${companyId}`, 10, 60_000))) {
+      return NextResponse.json({ error: "Too many requests. Try again in a moment." }, { status: 429 });
     }
 
     const body = await request.json();
