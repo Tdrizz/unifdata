@@ -4,6 +4,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getIndustryProfile } from "@/lib/industry-profiles";
 import { AppShell } from "@/components/AppShell";
 import { ContactEditForm } from "@/features/contacts/components/ContactEditForm";
+import { getContactRelatedCounts, describeContactRelatedCounts } from "@/lib/crm/related-counts";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,9 @@ export default async function CustomerEditPage({
     customFieldValues[v.field_id] = v.value;
   }
 
+  const relatedCounts = await getContactRelatedCounts(supabase, company.id, contact.id);
+  const deleteWarning = describeContactRelatedCounts(relatedCounts);
+
   return (
     <AppShell
       companyName={company.name}
@@ -90,6 +94,7 @@ export default async function CustomerEditPage({
           errorParam={errorParam}
           customFields={customFields}
           customFieldValues={customFieldValues}
+          deleteWarning={deleteWarning}
         />
       </div>
     </AppShell>

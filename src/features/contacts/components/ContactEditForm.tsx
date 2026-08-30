@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
 import type { IndustryProfile } from "@/lib/industry-profiles";
 import { updateContactAction, deleteContactAction, type ActionState } from "../actions";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { DeleteConfirm } from "@/components/ui/DeleteConfirm";
 import { ContactCustomFieldsEdit, type CustomFieldDef } from "./ContactCustomFields";
 
 const f = "mt-1.5 w-full rounded-[10px] border border-ud bg-ud-surface-sunk px-4 py-[11px] text-base text-ud-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-ud-accent focus:ring-2 focus:ring-ud-accent/15 placeholder:text-ud-faint";
@@ -34,12 +35,13 @@ type Props = {
   errorParam?: string;
   customFields?: CustomFieldDef[];
   customFieldValues?: Record<string, string | null>;
+  deleteWarning?: string | null;
 };
 
-export function ContactEditForm({ contact, profile, errorParam, customFields = [], customFieldValues = {} }: Props) {
+export function ContactEditForm({ contact, profile, errorParam, customFields = [], customFieldValues = {}, deleteWarning }: Props) {
   const updateAction = updateContactAction.bind(null, contact.id);
   const [state, formAction] = useActionState<ActionState, FormData>(updateAction, null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteAction = deleteContactAction.bind(null, contact.id);
 
   const name = [contact.first_name, contact.last_name].filter(Boolean).join(" ");
   const customerLabel = profile.labels.customerSingular.toLowerCase();
@@ -125,36 +127,23 @@ export function ContactEditForm({ contact, profile, errorParam, customFields = [
         <ContactCustomFieldsEdit fields={customFields} values={customFieldValues} />
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          {confirmDelete ? (
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="text-[12px] text-ud-danger font-medium">Delete this {customerLabel}?</span>
-              <button
-                type="submit"
-                formAction={deleteContactAction.bind(null, contact.id)}
-                className="px-3 py-1.5 rounded-[8px] bg-red-600 text-white text-[12px] font-semibold hover:opacity-90"
-              >
-                Yes, delete
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="px-3 py-1.5 rounded-[8px] border border-ud text-[12px] text-ud-muted hover:text-ud-ink"
-              >
-                Cancel
-              </button>
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              className="text-[12px] text-ud-danger hover:underline"
-            >
-              Delete {customerLabel}
-            </button>
-          )}
           <SubmitButton>Save changes</SubmitButton>
         </div>
       </form>
+      <div className="border-t border-ud-soft p-5">
+        {/* Deleting a contact doesn't cascade-delete most of what points at
+            it -- leads/jobs/sales/follow-ups/message threads just lose the
+            link (ON DELETE SET NULL), silently, with no name on the record
+            anymore. Notes and activity-log entries DO get permanently
+            deleted (ON DELETE CASCADE). deleteWarning states both, computed
+            from the real counts server-side, instead of the previous plain
+            "Delete this contact?" with no indication either was about to
+            happen. */}
+        <DeleteConfirm
+          action={deleteAction}
+          description={deleteWarning ?? `This will permanently delete this ${customerLabel} and cannot be undone.`}
+        />
+      </div>
     </div>
   );
 }

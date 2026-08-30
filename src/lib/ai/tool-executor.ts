@@ -5,6 +5,7 @@ import { runSweeperBatch } from "@/lib/data-keeper/sweeper";
 import { runDataQualityWorker } from "@/lib/agents/workers/data-quality-worker";
 import { createChatTrace } from "@/lib/observability/tracing";
 import { normalizePhone } from "@/lib/crm/phone";
+import { getContactRelatedCounts, describeContactRelatedCounts } from "@/lib/crm/related-counts";
 import { sendSms } from "@/lib/messaging/sms";
 import { sendEmail } from "@/lib/messaging/email";
 import { recordOutboundMessage } from "@/lib/messaging/record-outbound-message";
@@ -196,13 +197,21 @@ export async function executeTool(
         if (!(await verifyOwned(supabase, "master_customers", data.customer_id, orgId, "organization_id"))) {
           return { success: false, message: "That customer isn't in your workspace." };
         }
+        // Computed before the delete, from the real counts, so Vera can say
+        // what actually happened to related records instead of a bare
+        // "Contact deleted" -- leads/jobs/sales/follow-ups/message threads
+        // just lose the link (ON DELETE SET NULL), but notes and activity-
+        // log entries are permanently deleted (ON DELETE CASCADE).
+        const relatedCounts = await getContactRelatedCounts(supabase, orgId, data.customer_id);
+        const relatedNote = describeContactRelatedCounts(relatedCounts);
+
         const { error } = await supabase
           .from("master_customers")
           .delete()
           .eq("id", data.customer_id)
           .eq("organization_id", orgId);
         if (error) return { success: false, message: `Failed to delete contact: ${error.message}` };
-        return { success: true, message: "Contact deleted." };
+        return { success: true, message: relatedNote ? `Contact deleted. ${relatedNote}` : "Contact deleted." };
       }
 
       case "create_lead": {
