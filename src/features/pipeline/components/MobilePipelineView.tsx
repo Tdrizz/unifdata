@@ -13,6 +13,7 @@ import { PIPELINE_STAGES, STAGE_TO_QUICK_ADD_TYPE, getStageDisplayLabel, groupCa
 import { PIPELINE_ISSUE_FILTERS, PIPELINE_ISSUE_LABELS, isPipelineIssueId } from "../issue-filters";
 import { PipelineQuickAdd } from "./PipelineQuickAdd";
 import { PipelineCardActions } from "./PipelineCardActions";
+import { PipelineFollowUpsSection } from "./PipelineFollowUpsSection";
 import { formatDateOnly } from "@/lib/date-format";
 import type { PipelineCard, PipelinePageData } from "../types";
 import type { IndustryProfile } from "@/lib/industry-profiles";
@@ -67,7 +68,7 @@ function MobilePipelineCardRow({ card }: { card: PipelineCard }) {
   );
 }
 
-export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJobs }: Props) {
+export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJobs, followUps }: Props) {
   // See PipelineView's matching block — same /crm?issue=<id> deep link from
   // Data Hub, same flat-list-instead-of-board treatment on mobile.
   const searchParams = useSearchParams();
@@ -211,6 +212,12 @@ export function MobilePipelineView({ cards, profile, jobPickerLeads, leadPickerJ
           ))}
         </div>
       )}
+
+      {/* Follow-ups — kept on this page rather than a separate destination,
+          so clearing one doesn't require leaving the board. */}
+      <div className="px-4 pt-6">
+        <PipelineFollowUpsSection followUps={followUps} />
+      </div>
 
       {/* Revenue — same section desktop shows below the kanban, now showing actual paid revenue */}
       <div className="px-4 pt-6">

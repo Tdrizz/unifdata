@@ -15,6 +15,7 @@ import type { WorkspaceData } from "../queries";
 import { getAlertHref, getDraftHref } from "@/lib/agents/alert-routing";
 import { getDayLabel, getGreeting, getSortDate, getFollowUpLabel, getFollowUpTone, computeWorkspaceStats } from "../compute";
 import { OnboardingChecklist } from "./OnboardingChecklist";
+import { MarkFollowUpDoneButton } from "@/features/follow-ups/components/MarkFollowUpDoneButton";
 
 type QueueItem = {
   id: string;
@@ -25,6 +26,9 @@ type QueueItem = {
   tone: "success" | "warning" | "danger" | "neutral";
   due_date?: string | null;
   priority: number;
+  // Only set on manual follow-up items — drives the inline "Mark done"
+  // escape hatch on the row. See WorkspaceView.tsx for the desktop twin.
+  followUpId?: string;
 };
 
 type Draft = { id: string; draft_type: string; subject?: string | null; body: string; action_label?: string | null; record_id?: string | null };
@@ -193,6 +197,7 @@ export function MobileWorkspaceView({
       tone: getFollowUpTone(action.due_date),
       due_date: action.due_date,
       priority: isOverdue(action.due_date) ? 0 : isDueToday(action.due_date) ? 1 : action.due_date ? 2 : 4,
+      followUpId: action.id,
     }));
 
   const opportunityFollowUpItems: QueueItem[] = openLeads
@@ -549,20 +554,32 @@ export function MobileWorkspaceView({
                 const pillTone: "neutral" | "success" | "warning" | "danger" | "info" | "accent" | "ink" =
                   item.tone === "danger" ? "danger" : item.tone === "warning" ? "warning" : "neutral";
                 return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className="flex items-center gap-3 px-4 py-[16px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
-                  >
-                    <Pill tone={pillTone} className="shrink-0">{item.label}</Pill>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-medium text-ud-ink truncate">{item.title}</p>
-                      <p className="text-[13px] text-ud-muted truncate mt-0.5">{item.detail}</p>
-                    </div>
-                    <svg className="shrink-0 text-ud-faint" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m9 18 6-6-6-6" />
-                    </svg>
-                  </Link>
+                  <div key={item.id} className="relative">
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-3 px-4 py-[16px] border-b border-ud-soft last:border-0 active:bg-ud-surface-soft"
+                    >
+                      <Pill tone={pillTone} className="shrink-0">{item.label}</Pill>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[15px] font-medium text-ud-ink truncate">{item.title}</p>
+                        <p className="text-[13px] text-ud-muted truncate mt-0.5">{item.detail}</p>
+                      </div>
+                      {item.followUpId ? (
+                        <span className="shrink-0 w-[86px]" />
+                      ) : (
+                        <svg className="shrink-0 text-ud-faint" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m9 18 6-6-6-6" />
+                        </svg>
+                      )}
+                    </Link>
+                    {/* Sibling of the Link, not nested inside it — see
+                        WorkspaceView.tsx / PipelineCardActions.tsx. */}
+                    {item.followUpId && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <MarkFollowUpDoneButton id={item.followUpId} />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </Card>

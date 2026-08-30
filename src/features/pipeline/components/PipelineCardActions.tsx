@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setLeadStatusAction, setJobStatusAction } from "../actions";
+import { MarkFollowUpDoneButton } from "@/features/follow-ups/components/MarkFollowUpDoneButton";
 import type { PipelineCard } from "../types";
 
 // Simple, fixed action sets per stage -- the direct fix for "the logic seems
@@ -55,7 +56,7 @@ export function PipelineCardActions({ card }: { card: PipelineCard }) {
     ];
   }
 
-  if (buttons.length === 0) return null;
+  if (buttons.length === 0 && !card.openFollowUp) return null;
 
   return (
     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -74,6 +75,7 @@ export function PipelineCardActions({ card }: { card: PipelineCard }) {
           {button.label}
         </button>
       ))}
+      {card.openFollowUp && <MarkFollowUpDoneButton id={card.openFollowUp.id} />}
       {error && <p className="w-full text-[11px] text-ud-danger">{error}</p>}
     </div>
   );
