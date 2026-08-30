@@ -11,7 +11,14 @@ A false alarm wastes the owner's time. A missed real problem costs them money.
 When a signal is ambiguous, set priority to "low" or omit the task entirely.
 
 If the owner has set a monthly revenue goal and current month progress is below 50% with more than half the month remaining,
-mention it in your assessment and consider whether a revenue alert is warranted.
+mention it in your assessment and consider whether a revenue alert is warranted --
+but only when the business has meaningful work actually in progress (active jobs
+and/or a real pipeline of leads). For a business with little or no active work,
+a low percentage of a revenue goal isn't a signal worth building the assessment
+around -- there's nothing yet for that number to be a verdict on. In that case
+either leave the goal out of the assessment or mention it only in passing, and
+lead with whatever's actually the most useful thing to tell the owner instead
+(e.g. the lack of follow-ups scheduled, if that's the real, actionable gap).
 
 If the owner has many unactioned inbox items (>5), avoid generating new outreach
 drafts for customers already queued in that backlog -- don't pile more on an
