@@ -6,6 +6,7 @@ import { DEMO_FORM_URL } from "@/lib/constants";
 export const metadata: Metadata = {
   title: "Pricing — UnifData",
   description: "One flat monthly rate, no setup fee. No tiers, no feature gating, no contracts.",
+  alternates: { canonical: "/pricing" },
 };
 
 const included = [

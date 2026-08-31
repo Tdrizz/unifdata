@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicNav } from "@/components/PublicNav";
 import { LiveDemo } from "@/components/marketing/LiveDemo";
 import { DEMO_FORM_URL } from "@/lib/constants";
+
+// No title/description here on purpose -- both already inherit the correct
+// values from the root layout's metadata (this IS the homepage), so this
+// only adds the canonical tag without touching either.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const howItWorks = [
   {
@@ -47,7 +55,7 @@ const capabilities = [
 const integrations = ["QuickBooks", "Jobber", "HubSpot", "Square", "Google Sheets", "CSV"];
 
 function CapabilityIcon({ icon }: { icon: "kanban" | "dollar" | "chat" | "plug" }) {
-  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "var(--ud-accent)", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "var(--ud-accent)", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   if (icon === "kanban") return <svg {...common}><rect x="3" y="3" width="5" height="18" rx="1" /><rect x="9.5" y="3" width="5" height="18" rx="1" /><rect x="16" y="3" width="5" height="18" rx="1" /></svg>;
   if (icon === "dollar") return <svg {...common}><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>;
   if (icon === "chat") return <svg {...common}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>;
@@ -164,7 +172,7 @@ export default function HomePage() {
             <ul className="grid gap-3 sm:grid-cols-3 mb-7">
               {["Flags what needs attention each morning", "Drafts follow-ups you approve before they send", "Learns your patterns the longer you use it"].map((f) => (
                 <li key={f} className="flex items-start gap-2 text-[13px] leading-[1.6] text-ud-text">
-                  <svg className="w-4 h-4 shrink-0 mt-[2px] text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <svg aria-hidden="true" className="w-4 h-4 shrink-0 mt-[2px] text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                   {f}
                 </li>
               ))}
@@ -194,7 +202,7 @@ export default function HomePage() {
             <ul className="space-y-2.5 mb-8">
               {["Everything — no feature tiers","Vera AI briefings every morning","Customers, pipeline, jobs, sales","Imports + integrations included","Hands-on setup session included","Cancel any time, no contracts"].map((f) => (
                 <li key={f} className="flex items-center gap-3 text-[13.5px] text-ud-text">
-                  <svg className="w-4 h-4 shrink-0 text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <svg aria-hidden="true" className="w-4 h-4 shrink-0 text-ud-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
                   {f}
                 </li>
               ))}

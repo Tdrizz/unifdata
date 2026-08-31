@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { PublicNav } from "@/components/PublicNav";
 import { WaitlistForm } from "@/components/waitlist/WaitlistForm";
+
+export const metadata: Metadata = {
+  title: "Join the Waitlist",
+  description: "Request access to UnifData's invite-only beta.",
+  alternates: { canonical: "/waitlist" },
+};
 
 export default function WaitlistPage() {
   return (

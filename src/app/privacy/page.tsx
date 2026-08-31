@@ -4,6 +4,7 @@ import { PublicNav } from "@/components/PublicNav";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "UnifData Privacy Policy — how we collect, use, and protect your data.",
+  alternates: { canonical: "/privacy" },
 };
 
 const lastUpdated = "May 2, 2026";

@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Docs",
   description:
     "UnifData documentation for setup, core concepts, workflows, and product preview guidance.",
+  alternates: { canonical: "/docs" },
 };
 
 const lifecycle = [

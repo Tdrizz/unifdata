@@ -34,12 +34,17 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  // Required for Next.js to resolve relative OG-image/canonical URLs into
+  // absolute ones. Falls back to the production host (see the same pattern
+  // in features/settings/actions.ts) when NEXT_PUBLIC_APP_URL isn't set.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://app.unifdata.com"),
   title: {
     default: "UnifData – Unified Business Data. Clearer Decisions.",
     template: "%s | UnifData",
   },
   description:
     "UnifData organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace. Unified business data for home services, contractors, and service businesses.",
+  robots: { index: true, follow: true },
   keywords: [
     "CRM for service businesses",
     "small business CRM",
@@ -100,6 +105,7 @@ export default function RootLayout({
     >
       <html
         lang="en"
+        data-scroll-behavior="smooth"
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
         suppressHydrationWarning
       >

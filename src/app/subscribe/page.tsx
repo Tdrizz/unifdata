@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { PricingTable } from "@clerk/nextjs";
 import { hasLiveSubscription, requireAppUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
+
+// Auth-gated checkout step, not marketing content -- shouldn't be indexed.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function SubscribePage() {
   const user = await requireAppUser();
