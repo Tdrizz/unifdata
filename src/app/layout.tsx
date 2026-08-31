@@ -33,11 +33,24 @@ export const viewport: Viewport = {
   ],
 };
 
+// NEXT_PUBLIC_APP_URL isn't guaranteed to be a well-formed absolute URL in
+// every deploy environment (e.g. missing protocol) -- new URL() throws on a
+// bad value, and this runs at module load for every single page, so a
+// malformed env var would otherwise take the whole build down. Falls back
+// to the production host (see the same pattern in features/settings/actions.ts).
+function safeAppUrl(): URL {
+  const fallback = "https://app.unifdata.com";
+  try {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL || fallback);
+  } catch {
+    return new URL(fallback);
+  }
+}
+
 export const metadata: Metadata = {
   // Required for Next.js to resolve relative OG-image/canonical URLs into
-  // absolute ones. Falls back to the production host (see the same pattern
-  // in features/settings/actions.ts) when NEXT_PUBLIC_APP_URL isn't set.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://app.unifdata.com"),
+  // absolute ones.
+  metadataBase: safeAppUrl(),
   title: {
     default: "UnifData – Unified Business Data. Clearer Decisions.",
     template: "%s | UnifData",
