@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Product Preview",
   description:
     "See how UnifData adapts to different business types — home services, construction, professional services, and general business.",
+  alternates: { canonical: "/preview" },
 };
 
 const sectors = [

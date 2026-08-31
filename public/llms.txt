@@ -1,0 +1,18 @@
+# UnifData
+
+> UnifData is a unified business data workspace and CRM for service businesses — home services, contractors, and professional service companies. It organizes customers, jobs, follow-ups, and revenue into one industry-aware workspace, with an AI assistant (Vera) that reviews the business overnight and flags what needs attention.
+
+UnifData replaces juggling a spreadsheet, a separate invoicing tool, and a personal phone for texts/emails with one connected system: customer records, sales pipeline, job tracking, follow-up reminders, and revenue all stay in sync automatically as work happens, whether it's entered by hand, imported from a spreadsheet, or synced from Jobber, QuickBooks, HubSpot, or Square.
+
+## Pages
+
+- [Homepage](https://app.unifdata.com/): Overview of what UnifData does and how it works.
+- [Pricing](https://app.unifdata.com/pricing): Flat monthly pricing, no tiers or setup fees.
+- [Product Preview](https://app.unifdata.com/preview): How UnifData adapts to different business types.
+- [Docs](https://app.unifdata.com/docs): Setup, core concepts, and workflow documentation.
+- [Waitlist](https://app.unifdata.com/waitlist): Request access to the invite-only beta.
+
+## Policies
+
+- [Terms of Service](https://app.unifdata.com/terms)
+- [Privacy Policy](https://app.unifdata.com/privacy)

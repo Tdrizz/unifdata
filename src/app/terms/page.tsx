@@ -4,6 +4,7 @@ import { PublicNav } from "@/components/PublicNav";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "UnifData Terms of Service — the rules governing use of the platform.",
+  alternates: { canonical: "/terms" },
 };
 
 const lastUpdated = "May 2, 2026";
