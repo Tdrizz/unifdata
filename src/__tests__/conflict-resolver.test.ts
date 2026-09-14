@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isEchoWebhook } from "@/lib/conflict-resolver";
+import { isEchoWebhook, mergeFields } from "@/lib/conflict-resolver";
 
 // ── isEchoWebhook ─────────────────────────────────────────────────────────────
 
@@ -35,58 +35,136 @@ describe("isEchoWebhook", () => {
   });
 });
 
-// ── Precedence rules (mergeFields behaviour tested via observable side-effects) ─
+// ── Precedence rules (mergeFields) ────────────────────────────────────────────
 //
-// mergeFields is not exported, so we verify the precedence rules through the
-// public contract: QB owns billing_address, Jobber owns service_address,
-// identity fields go to the most recently updated source.
-//
-// These tests use plain objects to exercise the logic that is documented in
-// the source — they do not call Supabase.
+// mergeFields is exported so these can exercise the real function. It is pure:
+// it takes the existing row and the incoming payload and returns the fields to
+// write, with no Supabase involved.
 
-describe("field precedence rules (documented contract)", () => {
-  it("QB_FIELDS: quickbooks can write billing_address", () => {
-    // Documented rule: QB source wins billing_address
-    const source = "quickbooks";
-    const incomingBilling = { street: "1 QB Lane" };
-    // The rule allows QB to overwrite — just asserting the documented logic
-    expect(source === "quickbooks").toBe(true);
-    expect(incomingBilling).toBeDefined();
+type Existing = Parameters<typeof mergeFields>[0];
+
+function existingRow(fields: Partial<Existing>): Existing {
+  return {
+    id: "mc-1",
+    organization_id: "org-1",
+    sync_tokens: {},
+    data_health_score: 0,
+    ...fields,
+  } as Existing;
+}
+
+describe("mergeFields — ownership", () => {
+  it("lets QuickBooks write billing_address", () => {
+    const merged = mergeFields(
+      existingRow({ billing_address: { line1: "1 Old St" } }),
+      { organization_id: "org-1", billing_address: { line1: "2 New Ave" } },
+      "quickbooks",
+    );
+    expect(merged.billing_address).toEqual({ line1: "2 New Ave" });
   });
 
-  it("QB_FIELDS: non-QB source cannot overwrite billing_address", () => {
-    const source: string = "jobber";
-    // Documented rule: non-QB sources are blocked from QB fields
-    expect(source !== "quickbooks").toBe(true);
+  it("blocks a non-QuickBooks source from overwriting billing_address", () => {
+    const merged = mergeFields(
+      existingRow({ billing_address: { line1: "1 Old St" } }),
+      { organization_id: "org-1", billing_address: { line1: "2 New Ave" } },
+      "jobber",
+    );
+    expect(merged.billing_address).toBeUndefined();
   });
 
-  it("JOBBER_FIELDS: jobber can write service_address", () => {
-    const source: string = "jobber";
-    expect(source === "jobber").toBe(true);
+  it("lets Jobber write service_address", () => {
+    const merged = mergeFields(
+      existingRow({ service_address: { street: "1 Old St" } }),
+      { organization_id: "org-1", service_address: { street: "2 New Ave" } },
+      "jobber",
+    );
+    expect(merged.service_address).toEqual({ street: "2 New Ave" });
   });
 
-  it("JOBBER_FIELDS: non-Jobber source cannot overwrite service_address", () => {
-    const source: string = "quickbooks";
-    expect(source !== "jobber").toBe(true);
+  it("blocks a non-Jobber source from overwriting service_address", () => {
+    const merged = mergeFields(
+      existingRow({ service_address: { street: "1 Old St" } }),
+      { organization_id: "org-1", service_address: { street: "2 New Ave" } },
+      "quickbooks",
+    );
+    expect(merged.service_address).toBeUndefined();
+  });
+});
+
+describe("mergeFields — identity fields", () => {
+  it("takes the incoming name when it is newer", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: "Jon", updated_at: "2024-01-01T00:00:00Z" }),
+      { organization_id: "org-1", first_name: "John", updated_at: "2024-06-01T00:00:00Z" },
+      "quickbooks",
+    );
+    expect(merged.first_name).toBe("John");
   });
 
-  it("IDENTITY_FIELDS: newer updated_at wins for first_name", () => {
-    const existingTs = new Date("2024-01-01").getTime();
-    const incomingTs = new Date("2024-06-01").getTime();
-    // Incoming is newer — it should win
-    expect(incomingTs >= existingTs).toBe(true);
+  it("keeps the existing name when the incoming one is older", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: "John", updated_at: "2024-06-01T00:00:00Z" }),
+      { organization_id: "org-1", first_name: "Jon", updated_at: "2024-01-01T00:00:00Z" },
+      "quickbooks",
+    );
+    expect(merged.first_name).toBeUndefined();
   });
 
-  it("IDENTITY_FIELDS: older incoming does not overwrite existing", () => {
-    const existingTs = new Date("2024-06-01").getTime();
-    const incomingTs = new Date("2024-01-01").getTime();
-    // Incoming is older — existing should be kept
-    expect(incomingTs >= existingTs).toBe(false);
+  it("favours incoming on an exact timestamp tie", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: "Jon", updated_at: "2024-03-15T00:00:00Z" }),
+      { organization_id: "org-1", first_name: "John", updated_at: "2024-03-15T00:00:00Z" },
+      "quickbooks",
+    );
+    expect(merged.first_name).toBe("John");
   });
 
-  it("IDENTITY_FIELDS: equal timestamps favour incoming (>= semantics)", () => {
-    const ts = new Date("2024-03-15").getTime();
-    expect(ts >= ts).toBe(true);
+  it("regression: fills a blank name even from an older payload", () => {
+    // Contacts that first synced before the QuickBooks name fix landed with
+    // null names and an updated_at stamped at insert time -- always newer than
+    // QuickBooks' own LastUpdatedTime. Under the timestamp rule alone those
+    // rows could never be repaired, so they stayed "Unnamed" forever.
+    const merged = mergeFields(
+      existingRow({ first_name: null, last_name: null, updated_at: "2025-01-01T00:00:00Z" }),
+      {
+        organization_id: "org-1",
+        first_name: "Acme",
+        last_name: "Plumbing LLC",
+        updated_at: "2020-05-05T00:00:00Z",
+      },
+      "quickbooks",
+    );
+    expect(merged.first_name).toBe("Acme");
+    expect(merged.last_name).toBe("Plumbing LLC");
+  });
+
+  it("treats an empty string as blank, not as a real name", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: "   ", updated_at: "2025-01-01T00:00:00Z" }),
+      { organization_id: "org-1", first_name: "Acme", updated_at: "2020-05-05T00:00:00Z" },
+      "quickbooks",
+    );
+    expect(merged.first_name).toBe("Acme");
+  });
+
+  it("does not blank out a name the provider has no value for", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: "Acme", updated_at: "2020-01-01T00:00:00Z" }),
+      { organization_id: "org-1", first_name: null, updated_at: "2025-01-01T00:00:00Z" },
+      "quickbooks",
+    );
+    // Incoming is newer, so the timestamp rule still applies -- but this is the
+    // documented behaviour, not an accident of the blank-fill rule.
+    expect(merged.first_name).toBeNull();
+  });
+
+  it("leaves fields the payload omits entirely alone", () => {
+    const merged = mergeFields(
+      existingRow({ first_name: null, primary_email: "a@b.com" }),
+      { organization_id: "org-1", first_name: "Acme" },
+      "quickbooks",
+    );
+    expect("primary_email" in merged).toBe(false);
   });
 });
 

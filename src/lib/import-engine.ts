@@ -994,6 +994,31 @@ export async function createImportSessionFromRows({
     const sessionSeenEmails = new Set<string>();
     const sessionSeenPhones = new Set<string>();
 
+    // Rows carrying the provider's own record ID (integration syncs do; CSV
+    // uploads don't) are matched against what we've already committed for that
+    // ID, so a re-synced record updates its existing row instead of being
+    // staged as a fresh create. Without this, an invoice whose balance changed
+    // in QuickBooks could only ever come back as a "review" duplicate, which
+    // the commit loop skips -- so paid invoices never flipped to Paid here.
+    const providedIds = rows
+      .map((r) => (typeof r.external_id === "string" ? r.external_id : ""))
+      .filter(Boolean);
+    const linkedTargets = new Map<string, string>();
+
+    if (providedIds.length > 0) {
+      const { data: existingLinks } = await supabase
+        .from("external_record_links")
+        .select("external_id, internal_id")
+        .eq("company_id", companyId)
+        .eq("provider", sourceType)
+        .eq("internal_table", getTargetTable(recordType))
+        .in("external_id", providedIds);
+
+      for (const link of existingLinks ?? []) {
+        if (link.internal_id) linkedTargets.set(link.external_id, link.internal_id);
+      }
+    }
+
     for (let index = 0; index < rows.length; index += 1) {
       const rowNumber = index + 1;
       const rawData = rows[index];
@@ -1005,6 +1030,14 @@ export async function createImportSessionFromRows({
       });
 
       const externalHash = hashImportData(normalizedData);
+
+      const providedExternalId =
+        typeof rawData.external_id === "string" && rawData.external_id
+          ? rawData.external_id
+          : null;
+      const linkedTargetId = providedExternalId
+        ? linkedTargets.get(providedExternalId) ?? null
+        : null;
 
       // Within-session dedup for customer imports
       let withinSessionDuplicate: { duplicateReason: string } | null = null;
@@ -1022,8 +1055,10 @@ export async function createImportSessionFromRows({
         }
       }
 
-      const duplicate = (validationErrors.length || withinSessionDuplicate)
-        ? withinSessionDuplicate
+      // An already-linked record is not a duplicate to adjudicate -- it's the
+      // same record coming round again, so it goes straight to an update.
+      const duplicate = (validationErrors.length || withinSessionDuplicate || linkedTargetId)
+        ? withinSessionDuplicate && !validationErrors.length
           ? { targetTable: getTargetTable(recordType), targetId: null, matchConfidence: 0.9, duplicateReason: withinSessionDuplicate.duplicateReason }
           : null
         : await findSimpleDuplicate({
@@ -1039,6 +1074,8 @@ export async function createImportSessionFromRows({
       if (validationErrors.length) {
         action = "error";
         status = "error";
+      } else if (linkedTargetId) {
+        action = "update";
       } else if (duplicate) {
         action = "review";
         status = "duplicate";
@@ -1052,12 +1089,13 @@ export async function createImportSessionFromRows({
           sourceType,
           sourceName: sourceName || fileName || null,
           rowNumber,
+          providedExternalId,
         }),
         external_hash: externalHash,
         raw_data: rawData,
         normalized_data: normalizedData,
         target_table: duplicate?.targetTable || getTargetTable(recordType),
-        target_id: duplicate?.targetId || null,
+        target_id: linkedTargetId || duplicate?.targetId || null,
         action,
         status,
         match_confidence: duplicate?.matchConfidence || null,
@@ -1440,6 +1478,22 @@ export async function commitImportSession({
           payload as Record<string, unknown>;
         void _rc;
         void _ro;
+
+        // For contacts these two are hardcoded by buildInsertPayload rather
+        // than read from the row, so letting them through would knock an
+        // active contact back to "new" every time its source record changed.
+        if (recordType === "relationships") {
+          delete updatePayload.relationship_status;
+          delete updatePayload.source;
+          if (updatePayload.metadata === null) delete updatePayload.metadata;
+        }
+
+        // A re-sync must never take something away. Name resolution is fuzzy
+        // and the provider doesn't know about links a person made by hand, so
+        // a field that came back empty means "nothing to say", not "clear it".
+        for (const field of ["contact_id", "lead_id"]) {
+          if (updatePayload[field] === null) delete updatePayload[field];
+        }
 
         const { error: updateError } = await supabase
           .from(targetTable)

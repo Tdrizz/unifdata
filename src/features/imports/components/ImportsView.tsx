@@ -382,9 +382,14 @@ export function ImportsView({ importSessions, integrations, syncRuns, profile }:
                     </div>
                   )}
 
-                  {!isError && pendingSessions.length > 1 && (
+                  {/* Connected integrations now import straight through, so a
+                      single session left waiting is already the exception worth
+                      flagging -- this used to stay silent until there were two. */}
+                  {!isError && pendingSessions.length > 0 && (
                     <p className="text-[12px] text-ud-warning m-0">
-                      {pendingSessions.length} record types need review before they&apos;re committed.
+                      {pendingSessions.length === 1
+                        ? "1 record type needs review before it's committed."
+                        : `${pendingSessions.length} record types need review before they're committed.`}
                     </p>
                   )}
                   {!isError && committedSessions.length > 0 && pendingSessions.length === 0 && allSessions.length === committedSessions.length && (

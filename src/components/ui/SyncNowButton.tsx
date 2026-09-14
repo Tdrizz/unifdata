@@ -12,15 +12,30 @@ export function SyncNowButton({ provider, label }: { provider: string; label: st
     setSyncing(true);
     try {
       const response = await fetch(`/api/integrations/sync/${provider}`, { method: "POST" });
-      const data = await response.json() as { recordsStaged?: number; error?: string };
+      const data = await response.json() as {
+        contactsTouched?: number;
+        recordsImported?: number;
+        recordsFailed?: number;
+        error?: string;
+      };
 
       if (!response.ok) {
         toast.error(data.error ?? `${label} sync failed`);
         return;
       }
 
-      toast.success(`${label} sync complete — ${data.recordsStaged ?? 0} records staged for review`);
-      router.push("/imports");
+      const contacts = data.contactsTouched ?? 0;
+      const records = data.recordsImported ?? 0;
+      const failed = data.recordsFailed ?? 0;
+
+      // The records are in the app now, not parked awaiting review, so say so
+      // and land on the page where they actually show up.
+      toast.success(
+        `${label} synced — ${contacts} contact${contacts === 1 ? "" : "s"}, ` +
+          `${records} record${records === 1 ? "" : "s"} imported` +
+          (failed > 0 ? ` (${failed} couldn't be imported)` : ""),
+      );
+      router.push("/customers");
     } catch {
       toast.error(`Something went wrong syncing ${label}`);
     } finally {

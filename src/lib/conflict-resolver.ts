@@ -64,7 +64,11 @@ export function isEchoWebhook(
 
 // ── Core merge logic ───────────────────────────────────────────────────────────
 
-function mergeFields(
+function isBlank(value: unknown): boolean {
+  return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
+}
+
+export function mergeFields(
   existing: MasterCustomerRow,
   incoming: MasterCustomerPayload,
   source: ConflictSource,
@@ -91,11 +95,19 @@ function mergeFields(
   const incomingTs = incoming.updated_at ? new Date(incoming.updated_at).getTime() : 0;
   const existingTs = existing.updated_at ? new Date(existing.updated_at as string).getTime() : 0;
 
-  if (incomingTs >= existingTs) {
-    for (const field of IDENTITY_FIELDS) {
-      if (incoming[field] !== undefined) {
-        (merged as Record<string, unknown>)[field] = incoming[field];
-      }
+  const identityWins = incomingTs >= existingTs;
+
+  for (const field of IDENTITY_FIELDS) {
+    if (incoming[field] === undefined) continue;
+
+    // A stale timestamp is never a reason to keep a blank name on the record.
+    // Providers that send no updated_at score 0 here, so without this rule a
+    // contact that first synced with an empty name could never be repaired --
+    // every later sync lost the timestamp comparison and dropped the fix.
+    const fillingABlank = isBlank(existing[field]) && !isBlank(incoming[field]);
+
+    if (identityWins || fillingABlank) {
+      (merged as Record<string, unknown>)[field] = incoming[field];
     }
   }
 

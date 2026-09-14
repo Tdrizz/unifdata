@@ -4,6 +4,8 @@ import { registerRefresher } from "./token";
 import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows, type RawImportRow } from "@/lib/import-engine";
 import { upsertMasterCustomer } from "@/lib/conflict-resolver";
+import { splitName } from "@/lib/crm/legacy-shape";
+import { runWithConcurrency } from "./batch";
 import type { IntegrationSyncer, SyncResult } from "./types";
 
 // ── QuickBooks API helpers ─────────────────────────────────────────────────────
@@ -37,7 +39,35 @@ type QBCustomer = {
     PostalCode?: string;
   };
   CompanyName?: string;
+  MetaData?: { CreateTime?: string; LastUpdatedTime?: string };
 };
+
+/**
+ * The one name a QuickBooks customer is known by.
+ *
+ * DisplayName comes first deliberately: it is what QuickBooks stamps on every
+ * invoice as CustomerRef.name, and commitImportSession resolves a sale back to
+ * its contact by splitting that exact string. Deriving stored names from
+ * GivenName/FamilyName instead would leave imported invoices unlinked whenever
+ * a customer's display name isn't literally "Given Family".
+ *
+ * The fallbacks matter for the common small-business case: entering a company
+ * as a single name leaves GivenName and FamilyName empty, which is how every
+ * contact ended up rendering as "Unnamed".
+ */
+export function qbDisplayName(c: {
+  DisplayName?: string;
+  GivenName?: string;
+  FamilyName?: string;
+  CompanyName?: string;
+}): string {
+  return (
+    c.DisplayName?.trim() ||
+    `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim() ||
+    c.CompanyName?.trim() ||
+    ""
+  );
+}
 
 type QBInvoice = {
   Id: string;
@@ -122,73 +152,49 @@ const QuickBooksSyncer: IntegrationSyncer = {
     );
 
     if (customers.length > 0) {
-      const mapping = {
-        name: "name",
-        email: "email",
-        phone: "phone",
-        address: "address",
-        customer_type: "customer_type",
-      };
-
-      const allRows = customers.map((c) => ({
-        external_id: c.Id,
-        name:
-          c.DisplayName ||
-          `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim(),
-        email: c.PrimaryEmailAddr?.Address ?? "",
-        phone: c.PrimaryPhone?.FreeFormNumber ?? "",
-        address: [
-          c.BillAddr?.Line1,
-          c.BillAddr?.City,
-          c.BillAddr?.CountrySubDivisionCode,
-          c.BillAddr?.PostalCode,
-        ]
-          .filter(Boolean)
-          .join(", "),
-        customer_type: c.CompanyName ? "business" : "individual",
-      }));
-
-      // Mirror into master_customers with QB-precedence conflict resolution.
-      await Promise.allSettled(
-        customers.map((c) =>
-          upsertMasterCustomer({
-            supabase,
-            source: "quickbooks",
-            providerCustomerId: c.Id,
-            payload: {
-              organization_id: companyId,
-              first_name: c.GivenName ?? null,
-              last_name: c.FamilyName ?? null,
-              primary_email: c.PrimaryEmailAddr?.Address ?? null,
-              primary_phone: c.PrimaryPhone?.FreeFormNumber ?? null,
-              billing_address: c.BillAddr
-                ? {
-                    line1: c.BillAddr.Line1 ?? "",
-                    city: c.BillAddr.City ?? "",
-                    state: c.BillAddr.CountrySubDivisionCode ?? "",
-                    postal_code: c.BillAddr.PostalCode ?? "",
-                  }
-                : null,
-              quickbooks_customer_id: c.Id,
-            },
-          }),
-        ),
-      );
-
-      const rows = await filterFreshRows({ supabase, companyId, provider: "quickbooks", recordType: "relationships", rows: allRows, mapping });
-      if (rows.length > 0) {
-        const { sessionId } = await createImportSessionFromRows({
+      // upsertMasterCustomer is the only writer for QuickBooks contacts. These
+      // used to *also* be staged as a relationships import session, which meant
+      // committing that session created a second contact row for anyone without
+      // an email or phone (the only things findRelationshipDuplicate matches on).
+      const upserts = await runWithConcurrency(customers, 5, (c) => {
+        const { first_name, last_name } = splitName(qbDisplayName(c));
+        return upsertMasterCustomer({
           supabase,
-          companyId,
-          recordType: "relationships",
-          sourceType: "quickbooks",
-          sourceName: "quickbooks-customers",
-          rows,
-          mapping,
+          source: "quickbooks",
+          providerCustomerId: c.Id,
+          payload: {
+            organization_id: companyId,
+            first_name: first_name || null,
+            last_name,
+            primary_email: c.PrimaryEmailAddr?.Address ?? null,
+            primary_phone: c.PrimaryPhone?.FreeFormNumber ?? null,
+            billing_address: c.BillAddr
+              ? {
+                  line1: c.BillAddr.Line1 ?? "",
+                  city: c.BillAddr.City ?? "",
+                  state: c.BillAddr.CountrySubDivisionCode ?? "",
+                  postal_code: c.BillAddr.PostalCode ?? "",
+                }
+              : null,
+            metadata: { customer_type: c.CompanyName ? "business" : "individual" },
+            // Without this the identity-merge gate in conflict-resolver sees an
+            // incoming timestamp of 0 and drops every name change on the floor.
+            ...(c.MetaData?.LastUpdatedTime
+              ? { updated_at: c.MetaData.LastUpdatedTime }
+              : {}),
+            quickbooks_customer_id: c.Id,
+          },
         });
-        result.sessionIds.push(sessionId);
+      });
+
+      for (const outcome of upserts) {
+        if (outcome.status !== "fulfilled") {
+          console.error("[quickbooks] customer upsert failed", outcome.reason);
+          continue;
+        }
+        if (outcome.value.wasCreated) result.customersCreated += 1;
+        else result.customersUpdated += 1;
       }
-      result.recordsStaged += rows.length;
     }
 
     // ── Invoices → revenue ───────────────────────────────────────────────────
@@ -479,9 +485,7 @@ export async function fetchQBCustomers(
 
   return customers.map((c) => ({
     external_id: c.Id,
-    name:
-      c.DisplayName ||
-      `${c.GivenName ?? ""} ${c.FamilyName ?? ""}`.trim(),
+    name: qbDisplayName(c),
     email: c.PrimaryEmailAddr?.Address ?? "",
     phone: c.PrimaryPhone?.FreeFormNumber ?? "",
     address: [

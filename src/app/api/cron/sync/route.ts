@@ -11,6 +11,12 @@ import "@/lib/integrations/hubspot";
 import "@/lib/integrations/jobber";
 import "@/lib/integrations/square";
 import "@/lib/integrations/stripe";
+import { commitSyncSessions } from "@/lib/integrations/commit-sync";
+
+// This walks every active integration across every company, so it needs the
+// same headroom as the other nightly crons rather than the platform default.
+export const runtime = "nodejs";
+export const maxDuration = 300;
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -81,17 +87,27 @@ export async function GET(request: Request) {
         decryptIntegrationRow(freshIntegration),
       );
 
+      // Same as the manual Sync now button: a connected integration's records
+      // go into the app, not into a review queue nobody opens.
+      const committed = await commitSyncSessions({
+        supabase,
+        companyId: integration.company_id,
+        sessionIds: result.sessionIds,
+      });
+
+      const hadTrouble = committed.failed > 0 || committed.errors.length > 0;
+
       await supabase.from("sync_runs").insert({
         company_id: integration.company_id,
         sync_connection_id: null,
-        status: "success",
-        records_seen: result.recordsStaged,
-        records_created: result.customersCreated,
-        records_updated: result.customersUpdated,
-        records_failed: 0,
+        status: hadTrouble ? "completed_with_errors" : "success",
+        records_seen: result.recordsStaged + result.customersCreated + result.customersUpdated,
+        records_created: result.customersCreated + committed.created,
+        records_updated: result.customersUpdated + committed.updated,
+        records_failed: committed.failed,
         started_at: startedAt,
         finished_at: new Date().toISOString(),
-        error_message: null,
+        error_message: committed.errors.length ? committed.errors.join("; ") : null,
         metadata: { provider: integration.provider, session_ids: result.sessionIds },
       });
 
