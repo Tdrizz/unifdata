@@ -3,6 +3,8 @@ import { registerRefresher } from "./token";
 import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import { upsertMasterCustomer } from "@/lib/conflict-resolver";
+import { splitName } from "@/lib/crm/legacy-shape";
+import { runWithConcurrency } from "./batch";
 import type { IntegrationSyncer, SyncResult } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RawImportRow } from "@/lib/import-engine";
@@ -34,42 +36,42 @@ const HubSpotSyncer: IntegrationSyncer = {
       "/crm/v3/objects/contacts?limit=100&properties=firstname,lastname,email,phone,company",
     );
     if (contacts.length > 0) {
-      const allRows = contacts.map((c) => {
+      // upsertMasterCustomer is the only writer for HubSpot contacts -- these
+      // were also staged as a relationships import session, so committing that
+      // session produced a duplicate contact row for anyone HubSpot has no
+      // email or phone for. HubSpot owns identity fields when it has the latest
+      // updated_at; QB owns billing; Jobber owns service address.
+      const upserts = await runWithConcurrency(contacts, 5, (c) => {
         const props = (c.properties ?? {}) as Record<string, string>;
-        const name = [props.firstname, props.lastname].filter(Boolean).join(" ") || props.company || "Unknown";
-        return { external_id: String(c.id ?? ""), name, email: props.email ?? "", phone: props.phone ?? "", customer_type: "contact" };
+        // A contact stored only as a company name has no firstname/lastname;
+        // fall back the same way the name column does so it isn't "Unnamed".
+        const { first_name, last_name } =
+          props.firstname || props.lastname
+            ? { first_name: props.firstname ?? "", last_name: props.lastname || null }
+            : splitName(props.company ?? "");
+        return upsertMasterCustomer({
+          supabase,
+          source: "hubspot",
+          providerCustomerId: String(c.id ?? ""),
+          payload: {
+            organization_id: companyId,
+            first_name: first_name || null,
+            last_name,
+            primary_email: props.email ?? null,
+            primary_phone: props.phone ?? null,
+            hubspot_contact_id: String(c.id ?? ""),
+          },
+        });
       });
 
-      // Mirror into master_customers. HubSpot owns identity fields when it has
-      // the latest updated_at; QB owns billing; Jobber owns service address.
-      await Promise.allSettled(
-        contacts.map((c) => {
-          const props = (c.properties ?? {}) as Record<string, string>;
-          return upsertMasterCustomer({
-            supabase,
-            source: "hubspot",
-            providerCustomerId: String(c.id ?? ""),
-            payload: {
-              organization_id: companyId,
-              first_name: props.firstname ?? null,
-              last_name: props.lastname ?? null,
-              primary_email: props.email ?? null,
-              primary_phone: props.phone ?? null,
-              hubspot_contact_id: String(c.id ?? ""),
-            },
-          });
-        }),
-      );
-
-      const rows = await filterFreshRows({ supabase, companyId, provider: "hubspot", recordType: "relationships", rows: allRows, mapping: {} });
-      if (rows.length > 0) {
-        const { sessionId } = await createImportSessionFromRows({
-          supabase, companyId, sourceType: "hubspot", sourceName: "HubSpot Contacts",
-          fileName: null, recordType: "relationships", rows, mapping: {},
-        });
-        result.sessionIds.push(sessionId);
+      for (const outcome of upserts) {
+        if (outcome.status !== "fulfilled") {
+          console.error("[hubspot] contact upsert failed", outcome.reason);
+          continue;
+        }
+        if (outcome.value.wasCreated) result.customersCreated += 1;
+        else result.customersUpdated += 1;
       }
-      result.recordsStaged += rows.length;
     }
 
     // Deals → opportunities

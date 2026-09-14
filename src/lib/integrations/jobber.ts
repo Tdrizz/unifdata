@@ -3,6 +3,8 @@ import { registerRefresher } from "./token";
 import { decryptIntegrationRow, encryptToken, encryptTokenOrNull } from "./token-crypto";
 import { createImportSessionFromRows, filterFreshRows } from "@/lib/import-engine";
 import { upsertMasterCustomer } from "@/lib/conflict-resolver";
+import { splitName } from "@/lib/crm/legacy-shape";
+import { runWithConcurrency } from "./batch";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/db";
 import type { IntegrationSyncer, SyncResult } from "./types";
@@ -45,58 +47,45 @@ const JobberSyncer: IntegrationSyncer = {
 
     const clients = ((clientData.clients as Record<string, unknown>)?.nodes ?? []) as Record<string, unknown>[];
     if (clients.length > 0) {
-      const allRows = clients.map((c) => ({
-        external_id: String(c.id ?? ""),
-        name: String(c.name ?? ""),
-        email: String(((c.emails as Record<string, unknown>[])?.[0]?.address) ?? ""),
-        phone: String(((c.phones as Record<string, unknown>[])?.[0]?.number) ?? ""),
-        address: (() => {
-          const addr = c.billingAddress as Record<string, string> | undefined;
-          if (!addr) return "";
-          return [addr.street, addr.city, addr.province, addr.postalCode].filter(Boolean).join(", ");
-        })(),
-      }));
-
-      // Mirror into master_customers with Jobber-precedence conflict resolution.
-      await Promise.allSettled(
-        clients.map((c) => {
-          const addr = c.billingAddress as Record<string, string> | undefined;
-          const emails = c.emails as Record<string, unknown>[] | undefined;
-          const phones = c.phones as Record<string, unknown>[] | undefined;
-          const nameParts = String(c.name ?? "").split(" ");
-          return upsertMasterCustomer({
-            supabase,
-            source: "jobber",
-            providerCustomerId: String(c.id ?? ""),
-            payload: {
-              organization_id: companyId,
-              first_name: nameParts[0] ?? null,
-              last_name: nameParts.slice(1).join(" ") || null,
-              primary_email: String(emails?.[0]?.address ?? "") || null,
-              primary_phone: String(phones?.[0]?.number ?? "") || null,
-              service_address: addr
-                ? {
-                    street: addr.street ?? "",
-                    city: addr.city ?? "",
-                    state: addr.province ?? "",
-                    postal_code: addr.postalCode ?? "",
-                  }
-                : null,
-              jobber_client_id: String(c.id ?? ""),
-            },
-          });
-        }),
-      );
-
-      const rows = await filterFreshRows({ supabase, companyId, provider: "jobber", recordType: "relationships", rows: allRows, mapping: {} });
-      if (rows.length > 0) {
-        const { sessionId } = await createImportSessionFromRows({
-          supabase, companyId, sourceType: "jobber", sourceName: "Jobber Clients",
-          fileName: null, recordType: "relationships", rows, mapping: {},
+      // upsertMasterCustomer is the only writer for Jobber clients -- these were
+      // also staged as a relationships import session, so committing that session
+      // produced a duplicate contact row for anyone with no email or phone.
+      const upserts = await runWithConcurrency(clients, 5, (c) => {
+        const addr = c.billingAddress as Record<string, string> | undefined;
+        const emails = c.emails as Record<string, unknown>[] | undefined;
+        const phones = c.phones as Record<string, unknown>[] | undefined;
+        const { first_name, last_name } = splitName(String(c.name ?? ""));
+        return upsertMasterCustomer({
+          supabase,
+          source: "jobber",
+          providerCustomerId: String(c.id ?? ""),
+          payload: {
+            organization_id: companyId,
+            first_name: first_name || null,
+            last_name,
+            primary_email: String(emails?.[0]?.address ?? "") || null,
+            primary_phone: String(phones?.[0]?.number ?? "") || null,
+            service_address: addr
+              ? {
+                  street: addr.street ?? "",
+                  city: addr.city ?? "",
+                  state: addr.province ?? "",
+                  postal_code: addr.postalCode ?? "",
+                }
+              : null,
+            jobber_client_id: String(c.id ?? ""),
+          },
         });
-        result.sessionIds.push(sessionId);
+      });
+
+      for (const outcome of upserts) {
+        if (outcome.status !== "fulfilled") {
+          console.error("[jobber] client upsert failed", outcome.reason);
+          continue;
+        }
+        if (outcome.value.wasCreated) result.customersCreated += 1;
+        else result.customersUpdated += 1;
       }
-      result.recordsStaged += rows.length;
     }
 
     // Jobs → work
